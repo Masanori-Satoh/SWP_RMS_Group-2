@@ -85,7 +85,6 @@
                                 <span th:if="${item.departmentName != null}" th:text="${item.departmentName}">Phòng Công nghệ</span>
                                 <span>Nộp <time th:datetime="${#temporals.formatISO(item.submissionDate)}"
                                                 th:text="${#temporals.format(item.submissionDate, 'dd/MM/yyyy')}">05/10/2026</time></span>
-                                <span class="myapp-card__code" th:text="${item.applicationCode}">#CAN-0042</span>
                             </p>
                         </div>
                         <details th:if="${item.hasCv}" class="myapp-card__more">

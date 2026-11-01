@@ -1551,9 +1551,35 @@ function applyDirectorFilters() {
     if (timeSort && timeSort !== 'DEFAULT') {
         url += '&timeSort=' + encodeURIComponent(timeSort);
     }
+    url += '&page=0';
 
     window.location.href = url;
 }
+
+function filterDirectorOffersByStatus(status) {
+    const statusFilter = document.getElementById('statusFilter');
+    if (statusFilter) {
+        statusFilter.value = status;
+    }
+    const searchEl = document.getElementById('searchInput');
+    const timeSortEl = document.getElementById('timeSortFilter');
+
+    const search = searchEl ? searchEl.value.trim() : '';
+    const timeSort = timeSortEl ? timeSortEl.value : 'DEFAULT';
+
+    let url = '/offers?status=' + encodeURIComponent(status);
+    if (search !== '') {
+        url += '&search=' + encodeURIComponent(search);
+    }
+    if (timeSort && timeSort !== 'DEFAULT') {
+        url += '&timeSort=' + encodeURIComponent(timeSort);
+    }
+    url += '&page=0';
+
+    window.location.href = url;
+}
+window.filterDirectorOffersByStatus = filterDirectorOffersByStatus;
+window.applyDirectorFilters = applyDirectorFilters;
 
 function clearDirectorSearch() {
     const searchEl = document.getElementById('searchInput');

@@ -534,5 +534,41 @@ class OfferIntegrationTests {
                 .andExpect(status().isOk())
                 .andExpect(model().attribute("currentPage", 0));
     }
-}
 
+    @Test
+    @DisplayName("IT-25 GET /offers/{id}/edit: HR xem form chỉnh sửa Offer thành công (view offers/form, HTTP 200)")
+    @WithMockUser(username = "hr_specialist", roles = {"HR"})
+    void it25_getOfferEditForm_returnsOkView() throws Exception {
+        UpdateOfferRequest req = UpdateOfferRequest.builder()
+                .offeredPositionTitle("Frontend ReactJS Developer")
+                .proposedSalary(new BigDecimal("25000000"))
+                .probationSalary(new BigDecimal("21250000"))
+                .probationDays(60)
+                .responsePeriodDays(5)
+                .expectedStartDate(LocalDate.now().plusDays(10))
+                .workLocation("Ha Noi")
+                .benefitsPackage("Bonus")
+                .build();
+
+        OfferDetailResponse detail = OfferDetailResponse.builder()
+                .offerId(11)
+                .candidateName("Đinh Văn Hiếu")
+                .candidateEmail("hieu.van.dinh@gmail.com")
+                .candidatePhone("0931604451")
+                .appliedPosition("Frontend ReactJS Developer")
+                .departmentName("Engineering")
+                .requisitionId(2)
+                .offerStatus("Draft")
+                .build();
+
+        when(offerService.getUpdateOfferRequestById(eq(11))).thenReturn(req);
+        when(offerService.getOfferDetailForHr(eq(11))).thenReturn(detail);
+
+        mvc.perform(get("/offers/11/edit"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("offers/form"))
+                .andExpect(model().attribute("isEdit", true))
+                .andExpect(model().attribute("isLockedCandidate", false))
+                .andExpect(model().attributeExists("offerDto", "detail"));
+    }
+}

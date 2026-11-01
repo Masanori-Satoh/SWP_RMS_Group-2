@@ -931,7 +931,10 @@ public class OfferServiceImpl implements OfferService {
                 } else if ("Director_Approved".equalsIgnoreCase(s) || "Approved".equalsIgnoreCase(s)) {
                     predicates.add(builder.or(
                             builder.equal(builder.lower(root.get("offerStatus")), "director_approved"),
-                            builder.equal(builder.lower(root.get("offerStatus")), "approved")
+                            builder.equal(builder.lower(root.get("offerStatus")), "approved"),
+                            builder.equal(builder.lower(root.get("offerStatus")), "sent_candidate"),
+                            builder.equal(builder.lower(root.get("offerStatus")), "accepted"),
+                            builder.equal(builder.lower(root.get("offerStatus")), "declined")
                     ));
                 } else if ("Director_Rejected".equalsIgnoreCase(s) || "Rejected".equalsIgnoreCase(s)) {
                     predicates.add(builder.or(

@@ -4,8 +4,9 @@
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout/internal}">
 <head>
-  <title>Quản lý Đề xuất | Mộc RMS</title>
+  <title>Phê duyệt Đề xuất nhận việc | Mộc RMS</title>
   <th:block layout:fragment="styles">
+    <link rel="stylesheet" th:href="@{/css/offers.css}">
     <link rel="stylesheet" th:href="@{/css/pages/offer-workspace.css}">
     <link rel="stylesheet" th:href="@{/css/pages/flash-toast.css}">
   </th:block>
@@ -21,12 +22,15 @@
 
     <!-- TIÊU ĐỀ TRANG CHUẨN ADMIN WORKSPACE -->
     <div class="adw-heading ofw-heading">
-        <h1 class="adw-title ofw-title">Quản lý Đề xuất</h1>
+        <h1 class="adw-title ofw-title">Phê Duyệt Đề Xuất Nhận Việc</h1>
     </div>
 
     <!-- 3 Stat Cards chuẩn Admin Workspace -->
     <div class="director-stats-grid ofw-director-stats-grid">
-        <div class="director-stat-card adw-surface ofw-stat-card">
+        <button type="button" class="director-stat-card adw-surface ofw-stat-card"
+                onclick="filterDirectorOffersByStatus('Pending_Director')"
+                th:classappend="${currentStatus == 'Pending_Director'} ? ' ofw-stat-card--active' : ''"
+                th:attr="aria-pressed=${currentStatus == 'Pending_Director' ? 'true' : 'false'}">
             <div class="ofw-stat-label">Chờ duyệt</div>
             <div class="ofw-stat-bottom">
                 <div class="ofw-stat-icon stat-icon-amber">
@@ -34,9 +38,12 @@
                 </div>
                 <div class="ofw-stat-value" id="statPending" th:text="${statPending}">0</div>
             </div>
-        </div>
+        </button>
 
-        <div class="director-stat-card adw-surface ofw-stat-card">
+        <button type="button" class="director-stat-card adw-surface ofw-stat-card"
+                onclick="filterDirectorOffersByStatus('Director_Approved')"
+                th:classappend="${currentStatus == 'Director_Approved' or currentStatus == 'Approved'} ? ' ofw-stat-card--active' : ''"
+                th:attr="aria-pressed=${currentStatus == 'Director_Approved' or currentStatus == 'Approved' ? 'true' : 'false'}">
             <div class="ofw-stat-label">Đã duyệt</div>
             <div class="ofw-stat-bottom">
                 <div class="ofw-stat-icon stat-icon-green">
@@ -44,9 +51,12 @@
                 </div>
                 <div class="ofw-stat-value" id="statApproved" th:text="${statApproved}">0</div>
             </div>
-        </div>
+        </button>
 
-        <div class="director-stat-card adw-surface ofw-stat-card">
+        <button type="button" class="director-stat-card adw-surface ofw-stat-card"
+                onclick="filterDirectorOffersByStatus('Director_Rejected')"
+                th:classappend="${currentStatus == 'Director_Rejected' or currentStatus == 'Rejected'} ? ' ofw-stat-card--active' : ''"
+                th:attr="aria-pressed=${currentStatus == 'Director_Rejected' or currentStatus == 'Rejected' ? 'true' : 'false'}">
             <div class="ofw-stat-label">Đã từ chối</div>
             <div class="ofw-stat-bottom">
                 <div class="ofw-stat-icon stat-icon-danger">
@@ -54,7 +64,7 @@
                 </div>
                 <div class="ofw-stat-value" id="statRejected" th:text="${statRejected}">0</div>
             </div>
-        </div>
+        </button>
     </div>
 
     <!-- 2 Tabs Điều Hướng -->
@@ -90,7 +100,7 @@
                 <option value="Pending_Director" th:selected="${currentStatus == 'Pending_Director'}"
                         th:text="'Chờ Giám đốc duyệt (' + ${statusCounts != null ? (statusCounts['Pending_Director'] ?: 0) : 0} + ')'">Chờ Giám đốc duyệt (0)</option>
                 <option value="Director_Approved" th:selected="${currentStatus == 'Director_Approved' or currentStatus == 'Approved'}"
-                        th:text="'Giám đốc đã duyệt (' + ${statusCounts != null ? (statusCounts['Director_Approved'] ?: 0) : 0} + ')'">Giám đốc đã duyệt (0)</option>
+                        th:text="'Giám đốc đã duyệt (' + ${statApproved != null ? statApproved : (statusCounts != null ? (statusCounts['Director_Approved'] ?: 0) : 0)} + ')'">Giám đốc đã duyệt (0)</option>
                 <option value="Sent_Candidate" th:selected="${currentStatus == 'Sent_Candidate'}"
                         th:text="'Đã gửi thư mời (' + ${statusCounts != null ? (statusCounts['Sent_Candidate'] ?: 0) : 0} + ')'">Đã gửi thư mời (0)</option>
                 <option value="Accepted" th:selected="${currentStatus == 'Accepted'}"
@@ -112,17 +122,20 @@
 
     <!-- Table Surface Card -->
     <div class="card ofw-list-surface adw-surface">
-        <div class="ofw-list-header">
-            <div class="ofw-list-title-wrap">
-                <div class="ofw-list-icon">
+        <header class="ofw-list-header">
+            <div class="ofw-list-heading">
+                <span class="ofw-list-icon" aria-hidden="true">
                     <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-                </div>
-                <div>
-                    <h2 class="adw-panel-title">Danh Sách Đề Xuất Nhận Việc Của Giám Đốc</h2>
+                </span>
+                <div class="ofw-list-heading-text">
+                    <h2 class="adw-panel-title"
+                        th:text="${currentStatus == 'Pending_Director' ? 'Danh Sách Đề Xuất Chờ Phê Duyệt' : (currentStatus == 'Director_Approved' or currentStatus == 'Approved' ? 'Danh Sách Đề Xuất Đã Phê Duyệt' : (currentStatus == 'Director_Rejected' or currentStatus == 'Rejected' ? 'Danh Sách Đề Xuất Đã Từ Chối' : 'Lịch Sử Phê Duyệt Đề Xuất'))}">
+                        Danh Sách Đề Xuất Chờ Phê Duyệt
+                    </h2>
                     <span class="ofw-list-count" th:text="${totalElements != null ? totalElements + ' đề xuất' : '0 đề xuất'}">0 đề xuất</span>
                 </div>
             </div>
-        </div>
+        </header>
 
         <div class="table-wrapper offers-table-wrapper ofw-table-wrapper">
             <table class="table offers-table adw-data-table ofw-data-table">

@@ -294,6 +294,7 @@ public class OfferController {
             model.addAttribute("offerId", id);
             model.addAttribute("detail", detail);
             model.addAttribute("isEdit", true);
+            model.addAttribute("isLockedCandidate", false);
             return "offers/form";
         } catch (BaseBusinessException e) {
             flash.addFlashAttribute("errorMessage", e.getMessage());
@@ -346,6 +347,7 @@ public class OfferController {
             model.addAttribute("offerId", id);
             model.addAttribute("detail", detail);
             model.addAttribute("isEdit", true);
+            model.addAttribute("isLockedCandidate", false);
             return "offers/form";
         }
 
@@ -363,6 +365,7 @@ public class OfferController {
             model.addAttribute("offerId", id);
             model.addAttribute("detail", detail);
             model.addAttribute("isEdit", true);
+            model.addAttribute("isLockedCandidate", false);
             return "offers/form";
         }
     }
