@@ -4,11 +4,8 @@
 
 <head>
     <link rel="stylesheet" th:href="@{/css/workspace.css}">
-    <!-- Ứng viên: không sidebar, menu trên topbar, font như landing (css/candidate-shell.css) -->
+    <!-- Ứng viên: không sidebar, topbar khối nổi, nền ảnh mờ (css/candidate-shell.css) -->
     <th:block th:if="${topbarUser != null and topbarUser.roleName == 'Candidate'}">
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap">
         <link rel="stylesheet" th:href="@{/css/candidate-shell.css}">
     </th:block>
     <th:block layout:fragment="styles">
