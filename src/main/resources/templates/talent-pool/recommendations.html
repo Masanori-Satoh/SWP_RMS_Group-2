@@ -18,7 +18,7 @@
         <div th:if="${page.empty}" class="tpw-suggestion-empty tpw-hr-empty">
             <span class="tpw-section-icon tpw-empty-icon--lg" aria-hidden="true"><svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M14 2H5v20h14V7ZM14 2v6h5M8 15h8M8 18h5"/><circle cx="10" cy="10" r="1.5"/></svg></span>
             <h3 class="tpw-empty-title">Chưa có gợi ý ứng viên nào</h3>
-            <p class="tpw-empty-hint">Hiện tại chưa có ứng viên nào được gợi ý cho Hiring Manager của tin tuyển dụng này.</p>
+            <p class="tpw-empty-hint">Hiện tại chưa có ứng viên nào được gợi ý cho trưởng phòng tuyển dụng của tin tuyển dụng này.</p>
             <p class="tpw-empty-hint" th:text="${viewerRole == 'HR' ? 'Hãy chọn ứng viên phù hợp và gửi đề xuất.' : 'Gợi ý mới sẽ xuất hiện tại đây sau khi HR gửi.'}"></p>
         </div>
         <div th:unless="${page.empty}" class="tp-recommendation-list table-wrapper tpw-table-scroll tpw-recommendations-table-wrap">

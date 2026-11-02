@@ -170,7 +170,7 @@
             </section>
             <section th:if="${recommendation != null}" class="card adw-surface tpw-panel tp-decision tpw-decision" aria-labelledby="tp-decision-title">
                 <div>
-                    <h2 id="tp-decision-title" class="card-title adw-panel-title tpw-section-title">Quyết định của Hiring Manager</h2>
+                    <h2 id="tp-decision-title" class="card-title adw-panel-title tpw-section-title">Quyết định của Trưởng phòng tuyển dụng</h2>
                     <p class="tpw-section-desc" th:text="${recommendation.pending ? 'Xem xét hồ sơ trước khi phản hồi gợi ý từ HR.' : recommendation.statusLabel}"></p>
                 </div>
                 <form th:if="${recommendation.canDecide}" data-pool-decision class="tp-recommendation-actions" method="post" th:action="@{/talent-pool/recommendations/{id}/decision(id=${recommendation.applicationId},keyword=${filter.keyword},page=${sourcePage})}"><button class="btn btn--secondary btn--sm" type="submit" name="decision" value="Fail">Từ chối</button><button class="btn btn--primary btn--sm" type="submit" name="decision" value="Pass">Chấp nhận</button></form>

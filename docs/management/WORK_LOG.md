@@ -6,6 +6,8 @@ Tài liệu này là lịch sử tóm tắt các thay đổi quan trọng và b�
 
 | Ngày | Tên công việc / Yêu cầu chính | Người thực hiện | Chi tiết thay đổi |
 | --- | --- | --- | --- |
+| **2026-11-02** | Khắc phục lỗi import/package hàng loạt trong IDE bằng cách nạp lại dự án Java | LinhDN | [Chẩn đoán và xác nhận 0 lỗi đỏ](work_logs/2026-11-02-ide-java-project-reload.md) |
+| **2026-11-02** | Việt hóa tên Hiring Manager trong tiêu đề và thông báo Kho ứng viên tiềm năng | LinhDN | [Phạm vi và kiểm chứng](work_logs/2026-11-02-talent-pool-role-vietnamese.md) |
 | **2026-11-02** | Việt hóa thông báo lỗi tạo/sửa tài khoản nội bộ, gồm trùng tên đăng nhập/email và kiểm tra vai trò/phòng ban | LinhDN | [Phạm vi và kiểm chứng](work_logs/2026-11-02-account-validation-vietnamese.md) |
 | **2026-11-01** | Dọn fixture/comment AI screening trong Admin/Admin Dashboard; giữ nguyên 9 file module khác theo xác nhận của người dùng | LinhDN | [4 file thay đổi, 19 test qua và giới hạn SQL Server](work_logs/2026-11-01-admin-ai-screening-cleanup.md) |
 | **2026-10-31** | Chuẩn hóa giao diện cổng Offer ứng viên (Candidate Offer Portal) theo UI_RULES & ARCHITECTURE_GUIDE | HuyenPT | [File change và kiểm thử](work_logs/2026-10-31-candidate-offer-ui-sync.md) |

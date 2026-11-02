@@ -46,7 +46,7 @@
             <h3 class="tpw-empty-title">Chưa có ứng viên được đề xuất</h3>
             <p class="tpw-empty-hint" th:text="${viewerRole == 'Hiring Manager'
                 ? 'Bạn chưa đề xuất ứng viên nào cho vị trí này. Chọn ứng viên từ kho chung để thêm vào danh sách.'
-                : 'Hiện tại chưa có ứng viên nào được Hiring Manager đề xuất cho vị trí này. Danh sách sẽ cập nhật khi có đề xuất mới.'}"></p>
+                : 'Hiện tại chưa có ứng viên nào được trưởng phòng tuyển dụng đề xuất cho vị trí này. Danh sách sẽ cập nhật khi có đề xuất mới.'}"></p>
         </div>
         <div th:unless="${#lists.isEmpty(suggestions)}" class="table-wrapper tpw-table-scroll">
             <table class="table adw-data-table tpw-suggestions-table tpw-record-table">

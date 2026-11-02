@@ -65,7 +65,7 @@ public class TalentPoolService {
         User user = currentUser.requireUser();
         // check if user is not HR or Hiring Manager
         if (!CurrentUserService.hasRole(user, "HR") && !CurrentUserService.hasRole(user, "Hiring Manager"))
-            throw new AccessDeniedException("Chỉ HR và Hiring Manager được truy cập kho tiềm năng.");
+            throw new AccessDeniedException("Chỉ nhân sự và trưởng phòng tuyển dụng được truy cập kho ứng viên tiềm năng.");
         return user;
     }
 
@@ -386,7 +386,7 @@ public class TalentPoolService {
         User user = actor();
         // check if role is not HM
         if (!CurrentUserService.hasRole(user, "Hiring Manager"))
-            throw new AccessDeniedException("Chỉ Hiring Manager tạo đề xuất.");
+            throw new AccessDeniedException("Chỉ trưởng phòng tuyển dụng được tạo đề xuất.");
         createDrafts(jobId, request, user, false);
     }
 
@@ -403,7 +403,7 @@ public class TalentPoolService {
         requireOpen(target);
         // check if Hr is recommend and not have HM manage
         if (fromHr && receivingHiringManager(target) == null)
-            throw new TalentPoolException("Tin chưa có Hiring Manager phụ trách hợp lệ để nhận gợi ý.");
+            throw new TalentPoolException("Tin tuyển dụng chưa có trưởng phòng tuyển dụng phụ trách hợp lệ để nhận gợi ý.");
         Set<Integer> selected = new HashSet<>();
         List<Application> sources = new ArrayList<>();
         // loop full candidate by application
