@@ -135,7 +135,9 @@
 
         list.innerHTML = items.map(n => {
           const unreadClass = n.isRead ? 'is-read' : 'is-unread';
-          const link = n.linkUrl && n.linkUrl.trim() !== '' ? n.linkUrl : '/notifications';
+          // Chỉ nhận đường dẫn nội bộ, giống kiểm tra ở NotificationController
+          const isInternal = n.linkUrl && n.linkUrl.startsWith('/') && !n.linkUrl.startsWith('//');
+          const link = isInternal ? n.linkUrl : '/notifications';
           return `
             <a href="${escapeHtml(link)}" class="topbar-notif-item ${unreadClass}" data-id="${n.notificationId}" data-read="${n.isRead}">
               <div class="topbar-notif-icon-circle" aria-hidden="true">

@@ -20,6 +20,7 @@ public final class NotificationMessages {
     private static final DateTimeFormatter DISPLAY_DATE = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     private static final DateTimeFormatter CLOCK_TIME = DateTimeFormatter.ofPattern("HH:mm");
     private static final DateTimeFormatter EVENT_TIME = DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSSSSSS");
+    static final int COMMENT_PREVIEW_LIMIT = 300;
 
     private NotificationMessages() {
     }
@@ -38,6 +39,15 @@ public final class NotificationMessages {
             return fallback;
         }
         return user.getFullName();
+    }
+
+    // Ý kiến Giám đốc dài tới 1000 ký tự, cột Content cũng chỉ 1000 → chỉ trích phần đầu, đầy đủ xem ở trang chi tiết
+    static String shortComment(String comments) {
+        String trimmed = comments.trim();
+        if (trimmed.length() <= COMMENT_PREVIEW_LIMIT) {
+            return trimmed;
+        }
+        return trimmed.substring(0, COMMENT_PREVIEW_LIMIT).trim() + "…";
     }
 
     public static String requisitionCode(JobRequisition requisition) {
@@ -79,7 +89,7 @@ public final class NotificationMessages {
                                                     LocalDateTime decidedAt, String comments) {
         String commentText = "";
         if (comments != null && !comments.isBlank()) {
-            commentText = " Ý kiến: \"" + comments.trim() + "\".";
+            commentText = " Ý kiến: \"" + shortComment(comments) + "\".";
         }
         return String.format(
                 "Yêu cầu tuyển dụng \"%s\" (Mã: %s) đã được Giám đốc %s phê duyệt vào lúc %s.%s Bộ phận Nhân sự (HR) có thể tiến hành tạo tin tuyển dụng.",
@@ -90,7 +100,7 @@ public final class NotificationMessages {
                                                     LocalDateTime decidedAt, String comments) {
         String reason = "Không có lý do cụ thể";
         if (comments != null && !comments.isBlank()) {
-            reason = comments.trim();
+            reason = shortComment(comments);
         }
         return String.format(
                 "Yêu cầu tuyển dụng \"%s\" (Mã: %s) đã bị Giám đốc %s từ chối vào lúc %s.\nLý do: %s.\nVui lòng chỉnh sửa lại thông tin và nộp duyệt lại.",
@@ -200,7 +210,7 @@ public final class NotificationMessages {
     public static String offerApprovedContent(OfferProposal offer, String directorName, String comments) {
         String noteText = "";
         if (comments != null && !comments.isBlank()) {
-            noteText = " Ghi chú: \"" + comments.trim() + "\".";
+            noteText = " Ghi chú: \"" + shortComment(comments) + "\".";
         }
         return String.format(
                 "Giám đốc %s đã phê duyệt đề xuất nhận việc cho ứng viên %s (Vị trí: %s).%s Bạn có thể tiến hành phát hành Thư mời nhận việc cho ứng viên.",
@@ -210,7 +220,7 @@ public final class NotificationMessages {
     public static String offerRejectedContent(OfferProposal offer, String directorName, String comments) {
         String reasonText = "Không có lý do cụ thể";
         if (comments != null && !comments.isBlank()) {
-            reasonText = comments.trim();
+            reasonText = shortComment(comments);
         }
         return String.format(
                 "Giám đốc %s đã từ chối đề xuất nhận việc cho ứng viên %s (Vị trí: %s). Lý do: \"%s\". Vui lòng kiểm tra lại điều khoản và chỉnh sửa bản thảo nếu cần.",
@@ -228,6 +238,6 @@ public final class NotificationMessages {
         if (declineReason == null || declineReason.isBlank()) {
             return "";
         }
-        return String.format(" Lý do: \"%s\".", declineReason.trim());
+        return String.format(" Lý do: \"%s\".", shortComment(declineReason));
     }
 }
