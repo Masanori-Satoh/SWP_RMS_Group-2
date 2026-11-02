@@ -8,6 +8,8 @@ Theo yêu cầu LinhDN ngày 30/10/2026: mỗi lượt hoàn thành công việc
 
 ## Trạng thái mới nhất
 
+01/11 — dọn fixture/comment AI screening trong Admin; giữ nguyên 9 file module khác theo lựa chọn của người dùng: [Phạm vi và kiểm chứng](2026-11-01-admin-ai-screening-cleanup.md).
+
 31/10 — bố cục Tạo tài khoản và Tạo phòng ban theo mockup, giữ hai màn sửa và khung điều hướng: [Thống kê, kiểm chứng và ảnh desktop/mobile](2026-10-31-admin-create-forms-ui.md).
 
 31/10 — sửa giao diện chỉnh tài khoản nội bộ theo mockup, giữ khung điều hướng chung: [Báo cáo và ảnh desktop/mobile](2026-10-31-admin-account-edit-ui.md).
