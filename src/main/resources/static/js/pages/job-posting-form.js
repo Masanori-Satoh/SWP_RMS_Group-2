@@ -35,10 +35,6 @@
         const [y, m, d] = isoValue.slice(0, 10).split('-').map(Number);
         return isoDate(new Date(y, m - 1, d + days));
     };
-    const daysBetween = (fromIso, toIso) => {
-        const [a, b] = [fromIso, toIso].map(v => v.slice(0, 10).split('-').map(Number));
-        return Math.round((new Date(b[0], b[1] - 1, b[2]) - new Date(a[0], a[1] - 1, a[2])) / 864e5);
-    };
     const today = form.dataset.today || isoDate(new Date());
     const radioValue = name => form.querySelector(`input[name="${name}"]:checked`)?.value || '';
 
@@ -148,13 +144,6 @@
         deadline.dispatchEvent(new Event('input', { bubbles: true }));
     }));
 
-    function renderDeadlineHelp() {
-        const value = deadline.value;
-        const days = value ? daysBetween(postingDay(), value) : null;
-        $('deadline-help').textContent = days !== null && days > 0
-            ? `Nhận hồ sơ trong ${days} ngày, đến hết ${viDate(value)}.` : '';
-    }
-
     /* ---------------------------------------------------------------------
      * 6. XEM TRƯỚC "ỨNG VIÊN SẼ THẤY" + TAB TRÊN ĐIỆN THOẠI
      * --------------------------------------------------------------------- */
@@ -203,33 +192,67 @@
         }
     }
 
+    // Các ô được kiểm tra (độ dài tối đa do maxlength + js/text-limit.js lo)
+    const CHECKED_FIELDS = ['postingTitle', 'jobDescription', 'jobRequirements', 'salaryCustom',
+        'numberOfPositionsDisplay', 'applicationDeadline'];
+
+    /** Câu lỗi của một ô ('' = hợp lệ); publishing = kiểm tra theo luật "Đăng tin". */
+    function checkField(field, publishing) {
+        const empty = !$(field).value.trim();
+        if (field === 'postingTitle') {
+            return empty ? 'Vui lòng nhập tiêu đề tin.' : '';
+        }
+        if (field === 'jobDescription') {
+            return empty ? 'Vui lòng nhập mô tả công việc.' : '';
+        }
+        if (field === 'jobRequirements') {
+            return empty ? 'Vui lòng nhập yêu cầu ứng viên.' : '';
+        }
+        if (field === 'salaryCustom') {
+            return radioValue('salaryMode') === 'custom' && empty
+                ? 'Nhập mức lương hiển thị hoặc chọn một lựa chọn khác.' : '';
+        }
+        if (field === 'numberOfPositionsDisplay') {
+            return showPositions.checked && empty ? 'Nhập số lượng hiển thị hoặc tắt hiển thị số lượng.' : '';
+        }
+        // Còn lại: hạn nộp hồ sơ
+        if (empty) {
+            return publishing ? 'Vui lòng chọn hạn nộp hồ sơ.' : '';
+        }
+        if (deadline.value < today) {
+            return 'Hạn nộp hồ sơ phải từ hôm nay trở đi.';
+        }
+        if (publishing && deadline.value < postingDay()) {
+            return 'Hạn nộp hồ sơ phải sau ngày đăng.';
+        }
+        return '';
+    }
+
+    /** Kiểm tra cả form khi bấm nút lưu; trả về các ô lỗi theo thứ tự trên form. */
     function validate(publishing) {
         const errors = {};
-        // Độ dài tối đa: maxlength trên ô đã chặn không cho nhập thêm, js/text-limit.js báo "Nội dung quá N ký tự"
-        const required = (field, message) => {
-            if (!$(field).value.trim()) errors[field] = message;
-        };
-        required('postingTitle', 'Vui lòng nhập tiêu đề tin.');
-        required('jobDescription', 'Vui lòng nhập mô tả công việc.');
-        required('jobRequirements', 'Vui lòng nhập yêu cầu ứng viên.');
-        if (radioValue('salaryMode') === 'custom') {
-            required('salaryCustom', 'Nhập mức lương hiển thị hoặc chọn một lựa chọn khác.');
-        }
-        if (showPositions.checked) {
-            required('numberOfPositionsDisplay', 'Nhập số lượng hiển thị hoặc tắt hiển thị số lượng.');
-        }
-        if (!deadline.value) {
-            if (publishing) errors.applicationDeadline = 'Vui lòng chọn hạn nộp hồ sơ.';
-        } else if (deadline.value < today) {
-            errors.applicationDeadline = 'Hạn nộp hồ sơ phải từ hôm nay trở đi.';
-        } else if (publishing && deadline.value < postingDay()) {
-            errors.applicationDeadline = 'Hạn nộp hồ sơ phải sau ngày đăng.';
-        }
-
-        ['postingTitle', 'jobDescription', 'jobRequirements', 'salaryCustom', 'numberOfPositionsDisplay',
-            'applicationDeadline'].forEach(field => showError(field, errors[field] || ''));
+        CHECKED_FIELDS.forEach(field => {
+            const message = checkField(field, publishing);
+            showError(field, message);
+            if (message) errors[field] = message;
+        });
         return errors;
     }
+
+    // Rời ô thì kiểm tra ngay theo luật "Đăng tin" (giống form yêu cầu tuyển dụng); Lưu nháp vẫn kiểm tra lại theo luật nháp
+    form.addEventListener('focusout', event => {
+        if (CHECKED_FIELDS.includes(event.target.id)) {
+            showError(event.target.id, checkField(event.target.id, true));
+        }
+    });
+
+    // Ô đang báo lỗi thì kiểm tra lại khi người dùng sửa, đúng rồi thì dòng chữ đỏ tự mất
+    function recheckInvalidFields() {
+        CHECKED_FIELDS.filter(field => $(field).classList.contains('is-invalid'))
+            .forEach(field => showError(field, checkField(field, true)));
+    }
+    form.addEventListener('input', recheckInvalidFields);
+    form.addEventListener('change', recheckInvalidFields);
 
     let submitting = false;
     form.addEventListener('submit', event => {
@@ -241,12 +264,14 @@
         // Giống server: tin không còn là nháp (đã đăng / tạm dừng) thì "Lưu thay đổi" cũng phải đủ hạn nộp
         const publishing = action === 'publish' || form.dataset.draft !== 'true';
         const errors = validate(publishing);
-        const first = Object.keys(errors)[0];
+        // Ô còn báo "Nội dung quá N ký tự" (text-limit.js) cũng không cho lưu
+        const tooLong = form.querySelector('.is-too-long');
+        const first = $(Object.keys(errors)[0]) || tooLong;
         if (first) {
             event.preventDefault();
             form.dataset.tab = 'edit';
-            ($(first) || $(first + '-group'))?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            $(first)?.focus({ preventScroll: true });
+            first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            first.focus({ preventScroll: true });
             return;
         }
         submitting = true;
@@ -264,7 +289,6 @@
     function refresh() {
         renderFromMarkers();
         syncBenefitChips();
-        renderDeadlineHelp();
         renderPreview();
     }
     form.addEventListener('input', refresh);

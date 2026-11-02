@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 /**
  * Gửi email cho luồng Offer: phát hành thư mời nhận việc (Offer Letter) tới ứng viên.
  * Không có cấu hình SMTP thì chỉ ghi log (mock).
- * Thông báo in-app cho nội bộ (Giám đốc, HR) nằm ở {@link com.group2.rms.notification.NotificationService}.
+ * Thông báo in-app cho nội bộ (Giám đốc, HR) nằm ở {@link com.group2.rms.notification.service.NotificationService}.
  */
 @Slf4j
 @Service

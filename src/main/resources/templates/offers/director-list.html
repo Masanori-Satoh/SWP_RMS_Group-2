@@ -247,8 +247,23 @@
                 <input type="hidden" id="directorDecisionAction">
 
                 <div class="form-group">
-                    <label>Phản hồi / Ghi chú của Giám đốc (Không bắt buộc)</label>
-                    <textarea id="directorDecisionComments" class="input-control" rows="4" placeholder="Nhập ghi chú hoặc lý do từ chối..."></textarea>
+                    <div class="director-comment-label-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <label id="directorDecisionCommentsLabel" for="directorDecisionComments" style="font-weight: 600; font-size: 14px; margin-bottom: 0;">Phản hồi / Ghi chú của Giám đốc (Không bắt buộc)</label>
+                        <span class="ofw-counter-label" style="font-size: 12px; color: var(--muted, #64748b);">
+                            <span id="directorDecisionCommentCount">0</span>/500
+                        </span>
+                    </div>
+                    <textarea id="directorDecisionComments" class="input-control director-decision-textarea" rows="4"
+                              placeholder="Nhập ghi chú hoặc lý do..."
+                              maxlength="500"
+                              oninput="handleDirectorDecisionCommentInput(this)"></textarea>
+                    <div id="directorDecisionSubnote" class="director-decision-subnote" style="display: none; margin-top: 6px; font-size: 13px; color: var(--muted, #64748b);">
+                        * Nếu từ chối đề xuất, vui lòng nêu rõ lý do để Bộ phận Tuyển dụng tiếp tục hỗ trợ xử lý.
+                    </div>
+                    <div id="directorDecisionCommentsError" class="director-comment-error-msg" style="display: none;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                        <span>Vui lòng nhập lý do từ chối vào ô nhận xét trước khi tiếp tục.</span>
+                    </div>
                 </div>
             </div>
             <div class="modal-footer ofw-modal-footer--end">

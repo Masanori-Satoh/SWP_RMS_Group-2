@@ -19,6 +19,7 @@
     <th:block layout:fragment="styles">
         <link rel="stylesheet" th:href="@{/css/requisition-shared.css}">
         <link rel="stylesheet" th:href="@{/css/requisition-form.css}">
+        <link rel="stylesheet" th:href="@{/css/pages/flash-toast.css}">
     </th:block>
 </head>
 
@@ -29,12 +30,12 @@
         <header class="requisition-page-intro adw-heading">
             <h1 class="adw-title" th:text="${isEdit ? 'Chỉnh sửa yêu cầu tuyển dụng' : 'Tạo yêu cầu tuyển dụng'}">Tạo yêu cầu tuyển dụng
             </h1>
-            <p class="requisition-page-description">
-                Bạn có thể lưu bản nháp bất cứ lúc nào (cần tối thiểu Tên vị trí, Số lượng, Hình thức và Mô hình làm
-                việc).
-                Khi gửi Giám đốc duyệt, mọi trường có dấu <span class="required-asterisk">*</span> phải được điền đủ.
-            </p>
+
         </header>
+
+        <!-- Toast sau thao tác chuyển sang form (vd rút lại để chỉnh sửa) -->
+        <th:block th:replace="~{fragments/ui/flash-toast :: flashToast(${successMessage}, ${failureMessage})}">
+        </th:block>
 
         <p class="notice" th:if="${copyNotice}" th:text="${copyNotice}"></p>
 
@@ -98,7 +99,6 @@
                                         th:if="${department.departmentId == form.departmentId}"
                                         th:text="${department.departmentName}">Engineering</th:block>
                                     <span th:if="${form.departmentId == null}">Chưa được gán phòng ban</span>
-                                    <span class="rqf-hint">theo tài khoản của bạn</span>
                                 </div>
                             </div>
                             <div class="rqf-field">
@@ -108,7 +108,6 @@
                                 <div class="rqf-readonly">
                                     <span id="rqf-round" th:data-round="*{recruitmentRound ?: 1}"
                                         th:text="|Đợt *{recruitmentRound ?: 1}|">Đợt 1</span>
-                                    <span class="rqf-hint">hệ thống tự đánh số</span>
                                 </div>
                             </div>
 
@@ -120,13 +119,11 @@
                                         aria-label="Giảm số lượng">−</button>
                                     <input type="number" th:field="*{numberOfPositions}" th:min="${positionsMin}"
                                         th:max="${positionsMax}" step="1" inputmode="numeric"
-                                        aria-describedby="numberOfPositions-help numberOfPositions-error"
+                                        aria-describedby="numberOfPositions-error"
                                         th:attr="aria-invalid=${#fields.hasErrors('numberOfPositions')}">
                                     <button type="button" data-step="1" data-step-target="numberOfPositions"
                                         aria-label="Tăng số lượng">+</button>
                                 </div>
-                                <small id="numberOfPositions-help" class="rqf-hint"
-                                    th:text="|Từ ${positionsMin} đến ${positionsMax} người.|">Từ 1 đến 30 người.</small>
                                 <small id="numberOfPositions-error" class="field-error"
                                     th:text="${#fields.hasErrors('numberOfPositions')} ? ${#strings.listJoin(#fields.errors('numberOfPositions'), '; ')} : ''"></small>
                             </div>
@@ -335,6 +332,8 @@
         <script th:src="@{/js/text-limit.js}" defer></script>
         <!-- requisition-form.js: kiểm tra nhập liệu, checklist, bước xác nhận -->
         <script th:src="@{/js/pages/requisition-form.js}" defer></script>
+        <!-- flash-toast.js: thông báo sau thao tác tự tắt sau 3 giây -->
+        <script th:src="@{/js/pages/flash-toast.js}" defer></script>
     </th:block>
 </body>
 

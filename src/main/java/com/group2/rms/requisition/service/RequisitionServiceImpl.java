@@ -18,7 +18,6 @@ import com.group2.rms.user.entity.User;
 import com.group2.rms.user.repository.DepartmentRepository;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -84,8 +83,8 @@ public class RequisitionServiceImpl implements RequisitionService {
         // Rule: Người sao chép phải có quyền tạo mới yêu cầu
         access.requireCreate(currentUser);
         JobRequisition jobRequisition = findRequisitionById(id, false);
-        access.requireView(currentUser, jobRequisition);
-        requireCopyableSource(jobRequisition);
+        // Rule: chỉ sao chép yêu cầu đã duyệt; gõ URL với phiếu khác thì quay về trang chi tiết
+        access.requireCopy(currentUser, jobRequisition);
 
         RequisitionRequest copiedRequest = mapper.toEditForm(jobRequisition);
 
@@ -224,14 +223,11 @@ public class RequisitionServiceImpl implements RequisitionService {
     public void decide(Integer id, boolean approved, String comment) {
         User currentUser = access.actor();
         JobRequisition jobRequisition = findRequisitionById(id, true);
-        access.requireView(currentUser, jobRequisition);
-
         // Rule: Chỉ Giám đốc (Director) mới có quyền duyệt hoặc từ chối yêu cầu đang chờ
-        if (!access.canDecide(currentUser, jobRequisition)) {
-            throw new AccessDeniedException("Chỉ Giám đốc mới có quyền quyết định phê duyệt yêu cầu.");
-        }
+        access.requireDecide(currentUser, jobRequisition);
 
-        String cleanedComment = RequisitionValidator.cleanString(comment);
+        // \r\n → \n để đếm ký tự khớp với bộ đếm trên trình duyệt
+        String cleanedComment = RequisitionValidator.cleanMultiline(comment);
         // Rule: Khi từ chối bắt buộc phải có ý kiến nhận xét / lý do trả về
         if (!approved && cleanedComment == null) {
             throw createValidationException("comment", "Vui lòng nhập lý do để Hiring Manager chỉnh sửa.");
@@ -275,12 +271,8 @@ public class RequisitionServiceImpl implements RequisitionService {
     public void withdraw(Integer id) {
         User currentUser = access.actor();
         JobRequisition jobRequisition = findRequisitionById(id, true);
-        access.requireView(currentUser, jobRequisition);
-
         // Rule: Chỉ người tạo yêu cầu mới được rút lại yêu cầu đang chờ duyệt
-        if (!access.canWithdraw(currentUser, jobRequisition)) {
-            throw new AccessDeniedException("Chỉ người tạo yêu cầu mới có quyền rút lại yêu cầu đang chờ duyệt.");
-        }
+        access.requireWithdraw(currentUser, jobRequisition);
 
         // Rule: Chuyển trạng thái từ Pending_Director về Draft
         jobRequisition.setApprovalStatus(RequisitionAccess.STATUS_DRAFT);

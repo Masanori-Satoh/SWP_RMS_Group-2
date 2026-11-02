@@ -136,7 +136,15 @@ public class HiringManagerDashboardService {
             pipelineText = "Đã tuyển đủ, chờ đóng yêu cầu";
         }
         return new HiringProgressItem(RequisitionLabels.requisitionCode(row.requisitionId(), row.requisitionCode()),
-                row.title(), row.hired(), needed, pipelineText, detailHref(row.requisitionId()));
+                row.title(), row.hired(), needed, pipelineText, progressHref(row));
+    }
+
+    // Đã có tin thì mở chi tiết tin tuyển dụng; HR chưa đăng tin thì mở chi tiết yêu cầu
+    private String progressHref(ProgressRow row) {
+        if (row.latestPostingId() != null) {
+            return "/internal/job-postings/" + row.latestPostingId();
+        }
+        return detailHref(row.requisitionId());
     }
 
     private String detailHref(int requisitionId) {

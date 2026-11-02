@@ -19,7 +19,6 @@
                 <ul th:replace="~{dashboard/fragments :: workItems(${dashboard.needsAttention})}"></ul>
             </th:block>
             <p class="dash-panel__more" th:if="${dashboard.moreNeedsAttention > 0}">
-                <span th:text="|+${dashboard.moreNeedsAttention} việc khác|">+2 việc khác</span>
                 <a class="dash-link" th:href="@{/requisitions}">Xem tất cả</a>
             </p>
         </section>

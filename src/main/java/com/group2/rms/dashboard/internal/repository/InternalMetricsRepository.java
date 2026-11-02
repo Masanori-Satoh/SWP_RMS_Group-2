@@ -35,11 +35,11 @@ public class InternalMetricsRepository {
 
     // ===== Hiring Manager =====
 
-    /** Yêu cầu của phòng ban HM thuộc hoặc quản lý đã có ít nhất một tin đang đăng (Published). */
+    /** Yêu cầu trong phạm vi HM (mình tạo / phòng mình / phòng mình quản lý) đã có tin đang đăng (Published). */
     public long countPostedDepartmentRequisitions(int userId, Integer departmentId) {
         var query = entityManager.createQuery("select count(r) from JobRequisition r "
-                + "left join r.department d left join d.manager m "
-                + "where (m.userId = :userId or d.departmentId = :departmentId) "
+                + "left join r.hiringManager hm left join r.department d left join d.manager m "
+                + "where (hm.userId = :userId or m.userId = :userId or d.departmentId = :departmentId) "
                 + "and exists (select j from JobPosting j where j.requisition = r and j.postingStatus = :published)",
                 Long.class);
         query.setParameter("userId", userId);
@@ -48,13 +48,13 @@ public class InternalMetricsRepository {
         return query.getSingleResult();
     }
 
-    /** Buổi phỏng vấn còn hiệu lực của phòng HM thuộc hoặc làm trưởng phòng, bắt đầu trong [from, to). */
+    /** Buổi phỏng vấn còn hiệu lực trong phạm vi HM (như trên), bắt đầu trong [from, to). */
     public long countUpcomingDepartmentInterviews(int userId, Integer departmentId, LocalDateTime from,
             LocalDateTime to) {
         var query = entityManager.createQuery("select count(i) from InterviewSchedule i "
                 + "join i.application a join a.jobPosting j join j.requisition r "
-                + "left join r.department d left join d.manager m "
-                + "where (m.userId = :userId or d.departmentId = :departmentId) "
+                + "left join r.hiringManager hm left join r.department d left join d.manager m "
+                + "where (hm.userId = :userId or m.userId = :userId or d.departmentId = :departmentId) "
                 + "and i.startTime >= :from and i.startTime < :to "
                 + "and i.interviewStatus in " + ACTIVE_INTERVIEW_STATUSES, Long.class);
         query.setParameter("userId", userId);

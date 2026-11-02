@@ -259,7 +259,7 @@ private final RequisitionValidator validator = new RequisitionValidator(CLOCK); 
 Controller chỉ làm: **nhận request → bind DTO → gọi service → trả view / redirect / flash**.
 
 - Mặc định **form POST truyền thống**; AJAX (`fetch` + `ApiResponse<T>`) chỉ cho thao tác nhỏ cần ở lại trang (modal, nút trên danh sách). Mỗi thao tác chọn **một** cách. AJAX bắt buộc header `X-CSRF-TOKEN`.
-- **Chỉ `try-catch` đúng exception của module** để render lại form (AG §2.3). Không `catch (Exception e)`. Không bắt `ResourceNotFoundException` / `AccessDeniedException` — để Global trả 404 / 403.
+- **Chỉ `try-catch` đúng exception của module** để render lại form (AG §2.3). Không `catch (Exception e)`. **Ngoại lệ (02/11):** gõ URL sai mã / không đủ quyền không ra trang lỗi mà quay về trang đã xem hoặc danh sách kèm toast — `RequisitionController`, `JobPostingController` có `@ExceptionHandler(AccessDeniedException)` riêng và bắt `ResourceNotFoundException` ở URL GET; `CareerPortalController` có `@ExceptionHandler(ResourceNotFoundException)` → `/jobs` + thông báo. URL bị `SecurityConfig` chặn theo role vẫn trang 403 (Global).
 
   ```java
   @PostMapping("/create")
@@ -364,8 +364,8 @@ email / SĐT sai định dạng · file sai đuôi / sai MIME / quá dung lượ
 
 | Tình huống | Service ném | Người dùng thấy |
 |---|---|---|
-| Không tìm thấy bản ghi | `core.exception.ResourceNotFoundException` | Trang 404 |
-| Không có quyền với bản ghi | `org.springframework.security.access.AccessDeniedException` | Trang 403 |
+| Không tìm thấy bản ghi | `core.exception.ResourceNotFoundException` | Requisition / Job Posting / `/jobs`: về trang trước hoặc danh sách + toast; module khác: trang 404 |
+| Không có quyền với bản ghi | `org.springframework.security.access.AccessDeniedException` | Requisition / Job Posting: về trang trước hoặc danh sách + toast; module khác: trang 403 |
 | Vi phạm nghiệp vụ / dữ liệu sai | `{X}ValidationException extends BaseBusinessException` (mang `Map<field, message>`) | Form + lỗi cạnh ô |
 
 - **Không dùng** cho lỗi nghiệp vụ: `RuntimeException`, `IllegalArgumentException`, `IllegalStateException`, `EntityNotFoundException`, `ResponseStatusException`.
@@ -609,7 +609,7 @@ void decide_shouldReject_whenRejectReasonIsBlank() {                            
 | Trạng thái | thao tác ở mỗi trạng thái không hợp lệ bị chặn, trạng thái **không đổi** |
 | Quyền | đúng người được; người khác / role khác / tự duyệt bị chặn (`AccessDeniedException` / 403) |
 | Không tìm thấy | id không tồn tại → `ResourceNotFoundException` / 404 |
-| Gõ URL trực tiếp | role không được vào → 403; ứng viên vào trang nội bộ → 403 |
+| Gõ URL trực tiếp | role bị `SecurityConfig` chặn → 403; bị `{X}Access` chặn → redirect + flash lỗi (Requisition / Job Posting) |
 | Màn danh sách | lọc theo từng role · giá trị lọc lạ bị bỏ · sort lạ · page âm · size 0 / quá lớn · trang vượt tổng |
 | Controller | thành công → redirect + flash · lỗi → render lại form + lỗi đúng ô · thiếu CSRF → 403 · trường lạ trên form bị bỏ qua |
 

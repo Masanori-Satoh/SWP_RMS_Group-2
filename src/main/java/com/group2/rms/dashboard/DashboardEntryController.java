@@ -6,7 +6,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 
 /*
- * CONTROLLER: cửa vào /dashboard, chuyển người dùng tới dashboard đúng với role (Admin, nội bộ, ứng viên).
+ * CONTROLLER: cửa vào /dashboard, chuyển người dùng tới dashboard đúng với role (Admin, nội bộ).
  */
 @Controller
 public class DashboardEntryController {

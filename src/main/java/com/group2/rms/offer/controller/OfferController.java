@@ -244,7 +244,23 @@ public class OfferController {
         } catch (BaseBusinessException e) {
             errors.reject("businessError", e.getMessage());
             model.addAttribute("activeMenu", "offers");
-        List<PassedCandidateResponse> passedCandidates = offerService.getPassedCandidatesForOffer();
+            List<PassedCandidateResponse> passedCandidates = offerService.getPassedCandidatesForOffer();
+            model.addAttribute("passedCandidates", passedCandidates);
+            model.addAttribute("isEdit", false);
+            boolean locked = Boolean.TRUE.equals(isLockedCandidate);
+            model.addAttribute("isLockedCandidate", locked);
+            if (locked && createRequest.getApplicationId() != null) {
+                passedCandidates.stream()
+                        .filter(c -> createRequest.getApplicationId().equals(c.getApplicationId()))
+                        .findFirst()
+                        .ifPresent(c -> model.addAttribute("fixedCandidate", c));
+            }
+            return "offers/form";
+        } catch (Exception e) {
+            log.error("Lỗi không mong muốn khi tạo đề xuất nhận việc: {}", e.getMessage(), e);
+            errors.reject("businessError", "Không thể lưu đề xuất nhận việc: " + (e.getMessage() != null ? e.getMessage() : "Xung đột dữ liệu hệ thống."));
+            model.addAttribute("activeMenu", "offers");
+            List<PassedCandidateResponse> passedCandidates = offerService.getPassedCandidatesForOffer();
             model.addAttribute("passedCandidates", passedCandidates);
             model.addAttribute("isEdit", false);
             boolean locked = Boolean.TRUE.equals(isLockedCandidate);
@@ -470,7 +486,11 @@ public class OfferController {
             @PathVariable Integer id,
             @Valid @RequestBody DirectorDecisionRequest request) {
         try {
-            OfferResponse rejected = offerService.rejectOfferByDirector(id, request.getComments());
+            if (request == null || request.getComments() == null || request.getComments().trim().isEmpty()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(new ApiResponse<>(false, "Vui lòng nhập lý do từ chối vào ô nhận xét trước khi tiếp tục."));
+            }
+            OfferResponse rejected = offerService.rejectOfferByDirector(id, request.getComments().trim());
             return ResponseEntity.ok(new ApiResponse<>(true, "Đã từ chối đề xuất nhận việc thành công!", rejected));
         } catch (BaseBusinessException e) {
             HttpStatus status = (e instanceof ResourceNotFoundException) ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST;

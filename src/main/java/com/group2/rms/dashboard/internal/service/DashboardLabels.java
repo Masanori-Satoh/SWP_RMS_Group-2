@@ -10,6 +10,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.Locale;
 
 /*
  * LABELS: chữ tiếng Việt và tông màu dùng chung cho các dashboard (số ngày chờ, hình thức, trạng thái phỏng vấn).
@@ -89,6 +90,20 @@ public final class DashboardLabels {
         symbols.setGroupingSeparator('.');
         DecimalFormat format = new DecimalFormat("#,##0", symbols);
         return format.format(amount) + " VND";
+    }
+
+    /** Chữ viết tắt cho ô tròn: chữ đầu của họ + của tên ("Lê Thu Hà" → "LH"); không có tên → "?". */
+    public static String initials(String fullName) {
+        if (fullName == null || fullName.isBlank()) {
+            return "?";
+        }
+        String[] words = fullName.strip().split("\\s+");
+        String first = words[0].substring(0, 1);
+        if (words.length == 1) {
+            return first.toUpperCase(Locale.ROOT);
+        }
+        String last = words[words.length - 1].substring(0, 1);
+        return (first + last).toUpperCase(Locale.ROOT);
     }
 
     /** Tên thứ ngắn kiểu Việt Nam: thứ Hai → "T2", Chủ nhật → "CN". */

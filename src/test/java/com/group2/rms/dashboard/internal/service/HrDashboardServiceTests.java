@@ -1,7 +1,7 @@
 package com.group2.rms.dashboard.internal.service;
 
-import com.group2.rms.candidate.application.pipeline.dto.ApplicationListResponse;
 import com.group2.rms.candidate.application.pipeline.dto.ApplicationPipelineResponse;
+import com.group2.rms.candidate.application.pipeline.dto.OwnerWorkloadResponse;
 import com.group2.rms.candidate.application.pipeline.service.ApplicationPipelineService;
 import com.group2.rms.candidate.domain.rule.ApplicationStage;
 import com.group2.rms.dashboard.internal.dto.WeeklyApplicationItem;
@@ -16,7 +16,6 @@ import com.group2.rms.user.entity.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.data.domain.PageImpl;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -32,8 +31,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -82,13 +82,17 @@ class HrDashboardServiceTests {
         return row;
     }
 
+    /** Giả lập ApplicationPipelineService#ownerWorkload: đếm mọi dòng, chỉ giữ dòng HR cầm bóng. */
     private HrDashboardResponse build() {
+        Map<ApplicationStage, Long> counts = new EnumMap<>(ApplicationStage.class);
+        Map<ApplicationStage, List<ApplicationPipelineResponse>> owned = new EnumMap<>(ApplicationStage.class);
         for (ApplicationStage stage : HrDashboardService.WAITING_STAGES) {
-            ApplicationListResponse response = new ApplicationListResponse(new PageImpl<>(stageRows.get(stage)),
-                    Map.of(), List.of(), null, null, false, false, "HR");
-            when(applicationPipeline.list(argThat(search -> search != null && stage.name().equals(search.stage())), any()))
-                    .thenReturn(response);
+            counts.put(stage, (long) stageRows.get(stage).size());
+            owned.put(stage, stageRows.get(stage).stream()
+                    .filter(row -> HrDashboardService.HR_OWNER.equals(row.ownerLabel())).toList());
         }
+        when(applicationPipeline.ownerWorkload(eq(HrDashboardService.HR_OWNER), eq(HrDashboardService.WAITING_STAGES)))
+                .thenReturn(new OwnerWorkloadResponse(counts, owned));
         return service.build(hr());
     }
 
@@ -143,7 +147,7 @@ class HrDashboardServiceTests {
     }
 
     @Test
-    @DisplayName("Giai đoạn hơn 10.000 hồ sơ không bị cắt khỏi KPI và yêu cầu pipeline trả đủ")
+    @DisplayName("Giai đoạn hơn 10.000 hồ sơ không bị cắt khỏi KPI; dashboard hỏi pipeline đúng một lần")
     void build_shouldRequestAllStageRows_whenStageExceedsOldLimit() {
         List<ApplicationPipelineResponse> many = new ArrayList<>();
         for (int id = 1; id <= 10_001; id++) {
@@ -156,9 +160,8 @@ class HrDashboardServiceTests {
         HrDashboardResponse result = build();
 
         assertEquals("10001", result.kpis().get(0).value());
-        verify(applicationPipeline).list(
-                argThat(search -> search != null && ApplicationStage.APPLIED.name().equals(search.stage())),
-                argThat(pageable -> pageable != null && pageable.getPageSize() == Integer.MAX_VALUE));
+        verify(applicationPipeline).ownerWorkload(HrDashboardService.HR_OWNER, HrDashboardService.WAITING_STAGES);
+        verify(applicationPipeline, never()).list(any(), any());
     }
 
     @Test

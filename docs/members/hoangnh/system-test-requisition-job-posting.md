@@ -18,7 +18,7 @@
 
 | Bước | Thao tác | Kết quả mong đợi |
 |---|---|---|
-| 1 | HM-A vào `/requisitions/create`, nhập đủ trường bắt buộc và tiêu chí sàng lọc có tổng trọng số 100%, bấm **Gửi Giám đốc duyệt**. | Chuyển tới chi tiết; sinh mã `REQ-...`; trạng thái `Pending_Director`; HM-A thấy lịch sử gửi. |
+| 1 | HM-A vào `/requisitions/create`, nhập đủ trường bắt buộc, bấm **Gửi Giám đốc duyệt**. | Chuyển tới chi tiết; sinh mã `REQ-...`; trạng thái `Pending_Director`; HM-A thấy lịch sử gửi. |
 | 2 | D mở yêu cầu từ danh sách/thông báo và bấm **Duyệt**. | Trạng thái `Approved`; có bản ghi phê duyệt và lịch sử. |
 | 3 | H mở yêu cầu Approved, chọn **Tạo tin**, kiểm tra dữ liệu nguồn chỉ đọc, nhập hạn nộp tương lai và bấm **Đăng tin**. | Tạo tin `Published`, `PostingDate` là giờ đăng; trang nội bộ hiển thị liên kết về yêu cầu nguồn. |
 | 4 | Ở phiên khách, mở `/jobs`, tìm tin theo tiêu đề rồi mở `/jobs/{id}`. | Tin xuất hiện trong danh sách và trang chi tiết công khai; thông tin nội bộ (lịch sử duyệt, lý do tuyển dụng, người tạo) không lộ ra. |
@@ -70,7 +70,7 @@
 
 | Bước | Thao tác | Kết quả mong đợi |
 |---|---|---|
-| 1 | HM-A mở yêu cầu nguồn và chọn **Sao chép**. | Form mới được điền từ nguồn nhưng chưa tạo bản ghi; tiêu chí sàng lọc được sao chép. |
+| 1 | HM-A mở yêu cầu nguồn và chọn **Sao chép**. | Form mới được điền từ nguồn nhưng chưa tạo bản ghi. |
 | 2 | Giữ tên vị trí, lưu bản nháp. | ID/mã yêu cầu mới, `RecruitmentRound` tăng một và `OriginalRequisitionId` trỏ về nguồn; nguồn không đổi. |
 | 3 | Thử sao chép một yêu cầu `Draft` hoặc `Pending_Director`. | Bị chặn; không tạo đợt mới. |
 | 4 | Gửi yêu cầu mới và duyệt nếu cần; H mở danh sách. | Chỉ sau khi Approved, H mới thấy nguồn mới để tạo tin. |
@@ -83,7 +83,7 @@
 
 | Bước | Thao tác | Kết quả mong đợi |
 |---|---|---|
-| 1 | HM-A gửi form thiếu trường bắt buộc hoặc tổng trọng số tiêu chí khác 100%. | Lỗi xuất hiện cạnh trường; không tạo yêu cầu `Pending_Director`. |
+| 1 | HM-A gửi form thiếu trường bắt buộc (vd tên vị trí, địa điểm làm việc). | Lỗi xuất hiện cạnh trường; không tạo yêu cầu `Pending_Director`. |
 | 2 | HM-A tạo hai bản nháp cùng tên vị trí trong phòng A. | Lần thứ hai bị chặn; chỉ còn một bản nháp. |
 | 3 | HM-B mở URL sửa/xóa bản nháp HM-A; H mở URL tạo yêu cầu; SA mở `/requisitions`. | Không được thực hiện thao tác; dữ liệu và lịch sử không đổi. |
 | 4 | H mở URL trực tiếp của yêu cầu Draft/Pending/Rejected, rồi mở Approved. | Chỉ yêu cầu Approved xem được. |

@@ -80,7 +80,7 @@ class PublicJobSearchQueryTests {
         assumeOpen("Kế toán tổng hợp");
 
         assertTrue(titles("da nang", ALL).contains("Mobile Developer (Flutter) – Hợp đồng 12 tháng"));
-        assertTrue(titles("finance", ALL).contains("Kế toán tổng hợp"));
+        assertTrue(titles("tai chinh", ALL).contains("Kế toán tổng hợp"));
     }
 
     @Test
@@ -94,9 +94,9 @@ class PublicJobSearchQueryTests {
 
     @Test
     void keywordCombinesWithDepartmentFilterAndPagingCountsMatches() {
-        Integer sales = jdbc.query("SELECT DepartmentId FROM Department WHERE DepartmentName = N'Sales & Marketing'",
+        Integer sales = jdbc.query("SELECT DepartmentId FROM Department WHERE DepartmentName = N'Kinh doanh & Marketing'",
                 rs -> rs.next() ? rs.getInt(1) : null);
-        assumeTrue(sales != null, "seed không có phòng Sales & Marketing");
+        assumeTrue(sales != null, "seed không có phòng Kinh doanh & Marketing");
 
         Page<PublicJobListResponse> page = careers.getPublishedJobs("java", sales, null, FIRST_PAGE);
         assertTrue(page.getContent().stream().noneMatch(j -> j.postingTitle().contains("Java")));
