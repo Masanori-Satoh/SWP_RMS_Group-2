@@ -244,7 +244,23 @@ public class OfferController {
         } catch (BaseBusinessException e) {
             errors.reject("businessError", e.getMessage());
             model.addAttribute("activeMenu", "offers");
-        List<PassedCandidateResponse> passedCandidates = offerService.getPassedCandidatesForOffer();
+            List<PassedCandidateResponse> passedCandidates = offerService.getPassedCandidatesForOffer();
+            model.addAttribute("passedCandidates", passedCandidates);
+            model.addAttribute("isEdit", false);
+            boolean locked = Boolean.TRUE.equals(isLockedCandidate);
+            model.addAttribute("isLockedCandidate", locked);
+            if (locked && createRequest.getApplicationId() != null) {
+                passedCandidates.stream()
+                        .filter(c -> createRequest.getApplicationId().equals(c.getApplicationId()))
+                        .findFirst()
+                        .ifPresent(c -> model.addAttribute("fixedCandidate", c));
+            }
+            return "offers/form";
+        } catch (Exception e) {
+            log.error("Lỗi không mong muốn khi tạo đề xuất nhận việc: {}", e.getMessage(), e);
+            errors.reject("businessError", "Không thể lưu đề xuất nhận việc: " + (e.getMessage() != null ? e.getMessage() : "Xung đột dữ liệu hệ thống."));
+            model.addAttribute("activeMenu", "offers");
+            List<PassedCandidateResponse> passedCandidates = offerService.getPassedCandidatesForOffer();
             model.addAttribute("passedCandidates", passedCandidates);
             model.addAttribute("isEdit", false);
             boolean locked = Boolean.TRUE.equals(isLockedCandidate);

@@ -324,6 +324,34 @@ public class GlobalExceptionHandler {
         return mav;
     }
 
+    @ExceptionHandler(org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class)
+    public Object handleMethodArgumentTypeMismatch(
+            org.springframework.web.method.annotation.MethodArgumentTypeMismatchException ex,
+            HttpServletRequest request) {
+        log.warn("Parameter [{}] type mismatch at [{}]: {}", ex.getName(), request.getRequestURL(), ex.getMessage());
+        if ("/offers/create".equals(request.getRequestURI())) {
+            return new ModelAndView("redirect:/offers/create");
+        }
+        ModelAndView mav = new ModelAndView("error/400");
+        mav.setStatus(HttpStatus.BAD_REQUEST);
+        mav.addObject("message", "Tham số '" + ex.getName() + "' không đúng định dạng.");
+        mav.addObject("url", request.getRequestURL());
+        return mav;
+    }
+
+    @ExceptionHandler(org.springframework.dao.DataIntegrityViolationException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ModelAndView handleDataIntegrityViolation(
+            org.springframework.dao.DataIntegrityViolationException ex,
+            HttpServletRequest request) {
+        log.error("Data integrity violation at [{}]: {}", request.getRequestURL(), ex.getMessage());
+        ModelAndView mav = new ModelAndView("error/400");
+        mav.setStatus(HttpStatus.BAD_REQUEST);
+        mav.addObject("message", "Dữ liệu bị trùng lặp hoặc vi phạm ràng buộc hệ thống. Vui lòng kiểm tra lại.");
+        mav.addObject("url", request.getRequestURL());
+        return mav;
+    }
+
     // =========================================================================
     // 7. 500 INTERNAL SERVER ERROR (UNHANDLED SYSTEM FALLBACK)
     // =========================================================================
