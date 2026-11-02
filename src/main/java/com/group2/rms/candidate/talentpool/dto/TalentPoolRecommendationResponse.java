@@ -2,7 +2,11 @@ package com.group2.rms.candidate.talentpool.dto;
 
 import java.time.LocalDateTime;
 
-/** UI state derived from persisted draft, origin and structured review decisions. */
+/**
+ * UI state derived from persisted draft, origin and structured review
+ * decisions.
+ */
+// name Hr recommend Date, current status candecide
 public record TalentPoolRecommendationResponse(Integer applicationId, Integer candidateId,
         Integer jobPostingId, String jobTitle, String fullName, String recommendedBy,
         LocalDateTime recommendedAt, String statusLabel, boolean pending, boolean canDecide,
@@ -12,8 +16,9 @@ public record TalentPoolRecommendationResponse(Integer applicationId, Integer ca
             LocalDateTime recommendedAt, String statusLabel, boolean pending, boolean canDecide) {
         this(applicationId, candidateId, jobPostingId, jobTitle, fullName, recommendedBy,
                 recommendedAt, statusLabel, pending, canDecide, null, null,
-                pending ? "pending" : "HM đã chấp nhận".equals(statusLabel) ? "accepted"
-                        : "HM đã từ chối".equals(statusLabel) ? "rejected" : "closed");
+                pending ? "pending"
+                        : "HM đã chấp nhận".equals(statusLabel) ? "accepted"
+                                : "HM đã từ chối".equals(statusLabel) ? "rejected" : "closed");
     }
 
     public String statusTone() {

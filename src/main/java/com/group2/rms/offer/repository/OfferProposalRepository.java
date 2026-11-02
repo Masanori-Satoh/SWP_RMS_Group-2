@@ -41,6 +41,9 @@ public interface OfferProposalRepository extends JpaRepository<OfferProposal, In
            "ORDER BY o.offerId ASC")
     Page<OfferProposal> findActiveByStatusOrderByOfferIdAsc(@Param("status") String status, Pageable pageable);
 
+    @Query("SELECT COUNT(o) FROM OfferProposal o WHERE (o.isDeleted IS NULL OR o.isDeleted = false)")
+    long countActiveOffers();
+
     @Query("SELECT COUNT(o) FROM OfferProposal o WHERE (o.isDeleted IS NULL OR o.isDeleted = false) AND LOWER(o.offerStatus) = 'pending_director'")
     long countPendingDirector();
 

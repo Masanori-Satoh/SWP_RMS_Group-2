@@ -8,18 +8,23 @@
         return result;
     };
     const read = async response => {
+        //check sesesion login is valid
         if (!response.headers.get('content-type')?.includes('application/json'))
             throw new Error('Phiên làm việc có thể đã hết hạn. Hãy tải lại trang trước khi thử lại.');
         const json = await response.json();
+        //error in  backend
         if (!response.ok) throw new Error(json.message || 'Không thể cập nhật kho tiềm năng. Hãy thử lại.');
         const data = json.data || json;
         if (typeof data.saved !== 'boolean') throw new Error('Chưa xác nhận được trạng thái. Hãy tải lại trang để kiểm tra.');
         return data;
     };
     document.querySelectorAll('[data-potential-toggle]').forEach(button => {
+        //button
         const label = button.querySelector('[data-potential-toggle-label]');
+        //error
         const feedback = button.closest('.app-potential-control').querySelector('[data-potential-toggle-feedback]');
         let saving = false;
+        
         const render = saved => {
             button.dataset.saved = String(saved);
             button.setAttribute('aria-pressed', String(saved));

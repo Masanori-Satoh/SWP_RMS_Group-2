@@ -4,7 +4,7 @@
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout/internal}">
 <head>
-  <title>Quản lý Đề xuất | Mộc RMS</title>
+  <title>Quản lý Đề Xuất Nhận Việc | Mộc RMS</title>
   <th:block layout:fragment="styles">
         <link rel="stylesheet" th:href="@{/css/offers.css}">
     <link rel="stylesheet" th:href="@{/css/pages/offer-workspace.css}">
@@ -18,7 +18,7 @@
 
     <!-- Header Section -->
     <div class="offers-header adw-heading ofw-heading">
-        <h1 class="page-title adw-title">Quản lý Đề xuất</h1>
+        <h1 class="page-title adw-title">Quản lý Đề Xuất Nhận Việc</h1>
         <div class="offers-header-actions ofw-header-actions">
             <button type="button" class="btn btn--secondary" id="btnOpenExportModal" onclick="openExportModal()">
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
@@ -36,17 +36,23 @@
 
     <!-- Stats Overview Cards -->
     <div class="offers-stats-grid ofw-stats-grid">
-        <div class="offer-stat-card adw-surface ofw-stat-card">
+        <button type="button" class="offer-stat-card adw-surface ofw-stat-card"
+                onclick="filterOffersByStatus('ALL')"
+                th:classappend="${currentStatus == 'ALL' or currentStatus == null or currentStatus == ''} ? ' ofw-stat-card--active' : ''"
+                th:attr="aria-pressed=${currentStatus == 'ALL' or currentStatus == null or currentStatus == '' ? 'true' : 'false'}">
             <div class="ofw-stat-label">Tổng đề xuất</div>
             <div class="ofw-stat-bottom">
                 <div class="ofw-stat-icon stat-icon-brand">
                     <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
                 </div>
-                <div class="ofw-stat-value" id="statTotal" th:text="${totalElements}">0</div>
+                <div class="ofw-stat-value" id="statTotal" th:text="${statTotal}">0</div>
             </div>
-        </div>
+        </button>
 
-        <div class="offer-stat-card adw-surface ofw-stat-card">
+        <button type="button" class="offer-stat-card adw-surface ofw-stat-card"
+                onclick="filterOffersByStatus('Pending_Director')"
+                th:classappend="${currentStatus == 'Pending_Director'} ? ' ofw-stat-card--active' : ''"
+                th:attr="aria-pressed=${currentStatus == 'Pending_Director' ? 'true' : 'false'}">
             <div class="ofw-stat-label">Chờ Giám đốc duyệt</div>
             <div class="ofw-stat-bottom">
                 <div class="ofw-stat-icon stat-icon-amber">
@@ -54,9 +60,12 @@
                 </div>
                 <div class="ofw-stat-value" id="statPending" th:text="${statPending}">0</div>
             </div>
-        </div>
+        </button>
 
-        <div class="offer-stat-card adw-surface ofw-stat-card">
+        <button type="button" class="offer-stat-card adw-surface ofw-stat-card"
+                onclick="filterOffersByStatus('Director_Approved')"
+                th:classappend="${currentStatus == 'Director_Approved' or currentStatus == 'Approved'} ? ' ofw-stat-card--active' : ''"
+                th:attr="aria-pressed=${currentStatus == 'Director_Approved' or currentStatus == 'Approved' ? 'true' : 'false'}">
             <div class="ofw-stat-label">Giám đốc đã duyệt</div>
             <div class="ofw-stat-bottom">
                 <div class="ofw-stat-icon stat-icon-green">
@@ -64,9 +73,12 @@
                 </div>
                 <div class="ofw-stat-value" id="statApproved" th:text="${statApproved}">0</div>
             </div>
-        </div>
+        </button>
 
-        <div class="offer-stat-card adw-surface ofw-stat-card">
+        <button type="button" class="offer-stat-card adw-surface ofw-stat-card"
+                onclick="filterOffersByStatus('Sent_Candidate')"
+                th:classappend="${currentStatus == 'Sent_Candidate'} ? ' ofw-stat-card--active' : ''"
+                th:attr="aria-pressed=${currentStatus == 'Sent_Candidate' ? 'true' : 'false'}">
             <div class="ofw-stat-label">Đã gửi thư mời</div>
             <div class="ofw-stat-bottom">
                 <div class="ofw-stat-icon stat-icon-blue">
@@ -74,9 +86,12 @@
                 </div>
                 <div class="ofw-stat-value" id="statSent" th:text="${statSent}">0</div>
             </div>
-        </div>
+        </button>
 
-        <div class="offer-stat-card adw-surface ofw-stat-card">
+        <button type="button" class="offer-stat-card adw-surface ofw-stat-card"
+                onclick="filterOffersByStatus('Accepted')"
+                th:classappend="${currentStatus == 'Accepted'} ? ' ofw-stat-card--active' : ''"
+                th:attr="aria-pressed=${currentStatus == 'Accepted' ? 'true' : 'false'}">
             <div class="ofw-stat-label">Ứng viên đã nhận việc</div>
             <div class="ofw-stat-bottom">
                 <div class="ofw-stat-icon stat-icon-emerald">
@@ -84,7 +99,7 @@
                 </div>
                 <div class="ofw-stat-value" id="statAccepted" th:text="${statAccepted}">0</div>
             </div>
-        </div>
+        </button>
     </div>
 
     <!-- Filter Toolbar -->
@@ -220,11 +235,12 @@
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
                                 </button>
 
-                                <!-- Sửa Offer pop-up (Chỉ khi Draft) -->
-                                <button type="button" th:if="${o.offerStatus == 'Draft'}"
-                                        th:onclick="'openEditOfferModal(' + ${o.offerId} + ')'" class="btn-icon ofw-action-btn" title="Chỉnh sửa đề xuất">
+                                <!-- Sửa Offer (Chỉ khi Draft) -->
+                                <a th:if="${o.offerStatus == 'Draft'}"
+                                   th:href="@{/offers/{id}/edit(id=${o.offerId})}"
+                                   class="btn-icon ofw-action-btn" title="Chỉnh sửa đề xuất">
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-                                </button>
+                                </a>
 
                                 <!-- Director Duyệt / Từ chối (Chỉ khi Pending_Director và là Director) -->
                                 <th:block th:if="${o.offerStatus == 'Pending_Director' and userRole == 'Director'}">
@@ -417,104 +433,40 @@
 
 
 <!-- ===========================================================================
-     MODAL 3: CHỈNH SỬA OFFER PROPOSAL (Pop-up Modal Edit khi Draft hoặc Rejected)
-     =========================================================================== -->
-<div class="modal-overlay" id="editOfferModal" style="display: none;" onclick="handleEditModalBackdropClick(event)">
-    <div class="modal-box modal-lg" onclick="event.stopPropagation()">
-        <div class="modal-header">
-            <div class="ofw-modal-title-group">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--brand-dark)" stroke-width="1.8" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-                <span id="editModalTitle">Chỉnh Sửa Đề Xuất Nhận Việc</span>
-            </div>
-            <button type="button" class="btn-icon" onclick="closeModal('editOfferModal')">✕</button>
-        </div>
-        <div class="modal-body">
-            <form id="editOfferForm" onsubmit="event.preventDefault(); submitUpdateOffer(false);">
-                <input type="hidden" id="editOfferId">
-
-
-                <div class="form-group">
-                    <label>Vị trí chức danh đề xuất <span class="ofw-required-star" aria-hidden="true">*</span></label>
-                    <input type="text" id="editOfferedTitle" class="input-control" required>
-                </div>
-
-                <div class="ofw-modal-grid-2">
-                    <div class="form-group">
-                        <div class="ofw-field-header-row">
-                            <label class="ofw-export-title--no-mb">Lương chính thức (VNĐ/tháng) <span class="ofw-required-star" aria-hidden="true">*</span></label>
-                        </div>
-                        <input type="number" id="editProposedSalary" class="input-control" min="0" step="any" oninput="editAutoCalculateProbation()" required>
-                    </div>
-                    <div class="form-group">
-                        <div class="ofw-field-header-row">
-                            <label class="ofw-export-title--no-mb">Lương thử việc (VNĐ/tháng) <span class="ofw-required-star" aria-hidden="true">*</span></label>
-                            <button type="button" class="quick-calc-btn" onclick="editAutoCalculateProbation(true)">Gợi ý 85%</button>
-                        </div>
-                        <input type="number" id="editProbationSalary" class="input-control" min="0" step="any" oninput="editValidateProbation()" required>
-                        <div id="editProbationNotice" class="form-hint ofw-hint--brand">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Đạt điều kiện tối thiểu 85% lương chính thức.
-                        </div>
-                    </div>
-                </div>
-
-                <div class="ofw-modal-grid-2">
-                    <div class="form-group">
-                        <label>Thời gian thử việc (ngày) <span class="ofw-required-star" aria-hidden="true">*</span></label>
-                        <input type="number" id="editProbationDays" class="input-control" min="1" placeholder="VD: 60" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Thời hạn phản hồi (ngày) <span class="ofw-required-star" aria-hidden="true">*</span></label>
-                        <input type="number" id="editResponsePeriodDays" class="input-control" min="1" max="60" placeholder="VD: 5" required>
-                    </div>
-                </div>
-
-                <div class="ofw-modal-grid-2">
-                    <div class="form-group">
-                        <label>Ngày bắt đầu dự kiến <span class="ofw-required-star" aria-hidden="true">*</span></label>
-                        <input type="date" id="editStartDate" class="input-control" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Địa điểm làm việc <span class="ofw-required-star" aria-hidden="true">*</span></label>
-                        <input type="text" id="editWorkLocation" class="input-control" required>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label>Gói phúc lợi & Chế độ đãi ngộ <span class="ofw-optional-text">(Không bắt buộc)</span></label>
-                    <textarea id="editBenefits" class="input-control ofw-textarea-compact"></textarea>
-                </div>
-            </form>
-        </div>
-        <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" onclick="closeModal('editOfferModal')">Hủy bỏ</button>
-            <button type="button" class="btn btn-secondary" onclick="submitUpdateOffer(true)">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" class="ofw-btn-icon"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Lưu bản nháp
-            </button>
-            <button type="button" class="btn btn-primary" onclick="submitUpdateOffer(false)">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" class="ofw-btn-icon"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Trình Giám đốc
-            </button>
-        </div>
-    </div>
-</div>
-
-<!-- ===========================================================================
      MODAL 4: DIRECTOR APPROVAL MODAL (Duyệt / Từ chối Offer)
      =========================================================================== -->
-<div class="modal-overlay" id="directorDecisionModal" style="display: none;">
+<div class="modal-overlay" id="directorDecisionModal">
     <div class="modal-box ofw-modal-box--sm">
         <div class="modal-header">
             <div id="directorDecisionTitle" class="ofw-modal-title-group ofw-modal-title--medium">
                 Phê Duyệt Đề Xuất Nhận Việc
             </div>
-            <button type="button" class="btn-icon" onclick="closeDirectorDecisionModal()">✕</button>
+            <button type="button" class="btn-icon ofw-modal-close" onclick="closeDirectorDecisionModal()" aria-label="Đóng hộp thoại">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
         </div>
         <div class="modal-body">
             <input type="hidden" id="directorDecisionOfferId">
             <input type="hidden" id="directorDecisionAction">
             
             <div class="form-group">
-                <label>Phản hồi / Ghi chú của Giám đốc (Không bắt buộc)</label>
-                <textarea id="directorDecisionComments" class="input-control" rows="4" placeholder="Nhập ghi chú hoặc lý do từ chối..."></textarea>
+                <div class="director-comment-label-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <label id="directorDecisionCommentsLabel" for="directorDecisionComments" style="font-weight: 600; font-size: 14px; margin-bottom: 0;">Phản hồi / Ghi chú của Giám đốc (Không bắt buộc)</label>
+                    <span class="ofw-counter-label" style="font-size: 12px; color: var(--muted, #64748b);">
+                        <span id="directorDecisionCommentCount">0</span>/500
+                    </span>
+                </div>
+                <textarea id="directorDecisionComments" class="input-control director-decision-textarea" rows="4"
+                          placeholder="Nhập ghi chú hoặc lý do..."
+                          maxlength="500"
+                          oninput="handleDirectorDecisionCommentInput(this)"></textarea>
+                <div id="directorDecisionSubnote" class="director-decision-subnote" style="display: none; margin-top: 6px; font-size: 13px; color: var(--muted, #64748b);">
+                    * Nếu từ chối đề xuất, vui lòng nêu rõ lý do để Bộ phận Tuyển dụng tiếp tục hỗ trợ xử lý.
+                </div>
+                <div id="directorDecisionCommentsError" class="director-comment-error-msg" style="display: none;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    <span>Vui lòng nhập lý do từ chối vào ô nhận xét trước khi tiếp tục.</span>
+                </div>
             </div>
         </div>
         <div class="modal-footer ofw-modal-footer--end">

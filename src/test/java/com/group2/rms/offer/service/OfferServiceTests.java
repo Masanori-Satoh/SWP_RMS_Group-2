@@ -896,8 +896,9 @@ class OfferServiceTests {
     }
 
     @Test
-    @DisplayName("getOfferStats: Lấy thống kê số lượng Offer cho 4 stat cards từ database")
+    @DisplayName("getOfferStats: Lấy thống kê số lượng Offer cho 5 stat cards từ database")
     void testGetOfferStats_returnsAccurateCounts() {
+        when(offerProposalRepository.countActiveOffers()).thenReturn(14L);
         when(offerProposalRepository.countPendingDirector()).thenReturn(3L);
         when(offerProposalRepository.countDirectorApproved()).thenReturn(5L);
         when(offerProposalRepository.countSentCandidate()).thenReturn(2L);
@@ -905,6 +906,7 @@ class OfferServiceTests {
 
         Map<String, Long> stats = offerService.getOfferStats();
         assertNotNull(stats);
+        assertEquals(14L, stats.get("statTotal"));
         assertEquals(3L, stats.get("statPending"));
         assertEquals(5L, stats.get("statApproved"));
         assertEquals(2L, stats.get("statSent"));

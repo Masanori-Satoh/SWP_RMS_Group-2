@@ -86,4 +86,73 @@ public class OfferControllerBugTests {
                 .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.model().attribute("isLockedCandidate", false))
                 .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.model().attribute("isEdit", false));
     }
+
+    @Test
+    @WithMockUser(username = "director_1", authorities = {"ROLE_DIRECTOR"})
+    public void testDirectorOffersPage_pendingDirector_and_htmlRendering() throws Exception {
+        com.group2.rms.user.entity.Role role = com.group2.rms.user.entity.Role.builder().roleName("Director").build();
+        com.group2.rms.user.entity.User fakeUser = new com.group2.rms.user.entity.User();
+        fakeUser.setUserId(10);
+        fakeUser.setUsername("director_1");
+        fakeUser.setFullName("Director 1");
+        fakeUser.setAccountStatus("Active");
+        fakeUser.setRole(role);
+        
+        org.mockito.Mockito.when(userRepository.findByUsernameIgnoreCase("director_1"))
+                .thenReturn(java.util.Optional.of(fakeUser));
+
+        mockMvc.perform(get("/offers").param("status", "Pending_Director"))
+                .andExpect(status().isOk())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.view().name("offers/director-list"))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.model().attribute("currentStatus", "Pending_Director"))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.model().attribute("currentTab", "PENDING"))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.content().string(org.hamcrest.Matchers.containsString("Phê Duyệt Đề Xuất Nhận Việc")))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.content().string(org.hamcrest.Matchers.containsString("Danh Sách Đề Xuất Chờ Phê Duyệt")));
+    }
+
+    @Test
+    @WithMockUser(username = "director_1", authorities = {"ROLE_DIRECTOR"})
+    public void testDirectorOffersPage_directorApproved_and_htmlRendering() throws Exception {
+        com.group2.rms.user.entity.Role role = com.group2.rms.user.entity.Role.builder().roleName("Director").build();
+        com.group2.rms.user.entity.User fakeUser = new com.group2.rms.user.entity.User();
+        fakeUser.setUserId(10);
+        fakeUser.setUsername("director_1");
+        fakeUser.setFullName("Director 1");
+        fakeUser.setAccountStatus("Active");
+        fakeUser.setRole(role);
+        
+        org.mockito.Mockito.when(userRepository.findByUsernameIgnoreCase("director_1"))
+                .thenReturn(java.util.Optional.of(fakeUser));
+
+        mockMvc.perform(get("/offers").param("status", "Director_Approved").param("search", "Huynh").param("timeSort", "LATEST"))
+                .andExpect(status().isOk())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.view().name("offers/director-list"))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.model().attribute("currentStatus", "Director_Approved"))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.model().attribute("currentTab", "HISTORY"))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.model().attribute("search", "Huynh"))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.model().attribute("currentTimeSort", "LATEST"))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.content().string(org.hamcrest.Matchers.containsString("Danh Sách Đề Xuất Đã Phê Duyệt")));
+    }
+
+    @Test
+    @WithMockUser(username = "director_1", authorities = {"ROLE_DIRECTOR"})
+    public void testDirectorOffersPage_directorRejected_and_htmlRendering() throws Exception {
+        com.group2.rms.user.entity.Role role = com.group2.rms.user.entity.Role.builder().roleName("Director").build();
+        com.group2.rms.user.entity.User fakeUser = new com.group2.rms.user.entity.User();
+        fakeUser.setUserId(10);
+        fakeUser.setUsername("director_1");
+        fakeUser.setFullName("Director 1");
+        fakeUser.setAccountStatus("Active");
+        fakeUser.setRole(role);
+        
+        org.mockito.Mockito.when(userRepository.findByUsernameIgnoreCase("director_1"))
+                .thenReturn(java.util.Optional.of(fakeUser));
+
+        mockMvc.perform(get("/offers").param("status", "Director_Rejected"))
+                .andExpect(status().isOk())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.view().name("offers/director-list"))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.model().attribute("currentStatus", "Director_Rejected"))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.model().attribute("currentTab", "HISTORY"))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.content().string(org.hamcrest.Matchers.containsString("Danh Sách Đề Xuất Đã Từ Chối")));
+    }
 }

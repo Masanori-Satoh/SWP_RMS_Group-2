@@ -86,7 +86,6 @@ public class ApiMonitoringService {
                     null);
         }
 
-        // dunglt bổ sung: bỏ dòng "AI CV Screening" (gỡ AI, 01/11)
         return List.of(internal, emailMonitoring.row());
     }
 

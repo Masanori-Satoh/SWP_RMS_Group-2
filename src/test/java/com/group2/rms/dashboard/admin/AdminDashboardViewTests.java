@@ -77,12 +77,11 @@ class AdminDashboardViewTests {
         return html;
     }
 
-    @Test void keepsRealTotalsFilterDestinationsAndThreeMonitorResults() throws Exception {
+    @Test void keepsRealTotalsFilterDestinationsAndCurrentMonitorResults() throws Exception {
         var at = LocalDateTime.of(2026, 10, 23, 10, 30);
         String html = render(fixture(false, List.of(
                 new MonitorRowResponse("internal", "SQL Server", "internal", "OPERATIONAL", 95L, at),
-                new MonitorRowResponse("email", "Email", "external", "FAILED", 120L, at),
-                new MonitorRowResponse("ai", "AI", "external", "Unconfigured", null, null))), "populated");
+                new MonitorRowResponse("email", "Email", "external", "FAILED", 120L, at))), "populated");
         for (String state : List.of("Active", "Inactive")) {
             assertTrue(html.contains("/admin/accounts?status=" + state + "&amp;page=0"));
             assertTrue(html.contains("/admin/candidate-accounts?status=" + state + "&amp;page=0"));
@@ -95,7 +94,6 @@ class AdminDashboardViewTests {
         assertTrue(html.contains("23/10/2026 10:30:00"));
         assertTrue(html.contains("Hoạt động tốt"));
         assertTrue(html.contains("Thất bại"));
-        assertTrue(html.contains("Chưa cấu hình"));
         assertTrue(html.contains("/admin/api-monitoring"));
         assertFalse(html.contains("/admin/accounts/new"));
         assertFalse(html.contains("30 ngày gần đây"));

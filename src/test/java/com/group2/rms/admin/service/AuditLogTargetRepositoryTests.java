@@ -44,13 +44,13 @@ class AuditLogTargetRepositoryTests {
 
     @Test void configurationUsesStringKeysAndNeverReadsConfigurationValues() {
         when(jdbc.query(anyString(), anyMap(), any(ResultSetExtractor.class)))
-                .thenReturn(Map.of("AI_SCREENING_ENDPOINT", "Điểm kết nối sàng lọc AI"));
-        var names = targets.findNames(List.of(log("SystemConfig", "AI_SCREENING_ENDPOINT")));
-        assertEquals("Điểm kết nối sàng lọc AI", names.get(new AuditLogTargetRepository.Target("SystemConfig", "AI_SCREENING_ENDPOINT")));
+                .thenReturn(Map.of("SMTP_HOST", "Máy chủ SMTP"));
+        var names = targets.findNames(List.of(log("SystemConfig", "SMTP_HOST")));
+        assertEquals("Máy chủ SMTP", names.get(new AuditLogTargetRepository.Target("SystemConfig", "SMTP_HOST")));
         ArgumentCaptor<String> sql = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<Map<String, ?>> params = ArgumentCaptor.forClass(Map.class);
         verify(jdbc).query(sql.capture(), params.capture(), any(ResultSetExtractor.class));
         assertFalse(sql.getValue().contains("ConfigValue"));
-        assertEquals(Set.of("AI_SCREENING_ENDPOINT"), params.getValue().get("ids"));
+        assertEquals(Set.of("SMTP_HOST"), params.getValue().get("ids"));
     }
 }

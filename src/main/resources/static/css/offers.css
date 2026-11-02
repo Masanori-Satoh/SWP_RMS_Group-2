@@ -38,6 +38,17 @@
     margin-bottom: var(--s6);
 }
 
+button.offer-stat-card {
+    font-family: inherit;
+    font-size: inherit;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+    width: 100%;
+    appearance: none;
+    -webkit-appearance: none;
+}
+
 .offer-stat-card {
     background: var(--surface);
     border: 1px solid var(--line);
@@ -48,11 +59,19 @@
     align-items: center;
     gap: var(--s3);
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    cursor: pointer;
 }
 
 .offer-stat-card:hover {
     border-color: var(--control-line);
     box-shadow: 0 4px 12px rgba(37, 41, 35, 0.05);
+}
+
+.offer-stat-card--active,
+.offer-stat-card--active:hover {
+    border-color: var(--brand);
+    background: color-mix(in srgb, var(--brand-soft) 40%, var(--surface));
+    box-shadow: 0 0 0 1px var(--brand), var(--shadow-sm);
 }
 
 .offer-stat-card .stat-label {

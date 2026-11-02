@@ -16,7 +16,7 @@ document.querySelectorAll('[data-pool-cv]').forEach(select => {
     const confirm = byId('tp-confirm');
     const notesDialog = byId('tp-notes');
     const feedback = byId('tp-feedback');
-    
+
     let storage;
     // get session storage
     try { storage = window.sessionStorage; } catch { storage = null; }
@@ -41,8 +41,10 @@ document.querySelectorAll('[data-pool-cv]').forEach(select => {
         const select = row.querySelector('[data-pool-cv]');
         const option = select?.selectedOptions[0];
         if (!option) return null;
-        return {candidateId: Number(row.dataset.poolCandidate), name: row.dataset.poolName,
-            sourceId: Number(option.value), cvLabel: option.textContent.trim()};
+        return {
+            candidateId: Number(row.dataset.poolCandidate), name: row.dataset.poolName,
+            sourceId: Number(option.value), cvLabel: option.textContent.trim()
+        };
     }
 
     function syncCv(row) {
@@ -128,16 +130,16 @@ document.querySelectorAll('[data-pool-cv]').forEach(select => {
 
     function ajaxHeaders(jsonBody = false) {
         // response is json 
-        const headers = {Accept: 'application/json'};
+        const headers = { Accept: 'application/json' };
         // get csrf token
         const csrf = document.querySelector('meta[name="_csrf"]')?.content;
         // check if csrf is found
         if (csrf) headers['X-CSRF-TOKEN'] = csrf;
         // check if body is json
-        if (jsonBody) headers['Content-Type'] = 'application/json'; 
+        if (jsonBody) headers['Content-Type'] = 'application/json';
         return headers;
     }
-
+    //load note of candidate
     async function loadNotes() {
         notesRequest?.abort();
         const controller = new AbortController();
@@ -155,12 +157,16 @@ document.querySelectorAll('[data-pool-cv]').forEach(select => {
             if (controller.signal.aborted || !notesDialog.open) return;
             status.textContent = notes.length ? '' : 'Chưa có ghi chú chung.';
             notes.forEach(note => {
+                //li
                 const item = document.createElement('li');
                 item.className = 'app-note';
+
                 const meta = document.createElement('div');
                 meta.className = 'app-note__meta';
+                //author
                 const author = document.createElement('strong');
                 author.textContent = note.author;
+                //time
                 const time = document.createElement('time');
                 if (note.createdAt) {
                     const date = new Date(note.createdAt);
@@ -180,6 +186,7 @@ document.querySelectorAll('[data-pool-cv]').forEach(select => {
             byId('tp-notes-retry').hidden = false;
         } finally { clearTimeout(timer); }
     }
+    //get pool note
     page.querySelectorAll('[data-pool-notes]').forEach(button => {
         button.addEventListener('click', () => {
             notesButton = button;
@@ -196,7 +203,7 @@ document.querySelectorAll('[data-pool-cv]').forEach(select => {
 
     function svgIcon(path) {
         const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-        for (const [key, value] of Object.entries({viewBox: '0 0 24 24', width: '18', height: '18', fill: 'none', stroke: 'currentColor', 'stroke-width': '1.8', 'aria-hidden': 'true'})) svg.setAttribute(key, value);
+        for (const [key, value] of Object.entries({ viewBox: '0 0 24 24', width: '18', height: '18', fill: 'none', stroke: 'currentColor', 'stroke-width': '1.8', 'aria-hidden': 'true' })) svg.setAttribute(key, value);
         const line = document.createElementNS('http://www.w3.org/2000/svg', 'path');
         line.setAttribute('d', path);
         svg.append(line);
@@ -315,7 +322,7 @@ document.querySelectorAll('[data-pool-cv]').forEach(select => {
         byId('tp-recheck').hidden = true;
         reviewStatus('Đang kiểm tra CV và hồ sơ trùng…');
         renderReview();
-        const body = JSON.stringify({sourceApplicationIds: state.values().map(item => item.sourceId)});
+        const body = JSON.stringify({ sourceApplicationIds: state.values().map(item => item.sourceId) });
         try {
             const result = await json(await fetch(form.dataset.reviewUrl, {
                 method: 'POST', body, signal: controller.signal, headers: ajaxHeaders(true)
@@ -368,10 +375,12 @@ document.querySelectorAll('[data-pool-cv]').forEach(select => {
         const controller = new AbortController();
         const timer = setTimeout(() => controller.abort(), 30000);
         try {
-            const result = await json(await fetch(form.action, {method: 'POST',
+            const result = await json(await fetch(form.action, {
+                method: 'POST',
                 //get all candidate potential selection
-                body: JSON.stringify({sourceApplicationIds: state.values().map(item => item.sourceId)}),
-                headers: ajaxHeaders(true), signal: controller.signal}));
+                body: JSON.stringify({ sourceApplicationIds: state.values().map(item => item.sourceId) }),
+                headers: ajaxHeaders(true), signal: controller.signal
+            }));
             state.clear();
             updateSelection();
             feedback.className = 'alert alert--success';

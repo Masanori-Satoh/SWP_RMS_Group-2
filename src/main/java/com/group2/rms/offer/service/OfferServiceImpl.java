@@ -108,21 +108,42 @@ public class OfferServiceImpl implements OfferService {
 
         Integer responsePeriodDays = request.getResponsePeriodDays() != null ? request.getResponsePeriodDays() : 5;
 
-        OfferProposal newOffer = OfferProposal.builder()
-                .application(application)
-                .offeredPositionTitle(request.getOfferedPositionTitle())
-                .proposedSalary(request.getProposedSalary())
-                .probationSalary(request.getProbationSalary())
-                .expectedStartDate(request.getExpectedStartDate())
-                .workLocation(request.getWorkLocation())
-                .benefitsPackage(request.getBenefitsPackage())
-                .responsePeriodDays(responsePeriodDays)
-                .responseDeadline(null)
-                .proposedBy(proposedBy)
-                .offerStatus("Pending_Director")
-                .build();
+        Optional<OfferProposal> existingOfferOpt = offerProposalRepository
+                .findByApplication_ApplicationId(application.getApplicationId());
 
-        OfferProposal savedOffer = offerProposalRepository.save(newOffer);
+        OfferProposal offerToSave;
+        if (existingOfferOpt.isPresent()) {
+            offerToSave = existingOfferOpt.get();
+            offerToSave.setOfferedPositionTitle(request.getOfferedPositionTitle());
+            offerToSave.setProposedSalary(request.getProposedSalary());
+            offerToSave.setProbationSalary(request.getProbationSalary());
+            offerToSave.setExpectedStartDate(request.getExpectedStartDate());
+            offerToSave.setWorkLocation(request.getWorkLocation());
+            offerToSave.setBenefitsPackage(request.getBenefitsPackage());
+            offerToSave.setResponsePeriodDays(responsePeriodDays);
+            offerToSave.setResponseDeadline(null);
+            offerToSave.setProposedBy(proposedBy);
+            offerToSave.setOfferStatus("Pending_Director");
+            offerToSave.setIsDeleted(false);
+            offerToSave.setDeclineReason(null);
+        } else {
+            offerToSave = OfferProposal.builder()
+                    .application(application)
+                    .offeredPositionTitle(request.getOfferedPositionTitle())
+                    .proposedSalary(request.getProposedSalary())
+                    .probationSalary(request.getProbationSalary())
+                    .expectedStartDate(request.getExpectedStartDate())
+                    .workLocation(request.getWorkLocation())
+                    .benefitsPackage(request.getBenefitsPackage())
+                    .responsePeriodDays(responsePeriodDays)
+                    .responseDeadline(null)
+                    .proposedBy(proposedBy)
+                    .offerStatus("Pending_Director")
+                    .isDeleted(false)
+                    .build();
+        }
+
+        OfferProposal savedOffer = offerProposalRepository.save(offerToSave);
 
         if ("Pending_Director".equals(savedOffer.getOfferStatus())) {
             if (systemNotificationService != null) {
@@ -261,20 +282,37 @@ public class OfferServiceImpl implements OfferService {
 
         Integer responsePeriodDays = dto.getResponsePeriodDays() != null ? dto.getResponsePeriodDays() : 5;
 
-        OfferProposal offerToSave = OfferProposal.builder()
-                .application(application)
-                .offeredPositionTitle(dto.getOfferedPositionTitle())
-                .proposedSalary(dto.getProposedSalary())
-                .probationSalary(dto.getProbationSalary())
-                .expectedStartDate(dto.getExpectedStartDate())
-                .workLocation(dto.getWorkLocation())
-                .benefitsPackage(dto.getBenefitsPackage())
-                .responsePeriodDays(responsePeriodDays)
-                .responseDeadline(null)
-                .proposedBy(proposedBy)
-                .offerStatus(status)
-                .isDeleted(false)
-                .build();
+        OfferProposal offerToSave;
+        if (existingOfferOpt.isPresent() && Boolean.TRUE.equals(existingOfferOpt.get().getIsDeleted())) {
+            offerToSave = existingOfferOpt.get();
+            offerToSave.setOfferedPositionTitle(dto.getOfferedPositionTitle());
+            offerToSave.setProposedSalary(dto.getProposedSalary());
+            offerToSave.setProbationSalary(dto.getProbationSalary());
+            offerToSave.setExpectedStartDate(dto.getExpectedStartDate());
+            offerToSave.setWorkLocation(dto.getWorkLocation());
+            offerToSave.setBenefitsPackage(dto.getBenefitsPackage());
+            offerToSave.setResponsePeriodDays(responsePeriodDays);
+            offerToSave.setResponseDeadline(null);
+            offerToSave.setProposedBy(proposedBy);
+            offerToSave.setOfferStatus(status);
+            offerToSave.setIsDeleted(false);
+            offerToSave.setDeclineReason(null);
+        } else {
+            offerToSave = OfferProposal.builder()
+                    .application(application)
+                    .offeredPositionTitle(dto.getOfferedPositionTitle())
+                    .proposedSalary(dto.getProposedSalary())
+                    .probationSalary(dto.getProbationSalary())
+                    .expectedStartDate(dto.getExpectedStartDate())
+                    .workLocation(dto.getWorkLocation())
+                    .benefitsPackage(dto.getBenefitsPackage())
+                    .responsePeriodDays(responsePeriodDays)
+                    .responseDeadline(null)
+                    .proposedBy(proposedBy)
+                    .offerStatus(status)
+                    .isDeleted(false)
+                    .build();
+        }
 
         OfferProposal saved = offerProposalRepository.save(offerToSave);
 
@@ -378,6 +416,7 @@ public class OfferServiceImpl implements OfferService {
     @Transactional(readOnly = true)
     public Map<String, Long> getOfferStats() {
         Map<String, Long> stats = new HashMap<>();
+        stats.put("statTotal", offerProposalRepository.countActiveOffers());
         stats.put("statPending", offerProposalRepository.countPendingDirector());
         stats.put("statApproved", offerProposalRepository.countDirectorApproved());
         stats.put("statSent", offerProposalRepository.countSentCandidate());
@@ -930,7 +969,10 @@ public class OfferServiceImpl implements OfferService {
                 } else if ("Director_Approved".equalsIgnoreCase(s) || "Approved".equalsIgnoreCase(s)) {
                     predicates.add(builder.or(
                             builder.equal(builder.lower(root.get("offerStatus")), "director_approved"),
-                            builder.equal(builder.lower(root.get("offerStatus")), "approved")
+                            builder.equal(builder.lower(root.get("offerStatus")), "approved"),
+                            builder.equal(builder.lower(root.get("offerStatus")), "sent_candidate"),
+                            builder.equal(builder.lower(root.get("offerStatus")), "accepted"),
+                            builder.equal(builder.lower(root.get("offerStatus")), "declined")
                     ));
                 } else if ("Director_Rejected".equalsIgnoreCase(s) || "Rejected".equalsIgnoreCase(s)) {
                     predicates.add(builder.or(

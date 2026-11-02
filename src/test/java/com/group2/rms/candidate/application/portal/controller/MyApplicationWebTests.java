@@ -114,7 +114,7 @@ class MyApplicationWebTests {
                 // Dòng 1: định danh + Xem lại CV
                 .andExpect(content().string(containsString("href=\"/portal/applications/42\">Junior Java Developer</a>")))
                 .andExpect(content().string(containsString("Engineering")))
-                .andExpect(content().string(containsString("#CAN-0042")))
+                .andExpect(content().string(not(containsString("#CAN-0042"))))
                 .andExpect(content().string(containsString("05/10/2026")))
                 .andExpect(content().string(containsString("href=\"/portal/applications/42/cv\"")))
                 .andExpect(content().string(containsString("data-cv-open")))

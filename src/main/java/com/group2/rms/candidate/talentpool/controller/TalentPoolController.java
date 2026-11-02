@@ -46,20 +46,20 @@ public class TalentPoolController {
     @GetMapping
     // list all potential candidate
     public String list(@ModelAttribute("filter") TalentPoolSearch filter,
-            @RequestParam(defaultValue = "0") int page, 
+            @RequestParam(defaultValue = "0") int page,
             @RequestParam(required = false) Integer jobPostingId,
             Model model) {
-        //get match potential candidate
+        // get match potential candidate
         model.addAttribute("page", pool.search(filter, PageRequest.of(Math.max(0, page), 20)));
-        //get authors
+        // get authors
         model.addAttribute("authors", pool.authors());
-        //get source jobs
+        // get source jobs
         model.addAttribute("sourceJobs", pool.sourceJobs());
-        //get job posting id
+        // get job posting id
         model.addAttribute("jobPostingId", jobPostingId);
-        //get  job title
+        // get job title
         model.addAttribute("jobTitle", jobPostingId == null ? null : pool.targetJobTitle(jobPostingId));
-        //get current user role
+        // get current user role
         model.addAttribute("viewerRole", pool.viewerRole());
         model.addAttribute("activeMenu", "talent-pool");
         model.addAttribute("selectionScope", pool.selectionScope());
@@ -74,17 +74,26 @@ public class TalentPoolController {
             @RequestParam(required = false) Integer sourceApplicationId,
             @ModelAttribute("filter") TalentPoolSearch filter,
             @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "0") int cvPage, Model model) {
-        TalentPoolRecommendationResponse recommendation = recommendationId == null ? null : pool.recommendation(recommendationId, id);
-        if (recommendation != null) jobPostingId = recommendation.jobPostingId();
+        // check if hr recommend
+        TalentPoolRecommendationResponse recommendation = recommendationId == null ? null
+                : pool.recommendation(recommendationId, id);
+        // check if go to from HR recommend
+        if (recommendation != null)
+            jobPostingId = recommendation.jobPostingId();
         model.addAttribute("recommendation", recommendation);
         var detail = recommendation == null
-                ? (sourceApplicationId == null ? pool.detail(id) : pool.detail(id, sourceApplicationId))
+                // get detail when potential candidate
+                ? (sourceApplicationId == null ? pool.detail(id)
+                        // get detail when remove mark potential
+                        : pool.detail(id, sourceApplicationId))
+                // get detail when hr recommend
                 : pool.recommendationDetail(id, recommendationId);
         model.addAttribute("detail", detail);
         model.addAttribute("bookmarkSourceId", pool.bookmarkSource(id));
         int currentCvPage = Math.min(Math.max(0, cvPage), Math.max(0, (detail.cvs().size() - 1) / 3));
         model.addAttribute("cvHistory", new PageImpl<>(detail.cvs().subList(currentCvPage * 3,
-                Math.min(detail.cvs().size(), (currentCvPage + 1) * 3)), PageRequest.of(currentCvPage, 3), detail.cvs().size()));
+                Math.min(detail.cvs().size(), (currentCvPage + 1) * 3)), PageRequest.of(currentCvPage, 3),
+                detail.cvs().size()));
         model.addAttribute("jobPostingId", jobPostingId);
         model.addAttribute("jobTitle", jobPostingId == null ? null : pool.targetJobTitle(jobPostingId));
         model.addAttribute("viewerRole", pool.viewerRole());
@@ -113,10 +122,12 @@ public class TalentPoolController {
     @ResponseBody
     public ResponseEntity<ApiResponse<TalentPoolSelectionReviewResponse>> reviewSelection(@PathVariable Integer id,
             @Valid @RequestBody TalentPoolSuggestRequest request, BindingResult errors) {
-        if (errors.hasErrors()) return ResponseEntity.badRequest().body(new ApiResponse<>(false,
-                errors.getAllErrors().getFirst().getDefaultMessage()));
+        if (errors.hasErrors())
+            return ResponseEntity.badRequest().body(new ApiResponse<>(false,
+                    errors.getAllErrors().getFirst().getDefaultMessage()));
         try {
-            return ResponseEntity.ok(new ApiResponse<>(true, "Đã kiểm tra danh sách.", pool.reviewSelection(id, request)));
+            return ResponseEntity
+                    .ok(new ApiResponse<>(true, "Đã kiểm tra danh sách.", pool.reviewSelection(id, request)));
         } catch (TalentPoolException e) {
             return ResponseEntity.badRequest().body(new ApiResponse<>(false, e.getMessage()));
         }
@@ -124,14 +135,20 @@ public class TalentPoolController {
 
     @PostMapping("/{id}/notes")
     // add note for a potential candidate
-    public String note(@PathVariable Integer id, @RequestParam(defaultValue = "0") int cvPage, @Valid @ModelAttribute TalentPoolNoteRequest request,
+    public String note(@PathVariable Integer id, @RequestParam(defaultValue = "0") int cvPage,
+            @Valid @ModelAttribute TalentPoolNoteRequest request,
             BindingResult errors, @RequestParam(required = false) Integer jobPostingId,
             @RequestParam(required = false) Integer recommendationId,
             @RequestParam(required = false) Integer returnApplicationId,
             @ModelAttribute("filter") TalentPoolSearch filter,
             @RequestParam(defaultValue = "0") int page, RedirectAttributes flash) {
-        if (returnApplicationId != null) pool.validateNoteApplication(id, returnApplicationId);
-        if (recommendationId != null) pool.recommendation(recommendationId, id);
+        // check if application id not null
+        if (returnApplicationId != null)
+            pool.validateNoteApplication(id, returnApplicationId);
+        // check user recommend is not null
+        if (recommendationId != null)
+            pool.recommendation(recommendationId, id);
+        // check if errors
         if (errors.hasErrors()) {
             flash.addFlashAttribute("errorMessage", errors.getAllErrors().getFirst().getDefaultMessage());
             flash.addFlashAttribute("noteDraft", request.content());
@@ -144,10 +161,13 @@ public class TalentPoolController {
                 flash.addFlashAttribute("noteDraft", request.content());
             }
         }
-        if (returnApplicationId != null) return "redirect:/applications/" + returnApplicationId + "#candidate-notes";
+        if (returnApplicationId != null)
+            return "redirect:/applications/" + returnApplicationId + "#candidate-notes";
         String destination = poolUrl(id, jobPostingId, filter, page);
-        if (recommendationId != null) destination += (destination.contains("?") ? "&" : "?") + "recommendationId=" + recommendationId;
-        if (cvPage > 0) destination += (destination.contains("?") ? "&" : "?") + "cvPage=" + cvPage;
+        if (recommendationId != null)
+            destination += (destination.contains("?") ? "&" : "?") + "recommendationId=" + recommendationId;
+        if (cvPage > 0)
+            destination += (destination.contains("?") ? "&" : "?") + "cvPage=" + cvPage;
         return "redirect:" + destination;
     }
 
@@ -160,8 +180,10 @@ public class TalentPoolController {
             @RequestParam(defaultValue = "0") int cvPage,
             @ModelAttribute("filter") TalentPoolSearch filter,
             @RequestParam(defaultValue = "0") int page, RedirectAttributes flash) {
-        if (returnApplicationId != null) pool.validateNoteApplication(id, returnApplicationId);
-        if (recommendationId != null) pool.recommendation(recommendationId, id);
+        if (returnApplicationId != null)
+            pool.validateNoteApplication(id, returnApplicationId);
+        if (recommendationId != null)
+            pool.recommendation(recommendationId, id);
         if (errors.hasErrors()) {
             flash.addFlashAttribute("errorMessage", errors.getAllErrors().getFirst().getDefaultMessage());
             flash.addFlashAttribute("editingNoteId", noteId);
@@ -176,7 +198,8 @@ public class TalentPoolController {
                 flash.addFlashAttribute("editNoteDraft", request.content());
             }
         }
-        if (returnApplicationId != null) return "redirect:/applications/" + returnApplicationId + "#candidate-notes";
+        if (returnApplicationId != null)
+            return "redirect:/applications/" + returnApplicationId + "#candidate-notes";
         return noteRedirect(id, jobPostingId, recommendationId, cvPage, filter, page);
     }
 
@@ -188,32 +211,39 @@ public class TalentPoolController {
             @RequestParam(defaultValue = "0") int cvPage,
             @ModelAttribute("filter") TalentPoolSearch filter,
             @RequestParam(defaultValue = "0") int page, RedirectAttributes flash) {
-        if (returnApplicationId != null) pool.validateNoteApplication(id, returnApplicationId);
-        if (recommendationId != null) pool.recommendation(recommendationId, id);
+        if (returnApplicationId != null)
+            pool.validateNoteApplication(id, returnApplicationId);
+        if (recommendationId != null)
+            pool.recommendation(recommendationId, id);
         try {
             pool.deleteNote(id, noteId);
             flash.addFlashAttribute("successMessage", "Đã xóa ghi chú.");
         } catch (TalentPoolException e) {
             flash.addFlashAttribute("errorMessage", e.getMessage());
         }
-        if (returnApplicationId != null) return "redirect:/applications/" + returnApplicationId + "#candidate-notes";
+        if (returnApplicationId != null)
+            return "redirect:/applications/" + returnApplicationId + "#candidate-notes";
         return noteRedirect(id, jobPostingId, recommendationId, cvPage, filter, page);
     }
 
     private String noteRedirect(Integer id, Integer jobId, Integer recommendationId, int cvPage,
             TalentPoolSearch filter, int page) {
         String destination = poolUrl(id, jobId, filter, page);
-        if (recommendationId != null) destination += (destination.contains("?") ? "&" : "?") + "recommendationId=" + recommendationId;
+        if (recommendationId != null)
+            destination += (destination.contains("?") ? "&" : "?") + "recommendationId=" + recommendationId;
         return "redirect:" + destination + (destination.contains("?") ? "&" : "?") + "cvPage=" + Math.max(0, cvPage);
     }
 
     @GetMapping("/jobs/{id}/recommendations")
     public String recommendations(@PathVariable Integer id, @RequestParam(defaultValue = "") String keyword,
             @RequestParam(defaultValue = "0") int page, Model model) {
+        // view all cv
         var all = pool.recommendations(id);
         var filtered = all;
         int current = Math.min(Math.max(0, page), Math.max(0, (filtered.size() - 1) / 20));
-        model.addAttribute("page", new PageImpl<>(filtered.subList(current * 20, Math.min(filtered.size(), (current + 1) * 20)), PageRequest.of(current, 20), filtered.size()));
+        model.addAttribute("page",
+                new PageImpl<>(filtered.subList(current * 20, Math.min(filtered.size(), (current + 1) * 20)),
+                        PageRequest.of(current, 20), filtered.size()));
         model.addAttribute("keyword", "");
         model.addAttribute("pendingCount", all.stream().filter(TalentPoolRecommendationResponse::pending).count());
         model.addAttribute("canRecommend", pool.canRecommend(id));
@@ -230,7 +260,8 @@ public class TalentPoolController {
             RedirectAttributes flash) {
         try {
             pool.withdrawRecommendation(jobId, id);
-            flash.addFlashAttribute("successMessage", "Đã xóa gợi ý gửi cho HM. CV và ghi chú của ứng viên được giữ nguyên.");
+            flash.addFlashAttribute("successMessage",
+                    "Đã xóa gợi ý gửi cho HM. CV và ghi chú của ứng viên được giữ nguyên.");
         } catch (TalentPoolException e) {
             flash.addFlashAttribute("errorMessage", e.getMessage());
         }
@@ -249,15 +280,17 @@ public class TalentPoolController {
             @RequestParam(defaultValue = "") String keyword, @RequestParam(defaultValue = "0") int page,
             RedirectAttributes flash) {
         var recommendation = pool.recommendationForDecision(id);
-        if (errors.hasErrors()) flash.addFlashAttribute("errorMessage", "Quyết định không hợp lệ.");
-        else try {
-            pool.decideRecommendation(id, "Pass".equals(request.decision()));
-            flash.addFlashAttribute("successMessage", "Pass".equals(request.decision())
-                    ? "Đã chấp nhận gợi ý. Chờ HR liên hệ và xác nhận ứng viên đồng ý."
-                    : "Đã từ chối gợi ý. Hồ sơ, CV và ghi chú của ứng viên được giữ nguyên.");
-        } catch (TalentPoolException e) {
-            flash.addFlashAttribute("errorMessage", e.getMessage());
-        }
+        if (errors.hasErrors())
+            flash.addFlashAttribute("errorMessage", "Quyết định không hợp lệ.");
+        else
+            try {
+                pool.decideRecommendation(id, "Pass".equals(request.decision()));
+                flash.addFlashAttribute("successMessage", "Pass".equals(request.decision())
+                        ? "Đã chấp nhận gợi ý. Chờ HR liên hệ và xác nhận ứng viên đồng ý."
+                        : "Đã từ chối gợi ý. Hồ sơ, CV và ghi chú của ứng viên được giữ nguyên.");
+            } catch (TalentPoolException e) {
+                flash.addFlashAttribute("errorMessage", e.getMessage());
+            }
         return "redirect:" + recommendationListUrl(recommendation.jobPostingId(), keyword, page);
     }
 
@@ -265,23 +298,27 @@ public class TalentPoolController {
     @ResponseBody
     public ResponseEntity<ApiResponse<TalentPoolSuggestResponse>> recommend(@PathVariable Integer id,
             @Valid @RequestBody TalentPoolSuggestRequest request, BindingResult errors) {
-        if (errors.hasErrors()) return ResponseEntity.badRequest().body(new ApiResponse<>(false, errors.getAllErrors().getFirst().getDefaultMessage()));
+        if (errors.hasErrors())
+            return ResponseEntity.badRequest()
+                    .body(new ApiResponse<>(false, errors.getAllErrors().getFirst().getDefaultMessage()));
         try {
             pool.recommend(id, request);
-            return ResponseEntity.ok(new ApiResponse<>(true, "Đã gửi gợi ý cho HM.", new TalentPoolSuggestResponse(id, request.sourceApplicationIds().size())));
+            return ResponseEntity.ok(new ApiResponse<>(true, "Đã gửi gợi ý cho HM.",
+                    new TalentPoolSuggestResponse(id, request.sourceApplicationIds().size())));
         } catch (TalentPoolException e) {
             return ResponseEntity.badRequest().body(new ApiResponse<>(false, e.getMessage()));
         }
     }
 
-    /** Only typed search context is accepted; the destination path cannot be supplied by the client. */
     private static String poolUrl(Integer candidateId, Integer jobPostingId, TalentPoolSearch filter, int page) {
         var url = UriComponentsBuilder.fromPath(candidateId == null ? "/talent-pool" : "/talent-pool/" + candidateId)
                 .queryParamIfPresent("jobPostingId", Optional.ofNullable(jobPostingId))
                 .queryParamIfPresent("markedBy", Optional.ofNullable(filter.markedBy()))
                 .queryParamIfPresent("sourceJobId", Optional.ofNullable(filter.sourceJobId()));
-        if (filter.keyword() != null && !filter.keyword().isBlank()) url.queryParam("keyword", filter.keyword());
-        if (page > 0) url.queryParam("page", page);
+        if (filter.keyword() != null && !filter.keyword().isBlank())
+            url.queryParam("keyword", filter.keyword());
+        if (page > 0)
+            url.queryParam("page", page);
         return url.build().encode().toUriString();
     }
 
@@ -316,8 +353,9 @@ public class TalentPoolController {
     @ResponseBody
     public ResponseEntity<ApiResponse<TalentPoolSuggestResponse>> suggest(@PathVariable Integer id,
             @Valid @RequestBody TalentPoolSuggestRequest request, BindingResult errors) {
-        if (errors.hasErrors()) return ResponseEntity.badRequest().body(new ApiResponse<>(false,
-                errors.getAllErrors().getFirst().getDefaultMessage()));
+        if (errors.hasErrors())
+            return ResponseEntity.badRequest().body(new ApiResponse<>(false,
+                    errors.getAllErrors().getFirst().getDefaultMessage()));
         try {
             pool.suggest(id, request);
             return ResponseEntity.ok(new ApiResponse<>(true, "Đã thêm " + request.sourceApplicationIds().size()
