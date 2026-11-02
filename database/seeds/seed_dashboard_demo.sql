@@ -15,6 +15,8 @@
 --   4. 2 tin đang đăng có ngày đăng hôm nay (KPI "Tin mới đăng trong ngày" của HR).
 --   5. Interviewer demo viet.bui@rms-tech.vn có 7 buổi trong tuần này + tuần sau
 --      (lịch phỏng vấn, KPI buổi sắp tới, phiếu đánh giá cần hoàn thành).
+--   6. HM tuan.vu@rms-tech.vn có 5 yêu cầu thật đang tuyển, có đủ / thiếu người ("Tiến độ tuyển theo vị trí").
+--   7. Yêu cầu nào số Hired vượt số cần tuyển thì nâng số cần tuyển lên bằng số Hired.
 -- Không dùng ID cố định: mọi điều kiện tra theo dữ kiện của bảng.
 -- =============================================================================
 USE RitirementManagement2;
@@ -163,6 +165,101 @@ BEGIN
     WHERE NOT EXISTS (SELECT 1 FROM InterviewPanel p WHERE p.InterviewId = m.InterviewId AND p.InterviewerId = @demoInterviewer);
     PRINT N'>>> 5. Thêm Interviewer demo vào hội đồng: ' + CAST(@@ROWCOUNT AS NVARCHAR(10));
 END
+
+-- 6. "Tiến độ tuyển theo vị trí" của HM tuan.vu@rms-tech.vn: 5 yêu cầu thật, có đủ / thiếu người.
+--    Số Hired luôn <= số cần tuyển. Yêu cầu nào đã có (theo tên, cùng phòng) thì bỏ qua.
+DECLARE @demoHm INT = (SELECT UserId FROM [User] WHERE Email = N'tuan.vu@rms-tech.vn');
+DECLARE @demoDept INT = (SELECT DepartmentId FROM [User] WHERE UserId = @demoHm);
+DECLARE @demoHr INT = (SELECT TOP 1 u.UserId FROM [User] u JOIN Role ro ON ro.RoleId = u.RoleId
+                       WHERE ro.RoleName = N'HR' AND u.AccountStatus = N'Active' ORDER BY u.UserId);
+DECLARE @demoDirector INT = (SELECT TOP 1 u.UserId FROM [User] u JOIN Role ro ON ro.RoleId = u.RoleId
+                             WHERE ro.RoleName = N'Director' AND u.AccountStatus = N'Active' ORDER BY u.UserId);
+IF @demoHm IS NULL OR @demoDept IS NULL OR @demoHr IS NULL OR @demoDirector IS NULL
+    PRINT N'>>> 6. Thiếu HM tuan.vu / HR / Giám đốc đang hoạt động, bỏ qua.';
+ELSE
+BEGIN
+    -- Hired <= Needed; Interviewing là người đang phỏng vấn (hiện trong tooltip)
+    DECLARE @plan TABLE (SortNo INT PRIMARY KEY, Title NVARCHAR(200), Needed INT, Hired INT, Interviewing INT,
+                         MinSalary DECIMAL(18,2), MaxSalary DECIMAL(18,2), Description NVARCHAR(500), Requirement NVARCHAR(500));
+    INSERT INTO @plan VALUES
+        (1, N'Java Backend Developer (Spring Boot)', 3, 3, 0, 20000000, 30000000,
+            N'Phát triển API cho hệ thống quản lý tuyển dụng nội bộ.', N'Từ 2 năm kinh nghiệm Java, Spring Boot, SQL Server.'),
+        (2, N'Frontend Developer (ReactJS)', 2, 1, 1, 15000000, 25000000,
+            N'Xây dựng giao diện web cho khách hàng doanh nghiệp.', N'Từ 1 năm kinh nghiệm ReactJS, TypeScript.'),
+        (3, N'Kiểm thử viên tự động (QA Automation)', 2, 2, 0, 15000000, 22000000,
+            N'Viết kịch bản kiểm thử tự động cho sản phẩm web.', N'Biết Selenium hoặc Playwright, đọc hiểu Java.'),
+        (4, N'Kỹ sư DevOps (AWS)', 2, 0, 2, 25000000, 35000000,
+            N'Vận hành hạ tầng AWS, xây dựng pipeline CI/CD.', N'Từ 2 năm kinh nghiệm AWS, Docker, Kubernetes.'),
+        (5, N'Lập trình viên Mobile (Flutter)', 3, 1, 1, 18000000, 28000000,
+            N'Phát triển ứng dụng di động cho khách hàng bán lẻ.', N'Từ 1 năm kinh nghiệm Flutter, đã đưa app lên store.');
+
+    DECLARE @newReqs TABLE (SortNo INT PRIMARY KEY, RequisitionId INT);
+    DECLARE @sortNo INT = 1;
+    WHILE @sortNo <= 5
+    BEGIN
+        IF NOT EXISTS (SELECT 1 FROM JobRequisition r JOIN @plan p ON p.Title = r.Title
+                       WHERE p.SortNo = @sortNo AND r.DepartmentId = @demoDept)
+        BEGIN
+            INSERT INTO JobRequisition (Title, DepartmentId, HiringManagerId, CreatedBy, HiringType, NumberOfPositions,
+                                        EmploymentType, MinSalary, MaxSalary, ReasonForHiring, JobDescription,
+                                        RequirementDetails, ProbationDays, WorkModel, WorkLocation, ApprovalStatus,
+                                        SubmittedAt, CreatedAt, UpdatedAt)
+            SELECT p.Title, @demoDept, @demoHm, @demoHm, N'New', p.Needed, N'Full-time', p.MinSalary, p.MaxSalary,
+                   N'Mở rộng đội ngũ cho dự án mới.', p.Description, p.Requirement, 60, N'Hybrid', N'Hà Nội',
+                   N'Approved', DATEADD(day, -30 + p.SortNo, @now), DATEADD(day, -31 + p.SortNo, @now), DATEADD(day, -29 + p.SortNo, @now)
+            FROM @plan p WHERE p.SortNo = @sortNo;
+            INSERT INTO @newReqs VALUES (@sortNo, SCOPE_IDENTITY());
+        END
+        SET @sortNo = @sortNo + 1;
+    END
+    DECLARE @newReqCount INT = (SELECT COUNT(*) FROM @newReqs);
+    PRINT N'>>> 6. Yêu cầu tuyển dụng demo đã thêm: ' + CAST(@newReqCount AS NVARCHAR(10));
+
+    -- Giám đốc duyệt + HR đăng tin (Published) cho từng yêu cầu vừa thêm
+    INSERT INTO RequisitionApproval (RequisitionId, DirectorId, [Status], Comments, ApprovalDate)
+    SELECT n.RequisitionId, @demoDirector, N'Approved', N'Đồng ý tuyển.', DATEADD(day, -29 + n.SortNo, @now)
+    FROM @newReqs n;
+
+    INSERT INTO JobPosting (RequisitionId, PostingNo, PostingTitle, JobDescription, JobRequirements, Benefits,
+                            SalaryDisplay, NumberOfPositionsDisplay, WorkLocation, PostingDate, ApplicationDeadline,
+                            PostingStatus, CreatedBy, CreatedAt)
+    SELECT n.RequisitionId, 1, p.Title, p.Description, p.Requirement, N'Lương tháng 13, bảo hiểm đầy đủ.',
+           CONCAT(CAST(p.MinSalary / 1000000 AS INT), N' – ', CAST(p.MaxSalary / 1000000 AS INT), N' triệu VND/tháng'),
+           CONCAT(p.Needed, N' người'), N'Hà Nội', DATEADD(day, -28 + n.SortNo, @now), DATEADD(day, 30, @now),
+           N'Published', @demoHr, DATEADD(day, -28 + n.SortNo, @now)
+    FROM @newReqs n JOIN @plan p ON p.SortNo = n.SortNo;
+
+    -- Hồ sơ: mỗi ứng viên chỉ dùng 1 lần, lấy CV từ hồ sơ cũ của chính họ.
+    -- Mỗi yêu cầu cần Hired + Interviewing hồ sơ; Slot 1..Hired -> Hired, phần sau -> Interviewing.
+    DECLARE @slotsNeeded TABLE (SortNo INT, SlotNo INT, AppStatus NVARCHAR(30), GlobalNo INT PRIMARY KEY);
+    INSERT INTO @slotsNeeded (SortNo, SlotNo, AppStatus, GlobalNo)
+    SELECT p.SortNo, s.n, CASE WHEN s.n <= p.Hired THEN N'Hired' ELSE N'Interviewing' END,
+           ROW_NUMBER() OVER (ORDER BY p.SortNo, s.n)
+    FROM @newReqs nr JOIN @plan p ON p.SortNo = nr.SortNo
+    JOIN (VALUES (1), (2), (3), (4)) s(n) ON s.n <= p.Hired + p.Interviewing;
+
+    INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, CreatedAt, UpdatedAt)
+    SELECT c.CandidateId, jp.JobPostingId, c.AppliedCvUrl, DATEADD(day, -20 + sl.SlotNo, @now), sl.AppStatus,
+           DATEADD(day, -20 + sl.SlotNo, @now), DATEADD(day, -(sl.GlobalNo % 10) - 1, @now)
+    FROM @slotsNeeded sl
+    JOIN @newReqs nr ON nr.SortNo = sl.SortNo
+    JOIN JobPosting jp ON jp.RequisitionId = nr.RequisitionId AND jp.PostingNo = 1
+    JOIN (SELECT a.CandidateId, MAX(a.AppliedCvUrl) AS AppliedCvUrl, ROW_NUMBER() OVER (ORDER BY a.CandidateId) AS RowNo
+          FROM Application a GROUP BY a.CandidateId) c ON c.RowNo = sl.GlobalNo;
+    PRINT N'>>> 6. Hồ sơ demo đã thêm (Hired / Interviewing): ' + CAST(@@ROWCOUNT AS NVARCHAR(10));
+END
+
+-- 7. Không để yêu cầu nào tuyển vượt: số cần tuyển < số Hired thì nâng số cần tuyển lên bằng số Hired
+--    (giữ nguyên hồ sơ Hired và offer đã chấp nhận, tránh lệch dữ liệu offer).
+UPDATE r
+SET NumberOfPositions = h.HiredCount, UpdatedAt = @now
+FROM JobRequisition r
+JOIN (SELECT jp.RequisitionId, COUNT(*) AS HiredCount
+      FROM Application a JOIN JobPosting jp ON jp.JobPostingId = a.JobPostingId
+      WHERE a.ApplicationStatus = N'Hired'
+      GROUP BY jp.RequisitionId) h ON h.RequisitionId = r.RequisitionId
+WHERE h.HiredCount > r.NumberOfPositions;
+PRINT N'>>> 7. Yêu cầu tuyển vượt đã chỉnh số cần tuyển: ' + CAST(@@ROWCOUNT AS NVARCHAR(10));
 
 COMMIT TRANSACTION;
 END TRY

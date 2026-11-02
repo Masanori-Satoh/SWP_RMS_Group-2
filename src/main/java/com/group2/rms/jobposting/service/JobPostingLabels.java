@@ -17,7 +17,8 @@ public final class JobPostingLabels {
     public static final String DEADLINE_OPEN = "open";
     public static final String DEADLINE_SOON = "soon";
     public static final String DEADLINE_PAST = "past";
-    public static final List<String> DEADLINE_FILTERS = List.of(DEADLINE_OPEN, DEADLINE_SOON, DEADLINE_PAST);
+    /** Ô lọc "Hạn nộp" chỉ có Còn hạn / Đã quá hạn; "soon" chỉ dùng để tô màu từng dòng. */
+    public static final List<String> DEADLINE_FILTERS = List.of(DEADLINE_OPEN, DEADLINE_PAST);
     /** Còn từ 0 đến 7 ngày là "sắp hết hạn". */
     public static final int DEADLINE_SOON_DAYS = 7;
 
@@ -74,8 +75,7 @@ public final class JobPostingLabels {
             return "";
         }
         return switch (value) {
-            case DEADLINE_OPEN -> "Còn hạn (trên " + DEADLINE_SOON_DAYS + " ngày)";
-            case DEADLINE_SOON -> "Sắp hết hạn (≤ " + DEADLINE_SOON_DAYS + " ngày)";
+            case DEADLINE_OPEN -> "Còn hạn";
             case DEADLINE_PAST -> "Đã quá hạn";
             default -> value;
         };

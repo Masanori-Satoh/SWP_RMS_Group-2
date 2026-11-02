@@ -40,12 +40,45 @@ document.addEventListener('DOMContentLoaded', () => {
     const decision = document.getElementById('decision-form');
     const feedback = document.getElementById('decision-comment');
 
+    const decisionButtons = decision ? decision.querySelectorAll('button[name="decision"]') : [];
+    const commentCount = document.getElementById('decision-comment-count');
+    const commentError = document.getElementById('decision-comment-error');
+    const commentLimit = Number(feedback?.dataset.limit) || 1000;
+
+    // Đếm như server: xuống dòng tính 1 ký tự, bỏ khoảng trắng hai đầu
+    function commentLength() {
+        return feedback.value.replace(/\r\n/g, '\n').trim().length;
+    }
+
+    // Cập nhật bộ đếm; quá giới hạn thì báo lỗi đỏ và khóa cả 2 nút Trả lại / Phê duyệt
+    function checkCommentLength() {
+        if (!feedback) return true;
+        const length = commentLength();
+        const tooLong = length > commentLimit;
+        if (commentCount) commentCount.textContent = `${length}/${commentLimit}`;
+        if (commentError) commentError.textContent = tooLong ? `Nội dung quá ${commentLimit} ký tự` : '';
+        feedback.classList.toggle('is-too-long', tooLong);
+        feedback.setAttribute('aria-invalid', String(tooLong));
+        decisionButtons.forEach(button => { button.disabled = tooLong; });
+        return !tooLong;
+    }
+    checkCommentLength();
+
     // Xóa thông báo lỗi khi người dùng chọn nút hành động hoặc bắt đầu gõ lý do
-    decision?.querySelectorAll('button[name="decision"]').forEach(button => button.addEventListener('click', () => feedback?.setCustomValidity('')));
-    feedback?.addEventListener('input', () => feedback.setCustomValidity(''));
+    decisionButtons.forEach(button => button.addEventListener('click', () => feedback?.setCustomValidity('')));
+    feedback?.addEventListener('input', () => {
+        feedback.setCustomValidity('');
+        checkCommentLength();
+    });
 
     // Bắt buộc Giám đốc phải nhập lý do khi bấm Từ chối (Reject)
     decision?.addEventListener('submit', event => {
+        // Chặn gửi khi ý kiến quá dài (phòng trường hợp nút bị mở khóa bằng cách khác, vd Enter)
+        if (!checkCommentLength()) {
+            event.preventDefault();
+            feedback.focus();
+            return;
+        }
         if (event.submitter?.value === 'reject' && feedback && !feedback.value.trim()) {
             event.preventDefault();
             feedback.setCustomValidity('Vui lòng nêu rõ lý do từ chối để người tạo yêu cầu chỉnh sửa.');

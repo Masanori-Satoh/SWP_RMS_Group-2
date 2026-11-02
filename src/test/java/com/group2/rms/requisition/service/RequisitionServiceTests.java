@@ -8,6 +8,7 @@ import com.group2.rms.notification.service.NotificationService;
 import com.group2.rms.requisition.dto.RequisitionRequest;
 import com.group2.rms.requisition.entity.JobRequisition;
 import com.group2.rms.requisition.entity.RequisitionApproval;
+import com.group2.rms.requisition.exception.RequisitionStateException;
 import com.group2.rms.requisition.exception.RequisitionValidationException;
 import com.group2.rms.requisition.repository.JobRequisitionRepository;
 import com.group2.rms.requisition.repository.RequisitionApprovalRepository;
@@ -617,8 +618,8 @@ class RequisitionServiceTests {
     class ReadOperations {
 
         @Test
-        @DisplayName("Sao chép yêu cầu đã duyệt -> Form mới bỏ criteriaId, gợi ý đợt tiếp theo, không ghi DB")
-        void copy_shouldClearCriteriaIdsAndSuggestNextRound_whenSourceIsApproved() {
+        @DisplayName("Sao chép yêu cầu đã duyệt -> Form mới gợi ý đợt tiếp theo, không ghi DB")
+        void copy_shouldSuggestNextRoundWithoutSaving_whenSourceIsApproved() {
             // Arrange
             JobRequisition source = requisitionWithStatus(80, RequisitionAccess.STATUS_APPROVED);
             when(requisitions.findMaxRoundInChain(80)).thenReturn(1);
@@ -632,17 +633,16 @@ class RequisitionServiceTests {
             verify(requisitions, never()).saveAndFlush(any());
         }
 
-        @ParameterizedTest(name = "phiếu {0}")
-        @ValueSource(strings = {RequisitionAccess.STATUS_DRAFT, RequisitionAccess.STATUS_PENDING_DIRECTOR,
-                RequisitionAccess.STATUS_REJECTED})
-        @DisplayName("Sao chép yêu cầu chưa được duyệt -> Báo lỗi (bị từ chối thì sửa và gửi lại)")
-        void copy_shouldReject_whenSourceIsNotApproved(String status) {
+        @Test
+        @DisplayName("Sao chép yêu cầu chưa được duyệt (gõ URL) -> RequisitionStateException, không tính số đợt")
+        void copy_shouldThrowStateException_whenSourceIsNotApproved() {
             // Arrange
-            requisitionWithStatus(80, status);
+            JobRequisition source = requisitionWithStatus(80, RequisitionAccess.STATUS_PENDING_DIRECTOR);
+            doThrow(new RequisitionStateException()).when(access).requireCopy(manager, source);
 
             // Act + Assert
-            RequisitionValidationException error = assertThrows(RequisitionValidationException.class, () -> service.copy(80));
-            assertTrue(error.getErrors().containsKey("action"));
+            assertThrows(RequisitionStateException.class, () -> service.copy(80));
+            verify(requisitions, never()).findMaxRoundInChain(any());
         }
 
         @Test
@@ -682,7 +682,6 @@ class RequisitionServiceTests {
         void setUpPendingRequisition() {
             when(access.actor()).thenReturn(director);
             pending = requisitionWithStatus(50, RequisitionAccess.STATUS_PENDING_DIRECTOR);
-            lenient().when(access.canDecide(director, pending)).thenReturn(true);
             lenient().when(approvals.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
         }
 
@@ -763,6 +762,22 @@ class RequisitionServiceTests {
         }
 
         @Test
+        @DisplayName("Ý kiến có xuống dòng \\r\\n -> Đếm mỗi lần xuống dòng là 1 ký tự (khớp bộ đếm trên trình duyệt)")
+        void decide_shouldCountLineBreakAsOneChar_whenCommentHasCrLf() {
+            // Arrange: 999 chữ + 1 lần xuống dòng = 1000 ký tự theo trình duyệt (1001 nếu đếm cả \r)
+            String comment = "x".repeat(500) + "\r\n" + "x".repeat(499);
+
+            // Act
+            service.decide(50, false, comment);
+
+            // Assert: hợp lệ, ý kiến lưu với \n
+            assertEquals(RequisitionAccess.STATUS_REJECTED, pending.getApprovalStatus());
+            ArgumentCaptor<RequisitionApproval> decision = ArgumentCaptor.forClass(RequisitionApproval.class);
+            verify(approvals).save(decision.capture());
+            assertEquals("x".repeat(500) + "\n" + "x".repeat(499), decision.getValue().getComments());
+        }
+
+        @Test
         @DisplayName("Ý kiến vượt giới hạn 1 ký tự -> Báo lỗi 'Nội dung quá N ký tự'")
         void decide_shouldReject_whenCommentExceedsLimitByOne() {
             // Act
@@ -775,14 +790,26 @@ class RequisitionServiceTests {
         }
 
         @Test
-        @DisplayName("Người không được duyệt (không phải Giám đốc / tự duyệt / sai trạng thái) -> AccessDenied")
+        @DisplayName("Người không được duyệt (không phải Giám đốc / tự duyệt) -> AccessDenied")
         void decide_shouldThrowAccessDenied_whenViewerCannotDecide() {
             // Arrange
-            when(access.canDecide(director, pending)).thenReturn(false);
+            doThrow(new AccessDeniedException("no")).when(access).requireDecide(director, pending);
 
             // Act + Assert
             assertThrows(AccessDeniedException.class, () -> service.decide(50, true, "ok"));
             assertEquals(RequisitionAccess.STATUS_PENDING_DIRECTOR, pending.getApprovalStatus());
+            verifyNoInteractions(approvals, audit, notificationService);
+        }
+
+        @Test
+        @DisplayName("Yêu cầu không còn chờ duyệt -> RequisitionStateException, không lưu quyết định")
+        void decide_shouldThrowStateException_whenRequisitionIsNotPending() {
+            // Arrange
+            doThrow(new RequisitionStateException()).when(access).requireDecide(director, pending);
+
+            // Act + Assert
+            assertThrows(RequisitionStateException.class, () -> service.decide(50, true, "ok"));
+            verify(requisitions, never()).saveAndFlush(any());
             verifyNoInteractions(approvals, audit, notificationService);
         }
     }
@@ -800,12 +827,12 @@ class RequisitionServiceTests {
         void withdraw_shouldReturnToDraft_whenOwnerWithdrawsPending() {
             // Arrange
             JobRequisition requisition = requisitionWithStatus(55, RequisitionAccess.STATUS_PENDING_DIRECTOR);
-            when(access.canWithdraw(manager, requisition)).thenReturn(true);
 
             // Act
             service.withdraw(55);
 
             // Assert
+            verify(access).requireWithdraw(manager, requisition);
             assertEquals(RequisitionAccess.STATUS_DRAFT, requisition.getApprovalStatus());
             assertEquals("Status: Pending_Director → Draft (rút lại)", savedAudit().getNewValue());
             verify(notificationService).markRequisitionPendingRead(55);
@@ -813,15 +840,28 @@ class RequisitionServiceTests {
         }
 
         @Test
-        @DisplayName("Không phải người tạo, hoặc không còn chờ duyệt -> AccessDenied, không đổi trạng thái")
+        @DisplayName("Không phải người tạo -> AccessDenied, không đổi trạng thái")
         void withdraw_shouldThrowAccessDenied_whenViewerCannotWithdraw() {
             // Arrange
             JobRequisition requisition = requisitionWithStatus(56, RequisitionAccess.STATUS_PENDING_DIRECTOR);
-            when(access.canWithdraw(manager, requisition)).thenReturn(false);
+            doThrow(new AccessDeniedException("no")).when(access).requireWithdraw(manager, requisition);
 
             // Act + Assert
             assertThrows(AccessDeniedException.class, () -> service.withdraw(56));
             assertEquals(RequisitionAccess.STATUS_PENDING_DIRECTOR, requisition.getApprovalStatus());
+            verifyNoInteractions(audit, notificationService);
+        }
+
+        @Test
+        @DisplayName("Yêu cầu không còn chờ duyệt -> RequisitionStateException, không đổi trạng thái")
+        void withdraw_shouldThrowStateException_whenRequisitionIsNotPending() {
+            // Arrange
+            JobRequisition requisition = requisitionWithStatus(57, RequisitionAccess.STATUS_APPROVED);
+            doThrow(new RequisitionStateException()).when(access).requireWithdraw(manager, requisition);
+
+            // Act + Assert
+            assertThrows(RequisitionStateException.class, () -> service.withdraw(57));
+            assertEquals(RequisitionAccess.STATUS_APPROVED, requisition.getApprovalStatus());
             verifyNoInteractions(audit, notificationService);
         }
 

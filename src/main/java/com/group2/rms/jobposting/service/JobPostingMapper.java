@@ -326,7 +326,6 @@ public class JobPostingMapper {
 
     /** Yêu cầu ứng viên điền sẵn: chi tiết yêu cầu của phiếu. */
     private String requirementsFromRequisition(JobRequisition requisition) {
-        // dunglt bổ sung: bỏ phần chép "Tiêu chí bắt buộc" (gỡ tiêu chí sàng lọc, 01/11)
         String details = requisition.getRequirementDetails();
         return details == null ? "" : details.trim();
     }

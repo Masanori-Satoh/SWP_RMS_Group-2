@@ -133,7 +133,7 @@ class RequisitionIntegrationTests {
 
         @Test
         @WithMockUser(username = "it_hm", roles = "HIRING_MANAGER")
-        @DisplayName("HM lưu nháp -> Lưu vào DB đúng người tạo, phòng ban, tiêu chí và mã REQ-xxxx")
+        @DisplayName("HM lưu nháp -> Lưu vào DB đúng người tạo, phòng ban và mã REQ-xxxx")
         void createRequisition_shouldPersistRelationships_whenManagerSavesDraft() {
                 // Arrange
                 RequisitionRequest request = RequisitionRequest.builder()

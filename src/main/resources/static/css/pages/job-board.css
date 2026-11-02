@@ -94,6 +94,10 @@
   box-shadow: var(--jb-shadow);
 }
 
+.jb-alert {
+  margin-bottom: var(--s4);
+}
+
 .jb-search .form-group {
   margin-bottom: 0;
 }

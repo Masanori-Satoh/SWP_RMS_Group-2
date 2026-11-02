@@ -101,4 +101,15 @@ class DashboardLabelsTests {
         // Act + Assert
         assertEquals(expected, DashboardLabels.weekday(LocalDate.parse(day)));
     }
+
+    @Test
+    @DisplayName("Chữ viết tắt: chữ đầu của họ + của tên; tên một từ -> 1 chữ; không có tên -> '?'")
+    void initials_shouldUseFirstAndLastWord() {
+        // Act + Assert
+        assertEquals("LH", DashboardLabels.initials("Lê Thu Hà"));
+        assertEquals("TB", DashboardLabels.initials("  trần   quốc bảo "));
+        assertEquals("A", DashboardLabels.initials("An"));
+        assertEquals("?", DashboardLabels.initials(null));
+        assertEquals("?", DashboardLabels.initials(" "));
+    }
 }

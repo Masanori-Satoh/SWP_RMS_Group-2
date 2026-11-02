@@ -172,9 +172,14 @@
                         th:action="@{/requisitions/{id}/decision(id=${req.requisitionId})}">
                         <label class="form-label" for="decision-comment">Ý kiến gửi Hiring Manager
                             <span class="rqd-sub">(bắt buộc khi trả lại)</span></label>
-                        <textarea class="form-textarea" id="decision-comment" name="comment" rows="4" maxlength="1000"
-                            th:text="${decisionComment}"
+                        <!-- Không dùng maxlength để chữ dán vào không bị cắt; quá giới hạn thì JS báo lỗi và khóa 2 nút -->
+                        <textarea class="form-textarea" id="decision-comment" name="comment" rows="4"
+                            th:attr="data-limit=${commentLimit}" th:text="${decisionComment}"
+                            aria-describedby="decision-comment-count decision-comment-error"
                             placeholder="VD: Đồng ý, ưu tiên ứng viên có tệp khách hàng phía Nam."></textarea>
+                        <div class="rqd-counter" id="decision-comment-count" aria-live="polite"
+                            th:text="|0/${commentLimit}|">0/1000</div>
+                        <small class="field-error" id="decision-comment-error" role="alert"></small>
                         <div class="rqd-decision-buttons">
                             <button type="submit" name="decision" value="reject" class="btn btn--danger">Trả
                                 lại</button>

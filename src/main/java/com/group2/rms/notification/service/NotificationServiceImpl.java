@@ -225,6 +225,34 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     @Transactional
+    public void notifyJobPostingReopened(JobPosting posting, User hr) {
+        if (!hasPostingOwner(posting)) {
+            log.warn("Cannot send JOB_POSTING_REOPENED notification: Posting or Requisition owner is null");
+            return;
+        }
+
+        LocalDateTime postingDate = posting.getPostingDate();
+        if (postingDate == null) {
+            postingDate = LocalDateTime.now(clock);
+        }
+        String content = NotificationMessages.jobPostingReopenedContent(posting,
+                NotificationMessages.nameOr(hr, "Nhân sự (HR)"), postingDate);
+
+        // Mỗi lần mở lại có PostingDate mới nên eventId khác nhau, không bị chặn trùng.
+        saveIfNotDuplicate(Notification.builder()
+                .recipient(posting.getRequisition().getHiringManager())
+                .actor(hr)
+                .title("Tin tuyển dụng đã mở lại: " + posting.getPostingTitle())
+                .content(content)
+                .eventType("JOB_POSTING_REOPENED")
+                .referenceId(String.valueOf(posting.getJobPostingId()))
+                .linkUrl("/internal/job-postings/" + posting.getJobPostingId())
+                .eventId("JOB_REOPEN_" + posting.getJobPostingId() + "_" + NotificationMessages.eventTime(postingDate))
+                .build());
+    }
+
+    @Override
+    @Transactional
     public void notifyJobPostingPaused(JobPosting posting, User actor) {
         if (!hasPostingOwner(posting)) {
             log.warn("Cannot send JOB_POSTING_PAUSED notification: Posting or Requisition owner is null");

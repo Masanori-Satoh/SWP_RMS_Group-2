@@ -164,6 +164,7 @@ class HiringManagerDashboardIntegrationTests {
         assertEquals(0, row.hired());
         assertEquals(0, row.interviewing());
         assertEquals(0, row.offered());
+        assertEquals(null, row.latestPostingId());
         assertTrue(rows.stream().noneMatch(item -> item.title().equals("Nháp không tính")));
     }
 

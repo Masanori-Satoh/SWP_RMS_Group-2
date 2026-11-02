@@ -59,6 +59,7 @@
 /* ----- 5. Cột phải ----- */
 .req-detail-page .rqd-decision { border-color:var(--warning); }
 .req-detail-page .rqd-decision form { display:grid; gap:var(--s2); }
+.req-detail-page .rqd-counter { color:var(--muted); font-size:var(--font-xs); text-align:right; font-variant-numeric:tabular-nums; }
 .req-detail-page .rqd-decision-buttons { display:grid; grid-template-columns:1fr 1fr; gap:var(--s2); }
 .req-detail-page .rqd-kv { display:grid; gap:var(--s2); margin:0; font-size:var(--font-sm); }
 .req-detail-page .rqd-kv > div { display:flex; justify-content:space-between; gap:var(--s3); }

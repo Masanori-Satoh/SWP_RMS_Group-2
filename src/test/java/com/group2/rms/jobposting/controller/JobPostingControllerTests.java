@@ -421,22 +421,86 @@ class JobPostingControllerTests {
 
     @Test
     @WithMockUser(username = "hr_officer", roles = "HR")
-    @DisplayName("GET chi tiết id không tồn tại -> 404")
-    void showJobPostingDetail_shouldReturnNotFound_whenIdDoesNotExist() throws Exception {
+    @DisplayName("GET chi tiết id không tồn tại -> Về danh sách tin, toast 'Không tìm thấy'")
+    void showJobPostingDetail_shouldRedirectToListWithError_whenIdDoesNotExist() throws Exception {
         when(service.getInternalJobPostingDetail(eq(404), any(User.class)))
                 .thenThrow(new ResourceNotFoundException("Không tìm thấy tin tuyển dụng."));
 
-        mvc.perform(get(BASE + "/404")).andExpect(status().isNotFound());
+        mvc.perform(get(BASE + "/404"))
+                .andExpect(redirectedUrl(BASE))
+                .andExpect(flash().attribute("errorMessage", "Không tìm thấy tin tuyển dụng."));
     }
 
     @Test
     @WithMockUser(username = "hr_officer", roles = "HR")
-    @DisplayName("GET chi tiết khi service chặn quyền (Director mở tin nháp) -> 403")
-    void showJobPostingDetail_shouldReturnForbidden_whenServiceDenies() throws Exception {
+    @DisplayName("GET chi tiết /abc (mã không có số) -> Về danh sách tin, toast 'Mã không hợp lệ'")
+    void showJobPostingDetail_shouldRedirectToListWithError_whenIdHasNoDigits() throws Exception {
+        when(service.getInternalJobPostingDetail(isNull(), any(User.class)))
+                .thenThrow(new JobPostingValidationException("Mã tin tuyển dụng không hợp lệ."));
+
+        mvc.perform(get(BASE + "/abc"))
+                .andExpect(redirectedUrl(BASE))
+                .andExpect(flash().attribute("errorMessage", "Mã tin tuyển dụng không hợp lệ."));
+    }
+
+    @Test
+    @WithMockUser(username = "hr_officer", roles = "HR")
+    @DisplayName("GET sửa tin đã đóng -> Về chi tiết tin, toast 'Tin đã đóng không thể chỉnh sửa.'")
+    void showEditForm_shouldRedirectToDetailWithError_whenPostingIsClosed() throws Exception {
+        when(service.prepareEditForm(eq(1689), any(User.class)))
+                .thenThrow(new JobPostingValidationException("Tin đã đóng không thể chỉnh sửa."));
+
+        mvc.perform(get(BASE + "/{raw}/edit", "{1689}"))
+                .andExpect(redirectedUrl(BASE + "/1689"))
+                .andExpect(flash().attribute("errorMessage", "Tin đã đóng không thể chỉnh sửa."));
+    }
+
+    @Test
+    @WithMockUser(username = "hr_officer", roles = "HR")
+    @DisplayName("GET sửa tin không tồn tại -> Về danh sách tin, toast 'Không tìm thấy'")
+    void showEditForm_shouldRedirectToListWithError_whenIdDoesNotExist() throws Exception {
+        when(service.prepareEditForm(eq(999999), any(User.class)))
+                .thenThrow(new ResourceNotFoundException("Không tìm thấy tin tuyển dụng."));
+
+        mvc.perform(get(BASE + "/999999/edit"))
+                .andExpect(redirectedUrl(BASE))
+                .andExpect(flash().attribute("errorMessage", "Không tìm thấy tin tuyển dụng."));
+    }
+
+    @Test
+    @WithMockUser(username = "hr_officer", roles = "HR")
+    @DisplayName("GET tạo tin từ yêu cầu không tồn tại -> Về danh sách tin, toast 'Không tìm thấy'")
+    void showCreateForm_shouldRedirectToListWithError_whenRequisitionDoesNotExist() throws Exception {
+        when(service.prepareCreateForm(eq(999999), any(User.class)))
+                .thenThrow(new ResourceNotFoundException("Không tìm thấy yêu cầu tuyển dụng nguồn."));
+
+        mvc.perform(get(BASE + "/create").param("requisitionId", "999999"))
+                .andExpect(redirectedUrl(BASE))
+                .andExpect(flash().attribute("errorMessage", "Không tìm thấy yêu cầu tuyển dụng nguồn."));
+    }
+
+    @Test
+    @WithMockUser(username = "hr_officer", roles = "HR")
+    @DisplayName("GET chi tiết khi service chặn quyền (Director mở tin nháp) -> Về danh sách kèm toast lỗi, không ra trang 403")
+    void showJobPostingDetail_shouldRedirectToListWithError_whenServiceDenies() throws Exception {
         when(service.getInternalJobPostingDetail(eq(33), any(User.class)))
                 .thenThrow(new AccessDeniedException("Bạn không có quyền xem tin tuyển dụng này."));
 
-        mvc.perform(get(BASE + "/33")).andExpect(status().isForbidden());
+        mvc.perform(get(BASE + "/33"))
+                .andExpect(redirectedUrl(BASE))
+                .andExpect(flash().attribute("errorMessage", "Bạn không có quyền xem tin tuyển dụng này."));
+    }
+
+    @Test
+    @WithMockUser(username = "hr_officer", roles = "HR")
+    @DisplayName("Chính trang danh sách bị chặn quyền -> Về dashboard kèm toast, không lặp chuyển trang")
+    void listJobPostings_shouldRedirectToDashboard_whenListIsDenied() throws Exception {
+        when(listService.getListPage(any(), any(User.class)))
+                .thenThrow(new AccessDeniedException("Vai trò không có quyền xem tin tuyển dụng."));
+
+        mvc.perform(get(BASE))
+                .andExpect(redirectedUrl("/dashboard"))
+                .andExpect(flash().attribute("errorMessage", "Vai trò không có quyền xem tin tuyển dụng."));
     }
 
     // =========================================================================

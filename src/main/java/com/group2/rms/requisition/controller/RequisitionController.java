@@ -1,8 +1,10 @@
 package com.group2.rms.requisition.controller;
 
+import com.group2.rms.core.exception.ResourceNotFoundException;
 import com.group2.rms.core.util.FilterLinks;
 import com.group2.rms.requisition.dto.RequisitionRequest;
 import com.group2.rms.requisition.dto.RequisitionSearchRequest;
+import com.group2.rms.requisition.exception.RequisitionStateException;
 import com.group2.rms.requisition.exception.RequisitionValidationException;
 import com.group2.rms.requisition.service.RequisitionAccess;
 import com.group2.rms.requisition.service.RequisitionListService;
@@ -14,10 +16,12 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.WebDataBinder;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -38,8 +42,11 @@ import java.util.Locale;
 @RequestMapping("/requisitions")
 @RequiredArgsConstructor
 public class RequisitionController {
+    private static final String LAST_PAGE_PATH = "requisition.lastPage.path";
+    private static final String LAST_PAGE_USER = "requisition.lastPage.userId";
     private static final String DECISION_APPROVE = "approve";
     private static final String DECISION_REJECT = "reject";
+    private static final String INVALID_ID_MESSAGE = "Mã yêu cầu tuyển dụng không hợp lệ.";
     private static final String STORAGE_ERROR =
             "Không thể lưu dữ liệu. Vui lòng kiểm tra lại giá trị các trường.";
 
@@ -105,6 +112,8 @@ public class RequisitionController {
     public String list(@ModelAttribute("searchRequest") RequisitionSearchRequest searchRequest,
             BindingResult invalidParams, HttpServletRequest request, Model model) {
         model.addAttribute("list", listService.getListPage(searchRequest));
+        rememberPage(request, request.getRequestURI()
+                + (request.getQueryString() == null ? "" : "?" + request.getQueryString()));
         // Tạo link "bỏ một bộ lọc" cho các chip, giữ nguyên các tham số khác đang có trên URL
         model.addAttribute("filterLinks", new FilterLinks(request.getRequestURI(), request.getQueryString()));
         // activeMenu làm sáng menu sidebar, bodyClass giữ CSS cũ của trang
@@ -137,17 +146,40 @@ public class RequisitionController {
         return renderForm(model, false, null);
     }
 
+    // id nhận dạng chuỗi để URL gõ tay như "{2796}" vẫn hiểu là 2796 (không ra lỗi 500)
     @GetMapping("/copy/{id}")
-    public String copy(@PathVariable Integer id, Model model) {
-        model.addAttribute("form", service.copy(id));
+    public String copy(@PathVariable("id") String idParam, Model model, RedirectAttributes flash,
+            HttpServletRequest request) {
+        Integer id = parseId(idParam);
+        if (id == null) {
+            return backWhenNotFound(INVALID_ID_MESSAGE, flash, request);
+        }
+        try {
+            model.addAttribute("form", service.copy(id));
+        } catch (RequisitionStateException e) {
+            return backToPreviousPage(id, e, flash, request);
+        } catch (ResourceNotFoundException e) {
+            return backWhenNotFound(e.getMessage(), flash, request);
+        }
         model.addAttribute("copyNotice", "Đã sao chép vào biểu mẫu mới. Biểu mẫu chưa được lưu cho đến khi bạn chọn Lưu bản nháp hoặc "
                 + (access.isDirector(access.actor()) ? "Phê duyệt trực tiếp." : "Gửi Giám đốc duyệt."));
         return renderForm(model, false, null);
     }
 
     @GetMapping("/edit/{id}")
-    public String edit(@PathVariable Integer id, Model model) {
-        model.addAttribute("form", service.prepareEditForm(id));
+    public String edit(@PathVariable("id") String idParam, Model model, RedirectAttributes flash,
+            HttpServletRequest request) {
+        Integer id = parseId(idParam);
+        if (id == null) {
+            return backWhenNotFound(INVALID_ID_MESSAGE, flash, request);
+        }
+        try {
+            model.addAttribute("form", service.prepareEditForm(id));
+        } catch (RequisitionStateException e) {
+            return backToPreviousPage(id, e, flash, request);
+        } catch (ResourceNotFoundException e) {
+            return backWhenNotFound(e.getMessage(), flash, request);
+        }
         return renderForm(model, true, id);
     }
 
@@ -172,12 +204,14 @@ public class RequisitionController {
 
     @PostMapping("/edit/{id}")
     public String update(@PathVariable Integer id, @Valid @ModelAttribute("form") RequisitionRequest form,
-            BindingResult errors, Model model, RedirectAttributes flash) {
+            BindingResult errors, Model model, RedirectAttributes flash, HttpServletRequest request) {
         if (!errors.hasErrors()) {
             try {
                 service.updateRequisition(id, form);
                 flash.addFlashAttribute("successMessage", savedMessage(form.getAction()));
                 return "redirect:/requisitions/" + id;
+            } catch (RequisitionStateException e) {
+                return backToPreviousPage(id, e, flash, request);
             } catch (RequisitionValidationException e) {
                 addErrors(errors, e);
             } catch (DataIntegrityViolationException e) {
@@ -188,11 +222,13 @@ public class RequisitionController {
     }
 
     @PostMapping("/delete/{id}")
-    public String delete(@PathVariable Integer id, RedirectAttributes flash) {
+    public String delete(@PathVariable Integer id, RedirectAttributes flash, HttpServletRequest request) {
         try {
             service.deleteRequisition(id);
             flash.addFlashAttribute("successMessage", "Đã xóa yêu cầu tuyển dụng thành công.");
             return "redirect:/requisitions";
+        } catch (RequisitionStateException e) {
+            return backToPreviousPage(id, e, flash, request);
         } catch (RequisitionValidationException e) {
             flash.addFlashAttribute("failureMessage", e.getMessage());
         } catch (DataIntegrityViolationException e) {
@@ -203,7 +239,7 @@ public class RequisitionController {
 
     @PostMapping("/{id}/decision")
     public String decide(@PathVariable Integer id, @RequestParam String decision,
-            @RequestParam(defaultValue = "") String comment, RedirectAttributes flash) {
+            @RequestParam(defaultValue = "") String comment, RedirectAttributes flash, HttpServletRequest request) {
         // Rule: Hai nút trên trang chi tiết gửi decision=approve hoặc decision=reject, giá trị khác thì bỏ qua
         boolean isApprove = DECISION_APPROVE.equals(decision);
         boolean isReject = DECISION_REJECT.equals(decision);
@@ -214,6 +250,8 @@ public class RequisitionController {
         try {
             service.decide(id, isApprove, comment);
             flash.addFlashAttribute("successMessage", "Đã lưu quyết định thành công.");
+        } catch (RequisitionStateException e) {
+            return backToPreviousPage(id, e, flash, request);
         } catch (RequisitionValidationException e) {
             flash.addFlashAttribute("failureMessage", e.getMessage());
             // Giữ lại ý kiến đã gõ để người dùng không phải gõ lại
@@ -223,22 +261,102 @@ public class RequisitionController {
     }
 
     @PostMapping("/{id}/withdraw")
-    public String withdraw(@PathVariable Integer id, RedirectAttributes flash) {
+    public String withdraw(@PathVariable Integer id, RedirectAttributes flash, HttpServletRequest request) {
         try {
             service.withdraw(id);
             flash.addFlashAttribute("successMessage", "Đã rút lại yêu cầu thành công. Bạn có thể chỉnh sửa lại bản nháp.");
+            // Rút lại là để sửa → mở thẳng form sửa
+            return "redirect:/requisitions/edit/" + id;
+        } catch (RequisitionStateException e) {
+            return backToPreviousPage(id, e, flash, request);
         } catch (RequisitionValidationException e) {
             flash.addFlashAttribute("failureMessage", e.getMessage());
         }
         return "redirect:/requisitions/" + id;
     }
 
+    // Chỉ nhớ trang danh sách/chi tiết đã render thành công cho đúng tài khoản trong phiên.
+    private void rememberPage(HttpServletRequest request, String path) {
+        var session = request.getSession();
+        session.setAttribute(LAST_PAGE_PATH, path);
+        session.setAttribute(LAST_PAGE_USER, access.actor().getUserId());
+    }
+
+    // Trang danh sách / chi tiết đã xem gần nhất của đúng tài khoản này; chưa có thì trả null.
+    private String rememberedPage(HttpServletRequest request) {
+        var session = request.getSession(false);
+        if (session == null || !access.actor().getUserId().equals(session.getAttribute(LAST_PAGE_USER))) {
+            return null;
+        }
+        Object path = session.getAttribute(LAST_PAGE_PATH);
+        if (path instanceof String previous) {
+            return previous;
+        }
+        return null;
+    }
+
+    private boolean isListPage(String path) {
+        return path.equals("/requisitions") || path.startsWith("/requisitions?");
+    }
+
+    // Gõ URL sai trạng thái hoặc gửi form cũ: trở lại trang đã xem, kèm toast lỗi.
+    private String backToPreviousPage(Integer id, RequisitionStateException e, RedirectAttributes flash,
+            HttpServletRequest request) {
+        flash.addFlashAttribute("failureMessage", e.getMessage());
+        String previous = rememberedPage(request);
+        if (previous != null && (isListPage(previous) || previous.equals("/requisitions/" + id))) {
+            return "redirect:" + previous;
+        }
+        return "redirect:/requisitions/" + id;
+    }
+
+    // Gõ URL không đủ quyền (HM khác sửa nháp, HR mở yêu cầu chưa duyệt...): toast lỗi thay vì trang 403.
+    @ExceptionHandler(AccessDeniedException.class)
+    public String whenAccessDenied(AccessDeniedException e, RedirectAttributes flash, HttpServletRequest request) {
+        if (isListPage(request.getRequestURI())) {
+            // Chính danh sách bị chặn thì về dashboard, tránh chuyển trang lặp vô hạn
+            flash.addFlashAttribute("failureMessage", e.getMessage());
+            return "redirect:/dashboard";
+        }
+        return backWhenNotFound(e.getMessage(), flash, request);
+    }
+
+    // Mã sai, không tồn tại hoặc không đủ quyền: trở lại trang đã xem (tránh lặp nếu chính trang đó bị chặn), không thì về danh sách.
+    private String backWhenNotFound(String message, RedirectAttributes flash, HttpServletRequest request) {
+        flash.addFlashAttribute("failureMessage", message);
+        String previous = rememberedPage(request);
+        if (previous != null && !previous.equals(request.getRequestURI())) {
+            return "redirect:" + previous;
+        }
+        return "redirect:/requisitions";
+    }
+
+    // Lấy phần số của mã gõ trên URL (vd "{2796}" -> 2796); không có số thì trả null.
+    private static Integer parseId(String raw) {
+        String digits = raw == null ? "" : raw.replaceAll("\\D", "");
+        if (digits.isEmpty() || digits.length() > 9) {
+            return null;
+        }
+        return Integer.valueOf(digits);
+    }
+
     @GetMapping("/{id}")
-    public String detail(@PathVariable Integer id, Model model) {
-        // getById kiểm tra quyền xem (RequisitionAccess.requireView) và tính sẵn mọi nhãn / cờ quyền
-        model.addAttribute("req", service.getById(id));
+    public String detail(@PathVariable("id") String idParam, Model model, RedirectAttributes flash,
+            HttpServletRequest request) {
+        Integer id = parseId(idParam);
+        if (id == null) {
+            return backWhenNotFound(INVALID_ID_MESSAGE, flash, request);
+        }
+        try {
+            // getById kiểm tra quyền xem (RequisitionAccess.requireView) và tính sẵn mọi nhãn / cờ quyền
+            model.addAttribute("req", service.getById(id));
+        } catch (ResourceNotFoundException e) {
+            return backWhenNotFound(e.getMessage(), flash, request);
+        }
+        rememberPage(request, "/requisitions/" + id);
         model.addAttribute("activeMenu", "requisitions");
         model.addAttribute("bodyClass", "req-app req-detail-page");
+        model.addAttribute("commentLimit", RequisitionValidator.COMMENT_CHAR_LIMIT);
         return "requisitions/detail";
     }
 

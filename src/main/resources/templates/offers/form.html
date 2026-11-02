@@ -61,7 +61,7 @@
                   Hồ sơ cố định
                 </span>
                 <span class="ofw-fixed-candidate-text" th:text="${fixedCandidate.candidateName} + ' - ' + ${fixedCandidate.appliedPosition} + ' (' + ${fixedCandidate.departmentName} + ')'">
-                  Huỳnh Văn Toàn - Chuyên Viên Phát Triển Kinh Doanh B2B (Software Solutions) (Sales & Marketing)
+                  Huỳnh Văn Toàn - Chuyên Viên Phát Triển Kinh Doanh B2B (Software Solutions) (Kinh doanh &amp; Marketing)
                 </span>
               </div>
               <input type="hidden" th:field="*{applicationId}" th:value="${fixedCandidate.applicationId}">
@@ -91,7 +91,7 @@
                 </div>
                 <div class="ofw-info-item">
                   <span class="ofw-info-label">Phòng ban</span>
-                  <span class="ofw-info-value" th:text="${fixedCandidate.departmentName}">Sales & Marketing</span>
+                  <span class="ofw-info-value" th:text="${fixedCandidate.departmentName}">Kinh doanh &amp; Marketing</span>
                 </div>
                 <div class="ofw-info-item">
                   <span class="ofw-info-label">Mã yêu cầu tuyển dụng</span>
@@ -125,7 +125,7 @@
                         th:value="${c.applicationId}"
                         th:attr="data-cand-id=${c.candidateId}, data-cand-name=${c.candidateName}, data-email=${c.email}, data-phone=${c.phoneNumber}, data-pos=${c.appliedPosition}, data-dept=${c.departmentName}, data-req-id=${c.requisitionId}, data-work-location=${c.workLocation}, data-comments=${c.interviewSummaryComments}, data-recom-salary=${c.recommendedSalary != null ? #numbers.formatDecimal(c.recommendedSalary, 0, 0) : ''}, data-hm=${c.hiringManagerName}"
                         th:text="${c.candidateName} + ' - ' + ${c.appliedPosition} + ' (' + ${c.departmentName} + ')'">
-                  Nguyễn Văn A - Backend Dev (Engineering)
+                  Nguyễn Văn A - Backend Dev (Kỹ thuật)
                 </option>
               </select>
               <p class="form-error" th:if="${#fields.hasErrors('applicationId')}" th:errors="*{applicationId}"></p>

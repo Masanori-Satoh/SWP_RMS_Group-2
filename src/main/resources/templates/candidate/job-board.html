@@ -34,6 +34,11 @@
             </div>
         </div>
 
+        <!-- Mở tin đã tạm dừng / đóng / không tồn tại thì được chuyển về đây kèm thông báo -->
+        <div th:if="${errorMessage}" class="alert alert--danger jb-alert" role="alert" th:text="${errorMessage}">
+            Tin tuyển dụng này không còn khả dụng.
+        </div>
+
         <!-- Tìm kiếm & lọc -->
         <form th:action="@{/jobs}" method="get" class="card jb-search adw-surface" role="search" aria-label="Tìm kiếm vị trí tuyển dụng">
             <div class="form-group jb-search__keyword">
