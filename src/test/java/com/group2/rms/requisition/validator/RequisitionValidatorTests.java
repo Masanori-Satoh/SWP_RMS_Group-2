@@ -27,11 +27,11 @@ import static org.junit.jupiter.api.Assertions.*;
  * - Mỗi quy tắc có test hợp lệ + sai, nhất là ở biên (đúng giới hạn / giới hạn + 1),
  *   null, rỗng, chỉ khoảng trắng, giá trị ngoài danh mục, trùng, ID giả.
  * - Dùng hằng số của validator (POSITIONS_MAX + 1) thay vì gõ số, đổi giới hạn thì test vẫn đúng ý.
- * - Kiểm tra đúng key lỗi ("numberOfPositions", "screeningCriteria[0].weight"): key quyết định lỗi hiện ở ô nào.
+ * - Kiểm tra đúng key lỗi (ví dụ "numberOfPositions"): key quyết định lỗi hiện ở ô nào.
  *
  * Hàm hỗ trợ: valid() = gửi duyệt hợp lệ đủ trường; minimalDraft() = nháp chỉ có 4 trường NOT NULL;
- * criterion(name, weight) = một dòng tiêu chí đủ trường; expectPass / expectFail.
- * Phòng ban, quyền người dùng, criteriaId của yêu cầu khác: kiểm ở RequisitionServiceTests.
+ * expectPass / expectFail dùng để kiểm tra kết quả.
+ * Phòng ban và quyền người dùng: kiểm ở RequisitionServiceTests.
  */
 class RequisitionValidatorTests {
 

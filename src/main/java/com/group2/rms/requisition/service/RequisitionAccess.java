@@ -1,6 +1,7 @@
 package com.group2.rms.requisition.service;
 
 import com.group2.rms.requisition.entity.JobRequisition;
+import com.group2.rms.requisition.exception.RequisitionStateException;
 import com.group2.rms.user.entity.User;
 import com.group2.rms.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -217,11 +218,46 @@ public class RequisitionAccess {
         throw new AccessDeniedException("Bạn không có quyền truy cập yêu cầu tuyển dụng này.");
     }
 
-    // Security: Kiểm tra quyền chỉnh sửa Requisition, ném ngoại lệ nếu không đủ thẩm quyền
+    // Sửa / xóa: không phải người tạo → 403; đúng người nhưng không còn Nháp / Từ chối → báo lỗi ở trang chi tiết
     public void requireEdit(User user, JobRequisition requisition) {
         requireView(user, requisition);
+        boolean isOwner = owns(user, requisition) && canCreate(user);
+        if (!isOwner) {
+            throw new AccessDeniedException("Chỉ người tạo mới có quyền chỉnh sửa hoặc xóa yêu cầu này.");
+        }
         if (!canEdit(user, requisition)) {
-            throw new AccessDeniedException("Chỉ có thể chỉnh sửa hoặc xóa yêu cầu ở trạng thái Bản nháp hoặc Từ chối.");
+            throw new RequisitionStateException();
+        }
+    }
+
+    // Duyệt / trả lại: không phải Giám đốc hoặc tự duyệt → 403; yêu cầu không còn chờ duyệt → báo lỗi ở trang chi tiết
+    public void requireDecide(User user, JobRequisition requisition) {
+        requireView(user, requisition);
+        if (!isDirector(user) || owns(user, requisition)) {
+            throw new AccessDeniedException("Chỉ Giám đốc mới có quyền quyết định phê duyệt yêu cầu.");
+        }
+        if (!canDecide(user, requisition)) {
+            throw new RequisitionStateException();
+        }
+    }
+
+    // Rút lại: không phải người tạo → 403; yêu cầu không còn chờ duyệt → báo lỗi ở trang chi tiết
+    public void requireWithdraw(User user, JobRequisition requisition) {
+        requireView(user, requisition);
+        if (!owns(user, requisition)) {
+            throw new AccessDeniedException("Chỉ người tạo yêu cầu mới có quyền rút lại yêu cầu đang chờ duyệt.");
+        }
+        if (!canWithdraw(user, requisition)) {
+            throw new RequisitionStateException();
+        }
+    }
+
+    // Sao chép: không có quyền tạo / không xem được → 403; yêu cầu chưa duyệt → báo lỗi ở trang chi tiết
+    public void requireCopy(User user, JobRequisition requisition) {
+        requireCreate(user);
+        requireView(user, requisition);
+        if (!canCopy(user, requisition)) {
+            throw new RequisitionStateException();
         }
     }
 }

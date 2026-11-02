@@ -73,7 +73,9 @@ public class DashboardListRepository {
                         + "r.numberOfPositions, "
                         + "sum(case when a.applicationStatus = 'Hired' then 1 else 0 end), "
                         + "sum(case when a.applicationStatus = 'Interviewing' then 1 else 0 end), "
-                        + "sum(case when a.applicationStatus = 'Offered' then 1 else 0 end) "
+                        + "sum(case when a.applicationStatus = 'Offered' then 1 else 0 end), "
+                        // Tin mới nhất HM xem được (bỏ tin nháp); chưa có tin thì null
+                        + "max(case when j.postingStatus <> :draft then j.jobPostingId end) "
                         + "from JobRequisition r left join r.department d left join d.manager m "
                         + "left join JobPosting j on j.requisition = r "
                         + "left join Application a on a.jobPosting = j "
@@ -82,25 +84,26 @@ public class DashboardListRepository {
                         + "group by r.requisitionId, r.requisitionCode, r.title, r.numberOfPositions "
                         + "order by r.requisitionId desc", Object[].class)
                 .setParameter("approved", RequisitionAccess.STATUS_APPROVED)
+                .setParameter("draft", JobPostingAccess.STATUS_DRAFT)
                 .setParameter("userId", userId)
                 .setParameter("departmentId", departmentId)
                 .getResultList();
         List<ProgressRow> result = new ArrayList<>();
         for (Object[] row : rows) {
             result.add(new ProgressRow((Integer) row[0], (String) row[1], (String) row[2], (Integer) row[3],
-                    toLong(row[4]), toLong(row[5]), toLong(row[6])));
+                    toLong(row[4]), toLong(row[5]), toLong(row[6]), (Integer) row[7]));
         }
         return result;
     }
 
     // ===== Lịch phỏng vấn =====
 
-    /** Lịch còn hiệu lực của phòng HM thuộc hoặc làm trưởng phòng, bắt đầu trong [from, to), sớm nhất lên đầu. */
+    /** Lịch còn hiệu lực trong phạm vi HM (mình tạo / phòng mình / phòng mình quản lý), sớm nhất lên đầu. */
     public List<InterviewRow> departmentInterviews(int userId, Integer departmentId, LocalDateTime from,
             LocalDateTime to, int limit) {
         TypedQuery<Object[]> query = entityManager.createQuery(INTERVIEW_SELECT
-                + "join j.requisition r left join r.department d left join d.manager m "
-                + "where (m.userId = :userId or d.departmentId = :departmentId) "
+                + "join j.requisition r left join r.hiringManager hm left join r.department d left join d.manager m "
+                + "where (hm.userId = :userId or m.userId = :userId or d.departmentId = :departmentId) "
                 + "and i.startTime >= :from and i.startTime < :to "
                 + "and i.interviewStatus in " + InternalMetricsRepository.ACTIVE_INTERVIEW_STATUSES + " "
                 + "order by i.startTime asc, i.interviewId asc", Object[].class);
@@ -275,7 +278,7 @@ public class DashboardListRepository {
     }
 
     public record ProgressRow(int requisitionId, String requisitionCode, String title, int numberOfPositions,
-            long hired, long interviewing, long offered) {
+            long hired, long interviewing, long offered, Integer latestPostingId) {
     }
 
     public record InterviewRow(long interviewId, LocalDateTime startTime, LocalDateTime endTime,

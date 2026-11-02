@@ -66,7 +66,7 @@ class HiringManagerDashboardServiceTests {
     }
 
     private ProgressRow progressRow(int id, int needed, long hired, long interviewing, long offered) {
-        return new ProgressRow(id, "REQ-" + id, "Vị trí " + id, needed, hired, interviewing, offered);
+        return new ProgressRow(id, "REQ-" + id, "Vị trí " + id, needed, hired, interviewing, offered, null);
     }
 
     @Nested
@@ -144,6 +144,20 @@ class HiringManagerDashboardServiceTests {
             assertEquals("1 đang phỏng vấn · 0 có offer", items.get(1).pipelineText());
             assertEquals(2, items.get(2).hired());
             assertEquals("/requisitions/3", items.get(2).href());
+        }
+
+        @Test
+        @DisplayName("Yêu cầu đã có tin (không phải nháp) -> bấm thanh mở chi tiết tin tuyển dụng")
+        void build_shouldLinkToJobPosting_whenRequisitionHasPosting() {
+            // Arrange
+            when(lists.hiringProgress(USER_ID, DEPARTMENT_ID)).thenReturn(List.of(
+                    new ProgressRow(4, "REQ-4", "Vị trí 4", 2, 1, 0, 0, 42)));
+
+            // Act
+            List<HiringProgressItem> items = service.build(hiringManager(DEPARTMENT_ID)).progress();
+
+            // Assert
+            assertEquals("/internal/job-postings/42", items.get(0).href());
         }
 
         @Test

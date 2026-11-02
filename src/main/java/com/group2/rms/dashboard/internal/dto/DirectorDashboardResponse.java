@@ -10,7 +10,6 @@ public record DirectorDashboardResponse(
         String fullName,
         List<DashboardMetricResponse> kpis,
         List<PendingRequisitionItem> pendingRequisitions,
-        int morePendingRequisitions,
         List<PendingOfferItem> pendingOffers,
         int morePendingOffers,
         List<DepartmentRequisitionItem> openByDepartment) implements DashboardResponse {

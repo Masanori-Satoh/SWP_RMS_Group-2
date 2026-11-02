@@ -77,17 +77,14 @@ public final class JobPostingSpecifications {
         return (root, query, cb) -> cb.equal(root.get("createdBy").get("userId"), userId);
     }
 
-    /** Nhóm hạn nộp: past đã qua; soon còn 0–7 ngày; open còn trên 7 ngày hoặc không có hạn. */
+    /** Nhóm hạn nộp: past = đã qua hạn; open = chưa qua hạn hoặc không có hạn. */
     public static Specification<JobPosting> deadlineIn(String bucket, LocalDateTime now) {
-        // Hết ngày thứ 7 tính từ hôm nay = đầu ngày thứ 8
-        LocalDateTime soonEnd = now.toLocalDate().plusDays(JobPostingLabels.DEADLINE_SOON_DAYS + 1L).atStartOfDay();
-        return (root, query, cb) -> switch (bucket) {
-            case JobPostingLabels.DEADLINE_PAST -> cb.lessThan(root.get("applicationDeadline"), now);
-            case JobPostingLabels.DEADLINE_SOON -> cb.and(
-                    cb.greaterThanOrEqualTo(root.get("applicationDeadline"), now),
-                    cb.lessThan(root.get("applicationDeadline"), soonEnd));
-            default -> cb.or(cb.isNull(root.get("applicationDeadline")),
-                    cb.greaterThanOrEqualTo(root.get("applicationDeadline"), soonEnd));
+        return (root, query, cb) -> {
+            if (JobPostingLabels.DEADLINE_PAST.equals(bucket)) {
+                return cb.lessThan(root.get("applicationDeadline"), now);
+            }
+            return cb.or(cb.isNull(root.get("applicationDeadline")),
+                    cb.greaterThanOrEqualTo(root.get("applicationDeadline"), now));
         };
     }
 

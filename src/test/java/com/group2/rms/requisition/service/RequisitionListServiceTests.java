@@ -165,19 +165,45 @@ class RequisitionListServiceTests {
     }
 
     @Test
-    @DisplayName("Director gửi Draft + Approved -> Bỏ Draft (không được xem), giữ Approved")
-    void getListPage_shouldDropDraftStatus_whenViewerIsDirector() {
+    @DisplayName("Director chọn Bản nháp -> Được giữ (lọc được bản nháp của chính mình)")
+    void getListPage_shouldKeepDraftStatus_whenViewerIsDirector() {
         // Arrange
         loginAs(RequisitionAccess.ROLE_DIRECTOR);
 
         // Act
-        RequisitionListResponse list = service.getListPage(onlyStatus(
-                List.of(RequisitionAccess.STATUS_DRAFT, RequisitionAccess.STATUS_APPROVED)));
+        RequisitionListResponse list = service.getListPage(onlyStatus(List.of(RequisitionAccess.STATUS_DRAFT)));
 
         // Assert
-        assertEquals(List.of(RequisitionAccess.STATUS_APPROVED), list.filter().status());
+        assertEquals(List.of(RequisitionAccess.STATUS_DRAFT), list.filter().status());
+        assertEquals("Trạng thái: Bản nháp", list.chips().get(0).label());
         assertTrue(list.options().statuses().stream()
-                .noneMatch(option -> option.value().equals(RequisitionAccess.STATUS_DRAFT)));
+                .anyMatch(option -> option.value().equals(RequisitionAccess.STATUS_DRAFT)));
+    }
+
+    @Test
+    @DisplayName("Director mở danh sách -> WHERE: (không phải Draft) HOẶC (người tạo là chính mình)")
+    void getListPage_shouldQueryNonDraftOrOwnDraft_whenViewerIsDirector() {
+        // Arrange
+        User director = loginAs(RequisitionAccess.ROLE_DIRECTOR);
+
+        // Act
+        service.getListPage(onlyStatus(null));
+
+        // Assert: chạy thử Specification với Root / CriteriaBuilder giả
+        ArgumentCaptor<Specification> where = ArgumentCaptor.forClass(Specification.class);
+        verify(requisitions).findAll(where.capture(), any(Pageable.class));
+        Root root = mock(Root.class);
+        CriteriaBuilder builder = mock(CriteriaBuilder.class);
+        Path status = mock(Path.class);
+        Path creator = mock(Path.class);
+        Path creatorId = mock(Path.class);
+        when(root.get("approvalStatus")).thenReturn(status);
+        when(root.get("hiringManager")).thenReturn(creator);
+        when(creator.get("userId")).thenReturn(creatorId);
+        where.getValue().toPredicate(root, null, builder);
+        verify(builder).notEqual(status, RequisitionAccess.STATUS_DRAFT);
+        verify(builder).equal(creatorId, director.getUserId());
+        verify(builder).or(any(), any());
     }
 
     @Test

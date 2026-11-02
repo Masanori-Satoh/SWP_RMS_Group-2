@@ -120,7 +120,7 @@ class InternalDashboardServiceTests {
         // Arrange
         User user = account(DashboardAccess.ROLE_DIRECTOR, "Active");
         DirectorDashboardResponse expected = new DirectorDashboardResponse("Director", "Người dùng kiểm thử", List.of(),
-                List.of(), 0, List.of(), 0, List.of());
+                List.of(), List.of(), 0, List.of());
         when(directorDashboard.build(user)).thenReturn(expected);
 
         // Act

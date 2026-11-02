@@ -4,6 +4,7 @@ import com.group2.rms.candidate.talentpool.exception.RecruitmentEmailException;
 import com.group2.rms.candidate.talentpool.exception.TalentPoolException;
 import com.group2.rms.candidate.talentpool.service.RecruitmentEmailService;
 import com.group2.rms.candidate.talentpool.service.TalentPoolService;
+import com.group2.rms.core.exception.ResourceNotFoundException;
 import com.group2.rms.core.util.FilterLinks;
 import com.group2.rms.jobposting.dto.InternalJobPostingDetailResponse;
 import com.group2.rms.jobposting.dto.JobPostingRequest;
@@ -17,10 +18,12 @@ import com.group2.rms.user.entity.User;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.WebDataBinder;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -90,16 +93,19 @@ public class JobPostingController {
 
     /** Form tạo tin từ yêu cầu đã duyệt; fromPostingId = "Đăng lại" từ một tin đã đóng. */
     @GetMapping("/create")
-    public String showCreateForm(@RequestParam(value = "requisitionId", required = false) Integer requisitionId,
-            @RequestParam(value = "fromPostingId", required = false) Integer fromPostingId,
+    public String showCreateForm(@RequestParam(value = "requisitionId", required = false) String requisitionIdParam,
+            @RequestParam(value = "fromPostingId", required = false) String fromPostingIdParam,
             Model model, RedirectAttributes flash) {
         User currentUser = access.actor();
+        // Có tham số fromPostingId là "Đăng lại"; lấy phần số như "{1873}" -> 1873
+        boolean isRepost = fromPostingIdParam != null;
+        Integer fromPostingId = parseId(fromPostingIdParam);
         try {
             JobPostingRequest form;
-            if (fromPostingId != null) {
+            if (isRepost) {
                 form = jobPostingService.prepareRepostForm(fromPostingId, currentUser);
             } else {
-                form = jobPostingService.prepareCreateForm(requisitionId, currentUser);
+                form = jobPostingService.prepareCreateForm(parseId(requisitionIdParam), currentUser);
             }
             return renderForm(model, form, currentUser);
         } catch (JobPostingValidationException e) {
@@ -108,13 +114,31 @@ public class JobPostingController {
                 return redirectToDetail(fromPostingId);
             }
             return "redirect:" + LIST_URL;
+        } catch (ResourceNotFoundException e) {
+            // Mã yêu cầu / tin nguồn gõ tay không tồn tại: về danh sách tin kèm thông báo
+            flash.addFlashAttribute("errorMessage", e.getMessage());
+            return "redirect:" + LIST_URL;
         }
     }
 
+    /** id nhận dạng chuỗi để URL gõ tay như "{1689}" vẫn hiểu là tin 1689 (không ra lỗi 500). */
     @GetMapping("/{id}/edit")
-    public String showEditForm(@PathVariable("id") Integer id, Model model) {
+    public String showEditForm(@PathVariable("id") String idParam, Model model, RedirectAttributes flash) {
         User currentUser = access.actor();
-        return renderForm(model, jobPostingService.prepareEditForm(id, currentUser), currentUser);
+        Integer id = parseId(idParam);
+        try {
+            return renderForm(model, jobPostingService.prepareEditForm(id, currentUser), currentUser);
+        } catch (JobPostingValidationException e) {
+            // Tin đã đóng: về trang chi tiết tin; mã sai: về danh sách
+            flash.addFlashAttribute("errorMessage", e.getMessage());
+            if (id != null) {
+                return redirectToDetail(id);
+            }
+            return "redirect:" + LIST_URL;
+        } catch (ResourceNotFoundException e) {
+            flash.addFlashAttribute("errorMessage", e.getMessage());
+            return "redirect:" + LIST_URL;
+        }
     }
 
     /** Lưu nháp (action=draft) hoặc đăng ngay (action=publish) tin mới. */
@@ -204,8 +228,16 @@ public class JobPostingController {
     }
 
     @GetMapping("/{id}")
-    public String showJobPostingDetail(@PathVariable("id") Integer id, Model model) {
-        InternalJobPostingDetailResponse detail = jobPostingService.getInternalJobPostingDetail(id, access.actor());
+    public String showJobPostingDetail(@PathVariable("id") String idParam, Model model, RedirectAttributes flash) {
+        Integer id = parseId(idParam);
+        InternalJobPostingDetailResponse detail;
+        try {
+            detail = jobPostingService.getInternalJobPostingDetail(id, access.actor());
+        } catch (JobPostingValidationException | ResourceNotFoundException e) {
+            // Mã sai hoặc tin không tồn tại: về danh sách tin kèm thông báo, không hiện trang lỗi
+            flash.addFlashAttribute("errorMessage", e.getMessage());
+            return "redirect:" + LIST_URL;
+        }
         model.addAttribute("posting", detail);
         model.addAttribute("bodyClass", "jp-detail-page");
         if (detail.talentPoolVisible()) {
@@ -221,6 +253,17 @@ public class JobPostingController {
             flash.addFlashAttribute("successMessage", "Đã xóa tin tuyển dụng thành công.");
         } catch (JobPostingValidationException e) {
             flash.addFlashAttribute("errorMessage", e.getMessage());
+        }
+        return "redirect:" + LIST_URL;
+    }
+
+    // Gõ URL không đủ quyền (HM / Giám đốc mở tin nháp...): toast lỗi trên danh sách thay vì trang 403.
+    @ExceptionHandler(AccessDeniedException.class)
+    public String whenAccessDenied(AccessDeniedException e, RedirectAttributes flash, HttpServletRequest request) {
+        flash.addFlashAttribute("errorMessage", e.getMessage());
+        if (LIST_URL.equals(request.getRequestURI())) {
+            // Chính danh sách bị chặn thì về dashboard, tránh chuyển trang lặp vô hạn
+            return "redirect:/dashboard";
         }
         return "redirect:" + LIST_URL;
     }
@@ -274,6 +317,15 @@ public class JobPostingController {
             return "Đã lưu thay đổi.";
         }
         return PUBLISHED_NOW_MESSAGE;
+    }
+
+    // Lấy phần số của mã gõ trên URL (vd "{1753}" -> 1753); không có số thì trả null để service báo lỗi
+    private static Integer parseId(String raw) {
+        String digits = raw == null ? "" : raw.replaceAll("\\D", "");
+        if (digits.isEmpty() || digits.length() > 9) {
+            return null;
+        }
+        return Integer.valueOf(digits);
     }
 
     private static String redirectToDetail(Integer id) {

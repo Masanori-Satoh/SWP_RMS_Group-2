@@ -7,6 +7,7 @@ import com.group2.rms.career.dto.PublicJobDetailResponse;
 import com.group2.rms.career.dto.PublicJobListResponse;
 import com.group2.rms.career.dto.ViewerProfileResponse;
 import com.group2.rms.career.service.CareerPortalService;
+import com.group2.rms.core.exception.ResourceNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -16,6 +17,7 @@ import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -139,5 +141,12 @@ public class CareerPortalController {
         model.addAttribute("applyDialogOpen", true);
         model.addAttribute(PUBLIC_NAV, NAV_JOB_DETAIL);
         return "candidate/job-detail";
+    }
+
+    /** Tin đã tạm dừng / đóng / không tồn tại: về /jobs kèm thông báo thay vì trang 404. */
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public String whenJobUnavailable(ResourceNotFoundException e, RedirectAttributes flash) {
+        flash.addFlashAttribute("errorMessage", e.getMessage());
+        return "redirect:/jobs";
     }
 }

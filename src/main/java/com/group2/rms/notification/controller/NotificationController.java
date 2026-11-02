@@ -35,10 +35,6 @@ public class NotificationController {
         Page<NotificationResponse> result = notificationService.getNotificationsForUser(user, page, size);
 
         model.addAttribute("notifications", result.getContent());
-        model.addAttribute("currentPage", result.getNumber() + 1);
-        model.addAttribute("totalPages", Math.max(1, result.getTotalPages()));
-        model.addAttribute("pageSize", result.getSize());
-        model.addAttribute("totalElements", result.getTotalElements());
         model.addAttribute("unreadCount", notificationService.getUnreadCount(user));
         model.addAttribute("activeMenu", "notifications");
         model.addAttribute("viewerName", user.getFullName());

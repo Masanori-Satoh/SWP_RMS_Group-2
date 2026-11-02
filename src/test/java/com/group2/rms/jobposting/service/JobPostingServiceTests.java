@@ -208,6 +208,23 @@ class JobPostingServiceTests {
         }
 
         @Test
+        @DisplayName("Đăng lại sau khi tin trước đã đóng (lần đăng thứ 2) -> báo 'mở lại', không báo 'phát hành'")
+        void createAndPublishJobPosting_shouldNotifyReopened_whenRepostAfterClose() {
+            // Arrange
+            requisitionCanBeLocked();
+            when(postings.findMaxPostingNo(101)).thenReturn(1);
+
+            // Act
+            service.createAndPublishJobPosting(validForm(JobPostingValidator.ACTION_PUBLISH), hr);
+
+            // Assert
+            JobPosting saved = savedPosting();
+            assertEquals(2, saved.getPostingNo());
+            verify(notificationService).notifyJobPostingReopened(saved, hr);
+            verify(notificationService, never()).notifyJobPostingPublished(any(), any());
+        }
+
+        @Test
         @DisplayName("Không phải HR / Admin -> 403, không tra yêu cầu, không lưu, không audit")
         void createJobPosting_shouldDeny_whenViewerCannotManage() {
             doThrow(new AccessDeniedException("x")).when(access).requireManage(hr);
@@ -307,7 +324,7 @@ class JobPostingServiceTests {
         }
 
         @Test
-        @DisplayName("Tin tạm dừng: 'Lưu thay đổi' vẫn tạm dừng; 'Lưu và mở lại' -> Published, ngày đăng = bây giờ")
+        @DisplayName("Tin tạm dừng: 'Lưu thay đổi' vẫn tạm dừng; 'Lưu và mở lại' -> Published, ngày đăng = bây giờ, báo 'mở lại'")
         void updateJobPosting_shouldKeepPausedOrReopen_dependingOnAction() {
             // Arrange
             JobPosting paused = existingPosting(11, JobPostingAccess.STATUS_PAUSED, NOW.minusDays(10));
@@ -323,7 +340,8 @@ class JobPostingServiceTests {
             service.updateAndPublishJobPosting(11, form, hr);
             assertEquals(JobPostingAccess.STATUS_PUBLISHED, paused.getPostingStatus());
             assertEquals(NOW, paused.getPostingDate());
-            verify(notificationService).notifyJobPostingPublished(paused, hr);
+            verify(notificationService).notifyJobPostingReopened(paused, hr);
+            verify(notificationService, never()).notifyJobPostingPublished(any(), any());
         }
 
         @Test
@@ -381,6 +399,23 @@ class JobPostingServiceTests {
             assertEquals(NOW, draft.getPostingDate());
             assertTrue(savedAudit().getNewValue().startsWith(JobPostingLabels.LOG_PUBLISH));
             verify(notificationService).notifyJobPostingPublished(draft, hr);
+        }
+
+        @Test
+        @DisplayName("Mở lại tin tạm dừng từ trang chi tiết -> Published, báo 'mở lại' thay vì 'phát hành'")
+        void publishJobPosting_shouldNotifyReopened_whenPaused() {
+            // Arrange
+            JobPosting paused = existingPosting(22, JobPostingAccess.STATUS_PAUSED, NOW.minusDays(4));
+            when(postings.existsByRequisition_RequisitionIdAndJobPostingIdNotAndPostingStatusIn(eq(101), eq(22), any()))
+                    .thenReturn(false);
+
+            // Act
+            service.publishJobPosting(22, hr);
+
+            // Assert
+            assertEquals(JobPostingAccess.STATUS_PUBLISHED, paused.getPostingStatus());
+            verify(notificationService).notifyJobPostingReopened(paused, hr);
+            verify(notificationService, never()).notifyJobPostingPublished(any(), any());
         }
 
         @Test
