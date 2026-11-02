@@ -451,6 +451,21 @@ class OfferIntegrationTests {
     }
 
     @Test
+    @DisplayName("IT-17b POST /offers/{id}/reject (JSON): Từ chối không nhập lý do bị từ chối trả về HTTP 400 Bad Request")
+    @WithMockUser(username = "director_user", roles = {"DIRECTOR"})
+    void it17b_rejectOfferJson_emptyComments_returnsBadRequest() throws Exception {
+        DirectorDecisionRequest req = new DirectorDecisionRequest("   ");
+
+        mvc.perform(post("/offers/1/reject")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value("Vui lòng nhập lý do từ chối vào ô nhận xét trước khi tiếp tục."));
+    }
+
+    @Test
     @DisplayName("IT-18 GET /offers: Ứng viên (ROLE_CANDIDATE) bị chặn truy cập danh sách Offer nội bộ trả về HTTP 403 Forbidden")
     @WithMockUser(username = "cand_user", roles = {"CANDIDATE"})
     void it18_candidateAccessOffersList_isForbidden() throws Exception {
