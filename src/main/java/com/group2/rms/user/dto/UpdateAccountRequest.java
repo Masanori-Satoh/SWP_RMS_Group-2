@@ -12,24 +12,24 @@ import lombok.Setter;
 @Setter
 public class UpdateAccountRequest {
 
-    @NotBlank(message = "Enter a full name.")
-    @Size(max = 100, message = "Full name must be at most 100 characters.")
+    @NotBlank(message = "Vui lòng nhập họ và tên.")
+    @Size(max = 100, message = "Họ và tên không được quá 100 ký tự.")
     private String fullName;
 
-    @NotBlank(message = "Enter an email address.")
-    @Email(message = "Enter a valid email address.")
-    @Size(max = 150, message = "Email must be at most 150 characters.")
+    @NotBlank(message = "Vui lòng nhập email.")
+    @Email(message = "Vui lòng nhập email hợp lệ.")
+    @Size(max = 150, message = "Email không được quá 150 ký tự.")
     private String email;
 
-    @Size(max = 20, message = "Phone number must be at most 20 characters.")
+    @Size(max = 20, message = "Số điện thoại không được quá 20 ký tự.")
     private String phoneNumber;
 
-    @NotNull(message = "Select a role.")
+    @NotNull(message = "Vui lòng chọn vai trò.")
     private Integer roleId;
 
     private Integer departmentId;
 
-    @NotBlank(message = "Select a status.")
+    @NotBlank(message = "Vui lòng chọn trạng thái tài khoản.")
     private String accountStatus;
 
     public UpdateCommand toCommand() {

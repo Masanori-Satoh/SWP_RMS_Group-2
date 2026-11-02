@@ -68,22 +68,22 @@ public class AccountManagementService {
 
     private static void requireInternal(User user) {
         if (!RoleAuthorities.INTERNAL_ROLE_NAMES.contains(user.getRole().getRoleName())) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Internal account not found");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy tài khoản nội bộ.");
         }
     }
 
     private static void requireInternalRole(Role role) {
         if (!RoleAuthorities.INTERNAL_ROLE_NAMES.contains(role.getRoleName())) {
             throw new AccountFieldException("roleId",
-                    "Select an internal role. Candidate accounts have a separate lifecycle.");
+                    "Vui lòng chọn vai trò nội bộ. Tài khoản ứng viên được quản lý riêng.");
         }
     }
 
     @Transactional
     public int create(CreateCommand command) {
-        String fullName = required(command.fullName(), "fullName", "Enter a full name.");
-        String username = required(command.username(), "username", "Enter a username.");
-        String email = required(command.email(), "email", "Enter an email address.");
+        String fullName = required(command.fullName(), "fullName", "Vui lòng nhập họ và tên.");
+        String username = required(command.username(), "username", "Vui lòng nhập tên đăng nhập.");
+        String email = required(command.email(), "email", "Vui lòng nhập email.");
         String phone = optional(command.phoneNumber());
         validatePassword(command.password());
         Role role = findRole(command.roleId());
@@ -112,14 +112,14 @@ public class AccountManagementService {
         if (users.existsByDepartmentDepartmentIdAndRoleRoleNameAndAccountStatusAndUserIdNot(
                 department.getDepartmentId(), HIRING_MANAGER, "Active", userId)) {
             throw new AccountFieldException("roleId",
-                    "This department already has a Hiring Manager. Change the department manager first.");
+                    "Phòng ban này đã có trưởng phòng tuyển dụng. Vui lòng thay đổi trưởng phòng trước.");
         }
     }
 
     @Transactional(readOnly = true)
     public void assertLoginIdentifiersAvailable(String username, String email) {
-        checkUsernameAvailable(required(username, "username", "Enter a username."), null);
-        checkEmailAvailable(required(email, "email", "Enter an email address."), null);
+        checkUsernameAvailable(required(username, "username", "Vui lòng nhập tên đăng nhập."), null);
+        checkEmailAvailable(required(email, "email", "Vui lòng nhập email."), null);
     }
 
     /**
@@ -164,15 +164,15 @@ public class AccountManagementService {
         Role role = findRole(command.roleId());
         if (isCandidate(user.getRole()) != isCandidate(role)) {
             throw new AccountFieldException("roleId",
-                    "Account types cannot be changed. Create a new account for the other lifecycle.");
+                    "Không thể chuyển đổi giữa tài khoản nội bộ và tài khoản ứng viên. Vui lòng tạo tài khoản mới.");
         }
-        String fullName = required(command.fullName(), "fullName", "Enter a full name.");
-        String email = required(command.email(), "email", "Enter an email address.");
+        String fullName = required(command.fullName(), "fullName", "Vui lòng nhập họ và tên.");
+        String email = required(command.email(), "email", "Vui lòng nhập email.");
         String phone = optional(command.phoneNumber());
         Department department = findDepartment(command.departmentId(), role,
                 user.getDepartment() == null ? null : user.getDepartment().getDepartmentId());
         if (command.accountStatus() == null || !STATUSES.contains(command.accountStatus())) {
-            throw new AccountFieldException("accountStatus", "Invalid account status.");
+            throw new AccountFieldException("accountStatus", "Trạng thái tài khoản không hợp lệ.");
         }
         checkEmailAvailable(email, userId);
         checkSingleHiringManager(role, department, command.accountStatus(), userId);
@@ -205,18 +205,18 @@ public class AccountManagementService {
 
     private User findUser(int userId) {
         return users.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy tài khoản."));
     }
 
     private Role findRole(Integer roleId) {
         Role role = roleId == null ? null : roles.findById(roleId).orElse(null);
         if (role == null) {
-            throw new AccountFieldException("roleId", "Invalid role.");
+            throw new AccountFieldException("roleId", "Vai trò không hợp lệ.");
         }
         try {
             RoleAuthorities.fromRoleName(role.getRoleName());
         } catch (IllegalArgumentException ex) {
-            throw new AccountFieldException("roleId", "This role is not supported.");
+            throw new AccountFieldException("roleId", "Vai trò này không được hỗ trợ.");
         }
         return role;
     }
@@ -224,16 +224,16 @@ public class AccountManagementService {
     private Department findDepartment(Integer departmentId, Role role, Integer currentDepartmentId) {
         if (isCandidate(role) && departmentId != null) {
             throw new AccountFieldException("departmentId",
-                    "Candidate accounts do not belong to internal departments.");
+                    "Tài khoản ứng viên không thuộc phòng ban nội bộ.");
         }
         if (departmentId == null) {
             if (!isCandidate(role)) {
-                throw new AccountFieldException("departmentId", "Internal roles require a department.");
+                throw new AccountFieldException("departmentId", "Vui lòng chọn phòng ban cho tài khoản nội bộ.");
             }
             return null;
         }
         Department department = departments.findById(departmentId)
-                .orElseThrow(() -> new AccountFieldException("departmentId", "Invalid department."));
+                .orElseThrow(() -> new AccountFieldException("departmentId", "Phòng ban không hợp lệ."));
         if (!"Active".equals(department.getDepartmentStatus()) && !departmentId.equals(currentDepartmentId)) {
             throw new AccountFieldException("departmentId", "Không thể gán tài khoản vào phòng ban đã vô hiệu hóa.");
         }
@@ -244,7 +244,7 @@ public class AccountManagementService {
         // check if email or username has exist
         if (belongsToAnother(users.findByUsernameIgnoreCase(username), currentId)
                 || belongsToAnother(users.findByEmailIgnoreCase(username), currentId)) {
-            throw new AccountFieldException("username", "This username is already used as a username or email.");
+            throw new AccountFieldException("username", "Tên đăng nhập này đã được sử dụng.");
         }
     }
 
@@ -252,7 +252,7 @@ public class AccountManagementService {
         // check if email or username hasexist
         if (belongsToAnother(users.findByEmailIgnoreCase(email), currentId)
                 || belongsToAnother(users.findByUsernameIgnoreCase(email), currentId)) {
-            throw new AccountFieldException("email", "This email is already used as an email or username.");
+            throw new AccountFieldException("email", "Email này đã được sử dụng.");
         }
     }
 
@@ -291,7 +291,7 @@ public class AccountManagementService {
 
     private static void validatePassword(String password) {
         if (password == null || password.isBlank() || password.length() < 8 || password.length() > 32) {
-            throw new AccountFieldException("password", "Password must contain 8–32 characters.");
+            throw new AccountFieldException("password", "Mật khẩu phải có từ 8 đến 32 ký tự.");
         }
     }
 
