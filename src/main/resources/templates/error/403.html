@@ -1,15 +1,18 @@
-<!doctype html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<!DOCTYPE html>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
 <head>
-  <meta charset="utf-8">
-  <title>Lỗi 403 — Truy cập bị từ chối</title>
-  <link rel="stylesheet" th:href="@{/css/global.css}" href="/css/global.css">
+    <title>Lỗi 403 · Bạn không có quyền truy cập</title>
+    <th:block layout:fragment="styles">
+        <link rel="stylesheet" th:href="@{/css/pages/error-page.css}">
+    </th:block>
 </head>
-<body style="display:flex;align-items:center;justify-content:center;height:100vh;background:var(--page);text-align:center;">
-  <div class="base-card" style="padding:var(--s8);max-width:520px;">
-    <h1 style="color:var(--brand-dark);margin-bottom:var(--s2);">403 - Truy Cập Bị Từ Chối</h1>
-    <p style="color:var(--muted);margin-bottom:var(--s4);" th:text="${message}">Bạn không có quyền truy cập vào tài nguyên này.</p>
-    <a href="/dashboard" class="button button-brand">Về Trang Điều Khiển</a>
-  </div>
+<body>
+<!-- Câu thông báo (message) và nút quay về (homeUrl, homeLabel) do core/exception/ErrorPages dựng. -->
+<main id="main" layout:fragment="content" class="error-page">
+    <section th:replace="~{fragments/ui/error-page :: panel('403', 'Bạn không có quyền truy cập')}"></section>
+</main>
 </body>
 </html>
