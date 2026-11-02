@@ -246,13 +246,13 @@ class CareerFlowTests {
         }
 
         @Test
-        void unavailableJobReturnsNotFoundPage() throws Exception {
+        void unavailableJobRedirectsToJobBoardWithMessage() throws Exception {
                 when(careers.getPublishedJobDetail(eq(999), any()))
                                 .thenThrow(new ResourceNotFoundException("Tin tuyển dụng này không còn khả dụng."));
-                mvc.perform(get("/jobs/999")).andExpect(status().isNotFound())
-                                .andExpect(view().name("error/404"))
-                                .andExpect(content().string(containsString("404 - Không Tìm Thấy")))
-                                .andExpect(content().string(containsString("Tin tuyển dụng này không còn khả dụng.")));
+                // Tin tạm dừng / đóng: về /jobs kèm thông báo, không ra trang 404
+                mvc.perform(get("/jobs/999"))
+                                .andExpect(redirectedUrl("/jobs"))
+                                .andExpect(flash().attribute("errorMessage", "Tin tuyển dụng này không còn khả dụng."));
         }
 
         // ------------------------------------------------------------------ apply flow
@@ -353,15 +353,16 @@ class CareerFlowTests {
         }
 
         @Test
-        void unavailableJobOnSubmitReturnsNotFound() throws Exception {
+        void unavailableJobOnSubmitRedirectsToJobBoardWithMessage() throws Exception {
                 account("candidate-test", "Candidate", "Active");
                 MockHttpSession session = login(null, "candidate-test", "/dashboard");
                 when(applications.apply(eq("candidate-test"), eq(999), any()))
                                 .thenThrow(new ResourceNotFoundException("Tin tuyển dụng này không còn khả dụng."));
 
+                // Tin vừa ngừng khi đang nộp: về /jobs kèm thông báo, không ra trang 404
                 mvc.perform(multipart("/jobs/999/apply").file(CV).session(session).with(csrf()))
-                                .andExpect(status().isNotFound())
-                                .andExpect(view().name("error/404"));
+                                .andExpect(redirectedUrl("/jobs"))
+                                .andExpect(flash().attribute("errorMessage", "Tin tuyển dụng này không còn khả dụng."));
         }
 
         @Test
@@ -393,14 +394,16 @@ class CareerFlowTests {
         }
 
         @Test
-        void applyForUnavailableJobReturnsNotFound() throws Exception {
+        void applyForUnavailableJobRedirectsToJobBoardWithMessage() throws Exception {
                 account("candidate-test", "Candidate", "Active");
                 MockHttpSession session = login(null, "candidate-test", "/dashboard");
                 doThrow(new ResourceNotFoundException(
                                 "Tin tuyển dụng này không còn khả dụng hoặc đã ngừng nhận hồ sơ."))
                                 .when(careers).validateJobForApplication(999);
-                mvc.perform(get("/jobs/999/apply").session(session)).andExpect(status().isNotFound())
-                                .andExpect(view().name("error/404"));
+                mvc.perform(get("/jobs/999/apply").session(session))
+                                .andExpect(redirectedUrl("/jobs"))
+                                .andExpect(flash().attribute("errorMessage",
+                                                "Tin tuyển dụng này không còn khả dụng hoặc đã ngừng nhận hồ sơ."));
                 verify(careers, never()).validateCandidateApplicationProfile(anyString());
         }
 

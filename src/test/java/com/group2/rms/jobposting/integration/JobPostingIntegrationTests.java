@@ -50,6 +50,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.flash;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
@@ -510,12 +512,14 @@ class JobPostingIntegrationTests {
 
     @Test
     @WithMockUser(username = "it_jp_hm", roles = "HIRING_MANAGER")
-    @DisplayName("HM mở tin nháp phòng mình bằng URL -> 403 (D5)")
-    void detail_shouldReturnForbidden_whenHiringManagerOpensDraft() throws Exception {
+    @DisplayName("HM mở tin nháp phòng mình bằng URL -> Về danh sách kèm toast lỗi, không ra trang 403 (D5)")
+    void detail_shouldRedirectToListWithError_whenHiringManagerOpensDraft() throws Exception {
         JobPosting draft = savedPosting(savedRequisition("IT-JP Draft 403", department), 1, TITLE_PREFIX + "Nháp",
                 JobPostingAccess.STATUS_DRAFT, null, now.plusDays(10));
         entityManager.clear();
 
-        mvc.perform(get("/internal/job-postings/{id}", draft.getJobPostingId())).andExpect(status().isForbidden());
+        mvc.perform(get("/internal/job-postings/{id}", draft.getJobPostingId()))
+                .andExpect(redirectedUrl("/internal/job-postings"))
+                .andExpect(flash().attributeExists("errorMessage"));
     }
 }
