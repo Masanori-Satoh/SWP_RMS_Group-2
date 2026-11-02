@@ -1,6 +1,7 @@
 package com.group2.rms.requisition.service;
 
 import com.group2.rms.requisition.entity.JobRequisition;
+import com.group2.rms.requisition.exception.RequisitionStateException;
 import com.group2.rms.user.entity.Department;
 import com.group2.rms.user.entity.Role;
 import com.group2.rms.user.entity.User;
@@ -147,6 +148,70 @@ class RequisitionAccessTests {
         @DisplayName("Yêu cầu null (không tồn tại) -> AccessDenied")
         void requireView_shouldThrowAccessDenied_whenRequisitionIsNull() {
             assertThrows(AccessDeniedException.class, () -> access.requireView(admin, null));
+        }
+    }
+
+    // =========================================================================
+    // requireX: sai người → AccessDenied (403); đúng người sai trạng thái → RequisitionStateException
+    // =========================================================================
+
+    @Nested
+    @DisplayName("Chặn theo trạng thái (gõ URL)")
+    class StateBlock {
+
+        @ParameterizedTest(name = "người tạo sửa yêu cầu {0} -> RequisitionStateException")
+        @CsvSource({"Pending_Director", "Approved"})
+        @DisplayName("Người tạo mở form sửa yêu cầu Chờ duyệt / Đã duyệt -> Báo lỗi trạng thái, không phải 403")
+        void requireEdit_shouldThrowStateException_whenOwnerEditsLockedStatus(String status) {
+            RequisitionStateException error = assertThrows(RequisitionStateException.class,
+                    () -> access.requireEdit(manager, ownedByManager(status)));
+            assertEquals(RequisitionStateException.NO_ACCESS_MESSAGE, error.getMessage());
+        }
+
+        @ParameterizedTest(name = "người tạo sửa yêu cầu {0} -> được")
+        @CsvSource({"Draft", "Rejected"})
+        @DisplayName("Người tạo sửa yêu cầu Nháp / Từ chối -> Không bị chặn")
+        void requireEdit_shouldPass_whenOwnerEditsEditableStatus(String status) {
+            assertDoesNotThrow(() -> access.requireEdit(manager, ownedByManager(status)));
+        }
+
+        @Test
+        @DisplayName("Giám đốc mở form sửa yêu cầu của HM (xem được nhưng không phải người tạo) -> AccessDenied")
+        void requireEdit_shouldThrowAccessDenied_whenViewerIsNotOwner() {
+            assertThrows(AccessDeniedException.class,
+                    () -> access.requireEdit(director, ownedByManager(RequisitionAccess.STATUS_PENDING_DIRECTOR)));
+        }
+
+        @Test
+        @DisplayName("Giám đốc duyệt yêu cầu đã duyệt rồi -> Báo lỗi trạng thái; tự duyệt yêu cầu của mình -> AccessDenied")
+        void requireDecide_shouldSeparateStateFromPermission_whenDirectorDecides() {
+            // Arrange
+            JobRequisition own = JobRequisition.builder().requisitionId(2).hiringManager(director)
+                    .approvalStatus(RequisitionAccess.STATUS_PENDING_DIRECTOR).build();
+
+            // Act + Assert
+            assertThrows(RequisitionStateException.class,
+                    () -> access.requireDecide(director, ownedByManager(RequisitionAccess.STATUS_APPROVED)));
+            assertThrows(AccessDeniedException.class, () -> access.requireDecide(director, own));
+            assertDoesNotThrow(() -> access.requireDecide(director, ownedByManager(RequisitionAccess.STATUS_PENDING_DIRECTOR)));
+        }
+
+        @Test
+        @DisplayName("Người tạo rút lại yêu cầu đã duyệt -> Báo lỗi trạng thái; Giám đốc rút lại -> AccessDenied")
+        void requireWithdraw_shouldSeparateStateFromPermission_whenRequisitionIsNotPending() {
+            assertThrows(RequisitionStateException.class,
+                    () -> access.requireWithdraw(manager, ownedByManager(RequisitionAccess.STATUS_APPROVED)));
+            assertThrows(AccessDeniedException.class,
+                    () -> access.requireWithdraw(director, ownedByManager(RequisitionAccess.STATUS_PENDING_DIRECTOR)));
+        }
+
+        @Test
+        @DisplayName("Sao chép yêu cầu chưa duyệt -> Báo lỗi trạng thái; HR sao chép -> AccessDenied")
+        void requireCopy_shouldSeparateStateFromPermission_whenSourceIsNotApproved() {
+            assertThrows(RequisitionStateException.class,
+                    () -> access.requireCopy(manager, ownedByManager(RequisitionAccess.STATUS_REJECTED)));
+            assertThrows(AccessDeniedException.class,
+                    () -> access.requireCopy(hr, ownedByManager(RequisitionAccess.STATUS_APPROVED)));
         }
     }
 

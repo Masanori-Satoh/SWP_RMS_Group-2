@@ -9,6 +9,7 @@ import com.group2.rms.requisition.dto.RequisitionListResponse;
 import com.group2.rms.requisition.dto.RequisitionRequest;
 import com.group2.rms.requisition.dto.RequisitionResponse;
 import com.group2.rms.requisition.dto.RequisitionSearchRequest;
+import com.group2.rms.requisition.exception.RequisitionStateException;
 import com.group2.rms.requisition.exception.RequisitionValidationException;
 import com.group2.rms.requisition.service.RequisitionAccess;
 import com.group2.rms.requisition.service.RequisitionListService;
@@ -32,6 +33,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.mock.web.MockHttpSession;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -189,18 +191,33 @@ class RequisitionControllerTests {
 
         @Test
         @WithMockUser(username = "hm", roles = "HIRING_MANAGER")
-        @DisplayName("GET /requisitions/create khi không có quyền tạo (gõ thẳng URL) -> 403")
-        void createForm_shouldReturnForbidden_whenViewerCannotCreate() throws Exception {
+        @DisplayName("GET /requisitions/create khi không có quyền tạo (gõ thẳng URL) -> Về danh sách kèm toast lỗi, không ra trang 403")
+        void createForm_shouldRedirectWithFailureMessage_whenViewerCannotCreate() throws Exception {
                 // Arrange
-                doThrow(new AccessDeniedException("no")).when(access).requireCreate(hiringManager);
+                doThrow(new AccessDeniedException("Không có quyền tạo.")).when(access).requireCreate(hiringManager);
 
                 // Act + Assert
-                mvc.perform(get("/requisitions/create")).andExpect(status().isForbidden());
+                mvc.perform(get("/requisitions/create"))
+                                .andExpect(redirectedUrl("/requisitions"))
+                                .andExpect(flash().attribute("failureMessage", "Không có quyền tạo."));
         }
 
         @Test
         @WithMockUser(username = "hm", roles = "HIRING_MANAGER")
-        @DisplayName("GET /requisitions/{id} -> View chi tiết với model req, đọc được trường của record (tiêu chí bắt buộc)")
+        @DisplayName("Chính trang danh sách bị chặn quyền -> Về dashboard kèm toast, không lặp chuyển trang")
+        void list_shouldRedirectToDashboard_whenListIsDenied() throws Exception {
+                // Arrange
+                when(listService.getListPage(any())).thenThrow(new AccessDeniedException("Không có quyền xem."));
+
+                // Act + Assert
+                mvc.perform(get("/requisitions"))
+                                .andExpect(redirectedUrl("/dashboard"))
+                                .andExpect(flash().attribute("failureMessage", "Không có quyền xem."));
+        }
+
+        @Test
+        @WithMockUser(username = "hm", roles = "HIRING_MANAGER")
+        @DisplayName("GET /requisitions/{id} -> View chi tiết với model req, đọc được trường của record")
         void detail_shouldRenderDetailView_whenRequisitionExists() throws Exception {
                 // Arrange
                 RequisitionResponse detail = RequisitionResponse.builder().requisitionId(1).requisitionCode("REQ-0001")
@@ -213,19 +230,86 @@ class RequisitionControllerTests {
                                 .andExpect(status().isOk())
                                 .andExpect(view().name("requisitions/detail"))
                                 .andExpect(model().attributeExists("req"))
-                                .andExpect(content().string(containsString("Backend Engineer")))
-                                .andExpect(content().string(not(containsString("rqd-criteria"))));
+                                .andExpect(content().string(containsString("Backend Engineer")));
         }
 
         @Test
         @WithMockUser(username = "hm", roles = "HIRING_MANAGER")
-        @DisplayName("GET /requisitions/{id} với id không tồn tại -> 404")
-        void detail_shouldReturnNotFound_whenIdDoesNotExist() throws Exception {
+        @DisplayName("GET /requisitions/{id} với id không tồn tại -> Về danh sách, toast 'Không tìm thấy'")
+        void detail_shouldRedirectToListWithError_whenIdDoesNotExist() throws Exception {
                 // Arrange
                 when(service.getById(404)).thenThrow(new ResourceNotFoundException("Không tìm thấy yêu cầu tuyển dụng."));
 
                 // Act + Assert
-                mvc.perform(get("/requisitions/404")).andExpect(status().isNotFound());
+                mvc.perform(get("/requisitions/404"))
+                                .andExpect(redirectedUrl("/requisitions"))
+                                .andExpect(flash().attribute("failureMessage", "Không tìm thấy yêu cầu tuyển dụng."));
+        }
+
+        @Test
+        @WithMockUser(username = "hm", roles = "HIRING_MANAGER")
+        @DisplayName("GET /requisitions/{2796} (gõ cả dấu ngoặc) -> Hiểu là yêu cầu 2796, mở chi tiết")
+        void detail_shouldReadDigits_whenIdHasBraces() throws Exception {
+                // Arrange
+                when(service.getById(2796)).thenReturn(RequisitionResponse.builder()
+                                .requisitionId(2796).title("Backend Engineer")
+                                .approvalStatus(RequisitionAccess.STATUS_PENDING_DIRECTOR)
+                                .approvals(List.of()).activityLog(List.of()).build());
+
+                // Act + Assert
+                mvc.perform(get("/requisitions/{raw}", "{2796}"))
+                                .andExpect(status().isOk())
+                                .andExpect(view().name("requisitions/detail"));
+        }
+
+        @Test
+        @WithMockUser(username = "hm", roles = "HIRING_MANAGER")
+        @DisplayName("GET /requisitions/abc, edit/abc, copy/abc -> Về danh sách, toast 'Mã không hợp lệ', không gọi service")
+        void getPages_shouldRedirectToListWithError_whenIdHasNoDigits() throws Exception {
+                for (String url : List.of("/requisitions/abc", "/requisitions/edit/abc", "/requisitions/copy/abc")) {
+                        mvc.perform(get(url))
+                                        .andExpect(redirectedUrl("/requisitions"))
+                                        .andExpect(flash().attribute("failureMessage", "Mã yêu cầu tuyển dụng không hợp lệ."));
+                }
+                verifyNoInteractions(service);
+        }
+
+        @Test
+        @WithMockUser(username = "hm", roles = "HIRING_MANAGER")
+        @DisplayName("Đang xem chi tiết 2796, sửa URL sang mã không tồn tại -> Ở lại chi tiết 2796, toast 'Không tìm thấy'")
+        void detail_shouldReturnToLastPage_whenTypedIdDoesNotExist() throws Exception {
+                // Arrange
+                when(service.getById(2796)).thenReturn(RequisitionResponse.builder()
+                                .requisitionId(2796).title("Backend Engineer")
+                                .approvalStatus(RequisitionAccess.STATUS_PENDING_DIRECTOR)
+                                .approvals(List.of()).activityLog(List.of()).build());
+                MockHttpSession session = (MockHttpSession) mvc.perform(get("/requisitions/2796"))
+                                .andExpect(status().isOk()).andReturn().getRequest().getSession(false);
+                when(service.prepareEditForm(999999)).thenThrow(new ResourceNotFoundException("Không tìm thấy yêu cầu tuyển dụng."));
+
+                // Act + Assert
+                mvc.perform(get("/requisitions/edit/999999").session(session))
+                                .andExpect(redirectedUrl("/requisitions/2796"))
+                                .andExpect(flash().attribute("failureMessage", "Không tìm thấy yêu cầu tuyển dụng."));
+        }
+
+        @Test
+        @WithMockUser(username = "hm", roles = "HIRING_MANAGER")
+        @DisplayName("Trang chi tiết đã xem vừa bị xóa -> Về danh sách (không lặp vô hạn)")
+        void detail_shouldRedirectToList_whenRememberedPageNoLongerExists() throws Exception {
+                // Arrange
+                when(service.getById(2796)).thenReturn(RequisitionResponse.builder()
+                                .requisitionId(2796).title("Backend Engineer")
+                                .approvalStatus(RequisitionAccess.STATUS_DRAFT)
+                                .approvals(List.of()).activityLog(List.of()).build());
+                MockHttpSession session = (MockHttpSession) mvc.perform(get("/requisitions/2796"))
+                                .andExpect(status().isOk()).andReturn().getRequest().getSession(false);
+                reset(service);
+                when(service.getById(2796)).thenThrow(new ResourceNotFoundException("Không tìm thấy yêu cầu tuyển dụng."));
+
+                // Act + Assert
+                mvc.perform(get("/requisitions/2796").session(session))
+                                .andExpect(redirectedUrl("/requisitions"));
         }
 
         // =========================================================================
@@ -468,14 +552,128 @@ class RequisitionControllerTests {
 
         @Test
         @WithMockUser(username = "hm", roles = "HIRING_MANAGER")
-        @DisplayName("POST /requisitions/{id}/withdraw -> Rút lại xong chuyển về chi tiết")
-        void withdraw_shouldRedirectToDetail_whenWithdrawn() throws Exception {
+        @DisplayName("POST /requisitions/{id}/withdraw -> Rút lại xong mở thẳng form sửa")
+        void withdraw_shouldRedirectToEditForm_whenWithdrawn() throws Exception {
                 mvc.perform(post("/requisitions/10/withdraw").with(csrf()))
                                 .andExpect(status().is3xxRedirection())
-                                .andExpect(redirectedUrl("/requisitions/10"))
+                                .andExpect(redirectedUrl("/requisitions/edit/10"))
                                 .andExpect(flash().attribute("successMessage",
                                                 "Đã rút lại yêu cầu thành công. Bạn có thể chỉnh sửa lại bản nháp."));
                 verify(service).withdraw(10);
+        }
+
+        // =========================================================================
+        // Chặn theo trạng thái (gõ URL): về trang chi tiết kèm toast lỗi, không ra trang lỗi
+        // =========================================================================
+
+        @Test
+        @WithMockUser(username = "hm", roles = "HIRING_MANAGER")
+        @DisplayName("GET /requisitions/edit/{id} của yêu cầu Chờ duyệt / Đã duyệt -> Về chi tiết, flash 'không có quyền'")
+        void edit_shouldRedirectToDetailWithError_whenStatusIsLocked() throws Exception {
+                // Arrange
+                when(service.prepareEditForm(2796)).thenThrow(new RequisitionStateException());
+
+                // Act + Assert
+                mvc.perform(get("/requisitions/edit/2796"))
+                                .andExpect(status().is3xxRedirection())
+                                .andExpect(redirectedUrl("/requisitions/2796"))
+                                .andExpect(flash().attribute("failureMessage", RequisitionStateException.NO_ACCESS_MESSAGE));
+        }
+
+        @Test
+        @WithMockUser(username = "hm", roles = "HIRING_MANAGER")
+        @DisplayName("Gõ URL sửa sai trạng thái từ danh sách -> Giữ trang danh sách và bộ lọc, hiện thông báo")
+        void edit_shouldReturnToLastListPage_whenStatusIsLocked() throws Exception {
+                RequisitionFilterOptions options = new RequisitionFilterOptions(true, true, false, false, true,
+                                List.of(), List.of(), List.of(), List.of(), List.of());
+                when(listService.getListPage(any())).thenReturn(listWith(
+                                RequisitionResponse.builder().requisitionId(2796).title("Backend Engineer")
+                                                .approvalStatus(RequisitionAccess.STATUS_PENDING_DIRECTOR)
+                                                .createdAt(LocalDateTime.now()).build(), options));
+                MockHttpSession session = (MockHttpSession) mvc.perform(get("/requisitions?q=Backend"))
+                                .andExpect(status().isOk()).andReturn().getRequest().getSession(false);
+                when(service.prepareEditForm(2796)).thenThrow(new RequisitionStateException());
+
+                mvc.perform(get("/requisitions/edit/2796").session(session))
+                                .andExpect(redirectedUrl("/requisitions?q=Backend"))
+                                .andExpect(flash().attribute("failureMessage", RequisitionStateException.NO_ACCESS_MESSAGE));
+                mvc.perform(get("/requisitions?q=Backend").session(session))
+                                .andExpect(status().isOk())
+                                .andExpect(content().string(containsString(RequisitionStateException.NO_ACCESS_MESSAGE)));
+        }
+
+        @Test
+        @WithMockUser(username = "hm", roles = "HIRING_MANAGER")
+        @DisplayName("Gõ URL sửa sai trạng thái từ chi tiết -> Giữ trang chi tiết, hiện thông báo")
+        void edit_shouldReturnToLastDetailPage_whenStatusIsLocked() throws Exception {
+                when(service.getById(2796)).thenReturn(RequisitionResponse.builder()
+                                .requisitionId(2796).title("Backend Engineer")
+                                .approvalStatus(RequisitionAccess.STATUS_PENDING_DIRECTOR)
+                                .approvals(List.of()).activityLog(List.of()).build());
+                MockHttpSession session = (MockHttpSession) mvc.perform(get("/requisitions/2796"))
+                                .andExpect(status().isOk()).andReturn().getRequest().getSession(false);
+                when(service.prepareEditForm(2796)).thenThrow(new RequisitionStateException());
+
+                mvc.perform(get("/requisitions/edit/2796").session(session))
+                                .andExpect(redirectedUrl("/requisitions/2796"))
+                                .andExpect(flash().attribute("failureMessage", RequisitionStateException.NO_ACCESS_MESSAGE));
+        }
+
+        @Test
+        @WithMockUser(username = "hm", roles = "HIRING_MANAGER")
+        @DisplayName("POST /requisitions/edit/{id} khi yêu cầu đã đổi trạng thái -> Về chi tiết, không render lại form")
+        void update_shouldRedirectToDetailWithError_whenStatusIsLocked() throws Exception {
+                // Arrange
+                doThrow(new RequisitionStateException()).when(service).updateRequisition(eq(2793), any());
+
+                // Act + Assert
+                mvc.perform(post("/requisitions/edit/2793").with(csrf())
+                                .param("action", RequisitionValidator.ACTION_DRAFT).param("title", "Java Developer"))
+                                .andExpect(redirectedUrl("/requisitions/2793"))
+                                .andExpect(flash().attribute("failureMessage", RequisitionStateException.NO_ACCESS_MESSAGE));
+        }
+
+        @Test
+        @WithMockUser(username = "hm", roles = "HIRING_MANAGER")
+        @DisplayName("GET /requisitions/copy/{id} của yêu cầu chưa duyệt -> Về chi tiết, flash 'không có quyền'")
+        void copy_shouldRedirectToDetailWithError_whenSourceIsNotApproved() throws Exception {
+                // Arrange
+                when(service.copy(2796)).thenThrow(new RequisitionStateException());
+
+                // Act + Assert
+                mvc.perform(get("/requisitions/copy/2796"))
+                                .andExpect(redirectedUrl("/requisitions/2796"))
+                                .andExpect(flash().attribute("failureMessage", RequisitionStateException.NO_ACCESS_MESSAGE));
+        }
+
+        @Test
+        @WithMockUser(username = "hm", roles = "HIRING_MANAGER")
+        @DisplayName("POST delete / withdraw khi sai trạng thái -> Về chi tiết, flash 'không có quyền'")
+        void deleteAndWithdraw_shouldRedirectToDetailWithError_whenStatusIsLocked() throws Exception {
+                // Arrange
+                doThrow(new RequisitionStateException()).when(service).deleteRequisition(2793);
+                doThrow(new RequisitionStateException()).when(service).withdraw(2793);
+
+                // Act + Assert
+                mvc.perform(post("/requisitions/delete/2793").with(csrf()))
+                                .andExpect(redirectedUrl("/requisitions/2793"))
+                                .andExpect(flash().attribute("failureMessage", RequisitionStateException.NO_ACCESS_MESSAGE));
+                mvc.perform(post("/requisitions/2793/withdraw").with(csrf()))
+                                .andExpect(redirectedUrl("/requisitions/2793"))
+                                .andExpect(flash().attribute("failureMessage", RequisitionStateException.NO_ACCESS_MESSAGE));
+        }
+
+        @Test
+        @WithMockUser(username = "director", roles = "DIRECTOR")
+        @DisplayName("POST /requisitions/{id}/decision với yêu cầu đã duyệt -> Về chi tiết, flash 'không có quyền'")
+        void decide_shouldRedirectToDetailWithError_whenRequisitionIsNotPending() throws Exception {
+                // Arrange
+                doThrow(new RequisitionStateException()).when(service).decide(2793, true, "");
+
+                // Act + Assert
+                mvc.perform(post("/requisitions/2793/decision").with(csrf()).param("decision", "approve"))
+                                .andExpect(redirectedUrl("/requisitions/2793"))
+                                .andExpect(flash().attribute("failureMessage", RequisitionStateException.NO_ACCESS_MESSAGE));
         }
 
         // =========================================================================

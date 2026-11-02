@@ -50,7 +50,7 @@ public class RequisitionListService {
             RequisitionAccess.STATUS_APPROVED,
             RequisitionAccess.STATUS_REJECTED);
 
-    /** Director không xem bản nháp nên không có lựa chọn "Bản nháp". */
+    /** Trạng thái dùng cho ô "Người tạo" của Director (không lộ người chỉ có bản nháp). */
     private static final List<String> STATUSES_WITHOUT_DRAFT = List.of(
             RequisitionAccess.STATUS_PENDING_DIRECTOR,
             RequisitionAccess.STATUS_APPROVED,
@@ -106,7 +106,10 @@ public class RequisitionListService {
             };
         }
         if (RequisitionAccess.ROLE_DIRECTOR.equals(role)) {
-            return (root, query, cb) -> cb.notEqual(root.get("approvalStatus"), RequisitionAccess.STATUS_DRAFT);
+            // Director không xem nháp của người khác, nhưng thấy nháp do chính mình tạo
+            return (root, query, cb) -> cb.or(
+                    cb.notEqual(root.get("approvalStatus"), RequisitionAccess.STATUS_DRAFT),
+                    cb.equal(root.get("hiringManager").get("userId"), currentUser.getUserId()));
         }
         if (RequisitionAccess.ROLE_HR.equals(role)) {
             return (root, query, cb) -> cb.equal(root.get("approvalStatus"), RequisitionAccess.STATUS_APPROVED);
@@ -130,9 +133,9 @@ public class RequisitionListService {
                     statusOptions(ALL_STATUSES), postingOptions(), List.of(), List.of(), sorts);
         }
         if (RequisitionAccess.ROLE_DIRECTOR.equals(role)) {
-            // Director không xem bản nháp nên ô trạng thái không có "Bản nháp"
+            // Có "Bản nháp" để lọc nháp của chính mình; ô "Người tạo" vẫn bỏ người chỉ có nháp
             return new RequisitionFilterOptions(true, false, true, true, false,
-                    statusOptions(STATUSES_WITHOUT_DRAFT), List.of(), departmentOptions(),
+                    statusOptions(ALL_STATUSES), List.of(), departmentOptions(),
                     creatorOptions(STATUSES_WITHOUT_DRAFT), sorts);
         }
         if (RequisitionAccess.ROLE_HR.equals(role)) {
