@@ -1,0 +1,37 @@
+<!doctype html><html lang="vi"><meta charset="utf-8"><title>TC-PC-018 — real HTTP evidence</title><style>body{font:18px system-ui;background:#f4f6f3;color:#19251e;margin:32px auto;max-width:1440px;padding:0 32px}h1{font-size:28px}.card{background:white;border:1px solid #cad4cc;border-radius:8px;padding:22px;margin:14px 0}pre{white-space:pre-wrap;overflow-wrap:anywhere;font:16px/1.5 Consolas,monospace}.meta{display:flex;gap:32px;color:#41574a}h2{font-size:20px}.badge{padding:6px 14px;background:#e6eee8;display:inline-block;border-radius:5px}body{display:grid;grid-template-columns:1.15fr 1fr;gap:12px;max-width:1740px;margin:16px auto;font-size:16px}h1,.meta,body>p{grid-column:1/-1}h1{margin:0;font-size:26px}.meta{margin:0}.card{margin:0;padding:14px}.card:nth-of-type(2){grid-column:1/-1}h2{margin:0 0 8px;font-size:18px}pre{margin:4px 0;font-size:14px;line-height:1.25}</style><h1>TC-PC-018 · Interviewer cannot mark potential candidate</h1><div class="meta"><span>RMS local · http://localhost:8081</span><span>Account: <b>interviewer_nam</b></span><span>2026-11-02T07:07:12.539815+07:00</span></div><div class="card"><h2>Actual request — authenticated session with valid CSRF</h2><pre>POST /talent-pool/applications/4/mark
+{}</pre></div><div class="card"><h2>Actual server response</h2><pre>[
+  {
+    &quot;status&quot;: 403,
+    &quot;location&quot;: null,
+    &quot;content_type&quot;: &quot;application/json;charset=UTF-8&quot;,
+    &quot;body&quot;: {
+      &quot;timestamp&quot;: &quot;2026-11-02T00:07:12.300+00:00&quot;,
+      &quot;status&quot;: 403,
+      &quot;error&quot;: &quot;Forbidden&quot;,
+      &quot;message&quot;: &quot;Forbidden&quot;,
+      &quot;path&quot;: &quot;/talent-pool/applications/4/mark&quot;
+    }
+  }
+]</pre></div><div class="card"><h2>SQL Server verification</h2><div class="badge">Candidate flags, notes, applications and mark/suggest audit records unchanged</div><pre>{
+  &quot;candidates&quot;: [
+    {
+      &quot;CandidateId&quot;: 1,
+      &quot;IsPotential&quot;: true
+    },
+    {
+      &quot;CandidateId&quot;: 3,
+      &quot;IsPotential&quot;: true
+    },
+    {
+      &quot;CandidateId&quot;: 4,
+      &quot;IsPotential&quot;: true
+    },
+    {
+      &quot;CandidateId&quot;: 7,
+      &quot;IsPotential&quot;: true
+    }
+  ],
+  &quot;note_count&quot;: 2,
+  &quot;application_count&quot;: 5,
+  &quot;mark_suggest_audit_count&quot;: 16
+}</pre></div><p>API integration evidence from live requests; this page is an evidence viewer, not an RMS product screen. Full before/after snapshots are stored in TC-PC-018.json.</p></html>

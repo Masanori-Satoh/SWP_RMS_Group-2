@@ -1,0 +1,387 @@
+{
+  "case": "TC-PC-036",
+  "title": "Cannot suggest to Paused posting",
+  "time": "2026-11-02T07:12:06.625465+07:00",
+  "base_url": "http://localhost:8081",
+  "account": "hm_tuan",
+  "method": "POST",
+  "path": "/talent-pool/jobs/16/suggest",
+  "payload": {
+    "sourceApplicationIds": [
+      1
+    ]
+  },
+  "responses": [
+    {
+      "status": 400,
+      "location": null,
+      "content_type": "application/json;charset=UTF-8",
+      "body": {
+        "success": false,
+        "message": "Tin tuyển dụng không còn nhận hồ sơ.",
+        "data": null
+      }
+    }
+  ],
+  "db_before": {
+    "candidates": [
+      {
+        "CandidateId": 1,
+        "IsPotential": true
+      },
+      {
+        "CandidateId": 3,
+        "IsPotential": true
+      },
+      {
+        "CandidateId": 4,
+        "IsPotential": true
+      },
+      {
+        "CandidateId": 7,
+        "IsPotential": true
+      }
+    ],
+    "notes": [
+      {
+        "NoteId": 1,
+        "CandidateId": 1,
+        "UserId": 3,
+        "Characters": 107
+      },
+      {
+        "NoteId": 2,
+        "CandidateId": 3,
+        "UserId": 5,
+        "Characters": 99
+      }
+    ],
+    "applications": [
+      {
+        "ApplicationId": 1,
+        "CandidateId": 1,
+        "JobPostingId": 1,
+        "ApplicationStatus": "Interviewing"
+      },
+      {
+        "ApplicationId": 3,
+        "CandidateId": 3,
+        "JobPostingId": 3,
+        "ApplicationStatus": "Interviewing"
+      },
+      {
+        "ApplicationId": 4,
+        "CandidateId": 4,
+        "JobPostingId": 1,
+        "ApplicationStatus": "Applied"
+      },
+      {
+        "ApplicationId": 195,
+        "CandidateId": 4,
+        "JobPostingId": 5,
+        "ApplicationStatus": "Applied"
+      },
+      {
+        "ApplicationId": 199,
+        "CandidateId": 1,
+        "JobPostingId": 5,
+        "ApplicationStatus": "Rejected"
+      }
+    ],
+    "audit": [
+      {
+        "AuditLogId": 51,
+        "UserId": 3,
+        "EntityName": "Candidate",
+        "EntityId": "192",
+        "NewValue": "TalentPoolMarked"
+      },
+      {
+        "AuditLogId": 52,
+        "UserId": 3,
+        "EntityName": "Candidate",
+        "EntityId": "189",
+        "NewValue": "TalentPoolMarked"
+      },
+      {
+        "AuditLogId": 53,
+        "UserId": 3,
+        "EntityName": "Candidate",
+        "EntityId": "188",
+        "NewValue": "TalentPoolMarked"
+      },
+      {
+        "AuditLogId": 54,
+        "UserId": 3,
+        "EntityName": "Candidate",
+        "EntityId": "187",
+        "NewValue": "TalentPoolMarked"
+      },
+      {
+        "AuditLogId": 55,
+        "UserId": 3,
+        "EntityName": "Candidate",
+        "EntityId": "1",
+        "NewValue": "TalentPoolUnmarked"
+      },
+      {
+        "AuditLogId": 56,
+        "UserId": 3,
+        "EntityName": "Candidate",
+        "EntityId": "1",
+        "NewValue": "TalentPoolMarked"
+      },
+      {
+        "AuditLogId": 57,
+        "UserId": 3,
+        "EntityName": "Candidate",
+        "EntityId": "4",
+        "NewValue": "TalentPoolMarked"
+      },
+      {
+        "AuditLogId": 58,
+        "UserId": 3,
+        "EntityName": "Candidate",
+        "EntityId": "4",
+        "NewValue": "TalentPoolUnmarked"
+      },
+      {
+        "AuditLogId": 59,
+        "UserId": 3,
+        "EntityName": "Candidate",
+        "EntityId": "4",
+        "NewValue": "TalentPoolMarked"
+      },
+      {
+        "AuditLogId": 60,
+        "UserId": 3,
+        "EntityName": "Candidate",
+        "EntityId": "4",
+        "NewValue": "TalentPoolUnmarked"
+      },
+      {
+        "AuditLogId": 61,
+        "UserId": 3,
+        "EntityName": "Candidate",
+        "EntityId": "4",
+        "NewValue": "TalentPoolMarked"
+      },
+      {
+        "AuditLogId": 62,
+        "UserId": 3,
+        "EntityName": "Candidate",
+        "EntityId": "4",
+        "NewValue": "TalentPoolUnmarked"
+      },
+      {
+        "AuditLogId": 63,
+        "UserId": 3,
+        "EntityName": "Candidate",
+        "EntityId": "4",
+        "NewValue": "TalentPoolMarked"
+      },
+      {
+        "AuditLogId": 64,
+        "UserId": 3,
+        "EntityName": "Candidate",
+        "EntityId": "4",
+        "NewValue": "TalentPoolUnmarked"
+      },
+      {
+        "AuditLogId": 65,
+        "UserId": 3,
+        "EntityName": "Candidate",
+        "EntityId": "4",
+        "NewValue": "TalentPoolMarked"
+      },
+      {
+        "AuditLogId": 66,
+        "UserId": 3,
+        "EntityName": "Candidate",
+        "EntityId": "7",
+        "NewValue": "TalentPoolMarked"
+      }
+    ]
+  },
+  "db_after": {
+    "candidates": [
+      {
+        "CandidateId": 1,
+        "IsPotential": true
+      },
+      {
+        "CandidateId": 3,
+        "IsPotential": true
+      },
+      {
+        "CandidateId": 4,
+        "IsPotential": true
+      },
+      {
+        "CandidateId": 7,
+        "IsPotential": true
+      }
+    ],
+    "notes": [
+      {
+        "NoteId": 1,
+        "CandidateId": 1,
+        "UserId": 3,
+        "Characters": 107
+      },
+      {
+        "NoteId": 2,
+        "CandidateId": 3,
+        "UserId": 5,
+        "Characters": 99
+      }
+    ],
+    "applications": [
+      {
+        "ApplicationId": 1,
+        "CandidateId": 1,
+        "JobPostingId": 1,
+        "ApplicationStatus": "Interviewing"
+      },
+      {
+        "ApplicationId": 3,
+        "CandidateId": 3,
+        "JobPostingId": 3,
+        "ApplicationStatus": "Interviewing"
+      },
+      {
+        "ApplicationId": 4,
+        "CandidateId": 4,
+        "JobPostingId": 1,
+        "ApplicationStatus": "Applied"
+      },
+      {
+        "ApplicationId": 195,
+        "CandidateId": 4,
+        "JobPostingId": 5,
+        "ApplicationStatus": "Applied"
+      },
+      {
+        "ApplicationId": 199,
+        "CandidateId": 1,
+        "JobPostingId": 5,
+        "ApplicationStatus": "Rejected"
+      }
+    ],
+    "audit": [
+      {
+        "AuditLogId": 51,
+        "UserId": 3,
+        "EntityName": "Candidate",
+        "EntityId": "192",
+        "NewValue": "TalentPoolMarked"
+      },
+      {
+        "AuditLogId": 52,
+        "UserId": 3,
+        "EntityName": "Candidate",
+        "EntityId": "189",
+        "NewValue": "TalentPoolMarked"
+      },
+      {
+        "AuditLogId": 53,
+        "UserId": 3,
+        "EntityName": "Candidate",
+        "EntityId": "188",
+        "NewValue": "TalentPoolMarked"
+      },
+      {
+        "AuditLogId": 54,
+        "UserId": 3,
+        "EntityName": "Candidate",
+        "EntityId": "187",
+        "NewValue": "TalentPoolMarked"
+      },
+      {
+        "AuditLogId": 55,
+        "UserId": 3,
+        "EntityName": "Candidate",
+        "EntityId": "1",
+        "NewValue": "TalentPoolUnmarked"
+      },
+      {
+        "AuditLogId": 56,
+        "UserId": 3,
+        "EntityName": "Candidate",
+        "EntityId": "1",
+        "NewValue": "TalentPoolMarked"
+      },
+      {
+        "AuditLogId": 57,
+        "UserId": 3,
+        "EntityName": "Candidate",
+        "EntityId": "4",
+        "NewValue": "TalentPoolMarked"
+      },
+      {
+        "AuditLogId": 58,
+        "UserId": 3,
+        "EntityName": "Candidate",
+        "EntityId": "4",
+        "NewValue": "TalentPoolUnmarked"
+      },
+      {
+        "AuditLogId": 59,
+        "UserId": 3,
+        "EntityName": "Candidate",
+        "EntityId": "4",
+        "NewValue": "TalentPoolMarked"
+      },
+      {
+        "AuditLogId": 60,
+        "UserId": 3,
+        "EntityName": "Candidate",
+        "EntityId": "4",
+        "NewValue": "TalentPoolUnmarked"
+      },
+      {
+        "AuditLogId": 61,
+        "UserId": 3,
+        "EntityName": "Candidate",
+        "EntityId": "4",
+        "NewValue": "TalentPoolMarked"
+      },
+      {
+        "AuditLogId": 62,
+        "UserId": 3,
+        "EntityName": "Candidate",
+        "EntityId": "4",
+        "NewValue": "TalentPoolUnmarked"
+      },
+      {
+        "AuditLogId": 63,
+        "UserId": 3,
+        "EntityName": "Candidate",
+        "EntityId": "4",
+        "NewValue": "TalentPoolMarked"
+      },
+      {
+        "AuditLogId": 64,
+        "UserId": 3,
+        "EntityName": "Candidate",
+        "EntityId": "4",
+        "NewValue": "TalentPoolUnmarked"
+      },
+      {
+        "AuditLogId": 65,
+        "UserId": 3,
+        "EntityName": "Candidate",
+        "EntityId": "4",
+        "NewValue": "TalentPoolMarked"
+      },
+      {
+        "AuditLogId": 66,
+        "UserId": 3,
+        "EntityName": "Candidate",
+        "EntityId": "7",
+        "NewValue": "TalentPoolMarked"
+      }
+    ]
+  },
+  "unchanged": true
+}

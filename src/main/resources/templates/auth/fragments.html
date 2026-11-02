@@ -148,7 +148,7 @@
     'Too many incorrect attempts. Register again.': 'Bạn đã nhập sai mã 5 lần. Vui lòng đăng ký lại.',
     'A registration email is already being sent. Please wait.': 'Mã xác minh đăng ký đang được gửi. Vui lòng chờ.'
   } }"
-    th:text="${translations.get(text) != null ? translations.get(text) : (#strings.startsWith(text, 'Độ dài phải từ ') ? text : 'Không thể hoàn tất yêu cầu. Vui lòng kiểm tra thông tin và thử lại.')}"></span>
+    th:text="${translations.get(text) != null ? translations.get(text) : (translations.containsValue(text) or #strings.startsWith(text, 'Độ dài phải từ ') ? text : 'Không thể hoàn tất yêu cầu. Vui lòng kiểm tra thông tin và thử lại.')}"></span>
   <footer class="auth-footer" th:fragment="footer">
     <p class="auth-container">Mộc Tuyển dụng · Đồng hành cùng sự nghiệp của bạn.</p>
   </footer>

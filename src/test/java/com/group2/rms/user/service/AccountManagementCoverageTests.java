@@ -698,7 +698,7 @@ class AccountManagementCoverageTests {
             new AccountManagementService.UpdateCommand("Name", "a@example.test", null, 1, null, "Active")));
         // Then: Chặn ở guard nội bộ trước khi chạy logic update hoặc lưu dữ liệu.
         assertEquals("roleId", error.getField());
-        assertEquals("Select an internal role. Candidate accounts have a separate lifecycle.", error.getMessage());
+        assertEquals("Vui lòng chọn vai trò nội bộ. Tài khoản ứng viên được quản lý riêng.", error.getMessage());
         verify(users, times(1)).findById(7);
         verify(users, times(0)).saveAndFlush(any(User.class));
     }
