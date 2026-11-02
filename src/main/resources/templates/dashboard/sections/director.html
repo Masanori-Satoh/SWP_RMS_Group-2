@@ -35,10 +35,6 @@
                     <a class="btn btn--secondary btn--sm" th:href="@{${requisition.href}}">Xem và duyệt</a>
                 </li>
             </ul>
-            <p class="dash-panel__more" th:if="${dashboard.morePendingRequisitions > 0}">
-                <span th:text="|+${dashboard.morePendingRequisitions} yêu cầu khác|">+2 yêu cầu khác</span>
-                <a class="dash-link" th:href="@{/requisitions}">Xem tất cả</a>
-            </p>
         </section>
 
         <section class="card dash-panel adw-surface" aria-labelledby="dr-offers-title">

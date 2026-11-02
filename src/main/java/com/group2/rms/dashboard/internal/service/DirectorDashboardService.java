@@ -58,7 +58,6 @@ public class DirectorDashboardService {
                 user.getFullName(),
                 kpis(requisitionRows, offerRows, now),
                 pendingRequisitions(shownRequisitions, now),
-                requisitionRows.size() - shownRequisitions.size(),
                 pendingOffers(shownOffers, now),
                 offerRows.size() - shownOffers.size(),
                 departments(lists.openRequisitionsByDepartment()));

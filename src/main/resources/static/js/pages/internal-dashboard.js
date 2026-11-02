@@ -58,8 +58,8 @@
             data: {
                 labels: points.map((point) => point.label),
                 datasets: [
-                    { label: 'Đã tuyển', data: points.map((point) => point.hired), backgroundColor: token('--brand-hover'), borderRadius: 3, maxBarThickness: 26 },
-                    { label: 'Còn thiếu', data: points.map((point) => point.missing), backgroundColor: token('--brand-caption'), borderRadius: 3, maxBarThickness: 26 }
+                    { label: 'Đã tuyển', data: points.map((point) => point.hired), backgroundColor: token('--brand'), hoverBorderColor: token('--brand-dark'), hoverBorderWidth: 1, borderRadius: 4, maxBarThickness: 26 },
+                    { label: 'Còn thiếu', data: points.map((point) => point.missing), backgroundColor: token('--brand-caption'), borderRadius: 4, maxBarThickness: 26 }
                 ]
             },
             options
@@ -77,8 +77,8 @@
             data: {
                 labels: points.map((point) => point.label),
                 datasets: [{ label: 'Hồ sơ mới', data: points.map((point) => point.count),
-                    borderColor: token('--brand-dark'), backgroundColor: token('--brand-soft'), fill: true,
-                    pointBackgroundColor: token('--brand-dark'), pointRadius: 4, tension: 0.3 }]
+                    borderColor: token('--brand'), backgroundColor: token('--brand-soft'), fill: true,
+                    pointBackgroundColor: token('--brand'), pointRadius: 4, tension: 0.3 }]
             },
             options
         });
@@ -99,7 +99,7 @@
             data: {
                 labels: points.map((point) => point.label),
                 datasets: [
-                    { label: 'Đã duyệt', data: points.map((point) => point.approved), backgroundColor: token('--brand-dark'), borderRadius: 3, maxBarThickness: 48 },
+                    { label: 'Đã duyệt', data: points.map((point) => point.approved), backgroundColor: token('--brand'), hoverBorderColor: token('--brand-dark'), hoverBorderWidth: 1, borderRadius: 4, maxBarThickness: 48 },
                     { label: 'Chờ duyệt', data: points.map((point) => point.pending), backgroundColor: token('--warning'), borderRadius: 3, maxBarThickness: 48 }
                 ]
             },

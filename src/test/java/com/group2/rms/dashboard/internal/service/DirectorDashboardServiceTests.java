@@ -110,7 +110,6 @@ class DirectorDashboardServiceTests {
         assertEquals("Thư mời nhận việc chờ duyệt", result.kpis().get(1).title());
         assertEquals("Ứng viên trúng tuyển trong tháng", result.kpis().get(2).title());
         assertEquals(5, result.pendingRequisitions().size());
-        assertEquals(2, result.morePendingRequisitions());
     }
 
     @Test
