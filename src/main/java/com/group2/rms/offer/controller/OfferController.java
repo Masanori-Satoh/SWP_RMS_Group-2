@@ -486,7 +486,11 @@ public class OfferController {
             @PathVariable Integer id,
             @Valid @RequestBody DirectorDecisionRequest request) {
         try {
-            OfferResponse rejected = offerService.rejectOfferByDirector(id, request.getComments());
+            if (request == null || request.getComments() == null || request.getComments().trim().isEmpty()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(new ApiResponse<>(false, "Vui lòng nhập lý do từ chối vào ô nhận xét trước khi tiếp tục."));
+            }
+            OfferResponse rejected = offerService.rejectOfferByDirector(id, request.getComments().trim());
             return ResponseEntity.ok(new ApiResponse<>(true, "Đã từ chối đề xuất nhận việc thành công!", rejected));
         } catch (BaseBusinessException e) {
             HttpStatus status = (e instanceof ResourceNotFoundException) ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST;

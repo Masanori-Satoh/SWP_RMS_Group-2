@@ -1063,6 +1063,11 @@ function executeSendOfferAction() {
 }
 
 window.confirmSendOffer = confirmSendOffer;
+window.openDirectorDecisionModal = openDirectorDecisionModal;
+window.closeDirectorDecisionModal = closeDirectorDecisionModal;
+window.submitDirectorDecision = submitDirectorDecision;
+window.handleDirectorDecisionCommentInput = handleDirectorDecisionCommentInput;
+
 window.executeSendOfferAction = executeSendOfferAction;
 
 function confirmDeleteOffer(offerId) {
@@ -1452,37 +1457,128 @@ function openDirectorDecisionModal(offerId, actionType) {
 
     document.getElementById('directorDecisionOfferId').value = offerId;
     document.getElementById('directorDecisionAction').value = actionType;
-    document.getElementById('directorDecisionComments').value = '';
 
+    const commentsEl = document.getElementById('directorDecisionComments');
+    if (commentsEl) {
+        commentsEl.value = '';
+        commentsEl.classList.remove('is-invalid');
+        commentsEl.style.borderColor = '';
+    }
+
+    const counterEl = document.getElementById('directorDecisionCommentCount');
+    if (counterEl) {
+        counterEl.textContent = '0';
+    }
+
+    const errorEl = document.getElementById('directorDecisionCommentsError');
+    if (errorEl) {
+        errorEl.style.display = 'none';
+    }
+
+    const subnoteEl = document.getElementById('directorDecisionSubnote');
+    const labelEl = document.getElementById('directorDecisionCommentsLabel');
     const titleEl = document.getElementById('directorDecisionTitle');
     const btnSubmit = document.getElementById('btnSubmitDecision');
 
     if (actionType === 'APPROVE') {
-        titleEl.innerHTML = '<span class="ofw-modal-title-icon ofw-modal-title-icon--success"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg></span> Phê Duyệt Đề Xuất Nhận Việc';
-        btnSubmit.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="ofw-btn-icon-inline"><polyline points="20 6 9 17 4 12"/></svg> Phê Duyệt';
-        btnSubmit.className = 'btn btn-primary';
+        if (titleEl) {
+            titleEl.innerHTML = '<span class="ofw-modal-title-icon ofw-modal-title-icon--success"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg></span> Phê Duyệt Đề Xuất Nhận Việc';
+        }
+        if (btnSubmit) {
+            btnSubmit.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="ofw-btn-icon-inline"><polyline points="20 6 9 17 4 12"/></svg> Phê Duyệt';
+            btnSubmit.className = 'btn btn-primary';
+        }
+        if (labelEl) {
+            labelEl.innerHTML = 'Phản hồi / Ghi chú của Giám đốc (Không bắt buộc)';
+        }
+        if (commentsEl) {
+            commentsEl.placeholder = 'Nhập ghi chú hoặc ý kiến phê duyệt...';
+            commentsEl.removeAttribute('required');
+        }
+        if (subnoteEl) {
+            subnoteEl.style.display = 'none';
+        }
     } else {
-        titleEl.innerHTML = '<span class="ofw-modal-title-icon ofw-modal-title-icon--danger"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></span> Từ Chối Đề Xuất Nhận Việc';
-        btnSubmit.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="ofw-btn-icon-inline"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Từ Chối';
-        btnSubmit.className = 'btn btn-danger';
+        if (titleEl) {
+            titleEl.innerHTML = '<span class="ofw-modal-title-icon ofw-modal-title-icon--danger"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></span> Từ Chối Đề Xuất Nhận Việc';
+        }
+        if (btnSubmit) {
+            btnSubmit.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="ofw-btn-icon-inline"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Từ Chối';
+            btnSubmit.className = 'btn btn-danger';
+        }
+        if (labelEl) {
+            labelEl.innerHTML = 'Lý do từ chối của Giám đốc <span class="text-danger" style="color: #dc2626; font-weight: bold;">*</span>';
+        }
+        if (commentsEl) {
+            commentsEl.placeholder = 'Vui lòng nhập lý do từ chối đề xuất nhận việc (bắt buộc)...';
+            commentsEl.setAttribute('required', 'required');
+        }
+        if (subnoteEl) {
+            subnoteEl.style.display = 'block';
+        }
     }
 
     modal.classList.add('active');
+    modal.style.display = 'flex';
+}
+
+function handleDirectorDecisionCommentInput(textarea) {
+    if (!textarea) return;
+    const counterEl = document.getElementById('directorDecisionCommentCount');
+    if (counterEl) {
+        counterEl.textContent = textarea.value.length;
+    }
+    if (textarea.value.trim().length > 0) {
+        textarea.classList.remove('is-invalid');
+        textarea.style.borderColor = '';
+        const errorEl = document.getElementById('directorDecisionCommentsError');
+        if (errorEl) {
+            errorEl.style.display = 'none';
+        }
+    }
 }
 
 function closeDirectorDecisionModal() {
     const modal = document.getElementById('directorDecisionModal');
     if (modal) {
         modal.classList.remove('active');
+        modal.style.display = 'none';
+    }
+    const commentsEl = document.getElementById('directorDecisionComments');
+    if (commentsEl) {
+        commentsEl.classList.remove('is-invalid');
+        commentsEl.style.borderColor = '';
+    }
+    const errorEl = document.getElementById('directorDecisionCommentsError');
+    if (errorEl) {
+        errorEl.style.display = 'none';
     }
 }
 
 function submitDirectorDecision() {
     const offerId = document.getElementById('directorDecisionOfferId').value;
     const actionType = document.getElementById('directorDecisionAction').value;
-    const comments = document.getElementById('directorDecisionComments').value.trim();
+    const commentsEl = document.getElementById('directorDecisionComments');
+    const comments = commentsEl ? commentsEl.value.trim() : '';
 
     if (!offerId || !actionType) return;
+
+    // Yêu cầu nhập lý do bắt buộc khi Giám đốc Từ chối (đồng nhất với màn hình xem chi tiết)
+    if (actionType === 'REJECT' && !comments) {
+        if (commentsEl) {
+            commentsEl.classList.add('is-invalid');
+            commentsEl.style.borderColor = '#dc2626';
+            commentsEl.focus();
+        }
+        const errorEl = document.getElementById('directorDecisionCommentsError');
+        if (errorEl) {
+            errorEl.style.display = 'flex';
+        }
+        if (typeof showFlashToast === 'function') {
+            showFlashToast('Vui lòng nhập lý do từ chối vào ô nhận xét trước khi tiếp tục.', 'warning');
+        }
+        return;
+    }
 
     const btn = document.getElementById('btnSubmitDecision');
     const originalBtnHtml = btn.innerHTML;
@@ -2035,6 +2131,11 @@ window.submitDirectorDecisionFromScreen = submitDirectorDecisionFromScreen;
 window.showDirectorRejectReasonRequiredAlert = showDirectorRejectReasonRequiredAlert;
 window.showDirectorRejectConfirmModal = showDirectorRejectConfirmModal;
 window.confirmSendOffer = confirmSendOffer;
+window.openDirectorDecisionModal = openDirectorDecisionModal;
+window.closeDirectorDecisionModal = closeDirectorDecisionModal;
+window.submitDirectorDecision = submitDirectorDecision;
+window.handleDirectorDecisionCommentInput = handleDirectorDecisionCommentInput;
+
 
 function submitDirectorApprove() {
     if (!currentDirectorOfferId) return;
