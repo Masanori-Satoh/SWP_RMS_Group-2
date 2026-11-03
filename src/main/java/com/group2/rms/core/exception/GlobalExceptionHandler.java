@@ -98,22 +98,14 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ModelAndView handleResourceNotFoundException(ResourceNotFoundException ex, HttpServletRequest request) {
         log.warn("Resource not found at [{}]: {}", request.getRequestURL(), ex.getMessage());
-        ModelAndView mav = new ModelAndView("error/404");
-        mav.setStatus(HttpStatus.NOT_FOUND);
-        mav.addObject("message", ex.getMessage());
-        mav.addObject("url", request.getRequestURL());
-        return mav;
+        return ErrorPages.view(HttpStatus.NOT_FOUND, ex.getMessage(), request);
     }
 
     @ExceptionHandler(NoResourceFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ModelAndView handleNoResourceFoundException(NoResourceFoundException ex, HttpServletRequest request) {
         log.warn("Static resource not found at [{}]: {}", request.getRequestURL(), ex.getMessage());
-        ModelAndView mav = new ModelAndView("error/404");
-        mav.setStatus(HttpStatus.NOT_FOUND);
-        mav.addObject("message", "Tài nguyên được yêu cầu không tồn tại.");
-        mav.addObject("url", request.getRequestURL());
-        return mav;
+        return ErrorPages.view(HttpStatus.NOT_FOUND, "Tài nguyên được yêu cầu không tồn tại.", request);
     }
 
     // 403 forbidden
@@ -123,11 +115,7 @@ public class GlobalExceptionHandler {
         log.warn("Access denied for [{}] at [{}]: {}",
                 request.getUserPrincipal() != null ? request.getUserPrincipal().getName() : "Anonymous",
                 request.getRequestURL(), ex.getMessage());
-        ModelAndView mav = new ModelAndView("error/403");
-        mav.setStatus(HttpStatus.FORBIDDEN);
-        mav.addObject("message", "Bạn không có quyền truy cập vào chức năng hoặc tài nguyên này.");
-        mav.addObject("url", request.getRequestURL());
-        return mav;
+        return ErrorPages.view(HttpStatus.FORBIDDEN, request);
     }
 
     // 503 service unavailable
@@ -179,11 +167,8 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ModelAndView handleBusinessException(BaseBusinessException ex, HttpServletRequest request) {
         log.warn("Business exception [{}] at [{}]: {}", ex.getErrorCode(), request.getRequestURL(), ex.getMessage());
-        ModelAndView mav = new ModelAndView("error/400");
-        mav.setStatus(HttpStatus.BAD_REQUEST);
-        mav.addObject("message", ex.getMessage());
+        ModelAndView mav = ErrorPages.view(HttpStatus.BAD_REQUEST, ex.getMessage(), request);
         mav.addObject("errorCode", ex.getErrorCode());
-        mav.addObject("url", request.getRequestURL());
         return mav;
     }
 
@@ -211,11 +196,7 @@ public class GlobalExceptionHandler {
                     .body(new com.group2.rms.core.dto.ApiResponse<>(false, errorMsg));
         }
 
-        ModelAndView mav = new ModelAndView("error/400");
-        mav.setStatus(HttpStatus.BAD_REQUEST);
-        mav.addObject("message", errorMsg);
-        mav.addObject("url", request.getRequestURL());
-        return mav;
+        return ErrorPages.view(HttpStatus.BAD_REQUEST, errorMsg, request);
     }
 
     @ExceptionHandler(org.springframework.http.converter.HttpMessageNotReadableException.class)
@@ -229,11 +210,7 @@ public class GlobalExceptionHandler {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(new com.group2.rms.core.dto.ApiResponse<>(false, errorMsg));
         }
-        ModelAndView mav = new ModelAndView("error/400");
-        mav.setStatus(HttpStatus.BAD_REQUEST);
-        mav.addObject("message", errorMsg);
-        mav.addObject("url", request.getRequestURL());
-        return mav;
+        return ErrorPages.view(HttpStatus.BAD_REQUEST, errorMsg, request);
     }
 
     @ExceptionHandler(PasswordRecoveryFlowException.class)
@@ -301,27 +278,15 @@ public class GlobalExceptionHandler {
 
         log.warn("ResponseStatusException [{}] at [{}]: {}", status, request.getRequestURL(), ex.getReason());
 
-        String viewName = status == HttpStatus.NOT_FOUND ? "error/404"
-                : status == HttpStatus.FORBIDDEN ? "error/403"
-                        : status.is4xxClientError() ? "error/400"
-                                : "error/500";
-
-        ModelAndView mav = new ModelAndView(viewName);
-        mav.setStatus(status);
-        mav.addObject("message", ex.getReason() != null ? ex.getReason() : ex.getMessage());
-        mav.addObject("url", request.getRequestURL());
-        return mav;
+        // Không có reason thì dùng câu mặc định theo mã, tránh lộ chuỗi kỹ thuật kiểu "403 FORBIDDEN"
+        return ErrorPages.view(status, ex.getReason(), request);
     }
 
     @ExceptionHandler(org.springframework.web.HttpRequestMethodNotSupportedException.class)
     @ResponseStatus(HttpStatus.METHOD_NOT_ALLOWED)
     public ModelAndView handleMethodNotSupported(org.springframework.web.HttpRequestMethodNotSupportedException ex, HttpServletRequest request) {
         log.warn("Method [{}] not supported at [{}]: {}", ex.getMethod(), request.getRequestURL(), ex.getMessage());
-        ModelAndView mav = new ModelAndView("error/500");
-        mav.setStatus(HttpStatus.METHOD_NOT_ALLOWED);
-        mav.addObject("message", "Phương thức " + ex.getMethod() + " không được hỗ trợ cho đường dẫn này.");
-        mav.addObject("url", request.getRequestURL());
-        return mav;
+        return ErrorPages.view(HttpStatus.METHOD_NOT_ALLOWED, "Phương thức " + ex.getMethod() + " không được hỗ trợ cho đường dẫn này.", request);
     }
 
     @ExceptionHandler(org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class)
@@ -332,24 +297,16 @@ public class GlobalExceptionHandler {
         if ("/offers/create".equals(request.getRequestURI())) {
             return new ModelAndView("redirect:/offers/create");
         }
-        ModelAndView mav = new ModelAndView("error/400");
-        mav.setStatus(HttpStatus.BAD_REQUEST);
-        mav.addObject("message", "Tham số '" + ex.getName() + "' không đúng định dạng.");
-        mav.addObject("url", request.getRequestURL());
-        return mav;
+        return ErrorPages.view(HttpStatus.BAD_REQUEST, "Tham số '" + ex.getName() + "' không đúng định dạng.", request);
     }
 
     @ExceptionHandler(org.springframework.dao.DataIntegrityViolationException.class)
-    @ResponseStatus(HttpStatus.CONFLICT)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ModelAndView handleDataIntegrityViolation(
             org.springframework.dao.DataIntegrityViolationException ex,
             HttpServletRequest request) {
         log.error("Data integrity violation at [{}]: {}", request.getRequestURL(), ex.getMessage());
-        ModelAndView mav = new ModelAndView("error/400");
-        mav.setStatus(HttpStatus.BAD_REQUEST);
-        mav.addObject("message", "Dữ liệu bị trùng lặp hoặc vi phạm ràng buộc hệ thống. Vui lòng kiểm tra lại.");
-        mav.addObject("url", request.getRequestURL());
-        return mav;
+        return ErrorPages.view(HttpStatus.BAD_REQUEST, "Dữ liệu bị trùng lặp hoặc vi phạm ràng buộc hệ thống. Vui lòng kiểm tra lại.", request);
     }
 
     // =========================================================================
@@ -360,10 +317,6 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ModelAndView handleGlobalException(Exception ex, HttpServletRequest request) {
         log.error("Unhandled system exception at [{}]: ", request.getRequestURL(), ex);
-        ModelAndView mav = new ModelAndView("error/500");
-        mav.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
-        mav.addObject("message", "Đã xảy ra lỗi hệ thống, vui lòng thử lại sau.");
-        mav.addObject("url", request.getRequestURL());
-        return mav;
+        return ErrorPages.view(HttpStatus.INTERNAL_SERVER_ERROR, request);
     }
 }
