@@ -113,15 +113,19 @@
                             <span th:if="${p.numberOfPositionsDisplay != null}" th:text="${p.numberOfPositionsDisplay}">1 người</span>
                             <span th:unless="${p.numberOfPositionsDisplay != null}" class="jpd-muted">Không hiển thị</span></dd></div>
                         <div><dt>Hình thức</dt><dd th:text="|${p.employmentType} · ${p.workModelLabel}|">Toàn thời gian · Kết hợp</dd></div>
+                        <div th:unless="${#strings.isEmpty(p.probationPeriod)}"><dt>Thử việc</dt><dd th:text="${p.probationPeriod}">2 tháng</dd></div>
                         <div><dt>Hạn nộp</dt><dd th:text="${p.applicationDeadline != null ? #temporals.format(p.applicationDeadline, 'dd/MM/yyyy') : 'Chưa có'}">24/10/2026</dd></div>
                     </dl>
                 </div>
                 <div class="jpd-sec"><h2>Mô tả công việc</h2><p class="jpd-prose" th:text="${p.jobDescription}">...</p></div>
                 <div class="jpd-sec"><h2>Yêu cầu ứng viên</h2><p class="jpd-prose" th:text="${p.jobRequirements}">...</p></div>
-                <div class="jpd-sec" th:if="${p.benefits != null and !#strings.isEmpty(p.benefits)}"><h2>Quyền lợi</h2>
+                <div class="jpd-sec" th:if="${p.benefits != null and !#strings.isEmpty(p.benefits)}"><h2>Quyền lợi ứng viên</h2>
                     <p class="jpd-prose" th:text="${p.benefits}">...</p></div>
-                <div class="jpd-sec" th:if="${p.workLocation != null and !#strings.isEmpty(p.workLocation)}">
-                    <h2>Địa điểm làm việc</h2>
+                <!-- Địa điểm và thời gian: cùng thứ tự với trang ứng viên /jobs/{id}, dòng nào trống thì ẩn -->
+                <div class="jpd-sec" th:if="${!#strings.isEmpty(p.workLocation) or !#strings.isEmpty(p.workingHours)}">
+                    <h2>Địa điểm và thời gian</h2>
+                    <th:block th:unless="${#strings.isEmpty(p.workLocation)}">
+                    <h3>Địa điểm làm việc</h3>
                     <div class="jpd-loc">
                         <b th:text="${p.workLocation}">Tầng 8, RMS Tower</b>
                         <span class="jpd-muted" th:text="${p.workModelLabel}">Kết hợp</span>
@@ -143,6 +147,11 @@
                                th:href="|https://www.google.com/maps/search/?api=1&query=${#uris.escapeQueryParam(p.workLocation)}|">Mở Google Maps ↗</a>
                         </div>
                     </details>
+                    </th:block>
+                    <th:block th:unless="${#strings.isEmpty(p.workingHours)}">
+                    <h3>Thời gian làm việc</h3>
+                    <p class="jpd-prose" th:text="${p.workingHours}">Thứ 2 - Thứ 6 (09:00 - 18:00)</p>
+                    </th:block>
                 </div>
             </div>
 

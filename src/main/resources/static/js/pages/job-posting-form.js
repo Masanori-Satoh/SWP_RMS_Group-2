@@ -154,22 +154,30 @@
     function renderPreview() {
         const title = $('postingTitle').value.trim();
         const address = $('workLocation').value.trim();
-        const tags = [form.dataset.employment, form.dataset.workModel, form.dataset.department].filter(Boolean);
+        // Nhãn đang chọn ở ô Hình thức / Mô hình (HR đổi được), cộng phòng ban của yêu cầu
+        const selectedLabel = id => $(id).selectedOptions[0]?.textContent.trim();
+        const tags = [selectedLabel('employmentType'), selectedLabel('workModel'), form.dataset.department].filter(Boolean);
         const facts = [['Mức lương', salaryText() || '—'], ['Hạn nộp', deadline.value ? viDate(deadline.value) : '—']];
         if (showPositions.checked && $('numberOfPositionsDisplay').value.trim()) {
             facts.push(['Số lượng', $('numberOfPositionsDisplay').value.trim()]);
         }
-        facts.push(['Địa điểm', address || '—']);
+        const probation = $('probationPeriod').value.trim();
+        if (probation) facts.push(['Thử việc', probation]);
+        const workingHours = $('workingHours').value.trim();
+        // Mục "Địa điểm và thời gian" giống trang /jobs/{id}: chỉ hiện dòng nào HR đã nhập
+        const placeTime = (address ? `<h5>Địa điểm làm việc</h5><a href="${mapsLink(address)}" target="_blank" rel="noopener">${escapeHtml(address)} ↗</a>` : '')
+            + (workingHours ? `<h5>Thời gian làm việc</h5><p>${escapeHtml(workingHours)}</p>` : '');
 
         $('jpf-preview').innerHTML = `
             <header><h3>${title ? escapeHtml(title) : '<span class="jpf-empty">Tiêu đề tin</span>'}</h3>
                 <div class="jpf-tags">${tags.map(tag => `<span>${escapeHtml(tag)}</span>`).join('')}</div></header>
+            <h4>Tổng quan</h4>
             <dl class="jpf-facts">${facts.map(([label, value]) => `<div><dt>${label}</dt><dd>${escapeHtml(value)}</dd></div>`).join('')}</dl>
             <div class="jpf-body">
                 ${previewSection('Mô tả công việc', $('jobDescription').value)}
                 ${previewSection('Yêu cầu ứng viên', $('jobRequirements').value)}
-                ${benefitBox.value.trim() ? previewSection('Quyền lợi', benefitBox.value) : ''}
-                ${address ? `<section><h4>Nơi làm việc</h4><a href="${mapsLink(address)}" target="_blank" rel="noopener">${escapeHtml(address)} ↗</a></section>` : ''}
+                ${benefitBox.value.trim() ? previewSection('Quyền lợi ứng viên', benefitBox.value) : ''}
+                ${placeTime ? `<section><h4>Địa điểm và thời gian</h4>${placeTime}</section>` : ''}
             </div>
             <footer><span>Đăng ${viDate(postingDay())}</span><span class="btn btn--primary btn--sm" aria-hidden="true">Ứng tuyển ngay</span></footer>`;
     }

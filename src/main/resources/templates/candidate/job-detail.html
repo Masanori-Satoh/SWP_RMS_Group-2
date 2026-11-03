@@ -73,8 +73,22 @@
                         <div class="rich-text" th:utext="${job.jobRequirements}">Nội dung yêu cầu...</div>
                     </section>
                     <section class="jd-section" th:if="${job.benefits != null}" aria-labelledby="jd-h-benefits">
-                        <h2 id="jd-h-benefits" class="section-title">Quyền lợi</h2>
+                        <h2 id="jd-h-benefits" class="section-title">Quyền lợi ứng viên</h2>
                         <div class="rich-text" th:utext="${job.benefits}">Nội dung quyền lợi...</div>
+                    </section>
+                    <section class="jd-section" th:if="${!#strings.isEmpty(job.workLocation) or !#strings.isEmpty(job.workingHours)}"
+                             aria-labelledby="jd-h-place-time">
+                        <h2 id="jd-h-place-time" class="section-title">Địa điểm và thời gian</h2>
+                        <div class="rich-text">
+                            <th:block th:unless="${#strings.isEmpty(job.workLocation)}">
+                                <h3 class="jd-subtitle">Địa điểm làm việc</h3>
+                                <ul><li th:text="${job.workLocation}">Hà Nội</li></ul>
+                            </th:block>
+                            <th:block th:unless="${#strings.isEmpty(job.workingHours)}">
+                                <h3 class="jd-subtitle">Thời gian làm việc</h3>
+                                <ul><li th:text="${job.workingHours}">Thứ 2 - Thứ 6 (09:00 - 18:00)</li></ul>
+                            </th:block>
+                        </div>
                     </section>
                 </article>
             </div>
@@ -87,6 +101,14 @@
                         <li>
                             <span class="summary-label">Địa điểm</span>
                             <span class="summary-value" th:text="${job.workLocation}">Hà Nội</span>
+                        </li>
+                        <li th:unless="${#strings.isEmpty(job.workingHours)}">
+                            <span class="summary-label">Thời gian làm việc</span>
+                            <span class="summary-value" th:text="${job.workingHours}">Thứ 2 - Thứ 6 (09:00 - 18:00)</span>
+                        </li>
+                        <li th:unless="${#strings.isEmpty(job.probationPeriod)}">
+                            <span class="summary-label">Thời gian thử việc</span>
+                            <span class="summary-value" th:text="${job.probationPeriod}">2 tháng</span>
                         </li>
                         <li>
                             <span class="summary-label">Hình thức</span>
