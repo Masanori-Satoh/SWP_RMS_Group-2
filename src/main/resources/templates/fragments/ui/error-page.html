@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<body>
+<!-- Thân trang lỗi dùng chung cho templates/error/400|403|404|500.html.
+     Model do core/exception/ErrorPages dựng: message, homeUrl, homeLabel.
+     Phần dự phòng sau ?: chỉ dùng khi trang được render mà thiếu model (không nên xảy ra).
+     CSS: css/pages/error-page.css. -->
+<section th:fragment="panel(code, title)" class="error-page__card" aria-labelledby="error-page-title">
+    <p class="error-page__code" th:text="${code}">404</p>
+    <h1 id="error-page-title" class="error-page__title" th:text="${title}">Không tìm thấy trang</h1>
+    <p class="error-page__message" th:text="${message ?: 'Đã có lỗi xảy ra, vui lòng thử lại sau.'}">Trang hoặc dữ liệu bạn tìm không tồn tại.</p>
+    <div class="error-page__actions">
+        <a class="btn btn--primary" th:href="@{${homeUrl ?: '/'}}" th:text="${homeLabel ?: 'Về trang chủ'}">Về trang chủ</a>
+    </div>
+</section>
+</body>
+</html>
