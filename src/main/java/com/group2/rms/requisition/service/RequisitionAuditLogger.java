@@ -68,14 +68,9 @@ public class RequisitionAuditLogger {
         snapshot.put("Hình thức làm việc", jobRequisition.getEmploymentType());
         snapshot.put("Mức lương tối thiểu", formatNumber(jobRequisition.getMinSalary()));
         snapshot.put("Mức lương tối đa", formatNumber(jobRequisition.getMaxSalary()));
-        snapshot.put("Yêu cầu giới tính", jobRequisition.getGender());
         snapshot.put("Địa điểm làm việc", jobRequisition.getWorkLocation());
         snapshot.put("Mô hình làm việc", jobRequisition.getWorkModel());
-        String probation = null;
-        if (jobRequisition.getProbationDays() != null) {
-            probation = jobRequisition.getProbationDays() + " ngày";
-        }
-        snapshot.put("Thời gian thử việc", probation);
+        snapshot.put("Thời gian thử việc", jobRequisition.getProbationPeriod());
         snapshot.put("Lý do tuyển dụng", jobRequisition.getReasonForHiring());
         snapshot.put("Mô tả công việc", jobRequisition.getJobDescription());
         snapshot.put("Yêu cầu ứng viên", jobRequisition.getRequirementDetails());

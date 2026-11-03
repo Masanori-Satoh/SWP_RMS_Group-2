@@ -23,6 +23,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -48,6 +49,8 @@ class JobPostingValidatorTests {
                 .postingTitle("  Key Account Manager  ")
                 .jobDescription("Chăm sóc khách hàng\r\nĐàm phán hợp đồng")
                 .jobRequirements("2 năm kinh nghiệm")
+                .employmentType("Full-time")
+                .workModel("Hybrid")
                 .salaryMode(JobPostingRequest.SALARY_NEGOTIABLE)
                 .showPositions(false)
                 .applicationDeadline(TODAY.plusDays(30))
@@ -126,6 +129,46 @@ class JobPostingValidatorTests {
             form.setJobDescription("a\r\n".repeat(JobPostingValidator.TEXT_LIMIT / 2 - 1) + "a");
 
             assertDoesNotThrow(() -> validator.normalizeAndValidate(form, false));
+        }
+
+        @ParameterizedTest(name = "Hình thức = [{0}] -> lỗi")
+        @NullAndEmptySource
+        @ValueSource(strings = {"full-time", "Freelance"})
+        @DisplayName("Hình thức thiếu / sai hoa thường / ngoài danh mục -> Lỗi ở ô Hình thức")
+        void normalizeAndValidate_shouldRejectEmploymentType_whenOutsideCatalog(String type) {
+            JobPostingRequest form = validForm(JobPostingValidator.ACTION_DRAFT);
+            form.setEmploymentType(type);
+
+            assertEquals("Vui lòng chọn hình thức làm việc.", errorsOf(form, false).get("employmentType"));
+        }
+
+        @ParameterizedTest(name = "Mô hình = [{0}] -> lỗi")
+        @NullAndEmptySource
+        @ValueSource(strings = {"hybrid", "Office"})
+        @DisplayName("Mô hình thiếu / sai hoa thường / ngoài danh mục -> Lỗi ở ô Mô hình")
+        void normalizeAndValidate_shouldRejectWorkModel_whenOutsideCatalog(String model) {
+            JobPostingRequest form = validForm(JobPostingValidator.ACTION_DRAFT);
+            form.setWorkModel(model);
+
+            assertEquals("Vui lòng chọn mô hình làm việc.", errorsOf(form, false).get("workModel"));
+        }
+
+        @Test
+        @DisplayName("Thử việc: chữ tự do được trim, chỉ khoảng trắng thì thành NULL, quá PROBATION_LIMIT -> Lỗi")
+        void normalizeAndValidate_shouldCleanAndLimitProbation() {
+            JobPostingRequest trimmed = validForm(JobPostingValidator.ACTION_DRAFT);
+            trimmed.setProbationPeriod("  2 tháng  ");
+            validator.normalizeAndValidate(trimmed, false);
+            assertEquals("2 tháng", trimmed.getProbationPeriod());
+
+            JobPostingRequest blank = validForm(JobPostingValidator.ACTION_DRAFT);
+            blank.setProbationPeriod("   ");
+            validator.normalizeAndValidate(blank, false);
+            assertNull(blank.getProbationPeriod());
+
+            JobPostingRequest tooLong = validForm(JobPostingValidator.ACTION_DRAFT);
+            tooLong.setProbationPeriod("a".repeat(JobPostingValidator.PROBATION_LIMIT + 1));
+            assertEquals(JobPostingValidator.PROBATION_TOO_LONG, errorsOf(tooLong, false).get("probationPeriod"));
         }
 
         @Test

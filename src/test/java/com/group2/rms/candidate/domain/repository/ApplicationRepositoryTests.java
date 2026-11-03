@@ -79,7 +79,7 @@ class ApplicationRepositoryTests {
 
     private JobRequisition savedRequisition(Department department, User hiringManager, int round, JobRequisition original) {
         return requisitions.saveAndFlush(JobRequisition.builder().title("IT-AR Backend").recruitmentRound(round)
-                .originalRequisition(original).numberOfPositions(1).employmentType("Full-time").gender("Any")
+                .originalRequisition(original).numberOfPositions(1).employmentType("Full-time")
                 .workModel("On-site").jobDescription("Integration-test responsibilities")
                 .requirementDetails("Integration-test requirements").approvalStatus(RequisitionAccess.STATUS_APPROVED)
                 .hiringManager(hiringManager).department(department).build());

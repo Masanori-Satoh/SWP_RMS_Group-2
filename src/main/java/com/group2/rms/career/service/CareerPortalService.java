@@ -20,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -58,7 +59,7 @@ public class CareerPortalService {
                         ? job.getRequisition().getDepartment().getDepartmentName()
                         : "",
                 job.getWorkLocation(),
-                job.getRequisition() != null ? job.getRequisition().getEmploymentType() : "",
+                Objects.toString(job.effectiveEmploymentType(), ""),
                 job.getSalaryDisplay(),
                 job.getApplicationDeadline(),
                 job.getPostingDate()));
@@ -103,7 +104,9 @@ public class CareerPortalService {
                         ? job.getRequisition().getDepartment().getDepartmentName()
                         : "",
                 job.getWorkLocation(),
-                job.getRequisition() != null ? job.getRequisition().getEmploymentType() : "",
+                job.getWorkingHours(),
+                job.getProbationPeriod(),
+                Objects.toString(job.effectiveEmploymentType(), ""),
                 job.getSalaryDisplay(),
                 job.getApplicationDeadline(),
                 job.getPostingDate(),

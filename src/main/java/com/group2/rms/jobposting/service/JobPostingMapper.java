@@ -53,7 +53,7 @@ public class JobPostingMapper {
                 .jobPostingId(posting.getJobPostingId())
                 .postingTitle(posting.getPostingTitle())
                 .departmentName(departmentName(posting.getRequisition()))
-                .employmentType(employmentType(posting.getRequisition()))
+                .employmentType(employmentTypeLabel(posting))
                 .applicationDeadline(posting.getApplicationDeadline())
                 .postingDate(posting.getPostingDate())
                 .createdByName(fullName(posting.getCreatedBy()))
@@ -106,8 +106,11 @@ public class JobPostingMapper {
                         .jobPostingId(posting.getJobPostingId())
                         .postingTitle(posting.getPostingTitle())
                         .departmentName(departmentName(requisition))
-                        .employmentType(employmentType(requisition))
+                        .employmentType(employmentTypeLabel(posting))
+                        .workModelLabel(workModelLabel(posting))
+                        .probationPeriod(posting.getProbationPeriod())
                         .workLocation(posting.getWorkLocation())
+                        .workingHours(posting.getWorkingHours())
                         .salaryDisplay(salaryDisplay)
                         .numberOfPositionsDisplay(posting.getNumberOfPositionsDisplay())
                         .postingNo(posting.getPostingNo())
@@ -164,12 +167,10 @@ public class JobPostingMapper {
                     .requisitionCode(requisition.getRequisitionCode())
                     .requisitionTitle(requisition.getTitle())
                     .numberOfPositions(requisition.getNumberOfPositions())
-                    .workModelLabel(RequisitionLabels.workModel(requisition.getWorkModel()))
                     .hiringManagerName(fullName(requisition.getHiringManager()));
         } else {
             detail.requisitionCode(JobPostingLabels.MISSING)
                     .requisitionTitle(JobPostingLabels.MISSING)
-                    .workModelLabel(JobPostingLabels.MISSING)
                     .hiringManagerName(JobPostingLabels.MISSING);
         }
         return detail.build();
@@ -225,6 +226,9 @@ public class JobPostingMapper {
         form.setJobDescription(form.getSourceJobDescription());
         form.setJobRequirements(form.getSourceRequirements());
         form.setWorkLocation(form.getSourceWorkLocation());
+        form.setEmploymentType(form.getSourceEmploymentType());
+        form.setWorkModel(form.getSourceWorkModel());
+        form.setProbationPeriod(form.getSourceProbationPeriod());
         form.setBenefits("");
         boolean hasSalary = requisition.getMinSalary() != null || requisition.getMaxSalary() != null;
         if (hasSalary) {
@@ -233,11 +237,7 @@ public class JobPostingMapper {
             form.setSalaryMode(JobPostingRequest.SALARY_NEGOTIABLE);
         }
         form.setShowPositions(true);
-        String positions = "";
-        if (requisition.getNumberOfPositions() != null) {
-            positions = requisition.getNumberOfPositions() + PEOPLE_SUFFIX;
-        }
-        form.setNumberOfPositionsDisplay(positions);
+        form.setNumberOfPositionsDisplay(form.getSourcePositionsDisplay());
         form.setApplicationDeadline(validator.defaultDeadline());
         form.setAction(JobPostingValidator.ACTION_DRAFT);
         return form;
@@ -282,17 +282,20 @@ public class JobPostingMapper {
         form.setRequisitionTitle(requisition.getTitle());
         form.setDepartmentName(departmentName(requisition));
         form.setRecruitmentRound(recruitmentRound(requisition));
-        form.setEmploymentType(RequisitionLabels.employmentType(requisition.getEmploymentType()));
-        form.setWorkModel(RequisitionLabels.workModel(requisition.getWorkModel()));
         form.setNumberOfPositions(requisition.getNumberOfPositions());
         form.setHiringManagerName(fullName(requisition.getHiringManager()));
-        form.setReasonForHiring(requisition.getReasonForHiring());
-        form.setProbationDays(requisition.getProbationDays());
-        form.setGender(RequisitionLabels.gender(requisition.getGender()));
         form.setSalaryRangeLabel(RequisitionLabels.salary(requisition.getMinSalary(), requisition.getMaxSalary()));
         form.setSourceWorkLocation(Objects.toString(requisition.getWorkLocation(), ""));
         form.setSourceJobDescription(Objects.toString(requisition.getJobDescription(), ""));
         form.setSourceRequirements(requirementsFromRequisition(requisition));
+        form.setSourceEmploymentType(requisition.getEmploymentType());
+        form.setSourceWorkModel(requisition.getWorkModel());
+        form.setSourceProbationPeriod(Objects.toString(requisition.getProbationPeriod(), ""));
+        String positions = "";
+        if (requisition.getNumberOfPositions() != null) {
+            positions = requisition.getNumberOfPositions() + PEOPLE_SUFFIX;
+        }
+        form.setSourcePositionsDisplay(positions);
     }
 
     /** Chép nội dung một tin có sẵn vào form (dùng cho "Chỉnh sửa" và "Đăng lại"). */
@@ -302,6 +305,10 @@ public class JobPostingMapper {
         form.setJobRequirements(posting.getJobRequirements());
         form.setBenefits(posting.getBenefits());
         form.setWorkLocation(posting.getWorkLocation());
+        form.setWorkingHours(posting.getWorkingHours());
+        form.setEmploymentType(posting.effectiveEmploymentType());
+        form.setWorkModel(posting.effectiveWorkModel());
+        form.setProbationPeriod(posting.getProbationPeriod());
 
         // Nhận lại lựa chọn lương từ chuỗi đã lưu
         String salary = posting.getSalaryDisplay();
@@ -337,11 +344,20 @@ public class JobPostingMapper {
         return requisition.getDepartment().getDepartmentName();
     }
 
-    private static String employmentType(JobRequisition requisition) {
-        if (requisition == null || requisition.getEmploymentType() == null) {
+    /** Nhãn hình thức của tin, ví dụ "Toàn thời gian". */
+    private static String employmentTypeLabel(JobPosting posting) {
+        if (posting.effectiveEmploymentType() == null) {
             return JobPostingLabels.MISSING;
         }
-        return RequisitionLabels.employmentType(requisition.getEmploymentType());
+        return RequisitionLabels.employmentType(posting.effectiveEmploymentType());
+    }
+
+    /** Nhãn mô hình của tin, ví dụ "Kết hợp". */
+    private static String workModelLabel(JobPosting posting) {
+        if (posting.effectiveWorkModel() == null) {
+            return JobPostingLabels.MISSING;
+        }
+        return RequisitionLabels.workModel(posting.effectiveWorkModel());
     }
 
     /** Yêu cầu cũ chưa có số đợt thì coi là đợt 1. */

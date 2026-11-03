@@ -40,6 +40,10 @@ public class JobPostingValidator {
     public static final int POSITIONS_TEXT_LIMIT = 50;
     /** Cột WorkLocation NVARCHAR(255). */
     public static final int LOCATION_LIMIT = 255;
+    /** Cột WorkingHours NVARCHAR(255). */
+    public static final int WORKING_HOURS_LIMIT = 255;
+    /** Cột ProbationPeriod NVARCHAR(100). */
+    public static final int PROBATION_LIMIT = 100;
     /** Hạn nộp điền sẵn khi tạo tin: hôm nay + 30 ngày (đúng mockup). */
     public static final int DEFAULT_DEADLINE_DAYS = 30;
     /** Hạn nộp được lưu là cuối ngày đã chọn (23:59:59). */
@@ -48,6 +52,8 @@ public class JobPostingValidator {
     // Câu lỗi dùng chung giữa annotation trên DTO (Bean Validation) và normalizeAndValidate() bên dưới
     public static final String TITLE_TOO_LONG = "Nội dung quá " + TITLE_LIMIT + " ký tự";
     public static final String LOCATION_TOO_LONG = "Nội dung quá " + LOCATION_LIMIT + " ký tự";
+    public static final String WORKING_HOURS_TOO_LONG = "Nội dung quá " + WORKING_HOURS_LIMIT + " ký tự";
+    public static final String PROBATION_TOO_LONG = "Nội dung quá " + PROBATION_LIMIT + " ký tự";
     public static final String SALARY_TEXT_TOO_LONG = "Nội dung quá " + SALARY_TEXT_LIMIT + " ký tự";
     public static final String POSITIONS_TEXT_TOO_LONG = "Nội dung quá " + POSITIONS_TEXT_LIMIT + " ký tự";
 
@@ -116,6 +122,17 @@ public class JobPostingValidator {
         requireText(errors, "jobRequirements", request.getJobRequirements(), TEXT_LIMIT, "Vui lòng nhập yêu cầu ứng viên.");
         maxLength(errors, "benefits", request.getBenefits(), TEXT_LIMIT);
         maxLength(errors, "workLocation", request.getWorkLocation(), LOCATION_LIMIT);
+        maxLength(errors, "workingHours", request.getWorkingHours(), WORKING_HOURS_LIMIT);
+        maxLength(errors, "probationPeriod", request.getProbationPeriod(), PROBATION_LIMIT);
+
+        // Rule: Hình thức, Mô hình bắt buộc và phải nằm trong danh mục (khớp CHECK của JobPosting)
+        if (request.getEmploymentType() == null
+                || !RequisitionValidator.EMPLOYMENT_TYPES.contains(request.getEmploymentType())) {
+            errors.put("employmentType", "Vui lòng chọn hình thức làm việc.");
+        }
+        if (request.getWorkModel() == null || !RequisitionValidator.WORK_MODELS.contains(request.getWorkModel())) {
+            errors.put("workModel", "Vui lòng chọn mô hình làm việc.");
+        }
 
         // Rule: lương là 1 trong 3 lựa chọn, "Tự nhập" phải có nội dung (kiểm tra null trước contains)
         if (request.getSalaryMode() == null || !SALARY_MODES.contains(request.getSalaryMode())) {
@@ -154,6 +171,10 @@ public class JobPostingValidator {
         request.setJobRequirements(RequisitionValidator.cleanMultiline(request.getJobRequirements()));
         request.setBenefits(RequisitionValidator.cleanMultiline(request.getBenefits()));
         request.setWorkLocation(RequisitionValidator.cleanString(request.getWorkLocation()));
+        request.setWorkingHours(RequisitionValidator.cleanString(request.getWorkingHours()));
+        request.setEmploymentType(RequisitionValidator.cleanString(request.getEmploymentType()));
+        request.setWorkModel(RequisitionValidator.cleanString(request.getWorkModel()));
+        request.setProbationPeriod(RequisitionValidator.cleanString(request.getProbationPeriod()));
         request.setSalaryCustom(RequisitionValidator.cleanString(request.getSalaryCustom()));
         request.setNumberOfPositionsDisplay(RequisitionValidator.cleanString(request.getNumberOfPositionsDisplay()));
     }

@@ -49,8 +49,8 @@ public class JobPostingController {
     private static final String PUBLISHED_NOW_MESSAGE = "Đã đăng tin. Ứng viên có thể nộp hồ sơ ngay.";
     /** Các ô có trên form (lỗi của ô khác, ví dụ "action", hiện ở đầu form). */
     private static final Set<String> FORM_FIELDS = Set.of("postingTitle", "jobDescription", "jobRequirements",
-            "benefits", "workLocation", "salaryMode", "salaryCustom", "numberOfPositionsDisplay",
-            "applicationDeadline");
+            "benefits", "workLocation", "workingHours", "employmentType", "workModel", "probationPeriod", "salaryMode",
+            "salaryCustom", "numberOfPositionsDisplay", "applicationDeadline");
     /** Gợi ý quyền lợi trên form (nút thêm nhanh), theo mockup. */
     private static final List<String> BENEFIT_SUGGESTIONS = List.of("Lương tháng 13", "Thưởng theo hiệu quả công việc",
             "Đóng BHXH, BHYT, BHTN đầy đủ", "Bảo hiểm sức khỏe", "Review lương 2 lần/năm", "12 ngày phép năm",
@@ -76,7 +76,7 @@ public class JobPostingController {
     @InitBinder("form")
     void formBinder(WebDataBinder binder) {
         binder.setAllowedFields("jobPostingId", "requisitionId", "postingTitle", "jobDescription", "jobRequirements",
-                "benefits", "workLocation", "salaryMode", "salaryCustom", "showPositions", "numberOfPositionsDisplay",
+                "benefits", "workLocation", "workingHours", "employmentType", "workModel", "probationPeriod", "salaryMode", "salaryCustom", "showPositions", "numberOfPositionsDisplay",
                 "applicationDeadline", "action");
     }
 
@@ -290,6 +290,8 @@ public class JobPostingController {
         model.addAttribute("salaryTextLimit", JobPostingValidator.SALARY_TEXT_LIMIT);
         model.addAttribute("positionsTextLimit", JobPostingValidator.POSITIONS_TEXT_LIMIT);
         model.addAttribute("locationLimit", JobPostingValidator.LOCATION_LIMIT);
+        model.addAttribute("workingHoursLimit", JobPostingValidator.WORKING_HOURS_LIMIT);
+        model.addAttribute("probationLimit", JobPostingValidator.PROBATION_LIMIT);
         model.addAttribute("bodyClass", "jp-form-page");
         return FORM_VIEW;
     }

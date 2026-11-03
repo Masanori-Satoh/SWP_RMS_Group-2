@@ -183,7 +183,7 @@ public class DashboardListRepository {
     /** Yêu cầu Giám đốc đang xem được quyền duyệt, loại yêu cầu do chính người đó tạo. */
     public List<PendingRequisitionRow> pendingRequisitions(int viewerId) {
         List<Object[]> rows = entityManager.createQuery("select r.requisitionId, r.requisitionCode, r.title, "
-                        + "d.departmentName, hm.fullName, r.numberOfPositions, r.hiringType, r.recruitmentRound, "
+                        + "d.departmentName, hm.fullName, r.numberOfPositions, r.recruitmentRound, "
                         + "coalesce(r.submittedAt, r.updatedAt, r.createdAt) "
                         + "from JobRequisition r left join r.department d left join r.hiringManager hm "
                         + "where r.approvalStatus = :pending and r.hiringManager.userId <> :viewerId "
@@ -195,8 +195,8 @@ public class DashboardListRepository {
         List<PendingRequisitionRow> result = new ArrayList<>();
         for (Object[] row : rows) {
             result.add(new PendingRequisitionRow((Integer) row[0], (String) row[1], (String) row[2],
-                    (String) row[3], (String) row[4], (Integer) row[5], (String) row[6], (Integer) row[7],
-                    (LocalDateTime) row[8]));
+                    (String) row[3], (String) row[4], (Integer) row[5], (Integer) row[6],
+                    (LocalDateTime) row[7]));
         }
         return result;
     }
@@ -295,7 +295,7 @@ public class DashboardListRepository {
     }
 
     public record PendingRequisitionRow(int requisitionId, String requisitionCode, String title,
-            String departmentName, String requesterName, int numberOfPositions, String hiringType,
+            String departmentName, String requesterName, int numberOfPositions,
             Integer recruitmentRound, LocalDateTime waitingSince) {
     }
 

@@ -22,6 +22,8 @@ public record InternalJobPostingDetailResponse(
         String workModelLabel,
         LocalDate expectedStartDate,
         String workLocation,
+        String workingHours,
+        String probationPeriod,
         String salaryDisplay,
         String numberOfPositionsDisplay,
         Integer postingNo,

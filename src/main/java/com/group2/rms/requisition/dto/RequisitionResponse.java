@@ -47,10 +47,8 @@ public record RequisitionResponse(
         LocalDateTime submittedAt,          // JobRequisition.SubmittedAt: lúc gửi duyệt gần nhất
         Long waitingDays,                   // số ngày đã chờ Giám đốc duyệt (chỉ khi Pending_Director)
         String salaryLabel,                 // "20 – 30 triệu VND/tháng" hoặc "Thỏa thuận"
-        String probationLabel,              // "60 ngày" hoặc "Không thử việc"
-        String genderLabel,
+        String probationLabel,              // "2 tháng", "Thỏa thuận"... hoặc "Không thử việc"
         String workModelLabel,
-        String hiringTypeLabel,
         String reasonForHiringHtml,         // nội dung nhiều dòng đã escape + <br/> (hiển thị bằng th:utext)
         String jobDescriptionHtml,
         String requirementDetailsHtml,

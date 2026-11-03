@@ -126,8 +126,7 @@ CREATE TABLE JobRequisition (
     HiringManagerId        INT NOT NULL,
     CreatedBy              INT NULL,                -- [MỚI] user tạo phiếu
     RecruitmentRound       INT NOT NULL CONSTRAINT DF_JobRequisition_Round DEFAULT 1,
-    OriginalRequisitionId  INT NULL,                -- [MỚI] NULL = đợt 1
-    HiringType             NVARCHAR(20) NULL,       -- [MỚI] New / Replacement
+    OriginalRequisitionId  INT NULL,                -- [MỚI] yêu cầu gốc khi sao chép sang đợt mới
     NumberOfPositions      INT NOT NULL,
     EmploymentType         NVARCHAR(50) NOT NULL,
     MinSalary              DECIMAL(18,2) NULL,
@@ -135,8 +134,7 @@ CREATE TABLE JobRequisition (
     ReasonForHiring        NVARCHAR(2000) NULL,
     JobDescription         NVARCHAR(MAX) NOT NULL,
     RequirementDetails     NVARCHAR(MAX) NOT NULL,
-    RequiredGender         NVARCHAR(20) NOT NULL CONSTRAINT DF_JobRequisition_RequiredGender DEFAULT N'Any',
-    ProbationDays          INT NULL,                -- số ngày thử việc (1..180)
+    ProbationPeriod        NVARCHAR(100) NULL,      -- thời gian thử việc dạng chữ, VD "2 tháng", "Thỏa thuận"; NULL = không thử việc
     WorkModel              NVARCHAR(20) NOT NULL CONSTRAINT DF_JobRequisition_WorkModel DEFAULT N'On-site',
     WorkLocation           NVARCHAR(255) NULL,
     ApprovalStatus         NVARCHAR(30) NOT NULL CONSTRAINT DF_JobRequisition_ApprovalStatus DEFAULT N'Draft',
@@ -160,25 +158,11 @@ CREATE TABLE JobRequisition (
     CONSTRAINT CK_JobRequisition_RecruitmentRound
         CHECK (RecruitmentRound > 0),
  
-    CONSTRAINT CK_JobRequisition_RoundOrigin CHECK (
-        (RecruitmentRound = 1 AND OriginalRequisitionId IS NULL)
-        OR (RecruitmentRound > 1 AND OriginalRequisitionId IS NOT NULL)
-    ),
- 
-    CONSTRAINT CK_JobRequisition_HiringType
-        CHECK (HiringType IS NULL OR HiringType IN (N'New', N'Replacement')),
- 
     CONSTRAINT CK_JobRequisition_NumberOfPositions
         CHECK (NumberOfPositions > 0),
  
-    CONSTRAINT CK_JobRequisition_ProbationDays
-        CHECK (ProbationDays IS NULL OR ProbationDays BETWEEN 1 AND 180),
- 
     CONSTRAINT CK_JobRequisition_EmploymentType
         CHECK (EmploymentType IN (N'Full-time', N'Part-time', N'Internship', N'Contract')),
- 
-    CONSTRAINT CK_JobRequisition_RequiredGender
-        CHECK (RequiredGender IN (N'Male', N'Female', N'Any')),
  
     CONSTRAINT CK_JobRequisition_WorkModel
         CHECK (WorkModel IN (N'On-site', N'Remote', N'Hybrid')),
@@ -238,6 +222,10 @@ CREATE TABLE JobPosting (
     SalaryDisplay        NVARCHAR(100) NULL,
     NumberOfPositionsDisplay     NVARCHAR(50) NULL,      -- [MỚI] NULL = không hiển thị số lượng
     WorkLocation         NVARCHAR(255) NULL,
+    WorkingHours         NVARCHAR(255) NULL,      -- [MỚI] thời gian làm việc, VD "Thứ 2 - Thứ 6 (09:00 - 18:00)"
+    EmploymentType       NVARCHAR(50) NULL,       -- [MỚI] hình thức riêng của tin; NULL = dùng của yêu cầu
+    WorkModel            NVARCHAR(20) NULL,       -- [MỚI] mô hình riêng của tin; NULL = dùng của yêu cầu
+    ProbationPeriod      NVARCHAR(100) NULL,      -- [MỚI] thời gian thử việc hiển thị; NULL = không hiển thị
     PostingDate          DATETIME2 NULL,
     ApplicationDeadline  DATETIME2 NULL,
     PostingStatus        NVARCHAR(20) NOT NULL CONSTRAINT DF_JobPosting_PostingStatus DEFAULT N'Draft',
@@ -258,6 +246,12 @@ CREATE TABLE JobPosting (
     CONSTRAINT CK_JobPosting_PostingNo
         CHECK (PostingNo > 0),
  
+    CONSTRAINT CK_JobPosting_EmploymentType
+        CHECK (EmploymentType IS NULL OR EmploymentType IN (N'Full-time', N'Part-time', N'Internship', N'Contract')),
+
+    CONSTRAINT CK_JobPosting_WorkModel
+        CHECK (WorkModel IS NULL OR WorkModel IN (N'On-site', N'Remote', N'Hybrid')),
+
     CONSTRAINT CK_JobPosting_Status
         CHECK (PostingStatus IN (N'Draft', N'Published', N'Paused', N'Closed')),
  

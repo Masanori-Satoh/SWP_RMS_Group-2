@@ -8,6 +8,8 @@ public record PublicJobDetailResponse(
     String postingTitle, 
     String departmentName, 
     String workLocation, 
+    String workingHours,
+    String probationPeriod,
     String employmentType, 
     String salaryDisplay, 
     LocalDateTime applicationDeadline, 

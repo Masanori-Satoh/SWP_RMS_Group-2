@@ -63,7 +63,6 @@ class RequisitionMapperTests {
                 .numberOfPositions(2)
                 .employmentType("Full-time")
                 .workModel("Hybrid")
-                .gender("Any")
                 .build();
     }
 

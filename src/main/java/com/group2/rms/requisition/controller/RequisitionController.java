@@ -61,7 +61,7 @@ public class RequisitionController {
         // departmentId chỉ có tác dụng với Giám đốc; originalTitle chỉ để form hiện số đợt
         binder.setAllowedFields("action", "title", "departmentId", "originalTitle", "numberOfPositions", "employmentType", "minSalary",
                 "maxSalary",
-                "gender", "workLocation", "workModel", "probationDays", "reasonForHiring", "hiringType", "originalRequisitionId",
+                "workLocation", "workModel", "probationPeriod", "reasonForHiring", "recruitmentRound", "originalRequisitionId",
                 "jobDescription", "requirementDetails");
 
         // Ô lương hiển thị kiểu Việt Nam "20.000.000"
@@ -136,7 +136,6 @@ public class RequisitionController {
         form.setRecruitmentRound(1);
         form.setEmploymentType("Full-time");
         form.setWorkModel("On-site");
-        form.setGender(RequisitionValidator.GENDER_ANY);
         // Giám đốc tự chọn phòng ban trên form nên không điền sẵn
         if (currentUser.getDepartment() != null && !access.isDirector(currentUser)) {
             form.setDepartmentId(currentUser.getDepartment().getDepartmentId());
@@ -386,12 +385,12 @@ public class RequisitionController {
     private void addFormOptions(Model model) {
         model.addAttribute("departments", departments.findAll());
         model.addAttribute("employmentTypes", RequisitionValidator.EMPLOYMENT_TYPES);
-        model.addAttribute("genders", RequisitionValidator.GENDERS);
-        model.addAttribute("probationMinDays", RequisitionValidator.PROBATION_MIN_DAYS);
-        model.addAttribute("probationMaxDays", RequisitionValidator.PROBATION_MAX_DAYS);
+        model.addAttribute("probationLimit", RequisitionValidator.PROBATION_CHAR_LIMIT);
         // Giới hạn số lượng cần tuyển, dùng cho min/max của ô số lượng và nút −/+
         model.addAttribute("positionsMin", RequisitionValidator.POSITIONS_MIN);
         model.addAttribute("positionsMax", RequisitionValidator.POSITIONS_MAX);
+        model.addAttribute("roundMin", RequisitionValidator.ROUND_MIN);
+        model.addAttribute("roundMax", RequisitionValidator.ROUND_MAX);
     }
 
     private void addErrors(BindingResult errors, RequisitionValidationException e) {

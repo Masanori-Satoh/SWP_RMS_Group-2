@@ -113,28 +113,6 @@ public final class RequisitionLabels {
         return model == null ? "—" : model;
     }
 
-    /** Yêu cầu giới tính (JobRequisition.RequiredGender). */
-    public static String gender(String gender) {
-        if ("Male".equals(gender)) {
-            return "Nam";
-        }
-        if ("Female".equals(gender)) {
-            return "Nữ";
-        }
-        return "Không yêu cầu";
-    }
-
-    /** Loại tuyển dụng (JobRequisition.HiringType), NULL = chưa xác định. */
-    public static String hiringType(String type) {
-        if ("New".equals(type)) {
-            return "Tuyển mới";
-        }
-        if ("Replacement".equals(type)) {
-            return "Tuyển thay thế";
-        }
-        return "Chưa xác định";
-    }
-
     /** Lương theo đơn vị triệu: "20 – 30 triệu VND/tháng"; không nhập thì "Thỏa thuận". */
     public static String salary(BigDecimal min, BigDecimal max) {
         if (min == null && max == null) {
@@ -154,9 +132,9 @@ public final class RequisitionLabels {
         return value.stripTrailingZeros().toPlainString().replace('.', ',');
     }
 
-    /** Thời gian thử việc (JobRequisition.ProbationDays); NULL = không thử việc. */
-    public static String probation(Integer days) {
-        return days == null ? "Không thử việc" : days + " ngày";
+    /** Thời gian thử việc (JobRequisition.ProbationPeriod); trống = không thử việc. */
+    public static String probation(String period) {
+        return period == null || period.isBlank() ? "Không thử việc" : period;
     }
 
     /** Văn bản nhiều dòng → HTML: escape trước rồi mới đổi xuống dòng thành <br/> (chống XSS). */

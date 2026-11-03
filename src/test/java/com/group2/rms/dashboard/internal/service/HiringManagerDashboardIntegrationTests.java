@@ -93,7 +93,7 @@ class HiringManagerDashboardIntegrationTests {
         return requisitions.saveAndFlush(JobRequisition.builder()
                 .title(title).hiringManager(hiringManager).department(department).approvalStatus(status)
                 .submittedAt(submittedAt).recruitmentRound(1).numberOfPositions(2).employmentType("Full-time")
-                .gender("Any").workModel("On-site").jobDescription("Mô tả kiểm thử")
+                .workModel("On-site").jobDescription("Mô tả kiểm thử")
                 .requirementDetails("Yêu cầu kiểm thử").build());
     }
 

@@ -483,7 +483,7 @@ class CareerFlowTests {
 
         private PublicJobDetailResponse detail(int id, String title, LocalDateTime deadline,
                         boolean hasApplied, boolean accepting) {
-                return new PublicJobDetailResponse(id, title, "Engineering", "Hà Nội", "Full-time",
+                return new PublicJobDetailResponse(id, title, "Engineering", "Hà Nội", "Thứ 2 - Thứ 6 (09:00 - 18:00)", "2 tháng", "Full-time",
                                 "VND 30–45 million", deadline, POSTED,
                                 "Build clear, dependable workflow software.",
                                 List.of("Build clear, dependable workflow software."),

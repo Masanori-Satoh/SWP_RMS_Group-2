@@ -200,12 +200,12 @@ BEGIN
         IF NOT EXISTS (SELECT 1 FROM JobRequisition r JOIN @plan p ON p.Title = r.Title
                        WHERE p.SortNo = @sortNo AND r.DepartmentId = @demoDept)
         BEGIN
-            INSERT INTO JobRequisition (Title, DepartmentId, HiringManagerId, CreatedBy, HiringType, NumberOfPositions,
+            INSERT INTO JobRequisition (Title, DepartmentId, HiringManagerId, CreatedBy, NumberOfPositions,
                                         EmploymentType, MinSalary, MaxSalary, ReasonForHiring, JobDescription,
-                                        RequirementDetails, ProbationDays, WorkModel, WorkLocation, ApprovalStatus,
+                                        RequirementDetails, ProbationPeriod, WorkModel, WorkLocation, ApprovalStatus,
                                         SubmittedAt, CreatedAt, UpdatedAt)
-            SELECT p.Title, @demoDept, @demoHm, @demoHm, N'New', p.Needed, N'Full-time', p.MinSalary, p.MaxSalary,
-                   N'Mở rộng đội ngũ cho dự án mới.', p.Description, p.Requirement, 60, N'Hybrid', N'Hà Nội',
+            SELECT p.Title, @demoDept, @demoHm, @demoHm, p.Needed, N'Full-time', p.MinSalary, p.MaxSalary,
+                   N'Mở rộng đội ngũ cho dự án mới.', p.Description, p.Requirement, N'60 ngày', N'Hybrid', N'Hà Nội',
                    N'Approved', DATEADD(day, -30 + p.SortNo, @now), DATEADD(day, -31 + p.SortNo, @now), DATEADD(day, -29 + p.SortNo, @now)
             FROM @plan p WHERE p.SortNo = @sortNo;
             INSERT INTO @newReqs VALUES (@sortNo, SCOPE_IDENTITY());
