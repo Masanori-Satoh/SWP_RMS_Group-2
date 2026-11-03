@@ -58,8 +58,7 @@ MaxSalary;NULL;Proposed maximum salary
 ReasonForHiring;NULL;New hire / Replacement
 JobDescription;NOT NULL;Job description (JD)
 RequirementDetails;NOT NULL;Candidate requirements
-RequiredGender;NOT NULL, DEFAULT 'Any';Male, Female, Any
-ProbationDays;NULL, 1..180;Probation period in days
+ProbationPeriod;NULL, NVARCHAR(100);Probation period as free text, e.g. "2 tháng", "Thỏa thuận"; NULL = no probation
 WorkModel;NOT NULL;On-site, Remote, Hybrid
 WorkLocation;NULL;Work location (nullable for fully remote positions)
 ExpectedStartDate;NULL;Expected start/probation date for the position
@@ -84,6 +83,10 @@ JobRequirements;NOT NULL;Public job requirements
 Benefits;NULL;Benefits & perks
 SalaryDisplay;NULL;e.g. "Negotiable", "$1,500 - $2,000"
 WorkLocation;NULL;Work location
+WorkingHours;NULL;Working time shown on the posting, e.g. "Thứ 2 - Thứ 6 (09:00 - 18:00)"
+EmploymentType;NULL;Full-time, Part-time, Internship, Contract; NULL = use the requisition's value
+WorkModel;NULL;On-site, Remote, Hybrid; NULL = use the requisition's value
+ProbationPeriod;NULL, NVARCHAR(100);Probation period shown on the posting (prefilled from the requisition)
 PostingDate;NULL;Publish date
 ApplicationDeadline;NULL;Application deadline
 PostingStatus;NOT NULL;Draft, Published, Paused, Closed
