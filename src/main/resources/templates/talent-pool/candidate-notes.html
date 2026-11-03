@@ -19,7 +19,7 @@
                                   th:text="${#arrays.length(parts) > 0 ? #strings.toUpperCase(#strings.substring(parts[0], 0, 1) + (#arrays.length(parts) > 1 ? #strings.substring(parts[#arrays.length(parts) - 1], 0, 1) : '')) : ''}"></span>
                             <div class="tp-feed-content">
                                 <div class="tpw-note-header">
-                                    <div class="tpw-note-identity"><strong class="tp-feed-author" th:text="${note.author}"></strong><span class="tpw-note-role" th:if="${note.authorRole != null}" th:text="${note.authorRole == 'HR' ? 'Nhân sự' : note.authorRole}"></span></div>
+                                    <div class="tpw-note-identity"><strong class="tp-feed-author" th:text="${note.author}"></strong><span class="tpw-note-role" th:if="${note.authorRole != null}" th:text="${note.authorRole == 'HR' ? 'Nhân sự' : (note.authorRole == 'Hiring Manager' ? 'Trưởng bộ phận' : (note.authorRole == 'Director' ? 'Giám đốc' : (note.authorRole == 'Interviewer' ? 'Người phỏng vấn' : (note.authorRole == 'System Admin' ? 'Quản trị hệ thống' : 'Nhân viên'))))}"></span></div>
                                     <time class="tp-feed-time" th:datetime="${#temporals.formatISO(note.createdAt)}" th:text="${#temporals.format(note.createdAt, 'dd/MM/yyyy HH:mm')}"></time>
                                     <details th:if="${potential and note.owned}" class="tpw-note-menu">
                                         <summary th:attr="aria-label=|Thao tác ghi chú của ${note.author}|"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg></summary>

@@ -1,0 +1,50 @@
+/* Trang lỗi 400/403/404/500 (templates/error/*, fragments/ui/error-page.html). Chỉ dùng token của tokens.css. */
+.error-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--s6);
+  background: var(--page);
+}
+
+.error-page__card {
+  width: 100%;
+  max-width: 520px;
+  padding: var(--s8);
+  text-align: center;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+}
+
+.error-page__code {
+  margin: 0 0 var(--s2);
+  font-family: var(--font-serif);
+  font-size: 48px;
+  line-height: 1;
+  color: var(--brand-dark);
+}
+
+.error-page__title {
+  margin: 0 0 var(--s3);
+  font-size: 22px;
+  color: var(--ink);
+}
+
+.error-page__message {
+  margin: 0 0 var(--s6);
+  color: var(--muted);
+}
+
+.error-page__actions {
+  display: flex;
+  justify-content: center;
+}
+
+@media (max-width: 480px) {
+  .error-page__card {
+    padding: var(--s6);
+  }
+}

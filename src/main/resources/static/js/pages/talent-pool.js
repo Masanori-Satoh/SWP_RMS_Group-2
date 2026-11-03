@@ -81,7 +81,7 @@ document.querySelectorAll('[data-pool-cv]').forEach(select => {
         byId('tp-selection-slot').hidden = state.size === 0;
         // total candidate choose
         byId('tp-selection-count').textContent = `Đã chọn ${state.size} ứng viên`;
-        byId('tp-review-selection').textContent = hrMode ? `Gửi ${state.size} gợi ý cho HM` : `Thêm ${state.size} ứng viên`;
+        byId('tp-review-selection').textContent = hrMode ? `Gửi ${state.size} gợi ý cho Trưởng bộ phận` : `Thêm ${state.size} ứng viên`;
         if (!state.persistenceAvailable && state.size > 0) {
             feedback.textContent = 'Trình duyệt không cho lưu lựa chọn qua trang. Hãy kiểm tra hoặc bỏ chọn trước khi chuyển trang/lọc.';
         }
@@ -108,7 +108,7 @@ document.querySelectorAll('[data-pool-cv]').forEach(select => {
                 try {
                     if (checkbox.checked) state.set(currentItem(row));
                     else state.remove(Number(row.dataset.poolCandidate));
-                } catch (error) { feedback.textContent = error.message; }
+                } catch (error) { feedback.textContent = (error instanceof TypeError || error instanceof SyntaxError || !/[À-ỹ]/.test(error.message || '') ? 'Không thể hoàn tất thao tác. Vui lòng tải lại trang và thử lại.' : error.message); }
                 updateSelection();
             });
         }
@@ -182,7 +182,7 @@ document.querySelectorAll('[data-pool-cv]').forEach(select => {
             });
         } catch (error) {
             if (notesRequest !== controller || !notesDialog.open) return;
-            status.textContent = controller.signal.aborted ? 'Tải ghi chú quá lâu. Hãy thử lại.' : error.message;
+            status.textContent = controller.signal.aborted ? 'Tải ghi chú quá lâu. Hãy thử lại.' : (error instanceof TypeError || error instanceof SyntaxError || !/[À-ỹ]/.test(error.message || '') ? 'Không thể hoàn tất thao tác. Vui lòng tải lại trang và thử lại.' : error.message);
             byId('tp-notes-retry').hidden = false;
         } finally { clearTimeout(timer); }
     }
@@ -303,8 +303,8 @@ document.querySelectorAll('[data-pool-cv]').forEach(select => {
             item.append(content, actions);
             list.append(item);
         });
-        byId('tp-confirm-title').textContent = hrMode ? `Gửi ${state.size} gợi ý cho HM` : `Xác nhận thêm ${state.size} ứng viên`;
-        byId('tp-confirm-submit').textContent = hrMode ? `Gửi ${state.size} gợi ý cho HM` : `Xác nhận thêm ${state.size} ứng viên`;
+        byId('tp-confirm-title').textContent = hrMode ? `Gửi ${state.size} gợi ý cho Trưởng bộ phận` : `Xác nhận thêm ${state.size} ứng viên`;
+        byId('tp-confirm-submit').textContent = hrMode ? `Gửi ${state.size} gợi ý cho Trưởng bộ phận` : `Xác nhận thêm ${state.size} ứng viên`;
     }
 
     async function requestReview() {
@@ -347,7 +347,7 @@ document.querySelectorAll('[data-pool-cv]').forEach(select => {
         } catch (error) {
             //check if form is open and request is not aborted
             if (reviewRequest !== controller || !confirm.open) return;
-            reviewStatus(controller.signal.aborted ? 'Kiểm tra quá lâu. Hãy thử lại.' : error.message, 'warning');
+            reviewStatus(controller.signal.aborted ? 'Kiểm tra quá lâu. Hãy thử lại.' : (error instanceof TypeError || error instanceof SyntaxError || !/[À-ỹ]/.test(error.message || '') ? 'Không thể hoàn tất thao tác. Vui lòng tải lại trang và thử lại.' : error.message), 'warning');
             byId('tp-recheck').hidden = false;
         } finally {
             clearTimeout(timer);
@@ -384,11 +384,11 @@ document.querySelectorAll('[data-pool-cv]').forEach(select => {
             state.clear();
             updateSelection();
             feedback.className = 'alert alert--success';
-            feedback.textContent = hrMode ? `Đã gửi ${result.addedCount} gợi ý cho HM. Đang chờ HM phản hồi. `
-                : `Đã thêm ${result.addedCount} ứng viên vào danh sách HM đề xuất. HR sẽ liên hệ xác nhận. `;
+            feedback.textContent = hrMode ? `Đã gửi ${result.addedCount} gợi ý cho Trưởng bộ phận. Đang chờ Trưởng bộ phận phản hồi. `
+                : `Đã thêm ${result.addedCount} ứng viên vào danh sách Trưởng bộ phận đề xuất. Nhân sự sẽ liên hệ xác nhận. `;
             const link = document.createElement('a');
             link.href = form.dataset.suggestionsUrl;
-            link.textContent = hrMode ? 'Xem gợi ý đã gửi' : 'Xem danh sách HM đề xuất';
+            link.textContent = hrMode ? 'Xem gợi ý đã gửi' : 'Xem danh sách Trưởng bộ phận đề xuất';
             feedback.append(link);
             saving = false;
             confirm.close();
@@ -397,7 +397,7 @@ document.querySelectorAll('[data-pool-cv]').forEach(select => {
         } catch (error) {
             reviewStatus(controller.signal.aborted
                 ? 'Chưa nhận được kết quả lưu. Hãy xem danh sách đã đề xuất và kiểm tra lại trước khi thử tiếp.'
-                : error.message, 'warning');
+                : (error instanceof TypeError || error instanceof SyntaxError || !/[À-ỹ]/.test(error.message || '') ? 'Không thể hoàn tất thao tác. Vui lòng tải lại trang và thử lại.' : error.message), 'warning');
             byId('tp-recheck').hidden = false;
         } finally {
             saving = false;
@@ -422,7 +422,7 @@ document.querySelectorAll('[data-pool-cv]').forEach(select => {
             try {
                 if (event.target.checked) state.set(currentItem(row));
                 else state.remove(Number(row.dataset.poolCandidate));
-            } catch (error) { feedback.textContent = error.message; }
+            } catch (error) { feedback.textContent = (error instanceof TypeError || error instanceof SyntaxError || !/[À-ỹ]/.test(error.message || '') ? 'Không thể hoàn tất thao tác. Vui lòng tải lại trang và thử lại.' : error.message); }
         });
         updateSelection();
     });
