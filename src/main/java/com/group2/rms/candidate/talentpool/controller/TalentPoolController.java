@@ -261,7 +261,7 @@ public class TalentPoolController {
         try {
             pool.withdrawRecommendation(jobId, id);
             flash.addFlashAttribute("successMessage",
-                    "Đã xóa gợi ý gửi cho HM. CV và ghi chú của ứng viên được giữ nguyên.");
+                    "Đã xóa gợi ý gửi cho Trưởng bộ phận. CV và ghi chú của ứng viên được giữ nguyên.");
         } catch (TalentPoolException e) {
             flash.addFlashAttribute("errorMessage", e.getMessage());
         }
@@ -286,7 +286,7 @@ public class TalentPoolController {
             try {
                 pool.decideRecommendation(id, "Pass".equals(request.decision()));
                 flash.addFlashAttribute("successMessage", "Pass".equals(request.decision())
-                        ? "Đã chấp nhận gợi ý. Chờ HR liên hệ và xác nhận ứng viên đồng ý."
+                        ? "Đã chấp nhận gợi ý. Chờ Nhân sự liên hệ và xác nhận ứng viên đồng ý."
                         : "Đã từ chối gợi ý. Hồ sơ, CV và ghi chú của ứng viên được giữ nguyên.");
             } catch (TalentPoolException e) {
                 flash.addFlashAttribute("errorMessage", e.getMessage());
@@ -303,7 +303,7 @@ public class TalentPoolController {
                     .body(new ApiResponse<>(false, errors.getAllErrors().getFirst().getDefaultMessage()));
         try {
             pool.recommend(id, request);
-            return ResponseEntity.ok(new ApiResponse<>(true, "Đã gửi gợi ý cho HM.",
+            return ResponseEntity.ok(new ApiResponse<>(true, "Đã gửi gợi ý cho Trưởng bộ phận.",
                     new TalentPoolSuggestResponse(id, request.sourceApplicationIds().size())));
         } catch (TalentPoolException e) {
             return ResponseEntity.badRequest().body(new ApiResponse<>(false, e.getMessage()));
@@ -359,7 +359,7 @@ public class TalentPoolController {
         try {
             pool.suggest(id, request);
             return ResponseEntity.ok(new ApiResponse<>(true, "Đã thêm " + request.sourceApplicationIds().size()
-                    + " ứng viên vào danh sách HM đề xuất. HR sẽ liên hệ xác nhận.",
+                    + " ứng viên vào danh sách Trưởng bộ phận đề xuất. Nhân sự sẽ liên hệ xác nhận.",
                     new TalentPoolSuggestResponse(id, request.sourceApplicationIds().size())));
         } catch (TalentPoolException e) {
             return ResponseEntity.badRequest().body(new ApiResponse<>(false, e.getMessage()));

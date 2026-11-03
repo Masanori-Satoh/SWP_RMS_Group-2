@@ -26,7 +26,7 @@
                 <h1 class="page-title adw-title tpw-list-title"
                     th:text="${selectionMode ? 'Chọn ứng viên tiềm năng' : 'Ứng viên tiềm năng'}"></h1>
                 <p class="page-subtitle tpw-subtitle"
-                    th:text="${hrMode ? 'Chọn ứng viên và CV cũ để gửi gợi ý cho HM phụ trách tin tuyển dụng.' : (selectionMode ? 'Chọn ứng viên từ kho chung để đề xuất cho tin tuyển dụng.' : 'Xem CV đã nộp và ghi chú của HR, HM trong kho chung.')}">
+                    th:text="${hrMode ? 'Chọn ứng viên và CV cũ để gửi gợi ý cho Trưởng bộ phận phụ trách tin tuyển dụng.' : (selectionMode ? 'Chọn ứng viên từ kho chung để đề xuất cho tin tuyển dụng.' : 'Xem CV đã nộp và ghi chú của Nhân sự, Trưởng bộ phận trong kho chung.')}">
                 </p>
             </div>
             <a th:if="${jobPostingId != null}" class="btn btn--secondary"
@@ -40,7 +40,7 @@
                 <h2 id="tp-destination-title" class="tp-destination__title tpw-job-title" th:title="${jobTitle}"
                     th:text="${jobTitle}"></h2>
                 <p th:if="${hrMode and receivingManager != null}" class="text-muted"
-                    th:text="|HM phụ trách: ${receivingManager}|"></p>
+                    th:text="|Trưởng bộ phận phụ trách: ${receivingManager}|"></p>
             </div>
             <a class="btn btn--secondary btn--sm"
                 th:href="${hrMode ? '/talent-pool/jobs/' + jobPostingId + '/recommendations' : '/talent-pool/jobs/' + jobPostingId + '/suggestions'}"
@@ -253,7 +253,7 @@
                 <div class="tp-selection-actions"><button id="tp-clear-selection" class="btn btn--secondary btn--sm"
                         type="button">Bỏ chọn tất cả</button><button id="tp-review-selection" class="btn btn--primary"
                         type="button" aria-haspopup="dialog" aria-controls="tp-confirm"
-                        th:text="${hrMode ? 'Gửi gợi ý cho HM' : 'Thêm ứng viên'}"></button></div>
+                        th:text="${hrMode ? 'Gửi gợi ý cho Trưởng bộ phận' : 'Thêm ứng viên'}"></button></div>
             </section>
         </div>
         <dialog th:if="${selectionMode}" id="tp-confirm" class="dialog tp-dialog tp-confirm"
@@ -267,14 +267,14 @@
                     </svg></button>
             </div>
             <p id="tp-confirm-summary" class="tp-confirm-subtitle"
-                th:text="${hrMode ? 'Gửi gợi ý cho HM xem xét' : 'Thêm ứng viên tiềm năng vào tin tuyển dụng'}"></p>
+                th:text="${hrMode ? 'Gửi gợi ý cho Trưởng bộ phận xem xét' : 'Thêm ứng viên tiềm năng vào tin tuyển dụng'}"></p>
             <p class="tp-confirm-job" th:text="${jobTitle}"></p>
             <p th:if="${hrMode and receivingManager != null}" class="tp-confirm-subtitle"
-                th:text="|HM phụ trách: ${receivingManager}|"></p>
+                th:text="|Trưởng bộ phận phụ trách: ${receivingManager}|"></p>
             <p id="tp-review-status" class="tp-confirm-status" role="status"></p>
             <ul id="tp-confirm-list" class="tp-confirm-list" aria-label="Ứng viên và CV nguồn đang chọn"></ul>
             <p class="tp-confirm-subtitle"
-                th:text="${hrMode ? 'HM sẽ xem xét gợi ý. Chỉ sau khi HM chấp nhận, HR mới liên hệ xác nhận ứng viên đồng ý.' : 'Đề xuất được lưu nội bộ. HR sẽ liên hệ trước khi xác nhận ứng tuyển.'}">
+                th:text="${hrMode ? 'Trưởng bộ phận sẽ xem xét gợi ý. Chỉ sau khi Trưởng bộ phận chấp nhận, Nhân sự mới liên hệ xác nhận ứng viên đồng ý.' : 'Đề xuất được lưu nội bộ. Nhân sự sẽ liên hệ trước khi xác nhận ứng tuyển.'}">
             </p>
             <form id="tp-selection-form" method="post"
                 th:action="${hrMode ? '/talent-pool/jobs/' + jobPostingId + '/recommend' : '/talent-pool/jobs/' + jobPostingId + '/suggest'}"

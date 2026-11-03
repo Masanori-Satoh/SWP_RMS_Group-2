@@ -75,8 +75,8 @@ public class RecruitmentEmailService {
                     + ".\nBắt đầu: " + rs.getTimestamp(4).toLocalDateTime().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))
                     + "\nKết thúc: " + rs.getTimestamp(5).toLocalDateTime().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))
                     + "\nHình thức: " + ("Online_GoogleMeet".equals(rs.getString(6)) ? "Trực tuyến" : "Tại văn phòng")
-                    + "\nĐịa điểm / đường dẫn: " + java.util.Objects.toString(rs.getString(7), "HR sẽ liên hệ bổ sung")
-                    + "\n\nVui lòng liên hệ HR nếu bạn cần thay đổi lịch.\nTrân trọng,\nPhòng Nhân sự Mộc"),
+                    + "\nĐịa điểm / đường dẫn: " + java.util.Objects.toString(rs.getString(7), "Nhân sự sẽ liên hệ bổ sung")
+                    + "\n\nVui lòng liên hệ Nhân sự nếu bạn cần thay đổi lịch.\nTrân trọng,\nPhòng Nhân sự Mộc"),
                 id).stream().findFirst().orElseThrow(() -> new TalentPoolException("Lịch này không còn đủ điều kiện gửi thư mời."));
     }
     private void deliver(RecruitmentEmailMessage mail, Integer actorId) {
@@ -99,7 +99,7 @@ public class RecruitmentEmailService {
         var authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || authentication.getAuthorities().stream()
                 .noneMatch(a -> a.getAuthority().equals("ROLE_HR")))
-            throw new AccessDeniedException("Chỉ HR được gửi email tuyển dụng.");
+            throw new AccessDeniedException("Chỉ Nhân sự được gửi email tuyển dụng.");
         return currentUser.requireUser().getUserId();
     }
 }
