@@ -72,7 +72,7 @@ public class TalentPoolService {
     private User hr() {
         User user = actor();
         if (!CurrentUserService.hasRole(user, "HR"))
-            throw new AccessDeniedException("Chỉ HR được xác nhận ứng tuyển.");
+            throw new AccessDeniedException("Chỉ Nhân sự được xác nhận ứng tuyển.");
         return user;
     }
 
@@ -542,8 +542,8 @@ public class TalentPoolService {
         boolean pending = "HM_Suggested".equals(a.getApplicationStatus()) && decision.isEmpty();
         String label = pending ? "Chờ phản hồi"
                 : decision.map(r -> "Fail".equals(r.getDecision())
-                        ? "HM đã từ chối"
-                        : "HM đã chấp nhận").orElse("Đã kết thúc chờ phản hồi");
+                        ? "Trưởng bộ phận đã từ chối"
+                        : "Trưởng bộ phận đã chấp nhận").orElse("Đã kết thúc chờ phản hồi");
         boolean open = "Published".equals(a.getJobPosting().getPostingStatus())
                 && (a.getJobPosting().getApplicationDeadline() == null
                         || !a.getJobPosting().getApplicationDeadline().isBefore(LocalDateTime.now()));
@@ -561,7 +561,7 @@ public class TalentPoolService {
         User user = actor();
         //check if user is Hiring Manager
         if (!CurrentUserService.hasRole(user, "Hiring Manager"))
-            throw new AccessDeniedException("Chỉ HM được phản hồi gợi ý.");
+            throw new AccessDeniedException("Chỉ Trưởng bộ phận được phản hồi gợi ý.");
         //get application
         Application a = application(id);
         return recommendation(id, a.getCandidate().getCandidateId());
@@ -575,7 +575,7 @@ public class TalentPoolService {
     public Integer decideRecommendation(Integer id, boolean accept) {
         User user = actor();
         if (!CurrentUserService.hasRole(user, "Hiring Manager"))
-            throw new AccessDeniedException("Chỉ HM được phản hồi gợi ý.");
+            throw new AccessDeniedException("Chỉ Trưởng bộ phận được phản hồi gợi ý.");
         Application a = application(id);
         JobPosting target = job(a.getJobPosting().getJobPostingId(), true);
         requireTarget(user, target);
@@ -608,7 +608,7 @@ public class TalentPoolService {
         Application draft = application(id);
         if (!target.getJobPostingId().equals(draft.getJobPosting().getJobPostingId())
                 || !audit.has("Application", id, "TalentPoolHrRecommended"))
-            throw new ResourceNotFoundException("Không tìm thấy gợi ý gửi cho HM trong tin này.");
+            throw new ResourceNotFoundException("Không tìm thấy gợi ý gửi cho Trưởng bộ phận trong tin này.");
         if (applications.countPendingHrRecommendation(id) != 1
                 || applications.transition(id, Set.of("HM_Suggested"), "Rejected") != 1)
             throw new TalentPoolException("Gợi ý đã được xử lý, không thể xóa. Vui lòng tải lại trang.");
@@ -731,12 +731,12 @@ public class TalentPoolService {
         // check if role is HM and job is not in department
         if (CurrentUserService.hasRole(user, "Hiring Manager")
                 && !jobAccess.inManagedDepartment(user, job.getRequisition()))
-            throw new AccessDeniedException("Job không thuộc phạm vi phòng ban của bạn.");
+            throw new AccessDeniedException("Tin tuyển dụng không thuộc phạm vi phòng ban của bạn.");
     }
 
     private void requireHmDecision(Integer id) {
         if (applications.countPendingHrRecommendation(id) > 0)
-            throw new TalentPoolException("Gợi ý đang chờ HM phản hồi, chưa thể xác nhận hoặc kết thúc liên hệ.");
+            throw new TalentPoolException("Gợi ý đang chờ Trưởng bộ phận phản hồi, chưa thể xác nhận hoặc kết thúc liên hệ.");
     }
 
     private void requireOpen(JobPosting job) {

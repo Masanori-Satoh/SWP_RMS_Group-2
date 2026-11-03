@@ -1,13 +1,13 @@
 <!--Recommendation Page-->
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/internal}">
-<head><title>Gợi ý từ HR — Mộc RMS</title><th:block layout:fragment="styles"><link rel="stylesheet" th:href="@{/css/pages/applications.css}"><link rel="stylesheet" th:href="@{/css/pages/talent-pool.css}">
+<head><title>Gợi ý từ Nhân sự — Mộc RMS</title><th:block layout:fragment="styles"><link rel="stylesheet" th:href="@{/css/pages/applications.css}"><link rel="stylesheet" th:href="@{/css/pages/talent-pool.css}">
         <link rel="stylesheet" th:href="@{/css/pages/talent-pool-workspace.css}"></th:block></head>
 <body>
 <main id="main" layout:fragment="content" class="page-content container app-page tp-recommendations tpw-page adw-page tpw-hr-recommendations" tabindex="-1">
     <th:block th:replace="~{fragments/ui/admin-workspace :: scene}"></th:block>
 
-    <div class="page-header adw-heading tpw-heading"><div><h1 class="page-title adw-title tpw-hr-page-title" th:text="${viewerRole == 'HR' ? 'Gợi ý đã gửi cho HM' : 'Gợi ý từ HR'}"></h1><p class="page-subtitle tpw-subtitle tpw-job-title" th:title="${jobTitle}" th:text="${jobTitle}"></p></div><div class="tp-recommendation-actions"><a class="btn btn--secondary" th:href="@{/talent-pool/jobs/{id}/suggestions(id=${jobPostingId})}">Xem ứng viên được HM đề xuất</a><a th:if="${viewerRole == 'HR' and canRecommend}" class="btn btn--primary" th:href="@{/talent-pool(jobPostingId=${jobPostingId})}">Gợi ý ứng viên cho HM</a><a class="btn btn--secondary" th:href="@{/internal/job-postings/{id}(id=${jobPostingId})}">Quay lại tin tuyển dụng</a></div></div>
+    <div class="page-header adw-heading tpw-heading"><div><h1 class="page-title adw-title tpw-hr-page-title" th:text="${viewerRole == 'HR' ? 'Gợi ý đã gửi cho Trưởng bộ phận' : 'Gợi ý từ Nhân sự'}"></h1><p class="page-subtitle tpw-subtitle tpw-job-title" th:title="${jobTitle}" th:text="${jobTitle}"></p></div><div class="tp-recommendation-actions"><a class="btn btn--secondary" th:href="@{/talent-pool/jobs/{id}/suggestions(id=${jobPostingId})}">Xem ứng viên được Trưởng bộ phận đề xuất</a><a th:if="${viewerRole == 'HR' and canRecommend}" class="btn btn--primary" th:href="@{/talent-pool(jobPostingId=${jobPostingId})}">Gợi ý ứng viên cho Trưởng bộ phận</a><a class="btn btn--secondary" th:href="@{/internal/job-postings/{id}(id=${jobPostingId})}">Quay lại tin tuyển dụng</a></div></div>
     <div th:if="${successMessage}" class="alert alert--success" role="status" th:text="${successMessage}"></div>
     <div th:if="${errorMessage}" class="alert alert--danger" role="alert" th:text="${errorMessage}"></div>
     <section class="card adw-surface tpw-results" aria-labelledby="tp-recommendations-title">
@@ -19,13 +19,13 @@
             <span class="tpw-section-icon tpw-empty-icon--lg" aria-hidden="true"><svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M14 2H5v20h14V7ZM14 2v6h5M8 15h8M8 18h5"/><circle cx="10" cy="10" r="1.5"/></svg></span>
             <h3 class="tpw-empty-title">Chưa có gợi ý ứng viên nào</h3>
             <p class="tpw-empty-hint">Hiện tại chưa có ứng viên nào được gợi ý cho trưởng phòng tuyển dụng của tin tuyển dụng này.</p>
-            <p class="tpw-empty-hint" th:text="${viewerRole == 'HR' ? 'Hãy chọn ứng viên phù hợp và gửi đề xuất.' : 'Gợi ý mới sẽ xuất hiện tại đây sau khi HR gửi.'}"></p>
+            <p class="tpw-empty-hint" th:text="${viewerRole == 'HR' ? 'Hãy chọn ứng viên phù hợp và gửi đề xuất.' : 'Gợi ý mới sẽ xuất hiện tại đây sau khi Nhân sự gửi.'}"></p>
         </div>
         <div th:unless="${page.empty}" class="tp-recommendation-list table-wrapper tpw-table-scroll tpw-recommendations-table-wrap">
             <table class="table adw-data-table tpw-record-table tpw-recommendations-table tpw-hr-table" th:classappend="${viewerRole == 'Hiring Manager' ? 'tpw-hr-table--hm' : ''}">
-                <caption class="sr-only">Gợi ý ứng viên từ HR, thông tin liên hệ, trạng thái và thao tác theo quyền</caption>
+                <caption class="sr-only">Gợi ý ứng viên từ Nhân sự, thông tin liên hệ, trạng thái và thao tác theo quyền</caption>
                 <colgroup><col class="tpw-hr-col-index"><col class="tpw-hr-col-person"><col class="tpw-hr-col-contact"><col class="tpw-hr-col-author"><col class="tpw-hr-col-status"><col class="tpw-hr-col-date"><col class="tpw-hr-col-actions"></colgroup>
-                <thead><tr><th scope="col">STT</th><th scope="col">Ứng viên</th><th scope="col">Liên hệ</th><th scope="col">HR gợi ý</th><th scope="col">Trạng thái</th><th scope="col">Ngày gửi</th><th scope="col" class="tp-actions-head">Thao tác</th></tr></thead>
+                <thead><tr><th scope="col">STT</th><th scope="col">Ứng viên</th><th scope="col">Liên hệ</th><th scope="col">Nhân sự gợi ý</th><th scope="col">Trạng thái</th><th scope="col">Ngày gửi</th><th scope="col" class="tp-actions-head">Thao tác</th></tr></thead>
                 <tbody>
                 <tr class="tp-recommendation" th:each="r, row : ${page.content}">
                     <td class="tpw-hr-index" th:text="${page.number * page.size + row.count}"></td>
@@ -45,7 +45,7 @@
                             <form th:if="${r.pending}" class="tp-recommendation-actions" method="post" data-pool-withdraw th:action="@{/talent-pool/jobs/{jobId}/recommendations/{id}/withdraw(jobId=${jobPostingId},id=${r.applicationId},keyword=${keyword},page=${page.number})}">
                                 <button class="btn btn--secondary btn--sm tpw-hr-action tpw-hr-withdraw" type="button" data-pool-withdraw-dialog="tp-withdraw-dialog" th:attr="data-name=${r.fullName},aria-label=|Xóa gợi ý ${r.fullName}|" aria-haspopup="dialog"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/></svg><span>Xóa gợi ý</span></button>
                             </form>
-                            <button th:unless="${r.pending}" class="btn btn--secondary btn--sm tpw-hr-action tpw-hr-withdraw" type="button" disabled title="Chỉ xóa được gợi ý khi HM chưa phản hồi"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/></svg><span>Xóa gợi ý</span></button>
+                            <button th:unless="${r.pending}" class="btn btn--secondary btn--sm tpw-hr-action tpw-hr-withdraw" type="button" disabled title="Chỉ xóa được gợi ý khi Trưởng bộ phận chưa phản hồi"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/></svg><span>Xóa gợi ý</span></button>
                         </th:block>
                     </div></td>
                 </tr>

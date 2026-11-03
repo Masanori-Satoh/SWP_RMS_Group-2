@@ -49,12 +49,12 @@
             </div>
             <div class="tpw-profile-actions">
                 <a class="btn btn--secondary btn--sm" th:href="@{${backUrl}}" data-pool-back>
-                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m10 5-7 7 7 7 M3 12h18"/></svg><span th:text="${recommendation != null ? 'Quay lại gợi ý từ HR' : 'Quay lại danh sách'}"></span>
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m10 5-7 7 7 7 M3 12h18"/></svg><span th:text="${recommendation != null ? 'Quay lại gợi ý từ Nhân sự' : 'Quay lại danh sách'}"></span>
                 </a>
             </div>
         </div>
         <div th:if="${recommendation != null}" class="tp-recommendation-context tpw-recommendation-context">
-            <p><span th:text="|Được HR ${recommendation.recommendedBy} gợi ý cho|"></span> <strong class="tpw-job-title" th:title="${recommendation.jobTitle}" th:text="${recommendation.jobTitle}"></strong></p>
+            <p><span th:text="|Được Nhân sự ${recommendation.recommendedBy} gợi ý cho|"></span> <strong class="tpw-job-title" th:title="${recommendation.jobTitle}" th:text="${recommendation.jobTitle}"></strong></p>
             <time class="tp-feed-time" th:datetime="${#temporals.formatISO(recommendation.recommendedAt)}" th:text="${#temporals.format(recommendation.recommendedAt,'dd/MM/yyyy · HH:mm')}"></time>
         </div>
     </header>
@@ -171,10 +171,10 @@
             <section th:if="${recommendation != null}" class="card adw-surface tpw-panel tp-decision tpw-decision" aria-labelledby="tp-decision-title">
                 <div>
                     <h2 id="tp-decision-title" class="card-title adw-panel-title tpw-section-title">Quyết định của Trưởng phòng tuyển dụng</h2>
-                    <p class="tpw-section-desc" th:text="${recommendation.pending ? 'Xem xét hồ sơ trước khi phản hồi gợi ý từ HR.' : recommendation.statusLabel}"></p>
+                    <p class="tpw-section-desc" th:text="${recommendation.pending ? 'Xem xét hồ sơ trước khi phản hồi gợi ý từ Nhân sự.' : recommendation.statusLabel}"></p>
                 </div>
                 <form th:if="${recommendation.canDecide}" data-pool-decision class="tp-recommendation-actions" method="post" th:action="@{/talent-pool/recommendations/{id}/decision(id=${recommendation.applicationId},keyword=${filter.keyword},page=${sourcePage})}"><button class="btn btn--secondary btn--sm" type="submit" name="decision" value="Fail">Từ chối</button><button class="btn btn--primary btn--sm" type="submit" name="decision" value="Pass">Chấp nhận</button></form>
-                <p th:if="${recommendation.pending and !recommendation.canDecide}" class="tpw-section-desc">Đang chờ HM phản hồi hoặc tin không còn nhận gợi ý.</p>
+                <p th:if="${recommendation.pending and !recommendation.canDecide}" class="tpw-section-desc">Đang chờ Trưởng bộ phận phản hồi hoặc tin không còn nhận gợi ý.</p>
             </section>
 
             <section th:replace="~{talent-pool/candidate-notes :: panel(candidateId=${detail.candidate.candidateId},potential=${detail.potential},notes=${detail.notes},returnApplicationId=${null},jobPostingId=${jobPostingId},cvPage=${cvHistory.number},recommendationId=${recommendation != null ? recommendation.applicationId : null},filter=${filter},sourcePage=${sourcePage})}"></section>

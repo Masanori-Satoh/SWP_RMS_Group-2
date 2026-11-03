@@ -17,8 +17,8 @@ public record TalentPoolRecommendationResponse(Integer applicationId, Integer ca
         this(applicationId, candidateId, jobPostingId, jobTitle, fullName, recommendedBy,
                 recommendedAt, statusLabel, pending, canDecide, null, null,
                 pending ? "pending"
-                        : "HM đã chấp nhận".equals(statusLabel) ? "accepted"
-                                : "HM đã từ chối".equals(statusLabel) ? "rejected" : "closed");
+                        : "Trưởng bộ phận đã chấp nhận".equals(statusLabel) ? "accepted"
+                                : "Trưởng bộ phận đã từ chối".equals(statusLabel) ? "rejected" : "closed");
     }
 
     public String statusTone() {
@@ -32,9 +32,9 @@ public record TalentPoolRecommendationResponse(Integer applicationId, Integer ca
 
     public String statusHint() {
         return switch (stateKey) {
-            case "pending" -> "Đang chờ HM phụ trách phản hồi.";
-            case "accepted" -> "HM đã đồng ý; HR tiếp tục liên hệ ứng viên.";
-            case "rejected" -> "HM không tiếp tục gợi ý này.";
+            case "pending" -> "Đang chờ Trưởng bộ phận phụ trách phản hồi.";
+            case "accepted" -> "Trưởng bộ phận đã đồng ý; Nhân sự tiếp tục liên hệ ứng viên.";
+            case "rejected" -> "Trưởng bộ phận không tiếp tục gợi ý này.";
             default -> "Gợi ý đã kết thúc chờ phản hồi.";
         };
     }
