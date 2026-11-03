@@ -100,38 +100,40 @@
                                     <span th:if="${form.departmentId == null}">Chưa được gán phòng ban</span>
                                 </div>
                             </div>
-                            <div class="rqf-field">
-                                <label class="form-label" for="recruitmentRound">Đợt tuyển dụng</label>
-                                <!-- Tạo mới gợi ý đợt 1, sao chép gợi ý đợt kế tiếp; HM sửa được -->
-                                <div class="rqf-stepper">
-                                    <button type="button" data-step="-1" data-step-target="recruitmentRound"
-                                        aria-label="Giảm đợt">−</button>
-                                    <input type="number" th:field="*{recruitmentRound}" th:min="${roundMin}"
-                                        th:max="${roundMax}" step="1" inputmode="numeric"
-                                        aria-describedby="recruitmentRound-error"
-                                        th:attr="aria-invalid=${#fields.hasErrors('recruitmentRound')}">
-                                    <button type="button" data-step="1" data-step-target="recruitmentRound"
-                                        aria-label="Tăng đợt">+</button>
+                            <!-- Đợt + Số lượng chung một nửa hàng, cạnh Phòng ban -->
+                            <div class="rqf-pair">
+                                <div class="rqf-field">
+                                    <label class="form-label" for="recruitmentRound">Đợt tuyển dụng</label>
+                                    <!-- Tạo mới gợi ý đợt 1, sao chép gợi ý đợt kế tiếp; HM sửa được -->
+                                    <div class="rqf-stepper">
+                                        <button type="button" data-step="-1" data-step-target="recruitmentRound"
+                                            aria-label="Giảm đợt">−</button>
+                                        <input type="number" th:field="*{recruitmentRound}" th:min="${roundMin}"
+                                            th:max="${roundMax}" step="1" inputmode="numeric"
+                                            aria-describedby="recruitmentRound-error"
+                                            th:attr="aria-invalid=${#fields.hasErrors('recruitmentRound')}">
+                                        <button type="button" data-step="1" data-step-target="recruitmentRound"
+                                            aria-label="Tăng đợt">+</button>
+                                    </div>
+                                    <small id="recruitmentRound-error" class="field-error"
+                                        th:text="${#fields.hasErrors('recruitmentRound')} ? ${#strings.listJoin(#fields.errors('recruitmentRound'), '; ')} : ''"></small>
                                 </div>
-                                <small id="recruitmentRound-error" class="field-error"
-                                    th:text="${#fields.hasErrors('recruitmentRound')} ? ${#strings.listJoin(#fields.errors('recruitmentRound'), '; ')} : ''"></small>
-                            </div>
-
-                            <div class="rqf-field">
-                                <label class="form-label" for="numberOfPositions">Số lượng cần tuyển <span
-                                        class="required-asterisk">*</span></label>
-                                <div class="rqf-stepper">
-                                    <button type="button" data-step="-1" data-step-target="numberOfPositions"
-                                        aria-label="Giảm số lượng">−</button>
-                                    <input type="number" th:field="*{numberOfPositions}" th:min="${positionsMin}"
-                                        th:max="${positionsMax}" step="1" inputmode="numeric"
-                                        aria-describedby="numberOfPositions-error"
-                                        th:attr="aria-invalid=${#fields.hasErrors('numberOfPositions')}">
-                                    <button type="button" data-step="1" data-step-target="numberOfPositions"
-                                        aria-label="Tăng số lượng">+</button>
+                                <div class="rqf-field">
+                                    <label class="form-label" for="numberOfPositions">Số lượng cần tuyển <span
+                                            class="required-asterisk">*</span></label>
+                                    <div class="rqf-stepper">
+                                        <button type="button" data-step="-1" data-step-target="numberOfPositions"
+                                            aria-label="Giảm số lượng">−</button>
+                                        <input type="number" th:field="*{numberOfPositions}" th:min="${positionsMin}"
+                                            th:max="${positionsMax}" step="1" inputmode="numeric"
+                                            aria-describedby="numberOfPositions-error"
+                                            th:attr="aria-invalid=${#fields.hasErrors('numberOfPositions')}">
+                                        <button type="button" data-step="1" data-step-target="numberOfPositions"
+                                            aria-label="Tăng số lượng">+</button>
+                                    </div>
+                                    <small id="numberOfPositions-error" class="field-error"
+                                        th:text="${#fields.hasErrors('numberOfPositions')} ? ${#strings.listJoin(#fields.errors('numberOfPositions'), '; ')} : ''"></small>
                                 </div>
-                                <small id="numberOfPositions-error" class="field-error"
-                                    th:text="${#fields.hasErrors('numberOfPositions')} ? ${#strings.listJoin(#fields.errors('numberOfPositions'), '; ')} : ''"></small>
                             </div>
                         </div>
                     </section>
@@ -140,7 +142,7 @@
                     <section class="rqf-section" id="rqf-work" aria-labelledby="rqf-h-work">
                         <h2 id="rqf-h-work">Điều kiện làm việc</h2>
                         <div class="rqf-grid">
-                            <fieldset class="rqf-field rqf-full">
+                            <fieldset class="rqf-field">
                                 <legend class="form-label">Hình thức làm việc <span class="required-asterisk">*</span>
                                 </legend>
                                 <div class="rqf-seg" id="employmentType-group">
@@ -185,18 +187,6 @@
                             </div>
 
                             <div class="rqf-field">
-                                <label class="form-label" for="probationPeriod">Thời gian thử việc</label>
-                                <input class="form-input" type="text" th:field="*{probationPeriod}" th:maxlength="${probationLimit}"
-                                    placeholder="VD: 2 tháng, 60 ngày, Thỏa thuận"
-                                    aria-describedby="probationPeriod-help probationPeriod-error"
-                                    th:attr="aria-invalid=${#fields.hasErrors('probationPeriod')}">
-                                <small id="probationPeriod-help" class="rqf-hint">Để trống nếu không thử việc.</small>
-                                <small id="probationPeriod-error" class="field-error"
-                                    th:text="${#fields.hasErrors('probationPeriod')} ? ${#strings.listJoin(#fields.errors('probationPeriod'), '; ')} : ''"></small>
-                            </div>
-
-
-                            <div class="rqf-field">
                                 <label class="form-label" for="minSalary">Lương tối thiểu <span
                                         class="rqf-hint">VND/tháng</span></label>
                                 <input class="form-input" type="text" th:field="*{minSalary}" inputmode="numeric"
@@ -215,6 +205,17 @@
                                     th:text="${#fields.hasErrors('maxSalary')} ? ${#strings.listJoin(#fields.errors('maxSalary'), '; ')} : ''"></small>
                             </div>
                             <small id="salary-help" class="rqf-hint rqf-full">Để trống nếu lương thỏa thuận.</small>
+
+                            <div class="rqf-field">
+                                <label class="form-label" for="probationPeriod">Thời gian thử việc</label>
+                                <input class="form-input" type="text" th:field="*{probationPeriod}" th:maxlength="${probationLimit}"
+                                    placeholder="VD: 2 tháng, 60 ngày, Thỏa thuận"
+                                    aria-describedby="probationPeriod-help probationPeriod-error"
+                                    th:attr="aria-invalid=${#fields.hasErrors('probationPeriod')}">
+                                <small id="probationPeriod-help" class="rqf-hint">Để trống nếu không thử việc.</small>
+                                <small id="probationPeriod-error" class="field-error"
+                                    th:text="${#fields.hasErrors('probationPeriod')} ? ${#strings.listJoin(#fields.errors('probationPeriod'), '; ')} : ''"></small>
+                            </div>
                         </div>
                     </section>
 

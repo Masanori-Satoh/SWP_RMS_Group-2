@@ -536,3 +536,5 @@ Nhằm đảm bảo chất lượng code và phòng ngừa lỗi hồi quy (regr
 - [x] 03/11: Form tin: nhãn "Lấy từ yêu cầu / Khôi phục bản gốc" thêm cho Hình thức, Mô hình, Thời gian thử việc, Số lượng hiển thị (giá trị gốc `source*` nạp lại từ DB ở `fillSourceInfo`).
 - [x] 03/11: Bỏ "Loại tuyển dụng" (`JobRequisition.HiringType`): form/chi tiết yêu cầu, JS, validator, labels, mapper, dashboard Giám đốc (bỏ nhấn "Tuyển thay thế", giữ "Tuyển lại lần N"), seed, test; migration 016 xóa cột + CHECK.
 - [x] 03/11: Đợt tuyển dụng nhập tay (ô số −/+ 1..99, trống = 1); sao chép vẫn gợi ý đợt kế tiếp và nối phiếu gốc khi cùng tên + phòng; bỏ `CK_JobRequisition_RoundOrigin` (migration 016).
+- [x] 04/11: Form yêu cầu: Hình thức và Mô hình làm việc nằm cùng hàng (bỏ `rqf-full` ở ô Hình thức).
+- [x] 04/11: Form yêu cầu sắp lại: Tên vị trí (cả hàng); Phòng ban 50% | Đợt + Số lượng (mỗi ô 25%, `.rqf-pair`); Hình thức | Mô hình; Địa điểm (cả hàng); Lương tối thiểu | tối đa; Thử việc (50%).

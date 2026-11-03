@@ -16,6 +16,8 @@
 .req-form-page .rqf-section h2 { margin:0; color:var(--brand-dark); font:700 20px/1.35 var(--sans); }
 .req-form-page .rqf-section-head { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:baseline; gap:var(--s2) var(--s4); }
 .req-form-page .rqf-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:var(--s4); }
+/* 2 ô nhỏ (Đợt, Số lượng) chung một cột của rqf-grid */
+.req-form-page .rqf-pair { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:var(--s4); min-width:0; }
 .req-form-page .rqf-full { grid-column:1 / -1; }
 .req-form-page .rqf-field { display:grid; gap:var(--s2); align-content:start; min-width:0; margin:0; padding:0; border:0; }
 .req-form-page .rqf-field .form-label { margin:0; }
