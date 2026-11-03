@@ -44,7 +44,6 @@
 
             <!-- Phòng ban (trừ Giám đốc) và đợt tuyển dụng do server tự xác định, form chỉ giữ lại để gửi kèm -->
             <input type="hidden" th:field="*{departmentId}" th:unless="${directApprove}">
-            <input type="hidden" th:field="*{recruitmentRound}">
             <input type="hidden" th:field="*{originalRequisitionId}">
             <input type="hidden" th:field="*{originalTitle}">
 
@@ -102,13 +101,20 @@
                                 </div>
                             </div>
                             <div class="rqf-field">
-                                <span class="form-label">Đợt tuyển dụng</span>
-                                <!-- Đợt 1 khi tạo mới; sao chép thì server tính lại đợt kế tiếp khi lưu.
-                                 Đổi tên vị trí khác tên gốc thì JS hiện lại "Đợt 1" (requisition-form.js) -->
-                                <div class="rqf-readonly">
-                                    <span id="rqf-round" th:data-round="*{recruitmentRound ?: 1}"
-                                        th:text="|Đợt *{recruitmentRound ?: 1}|">Đợt 1</span>
+                                <label class="form-label" for="recruitmentRound">Đợt tuyển dụng</label>
+                                <!-- Tạo mới gợi ý đợt 1, sao chép gợi ý đợt kế tiếp; HM sửa được -->
+                                <div class="rqf-stepper">
+                                    <button type="button" data-step="-1" data-step-target="recruitmentRound"
+                                        aria-label="Giảm đợt">−</button>
+                                    <input type="number" th:field="*{recruitmentRound}" th:min="${roundMin}"
+                                        th:max="${roundMax}" step="1" inputmode="numeric"
+                                        aria-describedby="recruitmentRound-error"
+                                        th:attr="aria-invalid=${#fields.hasErrors('recruitmentRound')}">
+                                    <button type="button" data-step="1" data-step-target="recruitmentRound"
+                                        aria-label="Tăng đợt">+</button>
                                 </div>
+                                <small id="recruitmentRound-error" class="field-error"
+                                    th:text="${#fields.hasErrors('recruitmentRound')} ? ${#strings.listJoin(#fields.errors('recruitmentRound'), '; ')} : ''"></small>
                             </div>
 
                             <div class="rqf-field">
@@ -127,17 +133,6 @@
                                 <small id="numberOfPositions-error" class="field-error"
                                     th:text="${#fields.hasErrors('numberOfPositions')} ? ${#strings.listJoin(#fields.errors('numberOfPositions'), '; ')} : ''"></small>
                             </div>
-                            <fieldset class="rqf-field">
-                                <legend class="form-label">Loại tuyển dụng</legend>
-                                <div class="rqf-seg">
-                                    <label><input type="radio" th:field="*{hiringType}" value=""><span>Chưa xác
-                                            định</span></label>
-                                    <label><input type="radio" th:field="*{hiringType}" value="New"><span>Tuyển
-                                            mới</span></label>
-                                    <label><input type="radio" th:field="*{hiringType}" value="Replacement"><span>Tuyển
-                                            thay thế</span></label>
-                                </div>
-                            </fieldset>
                         </div>
                     </section>
 
@@ -190,33 +185,14 @@
                             </div>
 
                             <div class="rqf-field">
-                                <label class="form-label" for="probationDays">Thời gian thử việc</label>
-                                <!-- Ô trống + bấm "+" / "−" thì bắt đầu từ 60 ngày (data-step-start), mức thử việc hay dùng nhất -->
-                                <div class="rqf-stepper">
-                                    <button type="button" data-step="-1" data-step-target="probationDays"
-                                        aria-label="Giảm 1 ngày thử việc">−</button>
-                                    <input type="number" th:field="*{probationDays}" th:min="${probationMinDays}"
-                                        th:max="${probationMaxDays}" step="1" inputmode="numeric" placeholder="—"
-                                        data-step-start="60" aria-describedby="probationDays-help probationDays-error"
-                                        th:attr="aria-invalid=${#fields.hasErrors('probationDays')}">
-                                    <span class="rqf-unit">ngày</span>
-                                    <button type="button" data-step="1" data-step-target="probationDays"
-                                        aria-label="Tăng 1 ngày thử việc">+</button>
-                                </div>
-                                <small id="probationDays-help" class="rqf-hint"
-                                    th:text="|Để trống nếu không thử việc. Tối đa ${probationMaxDays} ngày.|">Để trống
-                                    nếu không thử việc.</small>
-                                <small id="probationDays-error" class="field-error"
-                                    th:text="${#fields.hasErrors('probationDays')} ? ${#strings.listJoin(#fields.errors('probationDays'), '; ')} : ''"></small>
-                            </div>
-
-                            <div class="rqf-field">
-                                <label class="form-label" for="gender">Yêu cầu giới tính</label>
-                                <select class="form-select" th:field="*{gender}">
-                                    <option value="Any">Không yêu cầu</option>
-                                    <option value="Male">Nam</option>
-                                    <option value="Female">Nữ</option>
-                                </select>
+                                <label class="form-label" for="probationPeriod">Thời gian thử việc</label>
+                                <input class="form-input" type="text" th:field="*{probationPeriod}" th:maxlength="${probationLimit}"
+                                    placeholder="VD: 2 tháng, 60 ngày, Thỏa thuận"
+                                    aria-describedby="probationPeriod-help probationPeriod-error"
+                                    th:attr="aria-invalid=${#fields.hasErrors('probationPeriod')}">
+                                <small id="probationPeriod-help" class="rqf-hint">Để trống nếu không thử việc.</small>
+                                <small id="probationPeriod-error" class="field-error"
+                                    th:text="${#fields.hasErrors('probationPeriod')} ? ${#strings.listJoin(#fields.errors('probationPeriod'), '; ')} : ''"></small>
                             </div>
 
 

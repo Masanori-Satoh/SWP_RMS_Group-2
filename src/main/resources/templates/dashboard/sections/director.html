@@ -23,8 +23,7 @@
                         <p class="dash-work__title" th:text="${requisition.title}">Vị trí</p>
                         <p class="dash-work__detail">
                             <span th:text="|${requisition.code} · ${requisition.departmentName} · ${requisition.positions} người|">REQ-0001 · Phòng ban · 1 người</span>
-                            <!-- Tuyển thay thế / tuyển lại: nhấn màu để Giám đốc chú ý -->
-                            <span class="dash-cell-emphasis" th:if="${requisition.replacement}"> · Tuyển thay thế</span>
+                            <!-- Tuyển lại: nhấn màu để Giám đốc chú ý -->
                             <span class="dash-cell-emphasis" th:if="${requisition.roundText != null}"
                                   th:text="| · ${requisition.roundText}|"> · Tuyển lại lần 2</span>
                         </p>
