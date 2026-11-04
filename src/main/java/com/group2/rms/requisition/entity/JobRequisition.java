@@ -92,6 +92,9 @@ public class JobRequisition extends BaseEntity {
     @Column(name = "ApprovalStatus", nullable = false, length = 30)
     private String approvalStatus;
 
+    @Column(name = "RequiredGender", nullable = false, length = 20)
+    private String gender;
+
     @Column(name = "WorkLocation", length = 255)
     private String workLocation;
     @Column(name = "WorkModel", nullable = false, length = 20)

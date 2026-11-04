@@ -423,6 +423,7 @@ public class RequisitionServiceImpl implements RequisitionService {
         jobRequisition.setEmploymentType(request.getEmploymentType());
         jobRequisition.setMinSalary(request.getMinSalary());
         jobRequisition.setMaxSalary(request.getMaxSalary());
+        jobRequisition.setGender(request.getGender());
         jobRequisition.setWorkLocation(request.getWorkLocation());
         jobRequisition.setWorkModel(request.getWorkModel());
         jobRequisition.setProbationPeriod(request.getProbationPeriod());

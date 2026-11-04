@@ -49,6 +49,7 @@ public class RequisitionRequest {
     @Digits(integer = 16, fraction = 2, message = RequisitionValidator.SALARY_FORMAT_MESSAGE)
     @DecimalMax(value = RequisitionValidator.SALARY_MAX_TEXT, message = RequisitionValidator.SALARY_MAX_MESSAGE)
     private BigDecimal maxSalary;
+    private String gender;
     @Size(max = RequisitionValidator.SHORT_FIELD_CHAR_LIMIT, message = RequisitionValidator.SHORT_FIELD_TOO_LONG)
     private String workLocation;
     private String workModel;

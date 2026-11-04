@@ -68,6 +68,7 @@ public class RequisitionAuditLogger {
         snapshot.put("Hình thức làm việc", jobRequisition.getEmploymentType());
         snapshot.put("Mức lương tối thiểu", formatNumber(jobRequisition.getMinSalary()));
         snapshot.put("Mức lương tối đa", formatNumber(jobRequisition.getMaxSalary()));
+        snapshot.put("Yêu cầu giới tính", jobRequisition.getGender());
         snapshot.put("Địa điểm làm việc", jobRequisition.getWorkLocation());
         snapshot.put("Mô hình làm việc", jobRequisition.getWorkModel());
         snapshot.put("Thời gian thử việc", jobRequisition.getProbationPeriod());

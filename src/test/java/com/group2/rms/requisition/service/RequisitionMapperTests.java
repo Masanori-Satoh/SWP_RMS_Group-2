@@ -224,6 +224,16 @@ class RequisitionMapperTests {
     // ----- Form -----
 
     @Test
+    @DisplayName("Giới tính đã lưu -> Hiện đúng trong form sửa và trang chi tiết")
+    void gender_shouldSurviveEditAndDetailMapping() {
+        JobRequisition requisition = requisition(RequisitionAccess.STATUS_DRAFT);
+        requisition.setGender("Female");
+
+        assertEquals("Female", mapper.toEditForm(requisition).getGender());
+        assertEquals("Nữ", mapper.toDetail(requisition, manager, null, false, List.of(), List.of()).genderLabel());
+    }
+
+    @Test
     @DisplayName("Đợt 2 trỏ về phiếu gốc -> DTO form mang tên phiếu gốc và phòng ban")
     void toEditForm_shouldCarryOriginalTitleAndDepartment_whenRequisitionIsLaterRound() {
         // Arrange

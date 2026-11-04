@@ -51,7 +51,9 @@ public class RequisitionValidator {
     public static final String SALARY_MAX_MESSAGE = "Mức lương không được vượt quá 1.000.000.000 VND/tháng.";
 
     public static final List<String> EMPLOYMENT_TYPES = List.of("Full-time", "Part-time", "Internship", "Contract");
+    public static final List<String> GENDERS = List.of("Any", "Male", "Female");
     public static final List<String> WORK_MODELS = List.of("On-site", "Remote", "Hybrid");
+    public static final String GENDER_ANY = "Any";
 
     /**
      * Đồng hồ dùng chung (ClockConfig); test truyền Clock.fixed để cố định "hôm
@@ -82,7 +84,11 @@ public class RequisitionValidator {
         requisitionRequest.setRequirementDetails(cleanMultiline(requisitionRequest.getRequirementDetails()));
         requisitionRequest.setWorkLocation(cleanString(requisitionRequest.getWorkLocation()));
         requisitionRequest.setWorkModel(cleanString(requisitionRequest.getWorkModel()));
+        requisitionRequest.setGender(cleanString(requisitionRequest.getGender()));
         requisitionRequest.setProbationPeriod(cleanString(requisitionRequest.getProbationPeriod()));
+        if (requisitionRequest.getGender() == null) {
+            requisitionRequest.setGender(GENDER_ANY);
+        }
 
         // Rule: tên vị trí bắt buộc cả khi lưu nháp
         validateTextField(errors, "title", requisitionRequest.getTitle(), TITLE_CHAR_LIMIT, true);
@@ -107,6 +113,7 @@ public class RequisitionValidator {
         // Rule: Các trường chọn phải nằm trong danh mục hợp lệ.
         validateChoiceField(errors, "employmentType", requisitionRequest.getEmploymentType(), EMPLOYMENT_TYPES, true);
         validateChoiceField(errors, "workModel", requisitionRequest.getWorkModel(), WORK_MODELS, true);
+        validateChoiceField(errors, "gender", requisitionRequest.getGender(), GENDERS, true);
         // Rule: đợt tuyển dụng do HM nhập tay; để trống thì là đợt 1
         Integer round = requisitionRequest.getRecruitmentRound();
         if (round == null) {

@@ -137,6 +137,17 @@ public final class RequisitionLabels {
         return period == null || period.isBlank() ? "Không thử việc" : period;
     }
 
+    /** Yêu cầu giới tính (JobRequisition.RequiredGender). */
+    public static String gender(String gender) {
+        if ("Male".equals(gender)) {
+            return "Nam";
+        }
+        if ("Female".equals(gender)) {
+            return "Nữ";
+        }
+        return "Không yêu cầu";
+    }
+
     /** Văn bản nhiều dòng → HTML: escape trước rồi mới đổi xuống dòng thành <br/> (chống XSS). */
     public static String multilineHtml(String text) {
         if (text == null || text.isBlank()) {

@@ -53,6 +53,7 @@ public class RequisitionMapper {
                 .employmentType(jobRequisition.getEmploymentType())
                 .minSalary(jobRequisition.getMinSalary())
                 .maxSalary(jobRequisition.getMaxSalary())
+                .gender(jobRequisition.getGender())
                 .workLocation(jobRequisition.getWorkLocation())
                 .workModel(jobRequisition.getWorkModel())
                 .probationPeriod(jobRequisition.getProbationPeriod())
@@ -150,6 +151,7 @@ public class RequisitionMapper {
                 // Nhãn tiếng Việt cho các trường thông tin cơ bản
                 .salaryLabel(RequisitionLabels.salary(jobRequisition.getMinSalary(), jobRequisition.getMaxSalary()))
                 .probationLabel(RequisitionLabels.probation(jobRequisition.getProbationPeriod()))
+                .genderLabel(RequisitionLabels.gender(jobRequisition.getGender()))
                 .workModelLabel(RequisitionLabels.workModel(jobRequisition.getWorkModel()))
                 // Văn bản nhiều dòng: escape HTML rồi đổi xuống dòng thành <br/> (AG §6.3)
                 .reasonForHiringHtml(RequisitionLabels.multilineHtml(jobRequisition.getReasonForHiring()))

@@ -68,7 +68,7 @@
                                 <label class="form-label" for="title">Tên vị trí <span
                                         class="required-asterisk">*</span></label>
                                 <input class="form-input" type="text" th:field="*{title}" maxlength="200"
-                                    placeholder="VD: Key Account Manager" aria-describedby="title-error"
+                                    placeholder="Nhập vị trí cần tuyển" aria-describedby="title-error"
                                     th:attr="aria-invalid=${#fields.hasErrors('title')}">
                                 <small id="title-error" class="field-error"
                                     th:text="${#fields.hasErrors('title')} ? ${#strings.listJoin(#fields.errors('title'), '; ')} : ''"></small>
@@ -179,7 +179,7 @@
                                 <label class="form-label" for="workLocation">Địa điểm làm việc <span
                                         class="required-asterisk">*</span></label>
                                 <input class="form-input" type="text" th:field="*{workLocation}" maxlength="255"
-                                    placeholder="VD: Tầng 8, RMS Tower, Duy Tân, Cầu Giấy, Hà Nội"
+                                    placeholder="Nhập địa điểm làm việc"
                                     aria-describedby="workLocation-error"
                                     th:attr="aria-invalid=${#fields.hasErrors('workLocation')}">
                                 <small id="workLocation-error" class="field-error"
@@ -190,7 +190,7 @@
                                 <label class="form-label" for="minSalary">Lương tối thiểu <span
                                         class="rqf-hint">VND/tháng</span></label>
                                 <input class="form-input" type="text" th:field="*{minSalary}" inputmode="numeric"
-                                    placeholder="VD: 20.000.000" aria-describedby="minSalary-error"
+                                    placeholder="Nhập lương tối thiểu" aria-describedby="minSalary-error"
                                     th:attr="aria-invalid=${#fields.hasErrors('minSalary')}">
                                 <small id="minSalary-error" class="field-error"
                                     th:text="${#fields.hasErrors('minSalary')} ? ${#strings.listJoin(#fields.errors('minSalary'), '; ')} : ''"></small>
@@ -199,7 +199,7 @@
                                 <label class="form-label" for="maxSalary">Lương tối đa <span
                                         class="rqf-hint">VND/tháng</span></label>
                                 <input class="form-input" type="text" th:field="*{maxSalary}" inputmode="numeric"
-                                    placeholder="VD: 30.000.000" aria-describedby="salary-help maxSalary-error"
+                                    placeholder="Nhập lương tối đa" aria-describedby="salary-help maxSalary-error"
                                     th:attr="aria-invalid=${#fields.hasErrors('maxSalary')}">
                                 <small id="maxSalary-error" class="field-error"
                                     th:text="${#fields.hasErrors('maxSalary')} ? ${#strings.listJoin(#fields.errors('maxSalary'), '; ')} : ''"></small>
@@ -209,12 +209,20 @@
                             <div class="rqf-field">
                                 <label class="form-label" for="probationPeriod">Thời gian thử việc</label>
                                 <input class="form-input" type="text" th:field="*{probationPeriod}" th:maxlength="${probationLimit}"
-                                    placeholder="VD: 2 tháng, 60 ngày, Thỏa thuận"
+                                    placeholder="Nhập thời gian thử việc"
                                     aria-describedby="probationPeriod-help probationPeriod-error"
                                     th:attr="aria-invalid=${#fields.hasErrors('probationPeriod')}">
                                 <small id="probationPeriod-help" class="rqf-hint">Để trống nếu không thử việc.</small>
                                 <small id="probationPeriod-error" class="field-error"
                                     th:text="${#fields.hasErrors('probationPeriod')} ? ${#strings.listJoin(#fields.errors('probationPeriod'), '; ')} : ''"></small>
+                            </div>
+                            <div class="rqf-field">
+                                <label class="form-label" for="gender">Yêu cầu giới tính</label>
+                                <select class="form-select" th:field="*{gender}">
+                                    <option value="Any">Không yêu cầu</option>
+                                    <option value="Male">Nam</option>
+                                    <option value="Female">Nữ</option>
+                                </select>
                             </div>
                         </div>
                     </section>
@@ -226,7 +234,7 @@
                             <label class="form-label" for="reasonForHiring">Lý do tuyển dụng <span
                                     class="required-asterisk">*</span></label>
                             <textarea class="form-textarea" th:field="*{reasonForHiring}" rows="3" maxlength="2000"
-                                placeholder="Vì sao phòng ban cần thêm người cho vị trí này?"
+                                placeholder="Nhập lý do tuyển dụng"
                                 aria-describedby="reasonForHiring-count reasonForHiring-error"></textarea>
                             <div class="rqf-counter" id="reasonForHiring-count" aria-live="polite"
                                 th:text="|${#strings.length(form.reasonForHiring ?: '')}/2000|">0/2000</div>
@@ -237,7 +245,7 @@
                             <label class="form-label" for="jobDescription">Mô tả công việc <span
                                     class="required-asterisk">*</span></label>
                             <textarea class="form-textarea" th:field="*{jobDescription}" rows="5" maxlength="2000"
-                                placeholder="Các đầu việc chính, mỗi ý một dòng"
+                                placeholder="Nhập mô tả công việc"
                                 aria-describedby="jobDescription-count jobDescription-error"></textarea>
                             <div class="rqf-counter" id="jobDescription-count" aria-live="polite"
                                 th:text="|${#strings.length(form.jobDescription ?: '')}/2000|">0/2000</div>
@@ -248,7 +256,7 @@
                             <label class="form-label" for="requirementDetails">Yêu cầu ứng viên <span
                                     class="required-asterisk">*</span></label>
                             <textarea class="form-textarea" th:field="*{requirementDetails}" rows="5" maxlength="2000"
-                                placeholder="Kinh nghiệm, kỹ năng, bằng cấp cần có"
+                                placeholder="Nhập yêu cầu ứng viên"
                                 aria-describedby="requirementDetails-count requirementDetails-error"></textarea>
                             <div class="rqf-counter" id="requirementDetails-count" aria-live="polite"
                                 th:text="|${#strings.length(form.requirementDetails ?: '')}/2000|">0/2000

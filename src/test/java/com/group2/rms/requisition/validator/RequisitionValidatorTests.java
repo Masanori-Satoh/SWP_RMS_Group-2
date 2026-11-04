@@ -96,6 +96,22 @@ class RequisitionValidatorTests {
     }
 
     @Test
+    @DisplayName("Không chọn giới tính -> Mặc định không yêu cầu")
+    void validate_shouldDefaultGenderToAny_whenMissing() {
+        var request = valid();
+        expectPass(request);
+        assertEquals(RequisitionValidator.GENDER_ANY, request.getGender());
+    }
+
+    @Test
+    @DisplayName("Giới tính ngoài danh mục -> Báo lỗi đúng trường")
+    void validate_shouldReject_whenGenderIsInvalid() {
+        var request = valid();
+        request.setGender("Other");
+        assertTrue(expectFail(request).getErrors().containsKey("gender"));
+    }
+
+    @Test
     @DisplayName("Mô hình Hybrid -> Hợp lệ")
     void validate_shouldPass_whenWorkModelIsHybrid() {
         var d = valid();

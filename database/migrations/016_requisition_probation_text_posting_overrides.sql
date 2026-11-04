@@ -1,6 +1,6 @@
--- 016: Thử việc dạng chữ, bỏ yêu cầu giới tính, tin có Hình thức / Mô hình / Thử việc riêng (hoangnh, 03/11).
+-- 016: Thử việc dạng chữ, tin có Hình thức / Mô hình / Thử việc riêng (hoangnh, 03/11).
 --  1. JobRequisition: ProbationDays INT -> ProbationPeriod NVARCHAR(100) (số cũ chuyển thành "N ngày").
---  2. JobRequisition: xóa cột RequiredGender (kèm default + CHECK).
+--  2. JobRequisition: giữ RequiredGender và dữ liệu giới tính hiện có.
 --  3. JobPosting: thêm EmploymentType, WorkModel, ProbationPeriod (NULL được); tin cũ chép giá trị từ yêu cầu.
 --  4. JobRequisition: xóa cột HiringType (Loại tuyển dụng) kèm CHECK.
 --  5. JobRequisition: bỏ CK_JobRequisition_RoundOrigin để HM nhập tay đợt tuyển dụng (vẫn giữ RecruitmentRound > 0).
@@ -17,17 +17,6 @@ BEGIN
     IF EXISTS (SELECT 1 FROM sys.check_constraints WHERE name = N'CK_JobRequisition_ProbationDays')
         ALTER TABLE dbo.JobRequisition DROP CONSTRAINT CK_JobRequisition_ProbationDays;
     ALTER TABLE dbo.JobRequisition DROP COLUMN ProbationDays;
-END
-GO
-
--- ---- 2. Bỏ JobRequisition.RequiredGender ----
-IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.JobRequisition') AND name = N'RequiredGender')
-BEGIN
-    IF EXISTS (SELECT 1 FROM sys.check_constraints WHERE name = N'CK_JobRequisition_RequiredGender')
-        ALTER TABLE dbo.JobRequisition DROP CONSTRAINT CK_JobRequisition_RequiredGender;
-    IF EXISTS (SELECT 1 FROM sys.default_constraints WHERE name = N'DF_JobRequisition_RequiredGender')
-        ALTER TABLE dbo.JobRequisition DROP CONSTRAINT DF_JobRequisition_RequiredGender;
-    ALTER TABLE dbo.JobRequisition DROP COLUMN RequiredGender;
 END
 GO
 
