@@ -138,7 +138,7 @@ function executeSendOfferAction() {
         btnModal.innerHTML = '<span class="ofw-spinner-sm" aria-hidden="true"></span> Đang gửi...';
     }
 
-    showFlashToast('Đang phát hành và gửi email Thư mời nhận việc tới ứng viên...', 'info');
+    showFlashToast('Đang phát hành thư mời nhận việc...', 'info');
 
     const csrf = getCsrfInfo();
     const headers = { 'Accept': 'application/json' };

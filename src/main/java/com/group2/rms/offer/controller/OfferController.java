@@ -429,7 +429,7 @@ public class OfferController {
         try {
             OfferResponse sentOffer = offerService.sendOfferToCandidate(id);
             return ResponseEntity.ok(new ApiResponse<>(true,
-                    "Đã phát hành và gửi thư mời nhận việc tới ứng viên thành công!", sentOffer));
+                    "Đã phát hành thư mời nhận việc trên cổng ứng viên.", sentOffer));
         } catch (BaseBusinessException e) {
             HttpStatus status = (e instanceof ResourceNotFoundException) ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST;
             return ResponseEntity.status(status).body(new ApiResponse<>(false, e.getMessage()));
@@ -449,7 +449,7 @@ public class OfferController {
         try {
             offerService.sendOfferToCandidate(id);
             flash.addFlashAttribute("successMessage",
-                    "Đã phát hành và gửi thư mời nhận việc tới ứng viên thành công!");
+                    "Đã phát hành thư mời nhận việc trên cổng ứng viên.");
         } catch (BaseBusinessException e) {
             flash.addFlashAttribute("errorMessage", e.getMessage());
         }

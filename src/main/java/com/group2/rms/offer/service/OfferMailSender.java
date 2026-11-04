@@ -19,13 +19,16 @@ public class OfferMailSender {
 
     private final ObjectProvider<JavaMailSender> mailSender;
     private final String from;
+    private final String testRecipient;
     private final String baseUrl;
 
     public OfferMailSender(ObjectProvider<JavaMailSender> mailSender,
                            @Value("${app.mail.from:${APP_MAIL_FROM:noreply@rms.group2.com}}") String from,
+                           @Value("${app.mail.offer-test-recipient:}") String testRecipient,
                            @Value("${app.base-url:${APP_BASE_URL:http://localhost:8080}}") String baseUrl) {
         this.mailSender = mailSender;
         this.from = from;
+        this.testRecipient = testRecipient.trim();
         this.baseUrl = baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;
     }
 
@@ -41,11 +44,7 @@ public class OfferMailSender {
             }
         }
 
-        // Ưu tiên gửi về email được cấu hình nếu đang dùng hòm thư phát triển cá nhân (from != noreply),
-        // đảm bảo người test nhận được email trực tiếp vào hòm thư cá nhân.
-        String targetRecipient = (from != null && !from.isBlank() && !from.contains("noreply"))
-                ? from
-                : candidateEmail;
+        String targetRecipient = testRecipient.isEmpty() ? candidateEmail : testRecipient;
 
         if (targetRecipient == null || targetRecipient.isBlank()) {
             log.warn("Không thể gửi thư mời nhận việc: Ứng viên cho Offer ID {} không có email hợp lệ.", offer.getOfferId());
@@ -85,8 +84,7 @@ public class OfferMailSender {
                 log.error("Lỗi khi gửi email Offer Letter tới {}: {}", targetRecipient, ex.getMessage());
             }
         } else {
-            log.info("[MOCK EMAIL] Gửi Offer Letter tới {} ({}) cho vị trí {} với lương {}. Link: {}/portal/offers/{}",
-                    candidateName, targetRecipient, offer.getOfferedPositionTitle(), offer.getProposedSalary(), baseUrl, offer.getOfferId());
+            log.info("Bỏ qua email Offer ID {} vì chưa có cấu hình SMTP.", offer.getOfferId());
         }
     }
 }

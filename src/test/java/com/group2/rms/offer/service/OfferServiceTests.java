@@ -38,9 +38,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -79,6 +83,28 @@ class OfferServiceTests {
 
     @InjectMocks
     private OfferServiceImpl offerService;
+
+    @Mock
+    private ObjectProvider<JavaMailSender> smtpProvider;
+
+    @ParameterizedTest
+    @CsvSource({"'', candidate@example.com", "test@example.com, test@example.com"})
+    void offerMailUsesCandidateUnlessExplicitTestRecipientIsConfigured(String testRecipient, String expectedRecipient) {
+        JavaMailSender smtp = mock(JavaMailSender.class);
+        when(smtpProvider.getIfAvailable()).thenReturn(smtp);
+        var sender = new OfferMailSender(smtpProvider, "hr@example.com", testRecipient, "https://example.com");
+        var candidate = Candidate.builder().account(User.builder()
+                .email("candidate@example.com").fullName("Candidate").build()).build();
+        var offer = OfferProposal.builder().offerId(1)
+                .application(Application.builder().candidate(candidate).build()).build();
+
+        sender.sendOfferLetterToCandidate(offer);
+
+        var message = ArgumentCaptor.forClass(SimpleMailMessage.class);
+        verify(smtp).send(message.capture());
+        assertEquals("hr@example.com", message.getValue().getFrom());
+        assertArrayEquals(new String[]{expectedRecipient}, message.getValue().getTo());
+    }
 
     @Test
     @DisplayName("Nghiệp vụ: Lương thử việc < 85% lương chính thức phải ném OfferValidationException")
