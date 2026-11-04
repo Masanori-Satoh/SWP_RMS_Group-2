@@ -230,7 +230,7 @@
     <!-- ===========================================================================
          MODAL: DIRECTOR APPROVAL MODAL (Duyệt / Từ chối Offer nhanh)
          =========================================================================== -->
-    <div class="modal-overlay" id="directorDecisionModal" hidden>
+    <dialog id="directorDecisionModal" class="confirm-dialog ofw-workspace-dialog" aria-labelledby="directorDecisionTitle">
         <div class="modal-box ofw-modal-box--sm">
             <div class="modal-header">
                 <div id="directorDecisionTitle" class="ofw-modal-title-group ofw-modal-title--medium">
@@ -269,7 +269,7 @@
                 <button type="button" id="btnSubmitDecision" class="btn btn--primary" onclick="submitDirectorDecision()">Xác Nhận</button>
             </div>
         </div>
-    </div>
+    </dialog>
 
 </main>
 

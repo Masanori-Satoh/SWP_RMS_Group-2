@@ -84,8 +84,7 @@ function openDirectorDecisionModal(offerId, actionType) {
         }
     }
 
-    modal.classList.add('active');
-    modal.hidden = false;
+    if (!modal.open) modal.showModal();
 }
 
 /**
@@ -112,8 +111,7 @@ function handleDirectorDecisionCommentInput(textarea) {
 function closeDirectorDecisionModal() {
     const modal = document.getElementById('directorDecisionModal');
     if (modal) {
-        modal.classList.remove('active');
-        modal.hidden = true;
+        modal.close();
     }
     const commentsEl = document.getElementById('directorDecisionComments');
     if (commentsEl) {

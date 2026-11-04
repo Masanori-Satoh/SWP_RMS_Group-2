@@ -334,8 +334,7 @@ function initOfferFormExpectedStartDateMin() {
 function openExportModal() {
     const modal = document.getElementById('offerExportModal');
     if (modal) {
-        modal.classList.add('active');
-        modal.hidden = false;
+        if (!modal.open) modal.showModal();
     }
     const errDiv = document.getElementById('exportModalError');
     if (errDiv) errDiv.hidden = true;
@@ -358,8 +357,7 @@ function openExportModalWithScope(scope) {
 function closeExportModal() {
     const modal = document.getElementById('offerExportModal');
     if (modal) {
-        modal.classList.remove('active');
-        modal.hidden = true;
+        modal.close();
     }
 }
 

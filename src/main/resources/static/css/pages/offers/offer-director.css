@@ -138,11 +138,6 @@ button.director-stat-card:hover {
    #directorDecisionModal popup for fast approve / reject with feedback
    ============================================================================= */
 
-#directorDecisionModal .modal-box {
-  max-width: 620px;
-  box-shadow: var(--shadow-lg, 0 10px 15px -3px color-mix(in srgb, var(--ink) 10%, transparent));
-}
-
 .director-decision-textarea {
   width: 100%;
   border: 1px solid var(--line);

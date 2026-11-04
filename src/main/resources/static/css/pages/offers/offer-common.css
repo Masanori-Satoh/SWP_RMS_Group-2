@@ -107,25 +107,12 @@
    SECTION 2 — MODALS & DIALOG OVERLAY ARCHITECTURE
    Base modal structure for Director Quick Decision, Excel Export, and Dialogs.
    ----------------------------------------------------------------------------- */
-.modal-overlay,
-.modal-backdrop {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: color-mix(in srgb, var(--ink) 55%, transparent);
-    backdrop-filter: blur(4px);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    z-index: 1200;
-    padding: 20px;
+dialog.ofw-workspace-dialog {
+    max-width: 620px;
 }
 
-.modal-overlay.active,
-.modal-backdrop.active {
-    display: flex;
+dialog.ofw-workspace-dialog .modal-box {
+    box-shadow: none;
 }
 
 .modal-box,
