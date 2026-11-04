@@ -187,7 +187,7 @@ function submitDirectorDecision() {
         .then(data => {
             closeDirectorDecisionModal();
             try {
-                sessionStorage.setItem('pendingFlashToast', JSON.stringify({
+                sessionStorage.setItem(OFFER_PENDING_TOAST_KEY, JSON.stringify({
                     message: data.message || 'Xử lý quyết định thành công!',
                     type: 'success'
                 }));
@@ -426,7 +426,7 @@ function executeDirectorDecisionApi(offerId, url, comments) {
 
             if (res.ok && data?.success) {
                 try {
-                    sessionStorage.setItem('pendingFlashToast', JSON.stringify({
+                    sessionStorage.setItem(OFFER_PENDING_TOAST_KEY, JSON.stringify({
                         message: data.message || 'Xử lý quyết định thành công!',
                         type: 'success'
                     }));

@@ -81,7 +81,7 @@ function confirmDeleteOffer(offerId) {
         .then(res => {
             if (res && res.success) {
                 try {
-                    sessionStorage.setItem('pendingFlashToast', JSON.stringify({
+                    sessionStorage.setItem(OFFER_PENDING_TOAST_KEY, JSON.stringify({
                         message: res.message || 'Đã xóa bản nháp đề xuất thành công.',
                         type: 'success'
                     }));

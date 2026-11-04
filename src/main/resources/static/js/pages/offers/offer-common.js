@@ -4,7 +4,7 @@
  * - Đọc CSRF Token từ thẻ meta (getCsrfInfo)
  * - Khử ký tự HTML độc hại chống XSS (escapeOfferHtml)
  * - Hiển thị Flash Toast thông báo phản hồi (showFlashToast, showToast)
- * - Tự động hiển thị pendingFlashToast từ sessionStorage sau khi reload trang
+ * - Tự động hiển thị toast của Offer từ sessionStorage sau khi reload trang
  * - Điều khiển Modal xác nhận phát hành Thư mời nhận việc (confirmSendOffer, executeSendOfferAction)
  */
 
@@ -38,6 +38,8 @@ function escapeOfferHtml(str) {
 // =========================================================================
 // 3. FLASH TOAST NOTIFICATION HELPERS
 // =========================================================================
+
+const OFFER_PENDING_TOAST_KEY = 'offer.pendingFlashToast';
 
 const TOAST_ICONS = {
     circle: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="flash-toast-icon"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
@@ -77,36 +79,21 @@ function showFlashToast(message, type = 'success') {
     `;
 
     container.appendChild(toast);
-
-    function dismissToast() {
-        if (toast.classList.contains('is-leaving')) return;
-        toast.classList.add('is-leaving');
-        const remove = () => {
-            toast.remove();
-            if (container && !container.querySelector('[data-flash-toast]')) {
-                container.remove();
-            }
-        };
-        toast.addEventListener('transitionend', remove, { once: true });
-        setTimeout(remove, 350);
-    }
-
-    toast.querySelector('.flash-toast-progress')?.addEventListener('animationend', dismissToast);
-    toast.querySelector('[data-flash-close]')?.addEventListener('click', dismissToast);
+    window.initFlashToasts(container);
 }
 
 function checkOfferPendingFlashToast() {
     try {
-        const pending = sessionStorage.getItem('pendingFlashToast');
+        const pending = sessionStorage.getItem(OFFER_PENDING_TOAST_KEY);
         if (pending) {
-            sessionStorage.removeItem('pendingFlashToast');
+            sessionStorage.removeItem(OFFER_PENDING_TOAST_KEY);
             const data = JSON.parse(pending);
             if (data && data.message) {
                 showFlashToast(data.message, data.type || 'success');
             }
         }
     } catch (e) {
-        sessionStorage.removeItem('pendingFlashToast');
+        sessionStorage.removeItem(OFFER_PENDING_TOAST_KEY);
     }
 }
 
@@ -174,7 +161,7 @@ function executeSendOfferAction() {
         .then(res => {
             if (res && res.success) {
                 try {
-                    sessionStorage.setItem('pendingFlashToast', JSON.stringify({
+                    sessionStorage.setItem(OFFER_PENDING_TOAST_KEY, JSON.stringify({
                         message: res.message || 'Phát hành Thư mời làm việc thành công!',
                         type: 'success'
                     }));
