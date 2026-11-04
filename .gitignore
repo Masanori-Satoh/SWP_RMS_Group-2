@@ -152,3 +152,6 @@ system-test/
 
 # Visual Paradigm auto-backups
 *.vpp.bak_*
+
+# Local QA evidence and screenshots
+/.qa/

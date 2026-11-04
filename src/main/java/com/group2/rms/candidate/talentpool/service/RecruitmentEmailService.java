@@ -74,11 +74,11 @@ public class RecruitmentEmailService {
             String start = rs.getTimestamp(4).toLocalDateTime().format(fmt);
             String end = rs.getTimestamp(5).toLocalDateTime().format(fmt);
             String format = "Online_GoogleMeet".equals(rs.getString(6)) ? "Trực tuyến" : "Tại văn phòng";
-            String location = java.util.Objects.toString(rs.getString(7), "HR sẽ liên hệ bổ sung");
+            String location = java.util.Objects.toString(rs.getString(7), "Nhân sự sẽ liên hệ bổ sung");
             String text = "Xin chào " + name + ",\n\nMộc mời bạn phỏng vấn vị trí " + job
                     + ".\nBắt đầu: " + start + "\nKết thúc: " + end + "\nHình thức: " + format
                     + "\nĐịa điểm / đường dẫn: " + location
-                    + "\n\nVui lòng liên hệ HR nếu bạn cần thay đổi lịch.\nTrân trọng,\nPhòng Nhân sự Mộc";
+                    + "\n\nVui lòng liên hệ Nhân sự nếu bạn cần thay đổi lịch.\nTrân trọng,\nPhòng Nhân sự Mộc";
             return new RecruitmentEmailMessage("InterviewSchedule", id, "InterviewInvitation", rs.getString(1),
                     "Thư mời phỏng vấn — " + job, text, interviewHtml(name, job, start, end, format, location));
         }, id).stream().findFirst().orElseThrow(() -> new TalentPoolException("Lịch này không còn đủ điều kiện gửi thư mời."));
@@ -130,7 +130,7 @@ public class RecruitmentEmailService {
         var authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || authentication.getAuthorities().stream()
                 .noneMatch(a -> a.getAuthority().equals("ROLE_HR")))
-            throw new AccessDeniedException("Chỉ HR được gửi email tuyển dụng.");
+            throw new AccessDeniedException("Chỉ Nhân sự được gửi email tuyển dụng.");
         return currentUser.requireUser().getUserId();
     }
 }

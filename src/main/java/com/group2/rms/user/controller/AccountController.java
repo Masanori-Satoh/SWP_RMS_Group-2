@@ -85,7 +85,7 @@ public class AccountController {
             } catch (AccountFieldException exception) {
                 errors.rejectValue(exception.getField(), "account.invalid", exception.getMessage());
             } catch (DataIntegrityViolationException exception) {
-                errors.reject("account.conflict", "The username or email is already in use.");
+                errors.reject("account.conflict", "Tên đăng nhập hoặc email đã được sử dụng.");
             }
         }
         form.setPassword(null);
@@ -123,7 +123,7 @@ public class AccountController {
             } catch (AccountFieldException exception) {
                 errors.rejectValue(exception.getField(), "account.invalid", exception.getMessage());
             } catch (DataIntegrityViolationException exception) {
-                errors.reject("account.conflict", "The email is already in use.");
+                errors.reject("account.conflict", "Email đã được sử dụng.");
             }
         }
         prepareEdit(model, userId, management.findForEdit(userId).username());

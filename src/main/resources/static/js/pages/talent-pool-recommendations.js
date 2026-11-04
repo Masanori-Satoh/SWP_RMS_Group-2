@@ -7,7 +7,7 @@
         document.querySelectorAll('[data-pool-withdraw-dialog]').forEach(button => {
             button.addEventListener('click', () => {
                 source = button;
-                dialog.querySelector('#tp-withdraw-description').textContent = `Thu hồi gợi ý ${button.dataset.name} trước khi HM phản hồi. CV và ghi chú của ứng viên vẫn được giữ nguyên.`;
+                dialog.querySelector('#tp-withdraw-description').textContent = `Thu hồi gợi ý ${button.dataset.name} trước khi Trưởng bộ phận phản hồi. CV và ghi chú của ứng viên vẫn được giữ nguyên.`;
                 confirm.disabled = false;
                 dialog.showModal();
             });

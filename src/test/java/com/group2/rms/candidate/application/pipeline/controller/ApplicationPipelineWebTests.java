@@ -192,7 +192,7 @@ class ApplicationPipelineWebTests {
                 .andExpect(content().string(containsString("Java Backend"))).andExpect(content().string(containsString("QA Automation")))
                 .andExpect(content().string(containsString("/talent-pool/15/cv/101"))).andExpect(content().string(containsString("/talent-pool/15/cv/102")))
                 .andExpect(content().string(containsString("&lt;script&gt;note&lt;/script&gt;")))
-                .andExpect(content().string(containsString("Quyết định của Hiring Manager")))
+                .andExpect(content().string(containsString("Quyết định của Trưởng phòng tuyển dụng")))
                 .andExpect(content().string(containsString("/talent-pool/recommendations/219/decision")))
                 .andExpect(content().string(containsString("recommendationId=219")));
     }

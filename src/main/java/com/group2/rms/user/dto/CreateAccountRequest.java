@@ -11,35 +11,35 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@PasswordMatches(message = "Passwords do not match.")
+@PasswordMatches(message = "Mật khẩu xác nhận không khớp.")
 public class CreateAccountRequest {
 
-    @NotBlank(message = "Enter a full name.")
-    @Size(max = 100, message = "Full name must be at most 100 characters.")
+    @NotBlank(message = "Vui lòng nhập họ và tên.")
+    @Size(max = 100, message = "Họ và tên không được quá 100 ký tự.")
     private String fullName;
 
-    @NotBlank(message = "Enter a username.")
-    @Size(max = 50, message = "Username must be at most 50 characters.")
+    @NotBlank(message = "Vui lòng nhập tên đăng nhập.")
+    @Size(max = 50, message = "Tên đăng nhập không được quá 50 ký tự.")
     private String username;
 
-    @NotBlank(message = "Enter an email address.")
-    @Email(message = "Enter a valid email address.")
-    @Size(max = 150, message = "Email must be at most 150 characters.")
+    @NotBlank(message = "Vui lòng nhập email.")
+    @Email(message = "Vui lòng nhập email hợp lệ.")
+    @Size(max = 150, message = "Email không được quá 150 ký tự.")
     private String email;
 
-    @Size(max = 20, message = "Phone number must be at most 20 characters.")
+    @Size(max = 20, message = "Số điện thoại không được quá 20 ký tự.")
     private String phoneNumber;
 
-    @NotNull(message = "Select a role.")
+    @NotNull(message = "Vui lòng chọn vai trò.")
     private Integer roleId;
 
     private Integer departmentId;
 
-    @NotBlank(message = "Enter a password.")
-    @Size(min = 8, max = 32, message = "Password must contain 8–32 characters.")
+    @NotBlank(message = "Vui lòng nhập mật khẩu.")
+    @Size(min = 8, max = 32, message = "Mật khẩu phải có từ 8 đến 32 ký tự.")
     private String password;
 
-    @NotBlank(message = "Confirm your password.")
+    @NotBlank(message = "Vui lòng xác nhận mật khẩu.")
     private String confirmPassword;
 
     public CreateCommand toCommand() {

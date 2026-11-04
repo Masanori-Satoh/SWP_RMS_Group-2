@@ -35,7 +35,7 @@
         };
         const showError = error => {
             feedback.textContent = error.name === 'TimeoutError'
-                ? 'Chưa nhận được kết quả. Hãy tải lại trang để kiểm tra trước khi thử tiếp.' : error.message;
+                ? 'Chưa nhận được kết quả. Hãy tải lại trang để kiểm tra trước khi thử tiếp.' : (error instanceof TypeError || error instanceof SyntaxError || !/[À-ỹ]/.test(error.message || '') ? 'Không thể hoàn tất thao tác. Vui lòng tải lại trang và thử lại.' : error.message);
             feedback.hidden = false;
         };
         if (button.dataset.saved !== 'true' && button.dataset.saved !== 'false') {
