@@ -68,16 +68,39 @@ public class RecruitmentEmailService {
                 "JOIN Candidate c ON c.CandidateId=a.CandidateId JOIN [User] u ON u.UserId=c.UserId " +
                 "JOIN JobPosting j ON j.JobPostingId=a.JobPostingId " +
                 "WHERE s.InterviewId=? AND s.InterviewStatus IN ('Scheduled','Rescheduled') " +
-                "AND a.ApplicationStatus NOT IN ('HM_Suggested','Rejected')", (rs, n) ->
-                new RecruitmentEmailMessage("InterviewSchedule", id, "InterviewInvitation", rs.getString(1),
-                    "Thư mời phỏng vấn — " + rs.getString(3),
-                    "Xin chào " + rs.getString(2) + ",\n\nMộc mời bạn phỏng vấn vị trí " + rs.getString(3)
-                    + ".\nBắt đầu: " + rs.getTimestamp(4).toLocalDateTime().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))
-                    + "\nKết thúc: " + rs.getTimestamp(5).toLocalDateTime().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))
-                    + "\nHình thức: " + ("Online_GoogleMeet".equals(rs.getString(6)) ? "Trực tuyến" : "Tại văn phòng")
-                    + "\nĐịa điểm / đường dẫn: " + java.util.Objects.toString(rs.getString(7), "Nhân sự sẽ liên hệ bổ sung")
-                    + "\n\nVui lòng liên hệ Nhân sự nếu bạn cần thay đổi lịch.\nTrân trọng,\nPhòng Nhân sự Mộc"),
-                id).stream().findFirst().orElseThrow(() -> new TalentPoolException("Lịch này không còn đủ điều kiện gửi thư mời."));
+                "AND a.ApplicationStatus NOT IN ('HM_Suggested','Rejected')", (rs, n) -> {
+            var fmt = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+            String name = rs.getString(2), job = rs.getString(3);
+            String start = rs.getTimestamp(4).toLocalDateTime().format(fmt);
+            String end = rs.getTimestamp(5).toLocalDateTime().format(fmt);
+            String format = "Online_GoogleMeet".equals(rs.getString(6)) ? "Trực tuyến" : "Tại văn phòng";
+            String location = java.util.Objects.toString(rs.getString(7), "Nhân sự sẽ liên hệ bổ sung");
+            String text = "Xin chào " + name + ",\n\nMộc mời bạn phỏng vấn vị trí " + job
+                    + ".\nBắt đầu: " + start + "\nKết thúc: " + end + "\nHình thức: " + format
+                    + "\nĐịa điểm / đường dẫn: " + location
+                    + "\n\nVui lòng liên hệ Nhân sự nếu bạn cần thay đổi lịch.\nTrân trọng,\nPhòng Nhân sự Mộc";
+            return new RecruitmentEmailMessage("InterviewSchedule", id, "InterviewInvitation", rs.getString(1),
+                    "Thư mời phỏng vấn — " + job, text, interviewHtml(name, job, start, end, format, location));
+        }, id).stream().findFirst().orElseThrow(() -> new TalentPoolException("Lịch này không còn đủ điều kiện gửi thư mời."));
+    }
+    /** Bản HTML của thư mời phỏng vấn: nạp khuôn templates/interview/email/interview-invitation.html, mọi giá trị đều được escape. */
+    private static String interviewHtml(String name, String job, String start, String end, String format, String location) {
+        String locationHtml = escape(location);
+        // Đường dẫn họp trực tuyến (http/https) hiển thị dạng liên kết bấm được; giá trị khác chỉ là chữ
+        if (location.startsWith("https://") || location.startsWith("http://")) {
+            locationHtml = "<a href=\"" + locationHtml + "\" style=\"color:#1b4332; text-decoration:underline;\">" + locationHtml + "</a>";
+        }
+        try (var input = new org.springframework.core.io.ClassPathResource("templates/interview/email/interview-invitation.html").getInputStream()) {
+            String html = new String(input.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+            return html.replace("{{candidateName}}", escape(name)).replace("{{jobTitle}}", escape(job))
+                    .replace("{{start}}", escape(start)).replace("{{end}}", escape(end))
+                    .replace("{{format}}", escape(format)).replace("{{location}}", locationHtml);
+        } catch (java.io.IOException e) {
+            return null; // không nạp được khuôn HTML thì vẫn gửi bản chữ thuần
+        }
+    }
+    private static String escape(String value) {
+        return org.springframework.web.util.HtmlUtils.htmlEscape(java.util.Objects.toString(value, ""));
     }
     private void deliver(RecruitmentEmailMessage mail, Integer actorId) {
         if (TransactionSynchronizationManager.isActualTransactionActive())
@@ -85,10 +108,18 @@ public class RecruitmentEmailService {
         JavaMailSender smtp = sender.getIfAvailable();
         try {
             if (smtp == null || from == null || from.isBlank()) throw new MailSendException("SMTP chưa cấu hình.");
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setFrom(from); message.setTo(mail.to()); message.setSubject(mail.subject()); message.setText(mail.body());
-            smtp.send(message);
-        } catch (MailException e) {
+            if (mail.html() == null) {
+                SimpleMailMessage message = new SimpleMailMessage();
+                message.setFrom(from); message.setTo(mail.to()); message.setSubject(mail.subject()); message.setText(mail.body());
+                smtp.send(message);
+            } else {
+                // Thư nhiều phần: bản chữ thuần dự phòng + bản HTML (cùng cách làm với email OTP đăng ký)
+                var mime = smtp.createMimeMessage();
+                var helper = new org.springframework.mail.javamail.MimeMessageHelper(mime, true, java.nio.charset.StandardCharsets.UTF_8.name());
+                helper.setFrom(from); helper.setTo(mail.to()); helper.setSubject(mail.subject()); helper.setText(mail.body(), mail.html());
+                smtp.send(mime);
+            }
+        } catch (MailException | jakarta.mail.MessagingException e) {
             audit.recordMail(actorId, mail.entity(), mail.id(), mail.kind(), false);
             log.warn("Recruitment email failed: entity={}, id={}, type={}", mail.entity(), mail.id(), e.getClass().getSimpleName());
             throw new RecruitmentEmailException();
