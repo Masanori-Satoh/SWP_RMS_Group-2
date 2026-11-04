@@ -93,9 +93,8 @@
 
             <!-- Actions when Draft -->
             <th:block th:if="${userRole == 'HR' and detail.offerStatus == 'Draft'}">
-                <form th:action="@{/offers/{id}/delete(id=${detail.offerId})}" method="post" class="ofw-form-inline"
-                      onsubmit="return confirm('Bạn có chắc chắn muốn xóa bản nháp đề xuất này khỏi hệ thống?');">
-                    <button type="submit" class="btn btn--danger">
+                <form th:action="@{/offers/{id}/delete(id=${detail.offerId})}" method="post" id="deleteOfferForm" class="ofw-form-inline">
+                    <button type="button" class="btn btn--danger" onclick="document.getElementById('deleteOfferDialog').showModal()">
                         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
                         <span>Xóa bản nháp</span>
                     </button>
@@ -466,17 +465,28 @@
                 <h3 id="sendOfferTitle" class="dialog-title">Phát hành Thư mời nhận việc?</h3>
             </div>
             <div class="dialog-body">
-                <p>Bạn có chắc chắn muốn phát hành Thư mời nhận việc tới ứng viên? Hệ thống sẽ gửi email thư mời chính thức kèm thời hạn phản hồi.</p>
+                <p>Bạn có chắc chắn muốn phát hành Thư mời nhận việc tới ứng viên? Ứng viên sẽ thấy thư mời và thời hạn phản hồi trên cổng ứng viên.</p>
             </div>
             <div class="dialog-actions">
                 <button type="button" class="btn btn--secondary" onclick="document.getElementById('sendOfferConfirmDialog').close()">Hủy</button>
                 <button type="button" id="btnConfirmSendOfferModal" class="btn btn--primary" onclick="executeSendOfferAction()">
                     <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="ofw-btn-icon-inline"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-                    Xác nhận phát hành
+                    Phát hành thư mời
                 </button>
             </div>
         </div>
     </dialog>
+
+<dialog th:if="${userRole == 'HR' and detail.offerStatus == 'Draft'}" id="deleteOfferDialog" class="confirm-dialog" aria-labelledby="deleteOfferTitle">
+    <div class="dialog-content">
+        <div class="dialog-header"><h3 id="deleteOfferTitle" class="dialog-title">Xóa bản nháp?</h3></div>
+        <div class="dialog-body"><p>Bạn có chắc chắn muốn xóa bản nháp đề xuất nhận việc này?</p></div>
+        <div class="dialog-actions">
+            <button type="button" class="btn btn--secondary" autofocus onclick="this.closest('dialog').close()">Hủy</button>
+            <button type="submit" form="deleteOfferForm" class="btn btn--danger">Xóa bản nháp</button>
+        </div>
+    </div>
+</dialog>
 
 </main>
 

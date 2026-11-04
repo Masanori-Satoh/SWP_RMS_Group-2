@@ -427,14 +427,25 @@
             <h3 id="sendOfferTitleList" class="dialog-title">Phát hành Thư mời nhận việc?</h3>
         </div>
         <div class="dialog-body">
-            <p>Bạn có chắc chắn muốn phát hành Thư mời nhận việc tới ứng viên? Hệ thống sẽ gửi email thư mời chính thức kèm thời hạn phản hồi.</p>
+            <p>Bạn có chắc chắn muốn phát hành Thư mời nhận việc tới ứng viên? Ứng viên sẽ thấy thư mời và thời hạn phản hồi trên cổng ứng viên.</p>
         </div>
         <div class="dialog-actions">
             <button type="button" class="btn btn--secondary" onclick="document.getElementById('sendOfferConfirmDialog').close()">Hủy</button>
             <button type="button" id="btnConfirmSendOfferModal" class="btn btn--primary" onclick="executeSendOfferAction()">
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="ofw-btn-icon-inline"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-                Xác nhận phát hành
+                Phát hành thư mời
             </button>
+        </div>
+    </div>
+</dialog>
+
+<dialog id="deleteOfferDialog" class="confirm-dialog" aria-labelledby="deleteOfferTitle">
+    <div class="dialog-content">
+        <div class="dialog-header"><h3 id="deleteOfferTitle" class="dialog-title">Xóa bản nháp?</h3></div>
+        <div class="dialog-body"><p>Bạn có chắc chắn muốn xóa bản nháp đề xuất nhận việc này?</p></div>
+        <div class="dialog-actions">
+            <button type="button" class="btn btn--secondary" autofocus onclick="this.closest('dialog').close()">Hủy</button>
+            <button type="button" onclick="executeDeleteOffer(this)" class="btn btn--danger">Xóa bản nháp</button>
         </div>
     </div>
 </dialog>

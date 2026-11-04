@@ -55,10 +55,17 @@ function clearSearchInput() {
  * Xác nhận và gọi API xóa bản nháp đề xuất (Chỉ áp dụng cho trạng thái Draft)
  */
 function confirmDeleteOffer(offerId) {
-    if (!offerId) return;
-    if (!confirm('Bạn có chắc chắn muốn xóa bản nháp đề xuất này khỏi hệ thống?')) {
-        return;
-    }
+    const dialog = document.getElementById('deleteOfferDialog');
+    if (!offerId || !dialog || dialog.open) return;
+    dialog.dataset.offerId = offerId;
+    dialog.showModal();
+}
+
+function executeDeleteOffer(button) {
+    const dialog = button.closest('dialog');
+    const offerId = dialog.dataset.offerId;
+    if (!offerId || button.disabled) return;
+    button.disabled = true;
 
     const csrf = (typeof getCsrfInfo === 'function') ? getCsrfInfo() : { token: '', header: 'X-CSRF-TOKEN' };
     const headers = { 'Accept': 'application/json' };
@@ -95,6 +102,9 @@ function confirmDeleteOffer(offerId) {
             if (typeof showFlashToast === 'function') {
                 showFlashToast(err.message, 'error');
             }
+        })
+        .finally(() => {
+            button.disabled = false;
         });
 }
 
@@ -548,6 +558,7 @@ window.applyOfferFilters = applyOfferFilters;
 window.filterOffersByStatus = filterOffersByStatus;
 window.clearSearchInput = clearSearchInput;
 window.confirmDeleteOffer = confirmDeleteOffer;
+window.executeDeleteOffer = executeDeleteOffer;
 window.getSelectedOfferIds = getSelectedOfferIds;
 window.toggleSelectAllOffers = toggleSelectAllOffers;
 window.handleOfferRowSelectionChange = handleOfferRowSelectionChange;
