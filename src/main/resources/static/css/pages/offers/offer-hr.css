@@ -101,7 +101,7 @@ button.offer-stat-card {
 
 .offer-stat-card:hover {
     border-color: var(--control-line);
-    box-shadow: 0 4px 12px rgba(37, 41, 35, 0.05);
+    box-shadow: 0 4px 12px color-mix(in srgb, var(--ink) 5%, transparent);
 }
 
 .offer-stat-card--active,
@@ -152,15 +152,15 @@ button.offer-stat-card {
 }
 
 .stat-icon-blue {
-    background: #eff6ff;
-    color: #1e40af;
-    border: 1px solid #bfdbfe;
+    background: var(--neutral-soft);
+    color: var(--neutral);
+    border: 1px solid var(--line);
 }
 
 .stat-icon-emerald {
-    background: #dcfce7;
-    color: #14532d;
-    border: 1px solid #86efac;
+    background: var(--brand-soft);
+    color: var(--brand-hover);
+    border: 1px solid var(--brand-caption);
 }
 
 .offer-stat-card .stat-value {
@@ -192,8 +192,8 @@ button.offer-stat-card {
     justify-content: space-between;
     padding: 10px 16px;
     margin-bottom: 12px;
-    background: #f0fdf4;
-    border: 1px solid #bbf7d0;
+    background: var(--brand-soft);
+    border: 1px solid var(--brand-caption);
     border-radius: 6px;
     animation: toolbarFadeIn 0.2s ease;
 }
@@ -212,12 +212,12 @@ button.offer-stat-card {
     align-items: center;
     gap: 8px;
     font-size: 13.5px;
-    color: #166534;
+    color: var(--brand-dark);
     font-weight: 500;
 }
 
 .selection-toolbar-left i {
-    color: #15803d;
+    color: var(--brand);
     font-size: 15px;
 }
 
@@ -590,12 +590,6 @@ button.offer-stat-card {
   font-weight: normal;
 }
 
-.form-hint {
-    font-size: 12px;
-    color: var(--muted);
-    margin-top: 4px;
-}
-
 /* B.5 Form Action Footer */
 .ofw-form-actions {
   display: flex;
@@ -723,7 +717,7 @@ button.offer-stat-card {
 .scope-radio-label.selected,
 .scope-radio-label:has(input[type="radio"]:checked) {
     border-color: var(--brand-dark);
-    background: #f6faf8;
+    background: var(--surface-subtle);
 }
 
 .scope-radio-label input[type="radio"] {

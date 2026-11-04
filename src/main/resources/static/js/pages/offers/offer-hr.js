@@ -157,7 +157,7 @@ function updateSelectionToolbar() {
     const toolbar = document.getElementById('selectionToolbar');
     if (toolbar) {
         toolbar.classList.toggle('active', count > 0);
-        toolbar.style.display = (count > 0) ? 'flex' : 'none';
+        toolbar.hidden = count === 0;
     }
 
     const selectedRadio = document.querySelector('input[name="exportScope"][value="SELECTED"]');
@@ -191,7 +191,7 @@ function handleSelectPassedCandidate(appId) {
     const grpA = document.getElementById('groupASection');
 
     if (!appId || !opt || !opt.value) {
-        if (grpA) grpA.style.display = 'none';
+        if (grpA) grpA.hidden = true;
         return;
     }
 
@@ -217,7 +217,7 @@ function handleSelectPassedCandidate(appId) {
     const defaultWorkLoc = opt.getAttribute('data-work-location') || 'Trụ sở chính Mộc RMS';
     setElemText('dispWorkLocation', defaultWorkLoc);
 
-    if (grpA) grpA.style.display = 'block';
+    if (grpA) grpA.hidden = false;
 
     // Tự động gợi ý chức danh và mức lương nếu trường đang để trống
     const titleInput = document.getElementById('offeredPositionTitle');
@@ -335,10 +335,10 @@ function openExportModal() {
     const modal = document.getElementById('offerExportModal');
     if (modal) {
         modal.classList.add('active');
-        modal.style.display = 'flex';
+        modal.hidden = false;
     }
     const errDiv = document.getElementById('exportModalError');
-    if (errDiv) errDiv.style.display = 'none';
+    if (errDiv) errDiv.hidden = true;
 }
 
 /**
@@ -359,7 +359,7 @@ function closeExportModal() {
     const modal = document.getElementById('offerExportModal');
     if (modal) {
         modal.classList.remove('active');
-        modal.style.display = 'none';
+        modal.hidden = true;
     }
 }
 
@@ -404,11 +404,11 @@ function executeOfferExport() {
     const showErr = (msg) => {
         if (errDiv && errText) {
             errText.textContent = msg;
-            errDiv.style.display = 'flex';
+            errDiv.hidden = false;
         }
     };
 
-    if (errDiv) errDiv.style.display = 'none';
+    if (errDiv) errDiv.hidden = true;
 
     // 1. Thu thập dữ liệu form modal
     const scopeRadio = document.querySelector('input[name="exportScope"]:checked');
