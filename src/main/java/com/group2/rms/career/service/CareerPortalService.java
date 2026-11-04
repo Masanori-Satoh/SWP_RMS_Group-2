@@ -9,6 +9,7 @@ import com.group2.rms.career.dto.ViewerProfileResponse;
 import com.group2.rms.career.repository.PublicJobSearch;
 import com.group2.rms.jobposting.entity.JobPosting;
 import com.group2.rms.jobposting.repository.JobPostingRepository;
+import com.group2.rms.requisition.service.RequisitionLabels;
 import com.group2.rms.user.repository.DepartmentRepository;
 import com.group2.rms.user.repository.UserRepository;
 import org.springframework.data.domain.Page;
@@ -107,6 +108,9 @@ public class CareerPortalService {
                 job.getWorkingHours(),
                 job.getProbationPeriod(),
                 Objects.toString(job.effectiveEmploymentType(), ""),
+                RequisitionLabels.workModel(job.effectiveWorkModel()),
+                RequisitionLabels.gender(job.effectiveGender()),
+                job.getNumberOfPositionsDisplay(),
                 job.getSalaryDisplay(),
                 job.getApplicationDeadline(),
                 job.getPostingDate(),

@@ -121,6 +121,7 @@ class JobPostingServiceTests {
                 .jobRequirements("2 năm kinh nghiệm")
                 .employmentType("Full-time")
                 .workModel("Hybrid")
+                .gender("Any")
                 .salaryMode(JobPostingRequest.SALARY_NEGOTIABLE)
                 .showPositions(false)
                 .applicationDeadline(TODAY.plusDays(30))
@@ -132,7 +133,7 @@ class JobPostingServiceTests {
     private JobPosting existingPosting(int id, String status, LocalDateTime postingDate) {
         JobPosting posting = JobPosting.builder().jobPostingId(id).postingNo(1).requisition(requisition)
                 .postingTitle("Key Account Manager").jobDescription("Chăm sóc khách hàng")
-                .jobRequirements("2 năm kinh nghiệm").employmentType("Full-time").workModel("Hybrid")
+                .jobRequirements("2 năm kinh nghiệm").employmentType("Full-time").workModel("Hybrid").gender("Any")
                 .salaryDisplay(JobPostingLabels.SALARY_NEGOTIABLE)
                 .applicationDeadline(TODAY.plusDays(30).atTime(23, 59, 59))
                 .postingStatus(status).postingDate(postingDate).createdBy(hr).build();

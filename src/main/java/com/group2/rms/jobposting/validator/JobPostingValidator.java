@@ -133,6 +133,9 @@ public class JobPostingValidator {
         if (request.getWorkModel() == null || !RequisitionValidator.WORK_MODELS.contains(request.getWorkModel())) {
             errors.put("workModel", "Vui lòng chọn mô hình làm việc.");
         }
+        if (request.getGender() == null || !RequisitionValidator.GENDERS.contains(request.getGender())) {
+            errors.put("gender", "Vui lòng chọn yêu cầu giới tính.");
+        }
 
         // Rule: lương là 1 trong 3 lựa chọn, "Tự nhập" phải có nội dung (kiểm tra null trước contains)
         if (request.getSalaryMode() == null || !SALARY_MODES.contains(request.getSalaryMode())) {
@@ -174,6 +177,7 @@ public class JobPostingValidator {
         request.setWorkingHours(RequisitionValidator.cleanString(request.getWorkingHours()));
         request.setEmploymentType(RequisitionValidator.cleanString(request.getEmploymentType()));
         request.setWorkModel(RequisitionValidator.cleanString(request.getWorkModel()));
+        request.setGender(RequisitionValidator.cleanString(request.getGender()));
         request.setProbationPeriod(RequisitionValidator.cleanString(request.getProbationPeriod()));
         request.setSalaryCustom(RequisitionValidator.cleanString(request.getSalaryCustom()));
         request.setNumberOfPositionsDisplay(RequisitionValidator.cleanString(request.getNumberOfPositionsDisplay()));

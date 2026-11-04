@@ -513,6 +513,7 @@ public class JobPostingServiceImpl implements JobPostingService {
         posting.setWorkingHours(request.getWorkingHours());
         posting.setEmploymentType(request.getEmploymentType());
         posting.setWorkModel(request.getWorkModel());
+        posting.setGender(request.getGender());
         posting.setProbationPeriod(request.getProbationPeriod());
         posting.setSalaryDisplay(salaryDisplayOf(request, requisition));
         // Rule: tắt "Hiển thị số lượng tuyển" thì lưu NULL (trang công khai không hiện số lượng)

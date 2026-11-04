@@ -114,6 +114,18 @@
                             <span class="summary-label">Hình thức</span>
                             <span class="summary-value" th:text="${job.employmentType}">Full-time</span>
                         </li>
+                        <li>
+                            <span class="summary-label">Mô hình làm việc</span>
+                            <span class="summary-value" th:text="${job.workModel}">Kết hợp</span>
+                        </li>
+                        <li th:unless="${#strings.isEmpty(job.numberOfPositionsDisplay)}">
+                            <span class="summary-label">Số lượng tuyển</span>
+                            <span class="summary-value" th:text="${job.numberOfPositionsDisplay}">1 người</span>
+                        </li>
+                        <li>
+                            <span class="summary-label">Yêu cầu giới tính</span>
+                            <span class="summary-value" th:text="${job.genderLabel}">Không yêu cầu</span>
+                        </li>
                         <li th:if="${job.salaryDisplay != null}">
                             <span class="summary-label">Mức lương</span>
                             <span class="summary-value" th:text="${job.salaryDisplay}">Thỏa thuận</span>

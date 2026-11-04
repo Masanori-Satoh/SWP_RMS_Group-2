@@ -20,6 +20,7 @@ public record InternalJobPostingDetailResponse(
         Integer numberOfPositions,
         String employmentType,
         String workModelLabel,
+        String genderLabel,
         LocalDate expectedStartDate,
         String workLocation,
         String workingHours,

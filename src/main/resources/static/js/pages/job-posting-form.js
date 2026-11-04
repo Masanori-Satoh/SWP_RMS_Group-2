@@ -163,6 +163,8 @@
         }
         const probation = $('probationPeriod').value.trim();
         if (probation) facts.push(['Thử việc', probation]);
+        const gender = selectedLabel('gender');
+        if (gender) facts.push(['Yêu cầu giới tính', gender]);
         const workingHours = $('workingHours').value.trim();
         // Mục "Địa điểm và thời gian" giống trang /jobs/{id}: chỉ hiện dòng nào HR đã nhập
         const placeTime = (address ? `<h5>Địa điểm làm việc</h5><a href="${mapsLink(address)}" target="_blank" rel="noopener">${escapeHtml(address)} ↗</a>` : '')

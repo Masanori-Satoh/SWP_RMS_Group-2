@@ -108,6 +108,7 @@ public class JobPostingMapper {
                         .departmentName(departmentName(requisition))
                         .employmentType(employmentTypeLabel(posting))
                         .workModelLabel(workModelLabel(posting))
+                        .genderLabel(RequisitionLabels.gender(posting.effectiveGender()))
                         .probationPeriod(posting.getProbationPeriod())
                         .workLocation(posting.getWorkLocation())
                         .workingHours(posting.getWorkingHours())
@@ -228,6 +229,7 @@ public class JobPostingMapper {
         form.setWorkLocation(form.getSourceWorkLocation());
         form.setEmploymentType(form.getSourceEmploymentType());
         form.setWorkModel(form.getSourceWorkModel());
+        form.setGender(form.getSourceGender());
         form.setProbationPeriod(form.getSourceProbationPeriod());
         form.setBenefits("");
         boolean hasSalary = requisition.getMinSalary() != null || requisition.getMaxSalary() != null;
@@ -290,6 +292,7 @@ public class JobPostingMapper {
         form.setSourceRequirements(requirementsFromRequisition(requisition));
         form.setSourceEmploymentType(requisition.getEmploymentType());
         form.setSourceWorkModel(requisition.getWorkModel());
+        form.setSourceGender(Objects.toString(requisition.getGender(), "Any"));
         form.setSourceProbationPeriod(Objects.toString(requisition.getProbationPeriod(), ""));
         String positions = "";
         if (requisition.getNumberOfPositions() != null) {
@@ -308,6 +311,7 @@ public class JobPostingMapper {
         form.setWorkingHours(posting.getWorkingHours());
         form.setEmploymentType(posting.effectiveEmploymentType());
         form.setWorkModel(posting.effectiveWorkModel());
+        form.setGender(posting.effectiveGender());
         form.setProbationPeriod(posting.getProbationPeriod());
 
         // Nhận lại lựa chọn lương từ chuỗi đã lưu

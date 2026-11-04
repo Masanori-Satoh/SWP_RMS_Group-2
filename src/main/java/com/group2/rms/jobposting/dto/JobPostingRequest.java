@@ -48,6 +48,7 @@ public class JobPostingRequest {
     private String sourceRequirements;
     private String sourceEmploymentType;
     private String sourceWorkModel;
+    private String sourceGender;
     private String sourceProbationPeriod;
     private String sourcePositionsDisplay;
 
@@ -73,6 +74,8 @@ public class JobPostingRequest {
     private String employmentType;
     /** Mã mô hình, ví dụ "Hybrid" (điền sẵn từ yêu cầu, HR đổi được). */
     private String workModel;
+    /** Yêu cầu giới tính của riêng tin, mặc định lấy từ yêu cầu. */
+    private String gender;
     /** Thời gian thử việc dạng chữ (điền sẵn từ yêu cầu, HR sửa được); trống = không hiển thị. */
     @Size(max = JobPostingValidator.PROBATION_LIMIT, message = JobPostingValidator.PROBATION_TOO_LONG)
     private String probationPeriod;

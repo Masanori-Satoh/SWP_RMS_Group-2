@@ -49,7 +49,7 @@ public class JobPostingController {
     private static final String PUBLISHED_NOW_MESSAGE = "Đã đăng tin. Ứng viên có thể nộp hồ sơ ngay.";
     /** Các ô có trên form (lỗi của ô khác, ví dụ "action", hiện ở đầu form). */
     private static final Set<String> FORM_FIELDS = Set.of("postingTitle", "jobDescription", "jobRequirements",
-            "benefits", "workLocation", "workingHours", "employmentType", "workModel", "probationPeriod", "salaryMode",
+            "benefits", "workLocation", "workingHours", "employmentType", "workModel", "gender", "probationPeriod", "salaryMode",
             "salaryCustom", "numberOfPositionsDisplay", "applicationDeadline");
     /** Gợi ý quyền lợi trên form (nút thêm nhanh), theo mockup. */
     private static final List<String> BENEFIT_SUGGESTIONS = List.of("Lương tháng 13", "Thưởng theo hiệu quả công việc",
@@ -76,7 +76,7 @@ public class JobPostingController {
     @InitBinder("form")
     void formBinder(WebDataBinder binder) {
         binder.setAllowedFields("jobPostingId", "requisitionId", "postingTitle", "jobDescription", "jobRequirements",
-                "benefits", "workLocation", "workingHours", "employmentType", "workModel", "probationPeriod", "salaryMode", "salaryCustom", "showPositions", "numberOfPositionsDisplay",
+                "benefits", "workLocation", "workingHours", "employmentType", "workModel", "gender", "probationPeriod", "salaryMode", "salaryCustom", "showPositions", "numberOfPositionsDisplay",
                 "applicationDeadline", "action");
     }
 

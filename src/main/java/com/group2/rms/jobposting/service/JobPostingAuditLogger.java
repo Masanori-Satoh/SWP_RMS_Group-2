@@ -64,6 +64,7 @@ public class JobPostingAuditLogger {
         snapshot.put("Thời gian làm việc", posting.getWorkingHours());
         snapshot.put("Hình thức làm việc", posting.getEmploymentType());
         snapshot.put("Mô hình làm việc", posting.getWorkModel());
+        snapshot.put("Yêu cầu giới tính", posting.effectiveGender());
         snapshot.put("Thời gian thử việc", posting.getProbationPeriod());
         snapshot.put("Hạn nộp hồ sơ", formatTime(posting.getApplicationDeadline()));
         snapshot.put("Ngày đăng", formatTime(posting.getPostingDate()));

@@ -62,6 +62,7 @@ class JobPostingMapperTests {
                 .approvalStatus(RequisitionAccess.STATUS_APPROVED).employmentType("Full-time").workModel("Hybrid")
                 .department(Department.builder().departmentId(1).departmentName("Engineering").build())
                 .numberOfPositions(2).recruitmentRound(1).workLocation("Hà Nội")
+                .gender("Female")
                 .jobDescription("Lập trình backend").requirementDetails("2 năm Spring Boot")
                 .minSalary(new BigDecimal("20000000")).maxSalary(new BigDecimal("30000000")).build();
     }
@@ -274,6 +275,8 @@ class JobPostingMapperTests {
             assertEquals(JobPostingRequest.SALARY_RANGE, form.getSalaryMode());
             assertEquals("20 – 30 triệu VND/tháng", form.getSalaryRangeLabel());
             assertEquals("2 người", form.getNumberOfPositionsDisplay());
+            assertEquals("Female", form.getGender());
+            assertEquals("Female", form.getSourceGender());
             assertEquals(NOW.toLocalDate().plusDays(JobPostingValidator.DEFAULT_DEADLINE_DAYS), form.getApplicationDeadline());
             assertEquals(JobPostingValidator.ACTION_DRAFT, form.getAction());
             assertEquals("2 năm Spring Boot", form.getJobRequirements());
@@ -298,6 +301,7 @@ class JobPostingMapperTests {
             JobPosting posting = posting(JobPostingAccess.STATUS_PUBLISHED, at, NOW.plusDays(30));
             posting.setPostingNo(2);
             posting.setSalaryDisplay("Lên đến 30 triệu + hoa hồng");
+            posting.setGender("Male");
 
             // Act
             JobPostingRequest form = mapper.toEditForm(posting);
@@ -310,6 +314,7 @@ class JobPostingMapperTests {
             assertTrue(form.isLive());
             assertFalse(form.isDraftOrNew());
             assertEquals(2, form.getPostingNo());
+            assertEquals("Male", form.getGender());
         }
 
         @Test

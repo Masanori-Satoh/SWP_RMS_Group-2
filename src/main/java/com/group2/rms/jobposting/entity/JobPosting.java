@@ -85,6 +85,10 @@ public class JobPosting extends BaseEntity {
     @Column(name = "WorkModel", length = 20)
     private String workModel;
 
+    /** Yêu cầu giới tính riêng của tin; NULL ở tin cũ thì lấy từ yêu cầu. */
+    @Column(name = "RequiredGender", length = 20)
+    private String gender;
+
     /** Thời gian thử việc hiển thị, ví dụ "2 tháng", "Thỏa thuận"; NULL = không hiển thị. */
     @Column(name = "ProbationPeriod", length = 100)
     private String probationPeriod;
@@ -122,6 +126,13 @@ public class JobPosting extends BaseEntity {
             return workModel;
         }
         return requisition.getWorkModel();
+    }
+
+    public String effectiveGender() {
+        if (gender != null || requisition == null) {
+            return gender;
+        }
+        return requisition.getGender();
     }
 
     /** Ứng viên thấy tin khi đang đăng (Published) và đã tới giờ đăng. */

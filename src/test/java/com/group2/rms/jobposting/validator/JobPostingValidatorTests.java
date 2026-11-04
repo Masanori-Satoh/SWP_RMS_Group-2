@@ -51,6 +51,7 @@ class JobPostingValidatorTests {
                 .jobRequirements("2 năm kinh nghiệm")
                 .employmentType("Full-time")
                 .workModel("Hybrid")
+                .gender("Any")
                 .salaryMode(JobPostingRequest.SALARY_NEGOTIABLE)
                 .showPositions(false)
                 .applicationDeadline(TODAY.plusDays(30))
@@ -151,6 +152,14 @@ class JobPostingValidatorTests {
             form.setWorkModel(model);
 
             assertEquals("Vui lòng chọn mô hình làm việc.", errorsOf(form, false).get("workModel"));
+        }
+
+        @Test
+        @DisplayName("Yêu cầu giới tính ngoài danh mục -> Lỗi đúng ô")
+        void normalizeAndValidate_shouldRejectGender_whenOutsideCatalog() {
+            JobPostingRequest form = validForm(JobPostingValidator.ACTION_DRAFT);
+            form.setGender("Other");
+            assertEquals("Vui lòng chọn yêu cầu giới tính.", errorsOf(form, false).get("gender"));
         }
 
         @Test

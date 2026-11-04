@@ -229,6 +229,7 @@ CREATE TABLE JobPosting (
     WorkingHours         NVARCHAR(255) NULL,      -- [MỚI] thời gian làm việc, VD "Thứ 2 - Thứ 6 (09:00 - 18:00)"
     EmploymentType       NVARCHAR(50) NULL,       -- [MỚI] hình thức riêng của tin; NULL = dùng của yêu cầu
     WorkModel            NVARCHAR(20) NULL,       -- [MỚI] mô hình riêng của tin; NULL = dùng của yêu cầu
+    RequiredGender       NVARCHAR(20) NULL,       -- NULL ở tin cũ = dùng của yêu cầu
     ProbationPeriod      NVARCHAR(100) NULL,      -- [MỚI] thời gian thử việc hiển thị; NULL = không hiển thị
     PostingDate          DATETIME2 NULL,
     ApplicationDeadline  DATETIME2 NULL,
@@ -255,6 +256,9 @@ CREATE TABLE JobPosting (
 
     CONSTRAINT CK_JobPosting_WorkModel
         CHECK (WorkModel IS NULL OR WorkModel IN (N'On-site', N'Remote', N'Hybrid')),
+
+    CONSTRAINT CK_JobPosting_RequiredGender
+        CHECK (RequiredGender IS NULL OR RequiredGender IN (N'Male', N'Female', N'Any')),
 
     CONSTRAINT CK_JobPosting_Status
         CHECK (PostingStatus IN (N'Draft', N'Published', N'Paused', N'Closed')),
