@@ -131,6 +131,15 @@ public class SecurityConfig {
                                                 .hasAnyAuthority("ROLE_HR", "ROLE_DIRECTOR")
                                                 .requestMatchers(HttpMethod.POST, "/offers/*/approve", "/offers/*/reject")
                                                 .hasAuthority("ROLE_DIRECTOR")
+                                                .requestMatchers(HttpMethod.GET, "/offers/create", "/offers/*/edit")
+                                                .hasAuthority("ROLE_HR")
+                                                .requestMatchers(HttpMethod.POST, "/offers/create", "/offers/*/edit",
+                                                                "/offers/*/delete", "/offers/*/send")
+                                                .hasAuthority("ROLE_HR")
+                                                .requestMatchers(HttpMethod.PUT, "/offers/*")
+                                                .hasAuthority("ROLE_HR")
+                                                .requestMatchers(HttpMethod.DELETE, "/offers/*")
+                                                .hasAuthority("ROLE_HR")
                                                 .requestMatchers("/offers", "/offers/**")
                                                 .hasAnyAuthority("ROLE_HR", "ROLE_DIRECTOR")
                                                 // authenticaed require for dashboard notification

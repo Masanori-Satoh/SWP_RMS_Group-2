@@ -206,6 +206,8 @@ Phân quyền URL nằm tập trung trong `core/config/SecurityConfig` (chưa d�
 | `/portal/applications/**` | `CANDIDATE` |
 | `/portal/offers/**` | `CANDIDATE` |
 | `POST /offers/*/approve`, `POST /offers/*/reject` | `DIRECTOR` |
+| `GET /offers/create`, `GET /offers/*/edit` | `HR` |
+| `POST /offers/create`, `POST /offers/*/edit`, `POST /offers/*/delete`, `POST /offers/*/send`, `PUT /offers/*`, `DELETE /offers/*` | `HR` |
 | `/offers/**` | `HR`, `DIRECTOR` |
 | `/requisitions/**` | `HIRING_MANAGER`, `DIRECTOR`, `HR` |
 | `/internal/job-postings/*/close` | `HR` |
