@@ -92,7 +92,7 @@
             </th:block>
 
             <!-- Actions when Draft -->
-            <th:block th:if="${detail.offerStatus == 'Draft'}">
+            <th:block th:if="${userRole == 'HR' and detail.offerStatus == 'Draft'}">
                 <form th:action="@{/offers/{id}/delete(id=${detail.offerId})}" method="post" class="ofw-form-inline"
                       onsubmit="return confirm('Bạn có chắc chắn muốn xóa bản nháp đề xuất này khỏi hệ thống?');">
                     <button type="submit" class="btn btn--danger">
@@ -107,7 +107,7 @@
             </th:block>
 
             <!-- Action when Director Approved -->
-            <th:block th:if="${detail.offerStatus == 'Director_Approved' or detail.offerStatus == 'Approved'}">
+            <th:block th:if="${userRole == 'HR' and (detail.offerStatus == 'Director_Approved' or detail.offerStatus == 'Approved')}">
                 <button type="button" class="btn btn--primary" th:onclick="'confirmSendOffer(' + ${detail.offerId} + ')'">
                     <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
                     <span>Phát hành Thư mời nhận việc</span>
@@ -459,7 +459,8 @@
     <!-- ===========================================================================
          DIALOG 3: NATIVE HTML5 XÁC NHẬN PHÁT HÀNH THƯ MỜI NHẬN VIỆC (HR)
          =========================================================================== -->
-    <dialog id="sendOfferConfirmDialog" class="confirm-dialog" aria-labelledby="sendOfferTitle">
+    <dialog th:if="${userRole == 'HR' and (detail.offerStatus == 'Director_Approved' or detail.offerStatus == 'Approved')}"
+            id="sendOfferConfirmDialog" class="confirm-dialog" aria-labelledby="sendOfferTitle">
         <div class="dialog-content">
             <div class="dialog-header">
                 <h3 id="sendOfferTitle" class="dialog-title">Phát hành Thư mời nhận việc?</h3>
