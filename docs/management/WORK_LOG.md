@@ -6,6 +6,8 @@ Tài liệu này là lịch sử tóm tắt các thay đổi quan trọng và b�
 
 | Ngày | Tên công việc / Yêu cầu chính | Người thực hiện | Chi tiết thay đổi |
 | --- | --- | --- | --- |
+| **2026-11-04** | Hiện toast “Bạn đã đăng xuất” sau logout, dùng đích đăng nhập hiện tại | LinhDN | [Thay đổi và kiểm chứng trình duyệt](work_logs/2026-11-04-logout-toast.md) |
+| **2026-11-04** | Đổi hướng đăng xuất thành công về trang chủ, kiểm tra hợp đồng CSRF của logout | LinhDN | [Phạm vi và giới hạn kiểm chứng](work_logs/2026-11-04-logout-home.md) |
 | **2026-11-02** | Khắc phục lỗi import/package hàng loạt trong IDE bằng cách nạp lại dự án Java | LinhDN | [Chẩn đoán và xác nhận 0 lỗi đỏ](work_logs/2026-11-02-ide-java-project-reload.md) |
 | **2026-11-02** | Việt hóa tên Hiring Manager trong tiêu đề và thông báo Kho ứng viên tiềm năng | LinhDN | [Phạm vi và kiểm chứng](work_logs/2026-11-02-talent-pool-role-vietnamese.md) |
 | **2026-11-02** | Việt hóa thông báo lỗi tạo/sửa tài khoản nội bộ, gồm trùng tên đăng nhập/email và kiểm tra vai trò/phòng ban | LinhDN | [Phạm vi và kiểm chứng](work_logs/2026-11-02-account-validation-vietnamese.md) |

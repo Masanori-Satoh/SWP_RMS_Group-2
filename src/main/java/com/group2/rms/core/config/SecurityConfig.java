@@ -34,7 +34,8 @@ import org.springframework.security.web.util.matcher.RequestMatcher;
 public class SecurityConfig {
 
         /**
-         * Paths the CV viewer frame loads: the protected CV endpoint and the seed sample CVs it redirects to.
+         * Paths the CV viewer frame loads: the protected CV endpoint and the seed
+         * sample CVs it redirects to.
          * Only these may be framed by the same origin.
          */
         private static final RequestMatcher CV_PATHS = new OrRequestMatcher(
@@ -64,11 +65,13 @@ public class SecurityConfig {
                                 .authenticationProvider(provider)
                                 .csrf(csrf -> csrf
                                                 .ignoringRequestMatchers("/api/**"))
-                                // CV viewer: only CV paths may be framed (same origin); every other page keeps DENY
+                                // CV viewer: only CV paths may be framed (same origin); every other page keeps
+                                // DENY
                                 .headers(headers -> headers
                                                 .frameOptions(frame -> frame.disable())
                                                 .addHeaderWriter(new DelegatingRequestMatcherHeaderWriter(CV_PATHS,
-                                                                new XFrameOptionsHeaderWriter(XFrameOptionsMode.SAMEORIGIN)))
+                                                                new XFrameOptionsHeaderWriter(
+                                                                                XFrameOptionsMode.SAMEORIGIN)))
                                                 .addHeaderWriter(new DelegatingRequestMatcherHeaderWriter(
                                                                 new NegatedRequestMatcher(CV_PATHS),
                                                                 new XFrameOptionsHeaderWriter(XFrameOptionsMode.DENY))))
@@ -81,7 +84,8 @@ public class SecurityConfig {
                                                 // permit all for defaultpage and font
                                                 .requestMatchers(HttpMethod.GET, "/", "/fonts/**").permitAll()
                                                 // permit all for login, register, forgot-password, reset-password
-                                                .requestMatchers("/login", "/register", "/register/**", "/forgot-password",
+                                                .requestMatchers("/login", "/register", "/register/**",
+                                                                "/forgot-password",
                                                                 "/reset-password/**")
                                                 .permitAll()
                                                 // required role canididate for job apply
@@ -107,14 +111,17 @@ public class SecurityConfig {
                                                 // Candidate portal is read-only and isolated from internal schedules.
                                                 .requestMatchers(HttpMethod.GET, "/portal/interviews")
                                                 .hasAuthority("ROLE_CANDIDATE")
-                                                .requestMatchers("/portal/interviews", "/portal/interviews/**").denyAll()
-                                                // Candidate's own applications and withdrawal (ownership checked in MyApplicationService)
+                                                .requestMatchers("/portal/interviews", "/portal/interviews/**")
+                                                .denyAll()
+                                                // Candidate's own applications and withdrawal (ownership checked in
+                                                // MyApplicationService)
                                                 .requestMatchers("/portal/applications", "/portal/applications/**")
                                                 .hasAuthority("ROLE_CANDIDATE")
                                                 // Candidate's own profile page (Q7.1); internal roles use /profile
                                                 .requestMatchers("/portal/profile", "/portal/profile/**")
                                                 .hasAuthority("ROLE_CANDIDATE")
-                                                // dunglt bổ sung: ứng viên xem / nhận / từ chối offer đã gửi cho mình (phải đứng trước /offers/**)
+                                                // dunglt bổ sung: ứng viên xem / nhận / từ chối offer đã gửi cho mình
+                                                // (phải đứng trước /offers/**)
                                                 .requestMatchers("/portal/offers", "/portal/offers/**")
                                                 .hasAuthority("ROLE_CANDIDATE")
                                                 // Forms and all writes: HR, Director (UC 62-64, SRS footnote 13).
@@ -122,42 +129,54 @@ public class SecurityConfig {
                                                 .hasAnyAuthority("ROLE_HR", "ROLE_DIRECTOR")
                                                 .requestMatchers(HttpMethod.GET, "/interviews", "/interviews/**")
                                                 .hasAnyAuthority("ROLE_HR",
-                                                                "ROLE_DIRECTOR", "ROLE_HIRING_MANAGER", "ROLE_INTERVIEWER")
+                                                                "ROLE_DIRECTOR", "ROLE_HIRING_MANAGER",
+                                                                "ROLE_INTERVIEWER")
                                                 .requestMatchers(HttpMethod.POST, "/interviews/*/evaluations")
-                                                .hasAnyAuthority("ROLE_INTERVIEWER", "ROLE_HIRING_MANAGER", "ROLE_DIRECTOR", "ROLE_HR")
+                                                .hasAnyAuthority("ROLE_INTERVIEWER", "ROLE_HIRING_MANAGER",
+                                                                "ROLE_DIRECTOR", "ROLE_HR")
                                                 .requestMatchers(HttpMethod.POST, "/interviews/*/final-result")
                                                 .hasAuthority("ROLE_HIRING_MANAGER")
                                                 .requestMatchers("/interviews", "/interviews/**")
                                                 .hasAnyAuthority("ROLE_HR", "ROLE_DIRECTOR")
-                                                .requestMatchers(HttpMethod.POST, "/offers/*/approve", "/offers/*/reject")
+                                                .requestMatchers(HttpMethod.POST, "/offers/*/approve",
+                                                                "/offers/*/reject")
                                                 .hasAuthority("ROLE_DIRECTOR")
                                                 .requestMatchers("/offers", "/offers/**")
                                                 .hasAnyAuthority("ROLE_HR", "ROLE_DIRECTOR")
                                                 // authenticaed require for dashboard notification
                                                 .requestMatchers("/dashboard", "/dashboard/**", "/notifications",
-                                                                "/notifications/**", "/api/notifications", "/api/notifications/**",
+                                                                "/notifications/**", "/api/notifications",
+                                                                "/api/notifications/**",
                                                                 WebSocketConfig.ENDPOINT)
                                                 .authenticated()
                                                 .requestMatchers("/requisitions", "/requisitions/**")
                                                 .hasAnyAuthority("ROLE_HIRING_MANAGER", "ROLE_DIRECTOR", "ROLE_HR")
-                                                .requestMatchers("/talent-pool/applications/*/confirm", "/talent-pool/applications/*/decline",
-                                                        "/talent-pool/applications/*/resend-email", "/talent-pool/interviews/*/resend-email",
-                                                        "/talent-pool/jobs/*/close", "/internal/job-postings/*/close")
+                                                .requestMatchers("/talent-pool/applications/*/confirm",
+                                                                "/talent-pool/applications/*/decline",
+                                                                "/talent-pool/applications/*/resend-email",
+                                                                "/talent-pool/interviews/*/resend-email",
+                                                                "/talent-pool/jobs/*/close",
+                                                                "/internal/job-postings/*/close")
                                                 .hasAuthority("ROLE_HR")
-                                                .requestMatchers("/talent-pool/jobs/*/recommend", "/talent-pool/jobs/*/recommendations/*/withdraw")
+                                                .requestMatchers("/talent-pool/jobs/*/recommend",
+                                                                "/talent-pool/jobs/*/recommendations/*/withdraw")
                                                 .hasAuthority("ROLE_HR")
-                                                .requestMatchers("/talent-pool/recommendations/*/decision", "/talent-pool/jobs/*/suggest")
+                                                .requestMatchers("/talent-pool/recommendations/*/decision",
+                                                                "/talent-pool/jobs/*/suggest")
                                                 .hasAuthority("ROLE_HIRING_MANAGER")
                                                 .requestMatchers("/talent-pool", "/talent-pool/**")
                                                 .hasAnyAuthority("ROLE_HR", "ROLE_HIRING_MANAGER")
                                                 .requestMatchers("/internal/job-postings/create")
                                                 .hasAuthority("ROLE_HR")
-                                                // Xem danh sách / chi tiết tin: thêm Director (chỉ xem, không thao tác); service ẩn tin nháp với HM, Director
-                                                .requestMatchers(HttpMethod.GET, "/internal/job-postings", "/internal/job-postings/*")
+                                                // Xem danh sách / chi tiết tin: thêm Director (chỉ xem, không thao
+                                                // tác); service ẩn tin nháp với HM, Director
+                                                .requestMatchers(HttpMethod.GET, "/internal/job-postings",
+                                                                "/internal/job-postings/*")
                                                 .hasAnyAuthority("ROLE_HR", "ROLE_HIRING_MANAGER", "ROLE_DIRECTOR")
                                                 .requestMatchers("/internal/job-postings", "/internal/job-postings/**")
                                                 .hasAuthority("ROLE_HR")
-                                                // application pipeline: HM scope (own department) is checked in ApplicationAccess
+                                                // application pipeline: HM scope (own department) is checked in
+                                                // ApplicationAccess
                                                 .requestMatchers("/applications", "/applications/**")
                                                 .hasAnyAuthority("ROLE_HR", "ROLE_HIRING_MANAGER", "ROLE_DIRECTOR")
                                                 .anyRequest().authenticated())
