@@ -6,8 +6,8 @@
 <head>
   <title>Phê duyệt Đề xuất nhận việc | Mộc RMS</title>
   <th:block layout:fragment="styles">
-    <link rel="stylesheet" th:href="@{/css/offers.css}">
-    <link rel="stylesheet" th:href="@{/css/pages/offer-workspace.css}">
+    <link rel="stylesheet" th:href="@{/css/pages/offers/offer-common.css}">
+    <link rel="stylesheet" th:href="@{/css/pages/offers/offer-director.css}">
     <link rel="stylesheet" th:href="@{/css/pages/flash-toast.css}">
   </th:block>
 </head>
@@ -278,7 +278,8 @@
 <th:block layout:fragment="scripts">
     <th:block th:replace="~{fragments/ui/admin-workspace :: scripts}"></th:block>
     <script th:src="@{/js/pages/flash-toast.js}" defer></script>
-    <script th:src="@{/js/offers.js}" defer></script>
+    <script th:src="@{/js/pages/offers/offer-common.js}" defer></script>
+    <script th:src="@{/js/pages/offers/offer-director.js}" defer></script>
 </th:block>
 </body>
 </html>
