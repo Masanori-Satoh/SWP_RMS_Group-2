@@ -83,6 +83,8 @@ function showFlashToast(message, type = 'success') {
 }
 
 function checkOfferPendingFlashToast() {
+    const warning = document.getElementById('main')?.dataset.offerWarning;
+    if (warning) showFlashToast(warning, 'warning');
     try {
         const pending = sessionStorage.getItem(OFFER_PENDING_TOAST_KEY);
         if (pending) {
@@ -162,8 +164,8 @@ function executeSendOfferAction() {
             if (res && res.success) {
                 try {
                     sessionStorage.setItem(OFFER_PENDING_TOAST_KEY, JSON.stringify({
-                        message: res.message || 'Phát hành Thư mời làm việc thành công!',
-                        type: 'success'
+                        message: res.message || 'Đã phát hành thư mời nhận việc.',
+                        type: res.data?.emailStatus === 'SENT' ? 'success' : 'warning'
                     }));
                 } catch (e) { }
                 window.location.reload();

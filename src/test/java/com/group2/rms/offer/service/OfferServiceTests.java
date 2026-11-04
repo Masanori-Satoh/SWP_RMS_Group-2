@@ -4,6 +4,8 @@ import com.group2.rms.candidate.domain.entity.Application;
 import com.group2.rms.candidate.domain.repository.ApplicationRepository;
 import com.group2.rms.offer.dto.CreateOfferRequest;
 import com.group2.rms.offer.dto.OfferResponse;
+import com.group2.rms.offer.dto.OfferResponse.EmailStatus;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import com.group2.rms.offer.dto.UpdateOfferRequest;
 import com.group2.rms.core.exception.BaseBusinessException;
 import com.group2.rms.core.exception.ResourceNotFoundException;
@@ -98,7 +100,8 @@ class OfferServiceTests {
         var offer = OfferProposal.builder().offerId(1)
                 .application(Application.builder().candidate(candidate).build()).build();
 
-        sender.sendOfferLetterToCandidate(offer);
+        assertEquals(testRecipient.isEmpty() ? EmailStatus.SENT : EmailStatus.TEST_RECIPIENT,
+                sender.sendOfferLetterToCandidate(offer));
 
         var message = ArgumentCaptor.forClass(SimpleMailMessage.class);
         verify(smtp).send(message.capture());
@@ -1069,7 +1072,19 @@ class OfferServiceTests {
         when(offerProposalRepository.findById(1)).thenReturn(Optional.of(offer));
         when(offerProposalRepository.save(any(OfferProposal.class))).thenAnswer(i -> i.getArgument(0));
 
-        OfferResponse response = offerService.sendOfferToCandidate(1);
+        when(offerMailSender.sendOfferLetterToCandidate(offer)).thenReturn(EmailStatus.SENT);
+        OfferResponse response;
+        TransactionSynchronizationManager.initSynchronization();
+        TransactionSynchronizationManager.setActualTransactionActive(true);
+        try {
+            response = offerService.sendOfferToCandidate(1);
+            verifyNoInteractions(offerMailSender);
+            TransactionSynchronizationManager.getSynchronizations().forEach(sync -> sync.afterCommit());
+        } finally {
+            TransactionSynchronizationManager.clearSynchronization();
+            TransactionSynchronizationManager.setActualTransactionActive(false);
+        }
+        assertEquals(EmailStatus.SENT, response.getEmailStatus());
 
         assertNotNull(response);
         assertEquals("Sent_Candidate", response.getOfferStatus());
@@ -1526,6 +1541,7 @@ class OfferServiceTests {
                 .when(offerMailSender).sendOfferLetterToCandidate(any(OfferProposal.class));
 
         OfferResponse response = offerService.sendOfferToCandidate(1);
+        assertEquals(EmailStatus.NOT_SENT, response.getEmailStatus());
 
         assertNotNull(response);
         assertEquals("Sent_Candidate", response.getOfferStatus());

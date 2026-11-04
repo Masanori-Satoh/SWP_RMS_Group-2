@@ -1,5 +1,6 @@
 package com.group2.rms.offer.service;
 
+import com.group2.rms.offer.dto.OfferResponse.EmailStatus;
 import com.group2.rms.offer.entity.OfferProposal;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
@@ -32,7 +33,7 @@ public class OfferMailSender {
         this.baseUrl = baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;
     }
 
-    public void sendOfferLetterToCandidate(OfferProposal offer) {
+    public EmailStatus sendOfferLetterToCandidate(OfferProposal offer) {
         String candidateEmail = null;
         String candidateName = "Ứng viên";
 
@@ -48,7 +49,7 @@ public class OfferMailSender {
 
         if (targetRecipient == null || targetRecipient.isBlank()) {
             log.warn("Không thể gửi thư mời nhận việc: Ứng viên cho Offer ID {} không có email hợp lệ.", offer.getOfferId());
-            return;
+            return EmailStatus.NOT_SENT;
         }
 
         JavaMailSender sender = mailSender.getIfAvailable();
@@ -79,12 +80,14 @@ public class OfferMailSender {
                         + "Trân trọng,\nBộ phận Tuyển dụng Mộc RMS"
                 );
                 sender.send(message);
-                log.info("Đã gửi email Offer Letter thành công tới {}", targetRecipient);
+                log.info("Đã gửi email cho Offer ID {}.", offer.getOfferId());
+                return testRecipient.isEmpty() ? EmailStatus.SENT : EmailStatus.TEST_RECIPIENT;
             } catch (Exception ex) {
-                log.error("Lỗi khi gửi email Offer Letter tới {}: {}", targetRecipient, ex.getMessage());
+                log.warn("Lỗi khi gửi email cho Offer ID {}: {}", offer.getOfferId(), ex.getClass().getSimpleName());
             }
         } else {
             log.info("Bỏ qua email Offer ID {} vì chưa có cấu hình SMTP.", offer.getOfferId());
         }
+        return EmailStatus.NOT_SENT;
     }
 }

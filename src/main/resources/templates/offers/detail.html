@@ -10,7 +10,7 @@
 </head>
 <body>
 
-<main id="main" layout:fragment="content" class="page-content container adw-page ofw-page offer-detail-container" tabindex="-1">
+<main id="main" th:attr="data-offer-warning=${offerWarningMessage}" layout:fragment="content" class="page-content container adw-page ofw-page offer-detail-container" tabindex="-1">
     <th:block th:replace="~{fragments/ui/admin-workspace :: scene}"></th:block>
 
     <!-- FLASH MESSAGES -->

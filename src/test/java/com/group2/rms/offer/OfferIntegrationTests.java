@@ -229,9 +229,13 @@ class OfferIntegrationTests {
     @DisplayName("IT-05 POST /offers/{id}/send: Phát hành Offer Letter điều hướng về /offers/{id}")
     @WithMockUser(username = "hr_specialist", roles = {"HR"})
     void it05_sendOffer_redirectsToDetail() throws Exception {
+        when(offerService.sendOfferToCandidate(1)).thenReturn(OfferResponse.builder()
+                .emailStatus(OfferResponse.EmailStatus.NOT_SENT).build());
         mvc.perform(post("/offers/1/send").with(csrf()))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/offers/1"));
+                .andExpect(redirectedUrl("/offers/1"))
+                .andExpect(flash().attribute("offerWarningMessage",
+                        "Đã phát hành thư mời nhận việc trên cổng ứng viên. Chưa gửi được email thông báo."));
     }
 
     @Test
@@ -418,6 +422,7 @@ class OfferIntegrationTests {
     @WithMockUser(username = "hr_specialist", roles = {"HR"})
     void it15_sendOfferJson_success() throws Exception {
         OfferResponse mockSent = OfferResponse.builder()
+                .emailStatus(OfferResponse.EmailStatus.SENT)
                 .offerId(1)
                 .offerStatus("Sent_Candidate")
                 .build();
@@ -428,7 +433,8 @@ class OfferIntegrationTests {
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.offerStatus").value("Sent_Candidate"));
+                .andExpect(jsonPath("$.data.offerStatus").value("Sent_Candidate"))
+                .andExpect(jsonPath("$.data.emailStatus").value("SENT"));
     }
     @Test
     @DisplayName("IT-16 POST /offers/{id}/approve (JSON): Director phê duyệt Offer thành công trả về HTTP 200")

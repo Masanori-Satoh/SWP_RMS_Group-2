@@ -7,6 +7,7 @@ import com.group2.rms.interview.entity.InterviewFinalResult;
 import com.group2.rms.offer.dto.CreateOfferRequest;
 import com.group2.rms.offer.dto.OfferDetailResponse;
 import com.group2.rms.offer.dto.OfferResponse;
+import com.group2.rms.offer.dto.OfferResponse.EmailStatus;
 import com.group2.rms.offer.dto.PassedCandidateResponse;
 import com.group2.rms.offer.dto.UpdateOfferRequest;
 import com.group2.rms.offer.entity.OfferApproval;
@@ -33,6 +34,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -651,14 +654,6 @@ public class OfferServiceImpl implements OfferService {
         offer.setOfferStatus("Sent_Candidate");
         OfferProposal saved = offerProposalRepository.save(offer);
 
-        if (offerMailSender != null) {
-            try {
-                offerMailSender.sendOfferLetterToCandidate(saved);
-            } catch (Exception e) {
-                log.warn("Lỗi khi gửi email thư mời nhận việc cho ứng viên Offer ID {}: {}", saved.getOfferId(), e.getMessage());
-            }
-        }
-
         if (systemNotificationService != null) {
             try {
                 systemNotificationService.notifyOfferLetterSent(saved);
@@ -673,7 +668,27 @@ public class OfferServiceImpl implements OfferService {
             applicationRepository.save(application);
         }
 
-        return mapToResponse(saved);
+        OfferResponse response = mapToResponse(saved);
+        response.setEmailStatus(EmailStatus.NOT_SENT);
+        if (TransactionSynchronizationManager.isActualTransactionActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    sendOfferEmail(saved, response);
+                }
+            });
+        } else {
+            sendOfferEmail(saved, response);
+        }
+        return response;
+    }
+
+    private void sendOfferEmail(OfferProposal offer, OfferResponse response) {
+        try {
+            response.setEmailStatus(offerMailSender.sendOfferLetterToCandidate(offer));
+        } catch (Exception e) {
+            log.warn("Lỗi khi gửi email cho Offer ID {}: {}", offer.getOfferId(), e.getClass().getSimpleName());
+        }
     }
 
     private void validateProbationSalaryRule(BigDecimal proposedSalary, BigDecimal probationSalary) {

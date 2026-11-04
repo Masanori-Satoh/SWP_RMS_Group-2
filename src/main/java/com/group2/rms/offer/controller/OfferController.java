@@ -429,7 +429,7 @@ public class OfferController {
         try {
             OfferResponse sentOffer = offerService.sendOfferToCandidate(id);
             return ResponseEntity.ok(new ApiResponse<>(true,
-                    "Đã phát hành thư mời nhận việc trên cổng ứng viên.", sentOffer));
+                    offerPublicationMessage(sentOffer), sentOffer));
         } catch (BaseBusinessException e) {
             HttpStatus status = (e instanceof ResourceNotFoundException) ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST;
             return ResponseEntity.status(status).body(new ApiResponse<>(false, e.getMessage()));
@@ -447,13 +447,25 @@ public class OfferController {
     @PostMapping("/{id}/send")
     public String sendOfferToCandidate(@PathVariable Integer id, RedirectAttributes flash) {
         try {
-            offerService.sendOfferToCandidate(id);
-            flash.addFlashAttribute("successMessage",
-                    "Đã phát hành thư mời nhận việc trên cổng ứng viên.");
+            OfferResponse sentOffer = offerService.sendOfferToCandidate(id);
+            String flashType = sentOffer.getEmailStatus() == OfferResponse.EmailStatus.SENT
+                    ? "successMessage" : "offerWarningMessage";
+            flash.addFlashAttribute(flashType, offerPublicationMessage(sentOffer));
         } catch (BaseBusinessException e) {
             flash.addFlashAttribute("errorMessage", e.getMessage());
         }
         return "redirect:/offers/" + id;
+    }
+
+    private String offerPublicationMessage(OfferResponse offer) {
+        String published = "Đã phát hành thư mời nhận việc trên cổng ứng viên.";
+        if (offer.getEmailStatus() == OfferResponse.EmailStatus.SENT) {
+            return published + " Đã gửi email thông báo.";
+        }
+        if (offer.getEmailStatus() == OfferResponse.EmailStatus.TEST_RECIPIENT) {
+            return published + " Email chỉ được gửi tới địa chỉ kiểm thử.";
+        }
+        return published + " Chưa gửi được email thông báo.";
     }
 
     /**
