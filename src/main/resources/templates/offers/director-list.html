@@ -231,16 +231,16 @@
          MODAL: DIRECTOR APPROVAL MODAL (Duyệt / Từ chối Offer nhanh)
          =========================================================================== -->
     <dialog id="directorDecisionModal" class="confirm-dialog ofw-workspace-dialog" aria-labelledby="directorDecisionTitle">
-        <div class="modal-box ofw-modal-box--sm">
-            <div class="modal-header">
-                <div id="directorDecisionTitle" class="ofw-modal-title-group ofw-modal-title--medium">
+        <div class="dialog-content">
+            <div class="dialog-header ofw-dialog-header">
+                <div id="directorDecisionTitle" class="dialog-title ofw-modal-title-group">
                     Phê Duyệt Đề Xuất Nhận Việc
                 </div>
                 <button type="button" class="btn-icon ofw-modal-close" onclick="closeDirectorDecisionModal()" aria-label="Đóng hộp thoại">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                 </button>
             </div>
-            <div class="modal-body">
+            <div class="dialog-body">
                 <input type="hidden" id="directorDecisionOfferId">
                 <input type="hidden" id="directorDecisionAction">
 
@@ -264,7 +264,7 @@
                     </div>
                 </div>
             </div>
-            <div class="modal-footer ofw-modal-footer--end">
+            <div class="dialog-actions">
                 <button type="button" class="btn btn--secondary" onclick="closeDirectorDecisionModal()">Hủy</button>
                 <button type="button" id="btnSubmitDecision" class="btn btn--primary" onclick="submitDirectorDecision()">Xác Nhận</button>
             </div>

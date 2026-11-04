@@ -107,12 +107,23 @@
    SECTION 2 — MODALS & DIALOG OVERLAY ARCHITECTURE
    Base modal structure for Director Quick Decision, Excel Export, and Dialogs.
    ----------------------------------------------------------------------------- */
-dialog.ofw-workspace-dialog {
+dialog.confirm-dialog.ofw-workspace-dialog {
+    max-height: calc(100dvh - var(--s6));
+}
+
+dialog.confirm-dialog#offerExportModal {
     max-width: 620px;
 }
 
-dialog.ofw-workspace-dialog .modal-box {
-    box-shadow: none;
+.ofw-dialog-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--s3);
+}
+
+.ofw-workspace-dialog .dialog-actions {
+    flex-wrap: wrap;
 }
 
 .modal-box,

@@ -257,21 +257,21 @@
 
 <!-- Modal Xuất Excel Offer (HR) -->
 <dialog id="offerExportModal" class="confirm-dialog ofw-workspace-dialog" aria-labelledby="offerExportTitle" onclick="handleExportModalBackdropClick(event)">
-    <div class="modal-box modal-lg modal-export-card" onclick="event.stopPropagation()">
-        <div class="modal-header">
+    <div class="dialog-content" onclick="event.stopPropagation()">
+        <div class="dialog-header ofw-dialog-header">
             <div class="ofw-modal-title-group">
                 <div class="offer-stat-icon stat-icon-green ofw-modal-stat-icon">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
                 </div>
                 <div>
-                    <div id="offerExportTitle" class="ofw-modal-title">Xuất dữ liệu Đề xuất nhận việc</div>
+                    <div id="offerExportTitle" class="dialog-title">Xuất dữ liệu Đề xuất nhận việc</div>
                     <div class="ofw-modal-desc">Tải dữ liệu đề xuất lương ra file Microsoft Excel (.xlsx)</div>
                 </div>
             </div>
             <button type="button" class="btn-icon" onclick="closeExportModal()" title="Đóng">✕</button>
         </div>
 
-        <div class="modal-body">
+        <div class="dialog-body">
             <!-- PHẠM VI XUẤT -->
             <div class="export-section">
                 <label class="export-section-title">Phạm vi xuất</label>
@@ -408,7 +408,7 @@
             </div>
         </div>
 
-        <div class="modal-footer">
+        <div class="dialog-actions">
             <button type="button" class="btn btn--secondary" onclick="closeExportModal()">Hủy</button>
             <button type="button" class="btn btn--primary" id="btnExecuteExport" onclick="executeOfferExport()">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> Xuất Excel
