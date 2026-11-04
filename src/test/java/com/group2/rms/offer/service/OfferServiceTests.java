@@ -1002,6 +1002,23 @@ class OfferServiceTests {
     }
 
     @Test
+    void deletedOfferIsUnavailableByDirectId() {
+        OfferProposal deleted = OfferProposal.builder().isDeleted(true).offerStatus("Draft").build();
+        when(offerProposalRepository.findById(1)).thenReturn(Optional.of(deleted));
+
+        assertAll(
+                () -> assertThrows(ResourceNotFoundException.class, () -> offerService.getOfferById(1)),
+                () -> assertThrows(ResourceNotFoundException.class, () -> offerService.getOfferDetailForHr(1)),
+                () -> assertThrows(ResourceNotFoundException.class, () -> offerService.getUpdateOfferRequestById(1)),
+                () -> assertThrows(ResourceNotFoundException.class, () -> offerService.updateOfferByHr(1, null)),
+                () -> assertThrows(ResourceNotFoundException.class, () -> offerService.deleteDraftOfferByHr(1)),
+                () -> assertThrows(ResourceNotFoundException.class, () -> offerService.sendOfferToCandidate(1)),
+                () -> assertThrows(ResourceNotFoundException.class, () -> offerService.approveOfferByDirector(1, null)),
+                () -> assertThrows(ResourceNotFoundException.class, () -> offerService.rejectOfferByDirector(1, null)));
+        verify(offerProposalRepository, never()).save(any());
+    }
+
+    @Test
     @DisplayName("deleteDraftOfferByHr: Xóa bản thảo Offer khi ở trạng thái Draft thành công (Soft delete)")
     void testDeleteDraftOfferByHr_draftStatus_softDeletesSuccessfully() {
         OfferProposal offer = OfferProposal.builder()

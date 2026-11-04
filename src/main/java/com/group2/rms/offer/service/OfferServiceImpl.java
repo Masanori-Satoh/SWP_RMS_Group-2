@@ -158,11 +158,16 @@ public class OfferServiceImpl implements OfferService {
         return mapToResponse(savedOffer);
     }
 
+    private OfferProposal findActiveOffer(Integer id) {
+        return offerProposalRepository.findById(id)
+                .filter(offer -> !Boolean.TRUE.equals(offer.getIsDeleted()))
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đề xuất nhận việc với ID: " + id));
+    }
+
     @Override
     @Transactional(readOnly = true)
     public OfferResponse getOfferById(Integer offerId) {
-        OfferProposal offer = offerProposalRepository.findById(offerId)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đề xuất nhận việc với ID: " + offerId));
+        OfferProposal offer = findActiveOffer(offerId);
         return mapToResponse(offer);
     }
 
@@ -434,8 +439,7 @@ public class OfferServiceImpl implements OfferService {
     @Override
     @Transactional(readOnly = true)
     public OfferDetailResponse getOfferDetailForHr(Integer id) {
-        OfferProposal offer = offerProposalRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đề xuất nhận việc với ID: " + id));
+        OfferProposal offer = findActiveOffer(id);
 
         var app = offer.getApplication();
         var cand = app != null ? app.getCandidate() : null;
@@ -520,8 +524,7 @@ public class OfferServiceImpl implements OfferService {
 
     @Override
     public OfferResponse updateOfferByHr(Integer id, UpdateOfferRequest dto) {
-        OfferProposal offer = offerProposalRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đề xuất nhận việc với ID: " + id));
+        OfferProposal offer = findActiveOffer(id);
 
         String currentStatus = offer.getOfferStatus();
         boolean canEdit = "Draft".equalsIgnoreCase(currentStatus);
@@ -579,8 +582,7 @@ public class OfferServiceImpl implements OfferService {
     @Override
     @Transactional(readOnly = true)
     public UpdateOfferRequest getUpdateOfferRequestById(Integer id) {
-        OfferProposal offer = offerProposalRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đề xuất nhận việc với ID: " + id));
+        OfferProposal offer = findActiveOffer(id);
 
         String currentStatus = offer.getOfferStatus();
         if (!"Draft".equalsIgnoreCase(currentStatus)) {
@@ -605,8 +607,7 @@ public class OfferServiceImpl implements OfferService {
 
     @Override
     public void deleteDraftOfferByHr(Integer id) {
-        OfferProposal offer = offerProposalRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đề xuất nhận việc với ID: " + id));
+        OfferProposal offer = findActiveOffer(id);
 
         if (!"Draft".equalsIgnoreCase(offer.getOfferStatus())) {
             throw new OfferValidationException(
@@ -622,8 +623,7 @@ public class OfferServiceImpl implements OfferService {
 
     @Override
     public OfferResponse sendOfferToCandidate(Integer id) {
-        OfferProposal offer = offerProposalRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đề xuất nhận việc với ID: " + id));
+        OfferProposal offer = findActiveOffer(id);
 
         String currentStatus = offer.getOfferStatus();
         boolean isApproved = "Approved".equalsIgnoreCase(currentStatus)
@@ -825,8 +825,7 @@ public class OfferServiceImpl implements OfferService {
 
     @Override
     public OfferResponse approveOfferByDirector(Integer id, String comments) {
-        OfferProposal offer = offerProposalRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đề xuất nhận việc với ID: " + id));
+        OfferProposal offer = findActiveOffer(id);
 
         if (!"Pending_Director".equalsIgnoreCase(offer.getOfferStatus())) {
             throw new OfferValidationException(
@@ -859,8 +858,7 @@ public class OfferServiceImpl implements OfferService {
 
     @Override
     public OfferResponse rejectOfferByDirector(Integer id, String comments) {
-        OfferProposal offer = offerProposalRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đề xuất nhận việc với ID: " + id));
+        OfferProposal offer = findActiveOffer(id);
 
         if (!"Pending_Director".equalsIgnoreCase(offer.getOfferStatus())) {
             throw new OfferValidationException(
