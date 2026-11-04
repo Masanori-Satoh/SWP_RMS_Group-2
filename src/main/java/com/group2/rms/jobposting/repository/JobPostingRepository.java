@@ -125,7 +125,7 @@ public interface JobPostingRepository extends JpaRepository<JobPosting, Integer>
            "AND (j.applicationDeadline IS NULL OR j.applicationDeadline >= CURRENT_TIMESTAMP) " +
            "AND (:keyword IS NULL OR LOWER(j.postingTitle) LIKE LOWER(CONCAT('%', :keyword, '%'))) " +
            "AND (:departmentId IS NULL OR j.requisition.department.departmentId = :departmentId) " +
-           "AND (:employmentType IS NULL OR j.requisition.employmentType = :employmentType)")
+           "AND (:employmentType IS NULL OR COALESCE(j.employmentType, j.requisition.employmentType) = :employmentType)")
     Page<JobPosting> findPublishedJobs(@Param("keyword") String keyword,
                                        @Param("departmentId") Integer departmentId,
                                        @Param("employmentType") String employmentType,

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<body>
+<!-- =============================================================================
+     POPUP ĐỒNG Ý ĐIỀU KHOẢN: ứng viên chưa đồng ý (cờ policyConsentRequired từ PolicyConsentAdvice).
+     Chỉ gọi từ fragments/layout/public-footer.html → có mặt ở landing, trang công khai và cổng ứng viên.
+     Không đóng được khi chưa đồng ý (js/pages/policy-consent.js). Nút gửi POST /policy-consents.
+     Tự nạp CSS/JS vì landing không dùng layout chung. Chỉ dùng token có ở cả landing và layout:
+     --brand, --brand-dark, --brand-soft, --surface, --ink, --muted, --line, --focus, --error, --error-soft.
+     ============================================================================= -->
+<th:block th:fragment="dialog">
+<link rel="stylesheet" th:href="@{/css/pages/policy-consent.css}">
+<dialog class="policy-consent" data-policy-consent
+        aria-labelledby="policy-consent-title" aria-describedby="policy-consent-desc">
+    <form class="policy-consent__form" th:action="@{/policy-consents}" method="post">
+        <input type="hidden" name="returnUrl" value="/jobs" data-policy-consent-return>
+
+        <div class="policy-consent__head">
+            <svg class="policy-consent__bell" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
+            </svg>
+            <h2 class="policy-consent__title" id="policy-consent-title">Thông báo &amp; Xác nhận đồng ý</h2>
+            <p class="policy-consent__subtitle">Vui lòng đọc kỹ trước khi tiếp tục</p>
+        </div>
+
+        <div class="policy-consent__body">
+            <h3 class="policy-consent__welcome">Chào mừng bạn đến với <span>Mộc Tuyển dụng!</span></h3>
+            <p class="policy-consent__desc" id="policy-consent-desc">Để tiếp tục sử dụng dịch vụ, vui lòng xác nhận bạn đã đọc và đồng ý với các điều khoản dưới đây:</p>
+
+            <div class="policy-consent__error" role="alert" th:if="${policyConsentError}" th:text="${policyConsentError}">
+                Vui lòng tick đồng ý cả hai tài liệu.
+            </div>
+
+            <label class="policy-consent__option">
+                <input type="checkbox" name="agreeTerms" value="true" data-policy-consent-check>
+                <span>Tôi đã đọc và đồng ý với
+                    <a th:href="@{/terms}" href="/terms" target="_blank" rel="noopener" class="policy-consent__doc">Điều khoản sử dụng<span class="policy-consent__sr"> (mở ở tab mới)</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7"/><path d="M8 7h9v9"/></svg></a>.
+                </span>
+            </label>
+
+            <label class="policy-consent__option">
+                <input type="checkbox" name="agreePrivacy" value="true" data-policy-consent-check>
+                <span>Tôi đã đọc và đồng ý với
+                    <a th:href="@{/privacy-policy}" href="/privacy-policy" target="_blank" rel="noopener" class="policy-consent__doc">Chính sách bảo mật<span class="policy-consent__sr"> (mở ở tab mới)</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7"/><path d="M8 7h9v9"/></svg></a>.
+                </span>
+            </label>
+
+            <div class="policy-consent__note">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/>
+                </svg>
+                <p>Mộc cam kết bảo vệ dữ liệu cá nhân của bạn và chỉ sử dụng, xử lý thông tin theo phạm vi và mục đích mà bạn đã đồng ý.</p>
+            </div>
+        </div>
+
+        <div class="policy-consent__actions">
+            <button type="submit" class="policy-consent__agree" disabled data-policy-consent-submit>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
+                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+                Tôi đồng ý
+            </button>
+            <p class="policy-consent__hint" data-policy-consent-hint aria-live="polite">Hãy tick cả 2 ô để tiếp tục</p>
+        </div>
+    </form>
+
+    <!-- Nền mờ che cả topbar → để lối đăng xuất ngay trong popup (POST /logout, Thymeleaf tự gắn CSRF) -->
+    <form class="policy-consent__logout" th:action="@{/logout}" method="post">
+        <span>Không phải bạn?</span>
+        <button type="submit">Đăng xuất</button>
+    </form>
+</dialog>
+<script defer th:src="@{/js/pages/policy-consent.js}"></script>
+</th:block>
+</body>
+</html>

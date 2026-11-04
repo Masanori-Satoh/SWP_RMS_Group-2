@@ -115,7 +115,9 @@
   // Quay lại trang bằng nút Back: trình duyệt có thể giữ nút đang bị khóa.
   window.addEventListener('pageshow', resetSubmitButton);
 
-  if (dialog.dataset.openOnLoad === 'true' || window.location.hash === '#apply') {
+  // Popup đồng ý điều khoản đang chờ → không mở chồng; đồng ý xong trang tải lại với #apply rồi mới mở
+  const consentPending = document.querySelector('[data-policy-consent]') !== null;
+  if (!consentPending && (dialog.dataset.openOnLoad === 'true' || window.location.hash === '#apply')) {
     open();
   }
 })();

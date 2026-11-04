@@ -34,6 +34,9 @@
 .jp-detail-page .jpd-main .jpd-sec + .jpd-sec { border-top:1px solid var(--line); }
 .jp-detail-page .jpd-sec h2 { margin:0; color:var(--brand-dark); font:700 20px/1.35 var(--sans); }
 .jp-detail-page .jpd-sec h3 { margin:0; font-size:var(--font-base); }
+/* Tiêu đề mục nội dung tin có vạch xanh bên trái (giống trang /jobs/{id}) */
+.jp-detail-page .jpd-main .jpd-sec > h2 { padding-left:var(--s3); border-left:4px solid var(--brand); color:var(--ink); }
+.jp-detail-page .jpd-main .jpd-sec > h3:not(:first-of-type) { margin-top:var(--s2); }
 .jp-detail-page .jpd-sec-head { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:baseline; gap:var(--s2); }
 .jp-detail-page .jpd-muted { color:var(--muted); font-size:var(--font-sm); }
 .jp-detail-page .jpd-empty { margin:0; color:var(--muted); font-style:italic; }

@@ -91,7 +91,9 @@ public final class PublicJobSearch {
                 where.add(cb.equal(department.get("departmentId"), departmentId));
             }
             if (employmentType != null) {
-                where.add(cb.equal(requisition.get("employmentType"), employmentType));
+                // Hình thức của tin; tin cũ chưa có thì lấy của yêu cầu (JobPosting#effectiveEmploymentType)
+                where.add(cb.equal(cb.coalesce(root.<String>get("employmentType"),
+                        requisition.<String>get("employmentType")), employmentType));
             }
 
             if (!terms.isEmpty()) {

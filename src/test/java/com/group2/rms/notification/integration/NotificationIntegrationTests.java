@@ -124,7 +124,7 @@ class NotificationIntegrationTests {
         JobRequisition requisition = requisitions.saveAndFlush(JobRequisition.builder()
                 .title("IT Noti Backend").hiringManager(userA).department(department)
                 .approvalStatus(status).recruitmentRound(1).numberOfPositions(1)
-                .employmentType("Full-time").gender("Any").workModel("On-site")
+                .employmentType("Full-time").workModel("On-site")
                 .jobDescription("Integration-test responsibilities").requirementDetails("Integration-test requirements").build());
         return approvals.saveAndFlush(RequisitionApproval.builder().requisition(requisition).director(director)
                 .status(status).comments(comments).approvalDate(BASE_TIME).build());

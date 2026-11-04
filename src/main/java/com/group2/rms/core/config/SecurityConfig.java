@@ -80,6 +80,11 @@ public class SecurityConfig {
                                                 .requestMatchers("/favicon.ico", "/error").permitAll()
                                                 // permit all for defaultpage and font
                                                 .requestMatchers(HttpMethod.GET, "/", "/fonts/**").permitAll()
+                                                // 2 PDF chính sách: khách cũng đọc được (link footer + popup đồng ý)
+                                                .requestMatchers(HttpMethod.GET, "/terms", "/privacy-policy").permitAll()
+                                                // nút "Tôi đồng ý" trong popup: chỉ ứng viên
+                                                .requestMatchers(HttpMethod.POST, "/policy-consents")
+                                                .hasAuthority("ROLE_CANDIDATE")
                                                 // permit all for login, register, forgot-password, reset-password
                                                 .requestMatchers("/login", "/register", "/register/**", "/forgot-password",
                                                                 "/reset-password/**")
