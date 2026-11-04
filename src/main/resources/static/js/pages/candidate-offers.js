@@ -98,15 +98,20 @@
         confirmButton.disabled = true;
 
         // Nếu là từ chối và có lý do, chèn tham số declineReason vào form
-        if (pendingForm.dataset.offerForm === 'decline' && reasonInput && reasonInput.value.trim()) {
+        if (pendingForm.dataset.offerForm === 'decline' && reasonInput) {
+          var reason = reasonInput.value.trim();
           var hiddenInput = pendingForm.querySelector('input[name="declineReason"]');
-          if (!hiddenInput) {
-            hiddenInput = document.createElement('input');
-            hiddenInput.type = 'hidden';
-            hiddenInput.name = 'declineReason';
-            pendingForm.appendChild(hiddenInput);
+          if (!reason) {
+            if (hiddenInput) hiddenInput.remove();
+          } else {
+            if (!hiddenInput) {
+              hiddenInput = document.createElement('input');
+              hiddenInput.type = 'hidden';
+              hiddenInput.name = 'declineReason';
+              pendingForm.appendChild(hiddenInput);
+            }
+            hiddenInput.value = reason;
           }
-          hiddenInput.value = reasonInput.value.trim();
         }
 
         pendingForm.submit();
