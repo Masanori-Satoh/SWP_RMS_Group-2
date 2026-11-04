@@ -280,6 +280,13 @@ public class OfferServiceImpl implements OfferService {
                     "OFFER_LOCKED_STATE");
         }
 
+        boolean passedInterview = interviewFinalResultRepository
+                .findByApplicationIdOrderByApprovedAtDesc(application.getApplicationId()).stream()
+                .anyMatch(result -> InterviewFinalResult.PASSED.equalsIgnoreCase(result.getFinalDecision()));
+        if (!passedInterview) {
+            throw new OfferValidationException("Chỉ được tạo đề xuất nhận việc cho hồ sơ đã đạt phỏng vấn.");
+        }
+
         Integer responsePeriodDays = dto.getResponsePeriodDays() != null ? dto.getResponsePeriodDays() : 5;
 
         OfferProposal offerToSave;

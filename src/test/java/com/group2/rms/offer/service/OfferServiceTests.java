@@ -241,18 +241,18 @@ class OfferServiceTests {
         assertTrue(ex.getMessage().contains("Địa điểm làm việc không được để trống"));
     }
 
-    @Test
-    @DisplayName("Validation: Ngày mai, lương > 0, thời gian thử việc > 0 và gói phúc lợi để trống vẫn tạo thành công")
-    void testCreateOfferByHr_allValidExceptBenefits_passes() {
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    @DisplayName("Tạo Offer không có phúc lợi chỉ thành công nếu hồ sơ đã đạt phỏng vấn")
+    void testCreateOfferByHr_requiresPassedInterview(boolean passedInterview) {
         Application application = Application.builder().applicationId(1).build();
 
         when(applicationRepository.findById(1)).thenReturn(Optional.of(application));
         when(offerProposalRepository.findByApplication_ApplicationId(1)).thenReturn(Optional.empty());
-        when(offerProposalRepository.save(any(OfferProposal.class))).thenAnswer(i -> {
-            OfferProposal op = i.getArgument(0);
-            op.setOfferId(555);
-            return op;
-        });
+        when(interviewFinalResultRepository.findByApplicationIdOrderByApprovedAtDesc(1))
+                .thenReturn(List.of(InterviewFinalResult.builder()
+                        .finalDecision(passedInterview ? InterviewFinalResult.PASSED : "Failed")
+                        .build()));
 
         CreateOfferRequest request = CreateOfferRequest.builder()
                 .applicationId(1)
@@ -266,6 +266,17 @@ class OfferServiceTests {
                 .isDraft(false)
                 .build();
 
+        if (!passedInterview) {
+            assertThrows(OfferValidationException.class, () -> offerService.createOfferByHr(request));
+            verify(offerProposalRepository, never()).save(any(OfferProposal.class));
+            return;
+        }
+
+        when(offerProposalRepository.save(any(OfferProposal.class))).thenAnswer(i -> {
+            OfferProposal op = i.getArgument(0);
+            op.setOfferId(555);
+            return op;
+        });
         OfferResponse response = offerService.createOfferByHr(request);
 
         assertNotNull(response);
