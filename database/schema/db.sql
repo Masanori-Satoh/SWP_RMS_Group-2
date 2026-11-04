@@ -279,7 +279,9 @@ CREATE TABLE Candidate (
     CandidateSource NVARCHAR(50) NULL,
     --update isPotential
     IsPotential BIT NOT NULL CONSTRAINT DF_Candidate_IsPotential DEFAULT 0,
-    
+    -- Lúc ứng viên bấm "Tôi đồng ý" Điều khoản + Chính sách bảo mật; NULL = chưa đồng ý (migration 015)
+    PolicyAgreedAt DATETIME2 NULL,
+
     CreatedAt DATETIME2 NOT NULL CONSTRAINT DF_Candidate_CreatedAt DEFAULT SYSDATETIME(),
     UpdatedAt DATETIME2 NULL,
 
