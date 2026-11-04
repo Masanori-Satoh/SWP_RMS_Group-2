@@ -96,6 +96,22 @@ class RequisitionValidatorTests {
     }
 
     @Test
+    @DisplayName("Không chọn giới tính -> Mặc định không yêu cầu")
+    void validate_shouldDefaultGenderToAny_whenMissing() {
+        var request = valid();
+        expectPass(request);
+        assertEquals(RequisitionValidator.GENDER_ANY, request.getGender());
+    }
+
+    @Test
+    @DisplayName("Giới tính ngoài danh mục -> Báo lỗi đúng trường")
+    void validate_shouldReject_whenGenderIsInvalid() {
+        var request = valid();
+        request.setGender("Other");
+        assertTrue(expectFail(request).getErrors().containsKey("gender"));
+    }
+
+    @Test
     @DisplayName("Mô hình Hybrid -> Hợp lệ")
     void validate_shouldPass_whenWorkModelIsHybrid() {
         var d = valid();
@@ -131,14 +147,6 @@ class RequisitionValidatorTests {
     }
 
     @Test
-    @DisplayName("Nháp không chọn giới tính -> Tự gán Any")
-    void validate_shouldDefaultGenderToAny_whenDraftGenderIsNull() {
-        var d = minimalDraft();
-        expectPass(d);
-        assertEquals("Any", d.getGender());
-    }
-
-    @Test
     @DisplayName("Nháp thiếu phòng ban / ngày bắt đầu -> Hợp lệ")
     void validate_shouldPass_whenDraftHasNoDepartmentOrStartDate() {
         var d = minimalDraft();
@@ -170,14 +178,6 @@ class RequisitionValidatorTests {
         var d = minimalDraft();
         d.setEmploymentType("Freelance");
         assertTrue(expectFail(d).getErrors().containsKey("employmentType"));
-    }
-
-    @Test
-    @DisplayName("Nháp có giới tính sai -> Báo lỗi")
-    void validate_shouldReject_whenDraftGenderIsInvalid() {
-        var d = minimalDraft();
-        d.setGender("Unknown");
-        assertTrue(expectFail(d).getErrors().containsKey("gender"));
     }
 
     @Test
@@ -276,21 +276,13 @@ class RequisitionValidatorTests {
         assertTrue(expectFail(d).getErrors().containsKey("workLocation"));
     }
 
-    @Test
-    @DisplayName("Gửi duyệt không chọn giới tính -> Hợp lệ (gán Any)")
-    void validate_shouldPass_whenSubmitGenderIsNull() {
-        var d = valid();
-        d.setGender(null);
-        expectPass(d);
-    }
-
     // VAL-006 — Tiêu đề placeholder của Draft
 
     @Test
     @DisplayName("Gửi duyệt với tên mặc định -> Báo lỗi")
     void validate_shouldReject_whenSubmitTitleIsPlaceholder() {
         var d = valid();
-        d.setTitle("Untitled requisition");
+        d.setTitle("Chưa nhập vị trí");
         assertTrue(expectFail(d).getErrors().containsKey("title"));
     }
 
@@ -298,7 +290,7 @@ class RequisitionValidatorTests {
     @DisplayName("Tên mặc định khác hoa / thường -> Vẫn báo lỗi")
     void validate_shouldReject_whenPlaceholderTitleHasDifferentCase() {
         var d = valid();
-        d.setTitle("UNTITLED REQUISITION");
+        d.setTitle("CHƯA NHẬP VỊ TRÍ");
         assertTrue(expectFail(d).getErrors().containsKey("title"));
     }
 
@@ -306,7 +298,7 @@ class RequisitionValidatorTests {
     @DisplayName("Nháp với tên mặc định -> Hợp lệ")
     void validate_shouldPass_whenDraftTitleIsPlaceholder() {
         var d = minimalDraft();
-        d.setTitle("Untitled requisition");
+        d.setTitle("Chưa nhập vị trí");
         expectPass(d);
     }
 
@@ -361,7 +353,7 @@ class RequisitionValidatorTests {
         expectPass(d);
     }
 
-    // VAL-008 — Employment type, work model, gender
+    // VAL-008 — Employment type, work model
 
     @ParameterizedTest
     @ValueSource(strings = { "Full-time", "Part-time", "Internship", "Contract" })
@@ -413,31 +405,6 @@ class RequisitionValidatorTests {
         var d = valid();
         d.setWorkModel(null);
         assertTrue(expectFail(d).getErrors().containsKey("workModel"));
-    }
-
-    @ParameterizedTest
-    @ValueSource(strings = { "Any", "Male", "Female" })
-    @DisplayName("Giới tính trong danh mục -> Hợp lệ")
-    void validate_shouldPass_whenGenderIsInList(String gender) {
-        var d = valid();
-        d.setGender(gender);
-        expectPass(d);
-    }
-
-    @Test
-    @DisplayName("Giới tính ngoài danh mục -> Báo lỗi")
-    void validate_shouldReject_whenGenderIsNotInList() {
-        var d = valid();
-        d.setGender("Non-binary");
-        assertTrue(expectFail(d).getErrors().containsKey("gender"));
-    }
-
-    @Test
-    @DisplayName("Giới tính null -> Hợp lệ (gán Any)")
-    void validate_shouldPass_whenGenderIsNull() {
-        var d = valid();
-        d.setGender(null);
-        expectPass(d);
     }
 
     // VAL-009 — Các field text bắt buộc
@@ -563,27 +530,64 @@ class RequisitionValidatorTests {
     }
 
     @Test
-    @DisplayName("Thử việc đúng số ngày tối đa -> Hợp lệ")
-    void validate_shouldPass_whenProbationDaysEqualsMaximum() {
+    @DisplayName("Không nhập đợt tuyển dụng -> Tự gán đợt 1")
+    void validate_shouldDefaultRoundToOne_whenRoundIsNull() {
         var d = valid();
-        d.setProbationDays(RequisitionValidator.PROBATION_MAX_DAYS);
+        d.setRecruitmentRound(null);
+        expectPass(d);
+        assertEquals(RequisitionValidator.ROUND_MIN, d.getRecruitmentRound());
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = { RequisitionValidator.ROUND_MIN, RequisitionValidator.ROUND_MAX })
+    @DisplayName("Đợt tuyển dụng ở biên 1 / 99 -> Hợp lệ")
+    void validate_shouldPass_whenRoundAtBoundary(int round) {
+        var d = valid();
+        d.setRecruitmentRound(round);
+        expectPass(d);
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = { RequisitionValidator.ROUND_MIN - 1, RequisitionValidator.ROUND_MAX + 1 })
+    @DisplayName("Đợt tuyển dụng ngoài 1..99 -> Báo lỗi ở ô đợt")
+    void validate_shouldReject_whenRoundOutOfRange(int round) {
+        var d = valid();
+        d.setRecruitmentRound(round);
+        assertTrue(expectFail(d).getErrors().containsKey("recruitmentRound"));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = { "2 tháng", "60 ngày", "Thỏa thuận" })
+    @DisplayName("Thử việc dạng chữ tự do -> Hợp lệ")
+    void validate_shouldPass_whenProbationPeriodIsFreeText(String period) {
+        var d = valid();
+        d.setProbationPeriod(period);
         expectPass(d);
     }
 
     @Test
-    @DisplayName("Thử việc tối đa + 1 ngày -> Báo lỗi")
-    void validate_shouldReject_whenProbationDaysExceedsMaximumByOne() {
+    @DisplayName("Thử việc dài đúng giới hạn -> Hợp lệ")
+    void validate_shouldPass_whenProbationPeriodEqualsLimit() {
         var d = valid();
-        d.setProbationDays(RequisitionValidator.PROBATION_MAX_DAYS + 1);
-        assertTrue(expectFail(d).getErrors().containsKey("probationDays"));
+        d.setProbationPeriod("x".repeat(RequisitionValidator.PROBATION_CHAR_LIMIT));
+        expectPass(d);
     }
 
     @Test
-    @DisplayName("Gửi duyệt không nhập thử việc -> Hợp lệ")
-    void validate_shouldPass_whenSubmitProbationDaysIsNull() {
+    @DisplayName("Thử việc dài quá giới hạn 1 ký tự -> Báo lỗi")
+    void validate_shouldReject_whenProbationPeriodExceedsLimitByOne() {
         var d = valid();
-        d.setProbationDays(null);
+        d.setProbationPeriod("x".repeat(RequisitionValidator.PROBATION_CHAR_LIMIT + 1));
+        assertTrue(expectFail(d).getErrors().containsKey("probationPeriod"));
+    }
+
+    @Test
+    @DisplayName("Thử việc chỉ có khoảng trắng -> Lưu NULL (không thử việc)")
+    void validate_shouldClearProbationPeriod_whenOnlySpaces() {
+        var d = valid();
+        d.setProbationPeriod("   ");
         expectPass(d);
+        assertNull(d.getProbationPeriod());
     }
 
     // VAL-011 — Salary và độ chính xác thập phân
@@ -765,18 +769,17 @@ class RequisitionValidatorTests {
     }
 
     @CsvSource({
-            "Full-time, On-site, Any",
-            "Part-time, Remote, Male",
-            "Internship, Hybrid, Female",
-            "Contract, On-site,"
+            "Full-time, On-site",
+            "Part-time, Remote",
+            "Internship, Hybrid",
+            "Contract, On-site"
     })
     @ParameterizedTest
-    @DisplayName("Các tổ hợp hình thức / mô hình / giới tính hợp lệ -> Hợp lệ")
-    void validate_shouldPass_whenChoiceFieldsAreValidCombination(String type, String model, String gender) {
+    @DisplayName("Các tổ hợp hình thức / mô hình hợp lệ -> Hợp lệ")
+    void validate_shouldPass_whenChoiceFieldsAreValidCombination(String type, String model) {
         var d = valid();
         d.setEmploymentType(type);
         d.setWorkModel(model);
-        d.setGender(gender);
         expectPass(d);
     }
 }

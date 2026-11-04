@@ -31,8 +31,6 @@ public class DirectorDashboardService {
 
     /** Số dòng tối đa của mỗi danh sách trên dashboard. */
     static final int LIST_LIMIT = 5;
-    /** Giá trị JobRequisition.HiringType của tuyển thay thế (có người đã nghỉ). */
-    static final String HIRING_TYPE_REPLACEMENT = "Replacement";
 
     private final InternalMetricsRepository metrics;
     private final DashboardListRepository lists;
@@ -102,8 +100,7 @@ public class DirectorDashboardService {
             }
             long days = DashboardLabels.waitDays(row.waitingSince(), now);
             items.add(new PendingRequisitionItem(code, row.title(), department, row.requesterName(),
-                    row.numberOfPositions(), RequisitionLabels.hiringType(row.hiringType()),
-                    HIRING_TYPE_REPLACEMENT.equals(row.hiringType()), roundText,
+                    row.numberOfPositions(), roundText,
                     DashboardLabels.waitText(days), DashboardLabels.waitTone(days),
                     "/requisitions/" + row.requisitionId()));
         }

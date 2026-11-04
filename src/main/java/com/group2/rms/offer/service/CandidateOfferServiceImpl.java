@@ -229,8 +229,9 @@ public class CandidateOfferServiceImpl implements CandidateOfferService {
                     .intValue();
         }
 
-        String probDuration = (requisition != null && requisition.getProbationDays() != null)
-                ? requisition.getProbationDays() + " ngày"
+        // Thử việc của yêu cầu là chữ tự do ("2 tháng", "60 ngày"...); chưa có thì mặc định 60 ngày
+        String probDuration = (requisition != null && requisition.getProbationPeriod() != null)
+                ? requisition.getProbationPeriod()
                 : "60 ngày";
 
         String deptName = department != null ? department.getDepartmentName() : "Toàn công ty";

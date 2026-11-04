@@ -15,16 +15,9 @@
 .jp-form-page .jpf-source { display:flex; flex-wrap:wrap; justify-content:space-between; gap:var(--s3) var(--s6); margin-bottom:var(--s4);
     padding:var(--s4) var(--s5, 20px); border-left:4px solid var(--brand); }
 .jp-form-page .jpf-source-main { display:grid; gap:var(--s1); min-width:0; flex:1 1 360px; }
-.jp-form-page .jpf-source-title { font-size:var(--font-lg); font-weight:700; overflow-wrap:anywhere; }
 .jp-form-page .jpf-source-meta { display:flex; flex-wrap:wrap; gap:var(--s1) var(--s3); color:var(--muted); font-size:var(--font-sm); }
 .jp-form-page .jpf-code { padding:0 var(--s2); border:1px solid var(--line); border-radius:var(--radius-sm); font-family:ui-monospace, Consolas, monospace; font-size:var(--font-xs); }
 .jp-form-page .jpf-pno { color:var(--brand-dark); font-weight:700; }
-.jp-form-page .jpf-source-more summary { width:max-content; color:var(--brand-dark); font-size:var(--font-sm); font-weight:600; cursor:pointer; }
-.jp-form-page .jpf-source-more dl { display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:var(--s2) var(--s4); margin:var(--s2) 0 0; font-size:var(--font-sm); }
-.jp-form-page .jpf-source-more dt { color:var(--muted); font-size:var(--font-xs); }
-.jp-form-page .jpf-source-more dd { margin:0; font-weight:600; overflow-wrap:anywhere; white-space:pre-line; }
-.jp-form-page .jpf-wide { grid-column:1 / -1; }
-.jp-form-page .jpf-note { font-weight:400; }
 .jp-form-page .jpf-switch { display:grid; gap:var(--s1); align-content:start; min-width:min(320px, 100%); }
 
 /* ----- 3. Bố cục: soạn tin (trái) + xem trước (phải) ----- */
@@ -85,9 +78,9 @@
 .jp-form-page .jpf-chips button:hover { background:var(--brand-soft); }
 .jp-form-page .jpf-chips button:disabled { border-style:solid; border-color:var(--line); color:var(--muted); cursor:default; opacity:.6; }
 
-/* Hạn nộp + nút chọn nhanh */
-.jp-form-page .jpf-deadline { display:flex; flex-wrap:wrap; align-items:center; gap:var(--s2) var(--s3); }
-.jp-form-page .jpf-deadline .form-input { max-width:220px; }
+/* Số lượng + Hạn nộp cùng 1 hàng */
+.jp-form-page .jpf-pair { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:var(--s4); align-items:start; }
+.jp-form-page .jpf-pair--positions-deadline .jpf-short { max-width:none; }
 .jp-form-page .jpf-quick { display:flex; flex-wrap:wrap; gap:var(--s2); }
 .jp-form-page .jpf-quick button { padding:var(--s1) var(--s3); border:1px solid var(--line); border-radius:var(--radius-full); background:var(--surface); font-size:var(--font-sm); cursor:pointer; }
 .jp-form-page .jpf-quick button:hover { background:var(--surface-subtle); }
@@ -105,7 +98,9 @@
 .jp-form-page .jpf-facts dt { color:var(--muted); font-size:var(--font-xs); }
 .jp-form-page .jpf-facts dd { margin:0; font-weight:600; overflow-wrap:anywhere; }
 .jp-form-page .jpf-body { display:grid; gap:var(--s3); max-height:420px; overflow:auto; }
-.jp-form-page .jpf-body h4 { margin:0 0 var(--s1); font-size:var(--font-sm); }
+.jp-form-page .jpf-preview h4 { margin:0 0 var(--s1); padding-left:var(--s2); border-left:3px solid var(--brand); font-size:var(--font-sm); }
+.jp-form-page .jpf-body h5 { margin:var(--s2) 0 0; font-size:var(--font-xs); font-weight:600; }
+.jp-form-page .jpf-body h5:first-of-type { margin-top:0; }
 .jp-form-page .jpf-body p { margin:0; white-space:pre-line; overflow-wrap:anywhere; }
 .jp-form-page .jpf-body a { color:var(--brand-dark); overflow-wrap:anywhere; }
 .jp-form-page .jpf-empty { color:var(--muted); font-style:italic; }
@@ -125,8 +120,8 @@
     .jp-form-page form[data-tab="preview"] .jpf-main { display:none; }
 }
 @media (max-width:640px) {
+    .jp-form-page .jpf-pair { grid-template-columns:minmax(0,1fr); }
     .jp-form-page .jpf-sec { padding:var(--s4); }
-    .jp-form-page .jpf-source-more dl { grid-template-columns:repeat(2, minmax(0,1fr)); }
     .jp-form-page .jpf-actions { padding:var(--s3) var(--s4); }
     .jp-form-page .jpf-actions .btn { flex:1 1 auto; }
 }

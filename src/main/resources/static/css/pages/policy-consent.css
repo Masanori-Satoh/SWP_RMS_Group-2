@@ -1,0 +1,259 @@
+/* =============================================================================
+   POPUP ĐỒNG Ý ĐIỀU KHOẢN (fragments/ui/policy-consent-dialog.html)
+   Dùng ở cả landing (không nạp tokens.css / components.css) lẫn layout chung, nên chỉ dùng
+   token mà cả hai nơi đều có (topbar.css / landing.css khai báo) và tự định nghĩa nút.
+   ============================================================================= */
+.policy-consent {
+  width: calc(100% - 32px);
+  max-width: 560px;
+  max-height: calc(100dvh - 32px);
+  padding: 0;
+  border: 0;
+  border-radius: 16px;
+  overflow: hidden;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 15px;
+  line-height: 1.5;
+  text-align: left;
+}
+
+.policy-consent::backdrop {
+  background: color-mix(in srgb, var(--ink) 55%, transparent);
+  backdrop-filter: blur(2px);
+}
+
+.policy-consent__form {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100dvh - 32px - 56px);
+}
+
+.policy-consent__head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 26px 28px 22px;
+  background: var(--brand);
+  color: var(--surface);
+  text-align: center;
+}
+
+.policy-consent__title {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--surface);
+}
+
+.policy-consent__subtitle {
+  margin: 0;
+  font-size: 14px;
+  color: color-mix(in srgb, var(--surface) 85%, var(--brand));
+}
+
+.policy-consent__body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 22px 28px 8px;
+  overflow-y: auto;
+}
+
+.policy-consent__welcome {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 700;
+  text-align: center;
+  color: var(--ink);
+}
+
+.policy-consent__welcome span {
+  color: var(--brand-dark);
+}
+
+.policy-consent__desc {
+  margin: 0 0 4px;
+  color: var(--muted);
+  text-align: center;
+}
+
+.policy-consent__error {
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: var(--error-soft);
+  color: var(--error);
+  font-size: 14px;
+}
+
+.policy-consent__option {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1.5px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  cursor: pointer;
+}
+
+.policy-consent__option:has(input:checked) {
+  border-color: var(--brand);
+  background: var(--brand-soft);
+}
+
+.policy-consent__option:has(input:focus-visible) {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.policy-consent__option input {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  margin: 2px 0 0;
+  accent-color: var(--brand);
+  cursor: pointer;
+}
+
+.policy-consent__doc {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-weight: 600;
+  color: var(--brand-dark);
+  text-decoration: underline;
+}
+
+.policy-consent__doc:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.policy-consent__sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.policy-consent__note {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 16px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+
+.policy-consent__note svg {
+  flex-shrink: 0;
+}
+
+.policy-consent__note p {
+  margin: 0;
+  font-size: 14px;
+  color: var(--ink);
+}
+
+.policy-consent__actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 28px 4px;
+}
+
+.policy-consent__agree {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 240px;
+  height: 50px;
+  padding: 0 28px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--brand);
+  color: var(--surface);
+  font: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.policy-consent__agree:hover:not(:disabled) {
+  background: var(--brand-dark);
+}
+
+.policy-consent__agree:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.policy-consent__agree:disabled {
+  background: var(--line);
+  color: var(--muted);
+  cursor: not-allowed;
+}
+
+.policy-consent__hint {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.policy-consent__logout {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 28px 18px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.policy-consent__logout button {
+  padding: 4px;
+  border: 0;
+  background: none;
+  color: var(--brand-dark);
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.policy-consent__logout button:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+@media (max-width: 480px) {
+  .policy-consent__head {
+    padding: 18px 18px 16px;
+  }
+
+  .policy-consent__title {
+    font-size: 20px;
+  }
+
+  .policy-consent__body {
+    padding: 16px 16px 6px;
+  }
+
+  .policy-consent__actions {
+    padding: 12px 16px 4px;
+  }
+
+  .policy-consent__agree {
+    width: 100%;
+    min-width: 0;
+  }
+}

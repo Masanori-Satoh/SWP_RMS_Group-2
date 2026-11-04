@@ -59,6 +59,10 @@
             <div><a href="#main">Về đầu trang ↑</a></div>
         </div>
     </div>
+    <!-- Popup đồng ý Điều khoản & Chính sách bảo mật: ứng viên chưa đồng ý (PolicyConsentAdvice) -->
+    <th:block th:if="${policyConsentRequired}">
+        <th:block th:replace="~{fragments/ui/policy-consent-dialog :: dialog}"></th:block>
+    </th:block>
 </footer>
 </body>
 </html>

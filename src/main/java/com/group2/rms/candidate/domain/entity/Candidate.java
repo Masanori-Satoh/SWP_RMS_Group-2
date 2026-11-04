@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 /**
  * 3.11 Candidate - Hồ sơ ứng viên.
@@ -54,4 +55,8 @@ public class Candidate extends BaseEntity {
      */
     @Column(name = "CandidateSource", length = 50)
     private String candidateSource;
+
+    /** Lúc bấm "Tôi đồng ý" Điều khoản + Chính sách bảo mật; null = chưa đồng ý. */
+    @Column(name = "PolicyAgreedAt")
+    private LocalDateTime policyAgreedAt;
 }

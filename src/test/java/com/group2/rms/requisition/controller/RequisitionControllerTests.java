@@ -413,20 +413,20 @@ class RequisitionControllerTests {
 
         @Test
         @WithMockUser(username = "hm", roles = "HIRING_MANAGER")
-        @DisplayName("POST /requisitions/edit/{id} -> Thời gian thử việc PROBATION_MAX_DAYS + 1 thì báo lỗi ở ô thử việc, không gọi service")
-        void update_shouldShowFieldError_whenProbationIsOutOfRange() throws Exception {
+        @DisplayName("POST /requisitions/edit/{id} -> Thời gian thử việc dài quá PROBATION_CHAR_LIMIT thì báo lỗi ở ô thử việc, không gọi service")
+        void update_shouldShowFieldError_whenProbationIsTooLong() throws Exception {
                 mvc.perform(post("/requisitions/edit/10").with(csrf())
                                 .param("action", RequisitionValidator.ACTION_DRAFT).param("title", "Updated Title")
-                                .param("probationDays", String.valueOf(RequisitionValidator.PROBATION_MAX_DAYS + 1)))
+                                .param("probationPeriod", "x".repeat(RequisitionValidator.PROBATION_CHAR_LIMIT + 1)))
                                 .andExpect(status().isOk())
                                 .andExpect(view().name("requisitions/form"))
-                                .andExpect(model().attributeHasFieldErrors("form", "probationDays"));
+                                .andExpect(model().attributeHasFieldErrors("form", "probationPeriod"));
                 verify(service, never()).updateRequisition(any(), any());
         }
 
         @Test
         @WithMockUser(username = "hm", roles = "HIRING_MANAGER")
-        @DisplayName("POST /requisitions/create -> Gửi thêm trường lạ (hiringManager.userId) thì bị bỏ qua")
+        @DisplayName("POST /requisitions/create -> Trường lạ (hiringManager.userId) bị bỏ qua; đợt tuyển dụng HM nhập được nhận")
         void create_shouldIgnoreUnknownField_whenFormIsTampered() throws Exception {
                 // Arrange
                 when(service.createRequisition(any(RequisitionRequest.class))).thenReturn(10);
@@ -434,11 +434,11 @@ class RequisitionControllerTests {
                 // Act + Assert: không lỗi bind, service vẫn được gọi bình thường
                 mvc.perform(post("/requisitions/create").with(csrf())
                                 .param("action", RequisitionValidator.ACTION_DRAFT).param("title", "New Dev")
-                                .param("recruitmentRound", "99"))
+                                .param("hiringManager.userId", "1").param("recruitmentRound", "3"))
                                 .andExpect(status().is3xxRedirection());
                 ArgumentCaptor<RequisitionRequest> captor = ArgumentCaptor.forClass(RequisitionRequest.class);
                 verify(service).createRequisition(captor.capture());
-                assertEquals(null, captor.getValue().getRecruitmentRound(), "Số đợt không nằm trong whitelist của form");
+                assertEquals(3, captor.getValue().getRecruitmentRound(), "Đợt tuyển dụng do HM nhập tay");
         }
 
         @Test

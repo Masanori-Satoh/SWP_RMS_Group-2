@@ -1,6 +1,7 @@
 package com.group2.rms.admin.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import com.group2.rms.admin.entity.AuditLog;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -38,4 +39,8 @@ public interface AuditLogRepository extends JpaRepository<AuditLog, Long>, JpaSp
      * Lấy tất cả log theo entityName + entityId, sắp xếp mới nhất trước.
      */
     List<AuditLog> findByEntityNameAndEntityIdOrderByTimestampDesc(String entityName, String entityId);
+
+    /** Lần ghi gần nhất của một bản ghi, kèm người thực hiện (màn Tài liệu chính sách). */
+    @EntityGraph(attributePaths = "user")
+    Optional<AuditLog> findFirstByEntityNameAndEntityIdOrderByTimestampDesc(String entityName, String entityId);
 }

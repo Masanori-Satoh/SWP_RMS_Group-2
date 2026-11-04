@@ -526,7 +526,7 @@ Rule khác:
 - Chỉ tạo từ **yêu cầu `Approved`**, kiểm lại khi đăng.
 - Chỉ **HR** tạo / sửa / đăng / tạm dừng / đóng / xóa tin; HM, Director chỉ xem (không thấy tin nháp); System Admin không vào màn tin.
 - Thông tin yêu cầu nguồn hiển thị **chỉ đọc** và luôn nạp lại từ DB (không tin số gửi lên). "Lý do tuyển dụng" chỉ nội bộ, không copy sang tin, không hiện cho khách / ứng viên.
-- HR chỉ sửa trường thuộc bảng `JobPosting`: `PostingTitle`, `JobDescription`, `JobRequirements`, `Benefits`, `SalaryDisplay`, `NumberOfPositionsDisplay`, `WorkLocation`, `ApplicationDeadline`. Không nhập trực tiếp: `PostingStatus`, `PostingDate`, `CreatedBy`, `CreatedAt`, `UpdatedAt`, yêu cầu nguồn sau khi tạo.
+- HR chỉ sửa trường thuộc bảng `JobPosting`: `PostingTitle`, `JobDescription`, `JobRequirements`, `Benefits`, `SalaryDisplay`, `NumberOfPositionsDisplay`, `WorkLocation`, `WorkingHours`, `ApplicationDeadline`. Không nhập trực tiếp: `PostingStatus`, `PostingDate`, `CreatedBy`, `CreatedAt`, `UpdatedAt`, yêu cầu nguồn sau khi tạo.
 - **Lưu nháp:** `Draft`, `PostingDate = NULL`; vẫn bắt buộc Tiêu đề, Mô tả, Yêu cầu (NOT NULL).
 - **Đăng:** kiểm tra đầy đủ → yêu cầu nguồn vẫn `Approved` → `Published` → `PostingDate` = giờ server → hạn nộp bắt buộc và sau `PostingDate` (`CK_JobPosting_Deadline`) → audit → thông báo HM.
 - Sửa tin **không** sửa ngược yêu cầu.

@@ -62,12 +62,6 @@ public class JobRequisition extends BaseEntity {
     @JoinColumn(name = "OriginalRequisitionId", referencedColumnName = "RequisitionId")
     private JobRequisition originalRequisition;
 
-    /**
-     * New, Replacement (NULL = chưa xác định)
-     */
-    @Column(name = "HiringType", length = 20)
-    private String hiringType;
-
     @Column(name = "NumberOfPositions", nullable = false)
     private Integer numberOfPositions;
 
@@ -100,12 +94,14 @@ public class JobRequisition extends BaseEntity {
 
     @Column(name = "RequiredGender", nullable = false, length = 20)
     private String gender;
+
     @Column(name = "WorkLocation", length = 255)
     private String workLocation;
     @Column(name = "WorkModel", nullable = false, length = 20)
     private String workModel;
-    @Column(name = "ProbationDays")
-    private Integer probationDays;
+    // Thời gian thử việc dạng chữ ("2 tháng", "Thỏa thuận"); NULL = không thử việc
+    @Column(name = "ProbationPeriod", length = 100)
+    private String probationPeriod;
     @Column(name = "SubmittedAt")
     private java.time.LocalDateTime submittedAt;
     // Cột có trong DB nhưng luồng requisition hiện chưa ghi (không có trạng thái đóng yêu cầu)

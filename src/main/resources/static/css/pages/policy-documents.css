@@ -1,0 +1,78 @@
+/* =============================================================================
+   ADMIN · TÀI LIỆU CHÍNH SÁCH (templates/admin/policy-documents.html) — tiền tố pdoc-
+   ============================================================================= */
+.pdoc-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+.pdoc-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s3);
+  padding: var(--s4) var(--s5);
+  border-bottom: 1px solid var(--line);
+}
+
+.pdoc-card-head h2 {
+  margin: 0;
+}
+
+.pdoc-table td {
+  vertical-align: middle;
+}
+
+.pdoc-name,
+.pdoc-file {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.pdoc-sub {
+  display: block;
+  margin: 0;
+  font-size: var(--font-sm);
+  color: var(--muted);
+}
+
+.pdoc-actions-col {
+  text-align: right;
+}
+
+.pdoc-actions {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.pdoc-actions .btn + .btn {
+  margin-left: var(--s2);
+}
+
+.pdoc-note {
+  margin: var(--s4) 0 0;
+  padding: var(--s3) var(--s4);
+  font-size: var(--font-sm);
+  color: var(--muted);
+}
+
+.pdoc-dialog {
+  max-width: 540px;
+}
+
+.pdoc-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+  margin-bottom: var(--s4);
+}
+
+.pdoc-error {
+  margin: 0;
+  font-size: var(--font-sm);
+  color: var(--error);
+}
+
+.pdoc-warning {
+  margin-bottom: var(--s4);
+}
