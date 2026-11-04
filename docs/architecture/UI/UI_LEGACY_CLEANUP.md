@@ -40,11 +40,8 @@
 
 | File | Đang dùng bởi | Xóa khi |
 |---|---|---|
-| `templates/fragments/sidebar.html` (chỉ còn cầu nối: `workspace(menu, role)` → `sidebar-shell :: shell`) | `hello.html` (demo) và test (`SidebarMenuTests`, `SidebarRoleWebTests`, probe trong `src/test/resources`). Không còn trang nội bộ nào | Xóa cùng lúc sửa các test đó và xóa `hello.html` |
-| `templates/fragments/head.html` → `globalHead` | `auth/fragments.html` | Các trang auth chuyển sang `layout/auth` |
-| `templates/fragments/head.html` → `head` (main.css) | `hello.html` | Xóa trang demo `hello.html` + `demo/TestWebController` (hỏi team) |
+| `templates/fragments/sidebar.html` (chỉ còn cầu nối: `workspace(menu, role)` → `sidebar-shell :: shell`) | Test (`SidebarMenuTests`, `SidebarRoleWebTests`, probe trong `src/test/resources`). Không còn trang nào (`hello.html` đã xóa 04/11) | Xóa cùng lúc sửa các test đó |
 | `static/css/interface.css` (gồm khối cầu nối phân trang ở cuối file, bản sao mục L `components.css`, giữ khớp bằng `LegacyPaginationBridgeTests`), `static/css/design-tokens.css` | `auth/fragments`, `careers.css` (`@import design-tokens`). `interface.css` hiện không template nào nạp (`interfaceHead` đã xóa 28/10) | `globalHead` đã bị xóa và `careers.css` bị xóa |
-| `static/css/main.css` | `fragments/head :: head` (chỉ `hello.html`) | `hello.html` bị xóa |
 | `templates/fragments/pagination.html` (adapter `paged(page, baseUrl)`, `pager(...)`) | `admin/accounts/{list,candidates}`, `requisitions/list`, `offers/list`, `job-postings/list` | Các trang này dùng `fragments/ui/pagination :: paged(page)` (Controller trả `Page<T>`) |
 | File CSS phẳng của trang (`offers.css`, `requisition-*.css`…) | Trang tương ứng | **Không xóa** — chỉ dọn phần trùng catalog khi migrate. Trang mới mới dùng `css/pages/`. |
 

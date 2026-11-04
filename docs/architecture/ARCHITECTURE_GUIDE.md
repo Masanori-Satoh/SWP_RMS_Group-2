@@ -58,7 +58,6 @@ src/main/java/com/group2/rms/
 | `notification` | Thông báo trong ứng dụng | `/notifications/**` | `notifications/list` |
 | `dashboard` | Bảng điều khiển theo vai trò (nội bộ + ứng viên) | `/dashboard` | `dashboard/index` (+ `dashboard/candidate` là fragment) |
 | `admin` | Giám sát API, health check, audit log, system config | `/admin/api-monitoring/**` | `admin/api-monitoring/index` |
-| `demo` | Controller thử kết nối DB/web. **Không phải nghiệp vụ** (xem mục 8) | `/test-db`, `/test-web` | `hello` |
 
 ### 1.2. Chiều phụ thuộc giữa các module (thực tế)
 
@@ -276,8 +275,8 @@ Code cũ chạy được, **chưa cần sửa ngay**. Khi viết code mới thì
 | 3 | `offer` có cả endpoint form lẫn JSON cho cùng thao tác tạo/sửa | Giữ một cách (mục 2.1) |
 | 5 | `core/exception/FormErrorViewHelper` (rỗng), `user/exception/AccountConflictException` không ai dùng | Xóa |
 | 6 | Hai `NotificationService` trùng tên (`notification` và `offer.service`) | Gộp về module `notification` |
-| 8 | Package `demo` (`/test-db`, `/test-web`, `hello.html`), `templates/careers/*` không còn dùng | Xóa (xem `UI/UI_LEGACY_CLEANUP.md`) |
-| 9 | Không còn trang nội bộ nào dựng khung cũ (`interfaceHead` đã gỡ 28/10). Còn `fragments/sidebar` (chỉ `hello.html` demo và test dùng), `interface.css`, `design-tokens.css` | Xóa theo `UI/UI_LEGACY_CLEANUP.md` mục 3. Menu đã về **một nguồn**: `fragments/sidebar :: workspace` chuyển tiếp sang `sidebar-shell`, thêm menu chỉ sửa `fragments/layout/sidebars/*.html` |
+| 8 | `templates/careers/*` không còn dùng (package `demo`, `hello.html` đã xóa 04/11) | Xóa (xem `UI/UI_LEGACY_CLEANUP.md`) |
+| 9 | Không còn trang nội bộ nào dựng khung cũ (`interfaceHead` đã gỡ 28/10). Còn `fragments/sidebar` (chỉ test dùng), `interface.css`, `design-tokens.css` | Xóa theo `UI/UI_LEGACY_CLEANUP.md` mục 3. Menu đã về **một nguồn**: `fragments/sidebar :: workspace` chuyển tiếp sang `sidebar-shell`, thêm menu chỉ sửa `fragments/layout/sidebars/*.html` |
 | 10 | Module `candidate` chưa có controller/service; bước ứng tuyển dừng ở `ITERATION_2_PENDING` | Iteration 2 |
 | 11 | Còn 4 chỗ `@Autowired` field; test đặt tên lẫn `*Test`/`*Tests` | Code mới: `@RequiredArgsConstructor` + `private final`; test tên `*Tests` |
 
