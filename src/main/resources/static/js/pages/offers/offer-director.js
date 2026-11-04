@@ -165,21 +165,11 @@ function submitDirectorDecision() {
         btn.innerHTML = '<span class="ofw-spinner-sm" aria-hidden="true"></span> Đang xử lý...';
     }
 
-    const csrf = (typeof getCsrfInfo === 'function') ? getCsrfInfo() : { token: '', header: 'X-CSRF-TOKEN' };
     const url = actionType === 'APPROVE' ? `/offers/${offerId}/approve` : `/offers/${offerId}/reject`;
 
-    fetch(url, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': csrf.token || ''
-        },
-        body: JSON.stringify({ comments: comments })
-    })
-        .then(async (res) => {
-            let data;
-            try { data = await res.json(); } catch (e) { }
-            if (!res.ok) {
+    postDirectorDecision(url, comments)
+        .then(({ res, data }) => {
+            if (!res.ok || !data?.success) {
                 throw new Error(data?.message || 'Có lỗi xảy ra khi xử lý quyết định.');
             }
             return data;
@@ -356,14 +346,14 @@ function submitDirectorDecisionFromScreen(offerId, action) {
             if (descEl) descEl.innerText = `Bạn có chắc chắn muốn từ chối đề xuất #${offerId}?`;
             rejectDialog.showModal();
         } else {
-            executeDirectorDecisionApi(offerId, `/offers/${offerId}/reject`, comments);
+            executeDirectorDecisionApi(`/offers/${offerId}/reject`, comments);
         }
     } else if (action === 'APPROVE') {
         const approveDialog = document.getElementById('directorApproveConfirmDialog');
         if (approveDialog && typeof approveDialog.showModal === 'function') {
             approveDialog.showModal();
         } else {
-            executeDirectorDecisionApi(offerId, `/offers/${offerId}/approve`, comments || 'Phê duyệt trực tiếp');
+            executeDirectorDecisionApi(`/offers/${offerId}/approve`, comments || 'Phê duyệt trực tiếp');
         }
     }
 }
@@ -374,7 +364,7 @@ function confirmDirectorApproveAction() {
 
     if (pendingDirectorDecision && pendingDirectorDecision.offerId) {
         const { offerId, comments } = pendingDirectorDecision;
-        executeDirectorDecisionApi(offerId, `/offers/${offerId}/approve`, comments || 'Phê duyệt trực tiếp');
+        executeDirectorDecisionApi(`/offers/${offerId}/approve`, comments || 'Phê duyệt trực tiếp');
     }
 }
 
@@ -391,14 +381,14 @@ function confirmDirectorRejectAction() {
 
     if (pendingDirectorDecision && pendingDirectorDecision.offerId) {
         const { offerId, comments } = pendingDirectorDecision;
-        executeDirectorDecisionApi(offerId, `/offers/${offerId}/reject`, comments);
+        executeDirectorDecisionApi(`/offers/${offerId}/reject`, comments);
     }
 }
 
 /**
  * Gửi yêu cầu AJAX POST JSON tới /offers/{id}/approve hoặc /offers/{id}/reject
  */
-function executeDirectorDecisionApi(offerId, url, comments) {
+async function postDirectorDecision(url, comments) {
     const csrf = (typeof getCsrfInfo === 'function') ? getCsrfInfo() : { token: '', header: 'X-CSRF-TOKEN' };
     const headers = {
         'Content-Type': 'application/json',
@@ -408,22 +398,25 @@ function executeDirectorDecisionApi(offerId, url, comments) {
         headers[csrf.header] = csrf.token;
     }
 
-    fetch(url, {
+    const res = await fetch(url, {
         method: 'POST',
-        headers: headers,
-        body: JSON.stringify({ comments: comments })
-    })
-        .then(async res => {
-            let data = null;
-            try {
-                const contentType = res.headers.get('content-type');
-                if (contentType && contentType.includes('application/json')) {
-                    data = await res.json();
-                }
-            } catch (e) {
-                console.warn('Cannot parse JSON response from director decision API:', e);
-            }
+        headers,
+        body: JSON.stringify({ comments })
+    });
+    let data = null;
+    if (res.headers.get('content-type')?.includes('application/json')) {
+        try {
+            data = await res.json();
+        } catch (error) {
+            console.warn('Cannot parse JSON response from director decision API:', error);
+        }
+    }
+    return { res, data };
+}
 
+function executeDirectorDecisionApi(url, comments) {
+    postDirectorDecision(url, comments)
+        .then(({ res, data }) => {
             if (res.ok && data?.success) {
                 try {
                     sessionStorage.setItem(OFFER_PENDING_TOAST_KEY, JSON.stringify({
