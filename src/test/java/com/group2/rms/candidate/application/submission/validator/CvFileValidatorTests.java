@@ -1,5 +1,6 @@
-package com.group2.rms.candidate.application.submission;
+package com.group2.rms.candidate.application.submission.validator;
 
+import com.group2.rms.candidate.application.submission.exception.ApplicationSubmissionException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;

@@ -17,6 +17,12 @@ public final class ListFilters {
     /** Từ khóa tìm kiếm dài hơn thế này bị cắt bớt, tránh câu LIKE quá dài. */
     public static final int MAX_KEYWORD_LENGTH = 120;
 
+    /**
+     * Collation của SQL Server so sánh không phân biệt hoa thường và dấu: "nguyen" khớp "Nguyễn", "dien" khớp "điện".
+     * Dùng cho ô tìm kiếm tên người, tên tin: {@code collate(field as Latin1_General_100_CI_AI) like :pattern escape '\'}.
+     */
+    public static final String ACCENT_INSENSITIVE = "Latin1_General_100_CI_AI";
+
     private ListFilters() {
         // Chỉ chứa hàm static, không tạo đối tượng
     }
