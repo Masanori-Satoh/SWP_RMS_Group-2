@@ -33,8 +33,8 @@ import java.util.stream.Collectors;
 
 /**
  * Đơn của chính ứng viên đang đăng nhập ("Đơn của tôi": danh sách, chi tiết, xem lại CV) và rút đơn (UC 39).
- * Rút đơn: schema không có trạng thái {@code Withdrawn} nên đơn chuyển {@code Rejected}
- * và ghi một dòng {@code AuditLog} để phân biệt "đã rút" với "bị loại".
+ * Rút đơn: đơn chuyển {@code Withdrawn}, kèm một dòng {@code AuditLog} ghi đơn đang ở trạng thái nào và lúc nào
+ * (nhật ký, không phải nơi suy ra trạng thái).
  */
 @Service
 @RequiredArgsConstructor
@@ -159,7 +159,7 @@ public class MyApplicationService {
             throw new ApplicationWithdrawalException(
                     "Hồ sơ đã qua vòng sơ tuyển nên không thể rút. Vui lòng liên hệ bộ phận tuyển dụng.");
         }
-        if (applications.transition(applicationId, WITHDRAWABLE_STATUSES, ApplicationStatusService.REJECTED) == 0) {
+        if (applications.transition(applicationId, WITHDRAWABLE_STATUSES, ApplicationStatusService.WITHDRAWN) == 0) {
             throw new ApplicationWithdrawalException("Hồ sơ vừa được cập nhật. Vui lòng tải lại trang.");
         }
         applications.recordWithdrawal(user.getUserId(), applicationId, status);

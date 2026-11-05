@@ -176,7 +176,9 @@ public final class MyApplicationJourney {
     private static Status status(Facts facts, LocalDateTime now) {
         Offer offer = facts.offer();
         return switch (facts.applicationStatus()) {
-            case "Rejected" -> stopped(facts);
+            case "Rejected" -> rejected(facts);
+            case "Withdrawn" -> withdrawn(facts);
+            case "Cancelled" -> cancelled(facts);
             case "Hired" -> new Status(Round.HIRED, Mode.FINISHED, "Đã nhận việc", "Chúc mừng bạn!", "success",
                     offer == null ? null : "Xem thư mời", offerHref(offer));
             case "Offered" -> offered(offer);
@@ -187,26 +189,34 @@ public final class MyApplicationJourney {
         };
     }
 
-    /** Đơn {@code Rejected}: vì sao dừng và dừng ở bước nào. */
-    private static Status stopped(Facts facts) {
-        Optional<Mark> withdrawn = mark(facts, WITHDRAWN);
-        if (withdrawn.isPresent()) {
-            LocalDateTime at = withdrawn.get().at();
-            String note = at == null ? "Bạn đã rút hồ sơ." : "Bạn đã rút hồ sơ ngày " + at.format(DAY_MONTH) + ".";
-            return new Status(roundWhenStopped(facts, withdrawn.get().oldStatus()), Mode.STOPPED, "Đã tự rút hồ sơ",
-                    note, "neutral", null, null);
-        }
-        Optional<Mark> closed = mark(facts, POSTING_CLOSED);
-        if (closed.isPresent()) {
-            return new Status(roundWhenStopped(facts, closed.get().oldStatus()), Mode.STOPPED, "Vị trí đã ngừng tuyển",
-                    "Công ty đã ngừng tuyển vị trí này nên hồ sơ của bạn dừng lại. Bạn có thể ứng tuyển vị trí khác.",
-                    "neutral", "Xem vị trí đang tuyển", JOBS_HREF);
-        }
+    /**
+     * Đơn {@code Withdrawn} (ứng viên tự dừng): từ chối thư mời, hoặc rút hồ sơ. Trạng thái quyết định đơn dừng
+     * vì sao; dấu {@code Withdrawn} trong {@code AuditLog} chỉ cho biết ngày rút và bước đang đứng.
+     */
+    private static Status withdrawn(Facts facts) {
         Offer offer = facts.offer();
         if (offer != null && "Declined".equals(offer.status())) {
             return new Status(Round.OFFER, Mode.STOPPED, "Đã từ chối thư mời", null, "neutral",
                     "Xem thư mời", offerHref(offer));
         }
+        Optional<Mark> withdrawn = mark(facts, WITHDRAWN);
+        LocalDateTime at = withdrawn.map(Mark::at).orElse(null);
+        String note = at == null ? "Bạn đã rút hồ sơ." : "Bạn đã rút hồ sơ ngày " + at.format(DAY_MONTH) + ".";
+        return new Status(roundWhenStopped(facts, withdrawn.map(Mark::oldStatus).orElse(null)), Mode.STOPPED,
+                "Đã tự rút hồ sơ", note, "neutral", null, null);
+    }
+
+    /** Đơn {@code Cancelled}: tin bị đóng. Dấu {@code PostingClosed} cho biết bước đang đứng lúc đóng. */
+    private static Status cancelled(Facts facts) {
+        Optional<Mark> closed = mark(facts, POSTING_CLOSED);
+        return new Status(roundWhenStopped(facts, closed.map(Mark::oldStatus).orElse(null)), Mode.STOPPED,
+                "Vị trí đã ngừng tuyển",
+                "Công ty đã ngừng tuyển vị trí này nên hồ sơ của bạn dừng lại. Bạn có thể ứng tuyển vị trí khác.",
+                "neutral", "Xem vị trí đang tuyển", JOBS_HREF);
+    }
+
+    /** Đơn {@code Rejected} (công ty loại): dừng sau phỏng vấn hay sau vòng CV. */
+    private static Status rejected(Facts facts) {
         if (hasActiveInterview(facts.interviews())) {
             return new Status(Round.INTERVIEW, Mode.STOPPED, "Không đạt phỏng vấn",
                     "Cảm ơn bạn đã tham gia phỏng vấn.", "danger", null, null);

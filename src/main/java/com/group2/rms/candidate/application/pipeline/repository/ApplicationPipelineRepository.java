@@ -117,9 +117,6 @@ public interface ApplicationPipelineRepository extends org.springframework.data.
                 String getActor();
         }
 
-        @Query(value = "select count(*) from AuditLog where EntityName = 'Application' and EntityId = cast(:id as nvarchar(50)) and NewValue = 'PostingClosed'", nativeQuery = true)
-        int countPostingClosure(@Param("id") Integer applicationId);
-
         /** Một mốc đọc từ bảng của module khác: thời điểm + trạng thái gốc. */
         interface TimelineEventRow {
                 LocalDateTime getAt();

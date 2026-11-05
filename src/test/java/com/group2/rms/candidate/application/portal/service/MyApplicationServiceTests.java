@@ -63,7 +63,7 @@ class MyApplicationServiceTests {
     void listGroupsFactsByApplicationAndShowsCandidateStatus() {
         LocalDateTime nextMonth = LocalDateTime.now().plusMonths(1).withHour(10).withMinute(0);
         when(myApplications.findOwnedByUserId(USER_ID)).thenReturn(List.of(
-                application(1, "Applied"), application(2, "Rejected"), application(3, "Rejected"),
+                application(1, "Applied"), application(2, "Withdrawn"), application(3, "Rejected"),
                 application(4, "Interviewing"), application(5, "Hired")));
         when(myApplications.findMyInterviews(USER_ID)).thenReturn(List.of(
                 new InterviewRow(4, nextMonth, "Online_GoogleMeet", "Scheduled", LocalDateTime.of(2026, 10, 4, 9, 0)),
@@ -107,7 +107,7 @@ class MyApplicationServiceTests {
     @Test
     void applicationWithNewInterviewComesBeforeRecentlyWithdrawnOne() {
         LocalDateTime now = LocalDateTime.now();
-        when(myApplications.findOwnedByUserId(USER_ID)).thenReturn(List.of(application(44, "Rejected"), application(210, "Interviewing")));
+        when(myApplications.findOwnedByUserId(USER_ID)).thenReturn(List.of(application(44, "Withdrawn"), application(210, "Interviewing")));
         when(myApplications.findMyInterviews(USER_ID)).thenReturn(List.of(
                 new InterviewRow(210, now.plusHours(22), "Offline_Office", "Scheduled", now.minusMinutes(30))));
         when(myApplications.findMyApplicationMarks(USER_ID)).thenReturn(List.of(
@@ -137,7 +137,7 @@ class MyApplicationServiceTests {
 
     @Test
     void cardCarriesDepartmentCodeCvAndWhetherThePostingIsStillPublic() {
-        Application closedPosting = application(42, "Rejected");
+        Application closedPosting = application(42, "Cancelled");
         closedPosting.getJobPosting().setPostingStatus("Closed");
         Application noCv = application(7, "Applied");
         noCv.setAppliedCvUrl(" ");
@@ -263,9 +263,9 @@ class MyApplicationServiceTests {
 
     @ParameterizedTest
     @ValueSource(strings = {"Applied"})
-    void withdrawRejectsEarlyApplicationAndRecordsWithdrawal(String status) {
+    void withdrawMovesEarlyApplicationToWithdrawnAndRecordsWithdrawal(String status) {
         when(myApplications.findOwnedById(ID, USER_ID)).thenReturn(Optional.of(application(ID, status)));
-        when(applications.transition(ID, MyApplicationService.WITHDRAWABLE_STATUSES, "Rejected")).thenReturn(1);
+        when(applications.transition(ID, MyApplicationService.WITHDRAWABLE_STATUSES, "Withdrawn")).thenReturn(1);
 
         String title = service.withdraw(ID);
 
@@ -274,7 +274,7 @@ class MyApplicationServiceTests {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"HR_Passed", "HM_Passed", "Interviewing", "Offered", "Hired", "Rejected"})
+    @ValueSource(strings = {"HR_Passed", "HM_Passed", "Interviewing", "Offered", "Hired", "Rejected", "Withdrawn", "Cancelled"})
     void withdrawIsRefusedAfterScreening(String status) {
         when(myApplications.findOwnedById(ID, USER_ID)).thenReturn(Optional.of(application(ID, status)));
 
@@ -287,7 +287,7 @@ class MyApplicationServiceTests {
     @Test
     void withdrawFailsWhenHrActedFirst() {
         when(myApplications.findOwnedById(ID, USER_ID)).thenReturn(Optional.of(application(ID, "Applied")));
-        when(applications.transition(ID, MyApplicationService.WITHDRAWABLE_STATUSES, "Rejected")).thenReturn(0);
+        when(applications.transition(ID, MyApplicationService.WITHDRAWABLE_STATUSES, "Withdrawn")).thenReturn(0);
 
         ApplicationWithdrawalException error = assertThrows(ApplicationWithdrawalException.class,
                 () -> service.withdraw(ID));

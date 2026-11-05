@@ -81,7 +81,7 @@ class MyApplicationJourneyTests {
 
         @Test
         void row06_withdrawn_stopsAtTheStepItWasInWithWithdrawalDate() {
-            View view = resolve(facts("Rejected").marks(mark("Withdrawn", "Applied", LocalDateTime.of(2026, 10, 5, 14, 0))));
+            View view = resolve(facts("Withdrawn").marks(mark("Withdrawn", "Applied", LocalDateTime.of(2026, 10, 5, 14, 0))));
 
             assertStatus(view, "Đã tự rút hồ sơ", "Bạn đã rút hồ sơ ngày 05/10.", "neutral", null, null);
             assertSteps(view, "done", "upcoming", "upcoming", "upcoming");
@@ -107,7 +107,7 @@ class MyApplicationJourneyTests {
 
         @Test
         void row08_offerDeclined_stopsAtOffer() {
-            View view = resolve(facts("Rejected").interviews(completed()).offer(offer(7, "Declined")));
+            View view = resolve(facts("Withdrawn").interviews(completed()).offer(offer(7, "Declined")));
 
             assertStatus(view, "Đã từ chối thư mời", null, "neutral", "Xem thư mời", "/portal/offers/7");
             assertSteps(view, "done", "done", "done", "upcoming");
@@ -115,7 +115,7 @@ class MyApplicationJourneyTests {
 
         @Test
         void row08_postingClosed_pointsToOpenJobs() {
-            View view = resolve(facts("Rejected").marks(mark("PostingClosed", "Applied", PAST)));
+            View view = resolve(facts("Cancelled").marks(mark("PostingClosed", "Applied", PAST)));
 
             assertStatus(view, "Vị trí đã ngừng tuyển",
                     "Công ty đã ngừng tuyển vị trí này nên hồ sơ của bạn dừng lại. Bạn có thể ứng tuyển vị trí khác.",
@@ -136,7 +136,7 @@ class MyApplicationJourneyTests {
     class Edges {
         @Test
         void withdrawalWinsOverOtherReasons() {
-            View view = resolve(facts("Rejected").interviews(completed())
+            View view = resolve(facts("Withdrawn").interviews(completed())
                     .marks(mark("Withdrawn", "Applied", PAST), mark("PostingClosed", "Applied", PAST)));
 
             assertEquals("Đã tự rút hồ sơ", view.statusLabel());
@@ -149,10 +149,35 @@ class MyApplicationJourneyTests {
             assertEquals("Đã nộp CV", view.statusLabel());
         }
 
+        /** Trạng thái là nguồn sự thật: dấu trong AuditLog không biến đơn bị công ty loại thành đơn tự rút. */
+        @Test
+        void rejectedApplicationIsNotReadFromWithdrawalMark() {
+            View view = resolve(facts("Rejected").marks(mark("Withdrawn", "Applied", PAST)));
+
+            assertEquals("Không đạt vòng CV", view.statusLabel());
+        }
+
+        @Test
+        void withdrawnWithoutAuditMarkStillSaysWithdrawn() {
+            View view = resolve(facts("Withdrawn"));
+
+            assertStatus(view, "Đã tự rút hồ sơ", "Bạn đã rút hồ sơ.", "neutral", null, null);
+            assertSteps(view, "done", "upcoming", "upcoming", "upcoming");
+        }
+
+        @Test
+        void cancelledWithoutAuditMarkStillSaysPostingClosed() {
+            View view = resolve(facts("Cancelled"));
+
+            assertEquals("Vị trí đã ngừng tuyển", view.statusLabel());
+            assertTrue(view.ended());
+            assertTrue(view.stopped());
+        }
+
         /** Chuẩn bị cho PR 4 (rút được tới trước thư mời): bước dừng lấy từ trạng thái ngay trước khi rút. */
         @Test
         void withdrawalDuringInterviewRoundStopsAtInterview() {
-            View view = resolve(facts("Rejected").interviews(new Interview(FUTURE, "Offline_Office", "Cancelled"))
+            View view = resolve(facts("Withdrawn").interviews(new Interview(FUTURE, "Offline_Office", "Cancelled"))
                     .marks(mark("Withdrawn", "Interviewing", PAST)));
 
             assertSteps(view, "done", "done", "upcoming", "upcoming");
@@ -207,7 +232,7 @@ class MyApplicationJourneyTests {
     class ClosedPosting {
         @Test
         void closedWhileWaitingForInterview_stopsAtInterviewThoughTheScheduleWasCancelled() {
-            View view = resolve(facts("Rejected")
+            View view = resolve(facts("Cancelled")
                     .interviews(new Interview(FUTURE, "Offline_Office", "Cancelled"))
                     .marks(mark("PostingClosed", "Interviewing", PAST)));
 
@@ -217,14 +242,14 @@ class MyApplicationJourneyTests {
         /** L6: HM đạt mà chưa có lịch thì ứng viên chưa được báo gì, nên đơn vẫn dừng ở Nộp CV. */
         @Test
         void closedAfterHmPassedWithoutSchedule_stopsAtSubmit() {
-            View view = resolve(facts("Rejected").marks(mark("PostingClosed", "HM_Passed", PAST)));
+            View view = resolve(facts("Cancelled").marks(mark("PostingClosed", "HM_Passed", PAST)));
 
             assertSteps(view, "done", "upcoming", "upcoming", "upcoming");
         }
 
         @Test
         void closedAfterOfferWasSent_stopsAtOffer() {
-            View view = resolve(facts("Rejected").interviews(completed()).offer(offer(3, "Sent_Candidate"))
+            View view = resolve(facts("Cancelled").interviews(completed()).offer(offer(3, "Sent_Candidate"))
                     .marks(mark("PostingClosed", "Offered", PAST)));
 
             assertSteps(view, "done", "done", "done", "upcoming");
@@ -232,7 +257,7 @@ class MyApplicationJourneyTests {
 
         @Test
         void completedInterviewCountsEvenWhenStatusBeforeCloseIsEarlier() {
-            View view = resolve(facts("Rejected").interviews(completed())
+            View view = resolve(facts("Cancelled").interviews(completed())
                     .marks(mark("PostingClosed", "HR_Passed", PAST)));
 
             assertSteps(view, "done", "done", "upcoming", "upcoming");
@@ -240,7 +265,7 @@ class MyApplicationJourneyTests {
 
         @Test
         void missingStatusBeforeCloseFallsBackToFacts() {
-            View view = resolve(facts("Rejected").marks(mark("PostingClosed", null, PAST)));
+            View view = resolve(facts("Cancelled").marks(mark("PostingClosed", null, PAST)));
 
             assertSteps(view, "done", "upcoming", "upcoming", "upcoming");
         }
@@ -313,7 +338,7 @@ class MyApplicationJourneyTests {
 
         @Test
         void stoppedApplicationIsNeverUrgent() {
-            assertNotUrgent(resolve(facts("Rejected").offer(sent(NOW.plusDays(2)))
+            assertNotUrgent(resolve(facts("Cancelled").offer(sent(NOW.plusDays(2)))
                     .marks(mark("PostingClosed", "Offered", PAST))));
         }
 
@@ -340,7 +365,7 @@ class MyApplicationJourneyTests {
         void hiredOrStoppedApplicationIsEnded() {
             assertTrue(resolve(facts("Hired")).ended());
             assertTrue(resolve(facts("Rejected")).ended());
-            assertTrue(resolve(facts("Rejected").marks(mark("Withdrawn", "Applied", PAST))).ended());
+            assertTrue(resolve(facts("Withdrawn").marks(mark("Withdrawn", "Applied", PAST))).ended());
         }
     }
 
@@ -404,7 +429,7 @@ class MyApplicationJourneyTests {
 
         @Test
         void endedApplicationsAreLastGroupWhateverHappenedRecently() {
-            View withdrawn = resolve(facts("Rejected").marks(mark("Withdrawn", "Applied", NOW.minusMinutes(5))));
+            View withdrawn = resolve(facts("Withdrawn").marks(mark("Withdrawn", "Applied", NOW.minusMinutes(5))));
             View hired = resolve(facts("Hired").offer(offer(8, "Accepted")));
 
             assertEquals(MyApplicationJourney.PRIORITY_ENDED, withdrawn.priority());
@@ -415,7 +440,7 @@ class MyApplicationJourneyTests {
         @Test
         void onlyApplicationsStoppedHalfwayAreMarkedStopped() {
             assertTrue(resolve(facts("Rejected")).stopped());
-            assertTrue(resolve(facts("Rejected").marks(mark("Withdrawn", "Applied", PAST))).stopped());
+            assertTrue(resolve(facts("Withdrawn").marks(mark("Withdrawn", "Applied", PAST))).stopped());
             assertFalse(resolve(facts("Hired")).stopped());
             assertFalse(resolve(facts("Applied")).stopped());
         }
@@ -425,7 +450,7 @@ class MyApplicationJourneyTests {
     class Journey {
         @Test
         void milestonesAreOldestFirstWithCandidateWording() {
-            View view = resolve(facts("Rejected")
+            View view = resolve(facts("Withdrawn")
                     .interviews(new Interview(LocalDateTime.of(2026, 10, 8, 9, 0), "Online_GoogleMeet", "Cancelled"),
                             new Interview(LocalDateTime.of(2026, 10, 9, 9, 0), "Offline_Office", "Rescheduled"),
                             new Interview(LocalDateTime.of(2026, 10, 11, 9, 0), "Offline_Office", "Completed"))
@@ -442,9 +467,9 @@ class MyApplicationJourneyTests {
             assertEquals(List.of("Đã nộp hồ sơ", "Bạn đã nhận lời"),
                     titles(resolve(facts("Hired").offer(offer(8, "Accepted")))));
             assertEquals(List.of("Đã nộp hồ sơ", "Đã rút hồ sơ"),
-                    titles(resolve(facts("Rejected").marks(mark("Withdrawn", "Applied", PAST)))));
+                    titles(resolve(facts("Withdrawn").marks(mark("Withdrawn", "Applied", PAST)))));
             assertEquals(List.of("Đã nộp hồ sơ", "Vị trí đã ngừng tuyển"),
-                    titles(resolve(facts("Rejected").marks(mark("PostingClosed", "Applied", PAST)))));
+                    titles(resolve(facts("Cancelled").marks(mark("PostingClosed", "Applied", PAST)))));
         }
 
         @Test

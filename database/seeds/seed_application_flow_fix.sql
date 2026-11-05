@@ -1,6 +1,7 @@
 -- =============================================================================
 -- RMS - SEED SỬA: ĐƯA TRẠNG THÁI HỒ SƠ VỀ ĐÚNG LUỒNG
--- Chạy SAU: database/schema/db.sql -> database/seeds/seed_data.sql
+-- Chạy SAU: database/schema/db.sql (CHECK đã có Withdrawn/Cancelled; DB cũ chạy migration 019 trước)
+--           -> database/seeds/seed_data.sql
 --           -> database/seeds/seed_extra_jobs_and_pipeline.sql
 -- Chỉ UPDATE Application.ApplicationStatus (+ UpdatedAt). Không đổi schema, không thêm/xóa dòng.
 -- Chạy lại nhiều lần an toàn: chỉ sửa hồ sơ đang lệch, lần sau không còn dòng nào để sửa.
@@ -11,13 +12,13 @@
 -- Quy tắc (dòng khớp đầu tiên thắng), áp cho hồ sơ đang ở
 -- HM_Passed, HM_Suggested, Interviewing, Offered, Hired hoặc Rejected:
 --   1. Offer Accepted                      -> Hired
---   2. Offer Declined                      -> Rejected
+--   2. Offer Declined                      -> Withdrawn (ứng viên tự dừng, không phải công ty loại)
 --   3. Offer Sent_Candidate                -> Offered
 --   4. Kết quả phỏng vấn mới nhất Failed   -> Rejected
 --   5. Có lịch phỏng vấn (chưa Cancelled)  -> Interviewing
 --   6. Còn lại                             -> giữ nguyên
--- Bỏ qua: hồ sơ ứng viên đã rút (AuditLog NewValue = 'Withdrawn') và hồ sơ bị
--- HR/HM chấm Fail ở vòng CV (Rejected hợp lệ).
+-- Bỏ qua: hồ sơ ứng viên đã rút (AuditLog NewValue = 'Withdrawn'), hồ sơ bị HR/HM chấm Fail ở vòng CV
+-- (Rejected hợp lệ), và hồ sơ đã Withdrawn/Cancelled (không nằm trong danh sách trạng thái xét bên dưới).
 -- "Lịch mới nhất" = InterviewSchedule có StartTime lớn nhất, InterviewStatus <> 'Cancelled'.
 -- Không dùng ID cố định: mọi điều kiện tra theo dữ kiện của bảng.
 -- =============================================================================
@@ -64,7 +65,7 @@ target AS (
     SELECT ApplicationId, CurrentStatus,
            CASE
                WHEN OfferStatus = N'Accepted'       THEN N'Hired'
-               WHEN OfferStatus = N'Declined'       THEN N'Rejected'
+               WHEN OfferStatus = N'Declined'       THEN N'Withdrawn'
                WHEN OfferStatus = N'Sent_Candidate' THEN N'Offered'
                WHEN FinalDecision = N'Failed'       THEN N'Rejected'
                WHEN LatestInterviewId IS NOT NULL   THEN N'Interviewing'

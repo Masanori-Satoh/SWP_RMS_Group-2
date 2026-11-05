@@ -345,7 +345,9 @@ CREATE TABLE Application (
             N'Interviewing',
             N'Offered',
             N'Hired',
-            N'Rejected'
+            N'Rejected',   -- công ty đánh trượt
+            N'Withdrawn',  -- ứng viên tự dừng: rút đơn, từ chối offer (migration 019)
+            N'Cancelled'   -- đơn dừng vì tin tuyển dụng bị đóng (migration 019)
         ))
 );
 GO
