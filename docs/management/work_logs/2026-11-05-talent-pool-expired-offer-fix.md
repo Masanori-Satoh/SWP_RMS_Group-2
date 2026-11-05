@@ -1,7 +1,7 @@
 # Work log — sửa Offer quá hạn chặn đóng tin
 
 - Ngày: 05/11/2026.
-- Người thực hiện: LinhDN (hỗ trợ triển khai bằng Codex).
+- Người thực hiện: LinhDN.
 - Yêu cầu: sửa điều kiện chặn đóng tin trong Talent Pool và test liên quan; tạo báo cáo và work log riêng.
 - [Báo cáo](../../members/linhdn/2026-11-05-talent-pool-expired-offer-fix.md).
 

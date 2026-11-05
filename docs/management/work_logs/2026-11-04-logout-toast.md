@@ -1,6 +1,6 @@
 # Thông báo sau đăng xuất — 2026-11-04
 
-- Người thực hiện: LinhDN (hỗ trợ bởi Codex).
+- Người thực hiện: LinhDN.
 - Yêu cầu: hiển thị thông báo nổi “Bạn đã đăng xuất” thay vì chỉ chuyển tới màn hình đăng nhập.
 - Trạng thái khi bắt đầu: đích logout trong source đã được đổi thành `/login` sau lượt sửa trước; giữ màn hình này và đổi thành `/login?logout` để kích hoạt thông báo.
 - Mã nguồn: `SecurityConfig` gửi dấu hiệu logout tới trang đăng nhập; `auth/login.html` dùng fragment `flashToast` cùng CSS/JS có sẵn, thay cho dòng thông báo trong thẻ form. Toast tự ẩn sau 3 giây, tạm dừng khi hover/focus và có nút đóng. `auth.css` đặt toast dưới thanh đầu trang trên màn hình nhỏ.

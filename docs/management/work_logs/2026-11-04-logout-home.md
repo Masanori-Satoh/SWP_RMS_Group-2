@@ -1,6 +1,6 @@
 # Đăng xuất về trang chủ — 2026-11-04
 
-- Người thực hiện: LinhDN (hỗ trợ bởi Codex).
+- Người thực hiện: LinhDN.
 - Yêu cầu: người dùng gặp trang 403 tại `/logout` và muốn đăng xuất về trang chủ.
 - Mã nguồn: đổi `SecurityConfig.logoutSuccessUrl` từ `/login?logout` thành `/`. Form dùng POST với `th:action`, được Thymeleaf tích hợp CSRF; giữ bảo vệ CSRF.
 - Chẩn đoán: request logout thiếu/sai CSRF bị chặn trước khi đến logout handler. Session/token cũ sau restart là một khả năng; chưa có request/log của lần lỗi trong ảnh để xác nhận nguyên nhân cụ thể.
