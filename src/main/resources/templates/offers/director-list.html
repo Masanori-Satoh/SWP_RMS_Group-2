@@ -105,6 +105,7 @@
                         th:text="'Ứng viên đã nhận việc (' + ${statusCounts != null ? (statusCounts['Accepted'] ?: 0) : 0} + ')'">Ứng viên đã nhận việc (0)</option>
                 <option value="Declined" th:selected="${currentStatus == 'Declined'}"
                         th:text="'Ứng viên từ chối (' + ${statusCounts != null ? (statusCounts['Declined'] ?: 0) : 0} + ')'">Ứng viên từ chối (0)</option>
+                <option value="Expired" th:selected="${currentStatus == 'Expired'}">Đã quá hạn phản hồi</option>
                 <option value="Director_Rejected" th:selected="${currentStatus == 'Director_Rejected' or currentStatus == 'Rejected'}"
                         th:text="'Giám đốc từ chối (' + ${statusCounts != null ? (statusCounts['Director_Rejected'] ?: 0) : 0} + ')'">Giám đốc từ chối (0)</option>
             </select>

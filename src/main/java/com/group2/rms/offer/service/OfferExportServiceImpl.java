@@ -291,6 +291,7 @@ public class OfferExportServiceImpl implements OfferExportService {
             case "director_approved", "approved" -> "Giám đốc đã duyệt";
             case "director_rejected", "rejected" -> "Giám đốc từ chối";
             case "sent_candidate" -> "Đã gửi thư mời";
+            case "expired" -> "Đã quá hạn phản hồi";
             case "accepted" -> "Ứng viên đã nhận việc";
             case "declined" -> "Ứng viên từ chối";
             case "canceled", "cancelled" -> "Đã hủy";

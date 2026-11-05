@@ -1,6 +1,6 @@
 # Học luồng Offer Management — HuyenPT
 
-Tài liệu mô tả hành vi đang có trong mã nguồn sau commit `78a99cbb`. Các mục “đề xuất” chưa được triển khai trong lần thêm comment này. Dùng tài liệu cùng comment tiếng Việt tại controller, service, repository và JavaScript; không học chỉ từ tên nút trên giao diện.
+Tài liệu được cập nhật theo 5 phase bảo toàn form, chuẩn hóa tài khoản, dọn truy vấn và quản lý hết hạn Offer. Mục đề xuất cần đọc cùng ghi chú đã/chưa triển khai. Dùng tài liệu cùng comment tiếng Việt tại controller, service, repository và JavaScript; không học chỉ từ tên nút trên giao diện.
 
 ## 1. Nắm ba vai trò trước
 
@@ -21,6 +21,7 @@ Tài liệu mô tả hành vi đang có trong mã nguồn sau commit `78a99cbb`.
 | Director duyệt | Director_Approved | Giữ nguyên |
 | Director từ chối đề xuất | Director_Rejected | Giữ nguyên, không tự chuyển hồ sơ thành Rejected |
 | HR phát hành | Sent_Candidate | Cập nhật có điều kiện sang Offered |
+| Job chốt quá hạn (khi được bật) | Expired | Giữ nguyên; không tự kết thúc hồ sơ |
 | Ứng viên nhận | Accepted | Yêu cầu chuyển Offered → Hired |
 | Ứng viên từ chối | Declined | Yêu cầu chuyển Offered → Withdrawn |
 
@@ -28,7 +29,7 @@ Tài liệu mô tả hành vi đang có trong mã nguồn sau commit `78a99cbb`.
 
 Hai chuỗi Approved/Rejected cũ còn được hỗ trợ ở một số chỗ để đọc dữ liệu tương thích. Không tự đổi tên trạng thái, cột DB hoặc biến template khi thống nhất cách gọi UI.
 
-`ApplicationStatusService.onOfferAnswered` chỉ đổi hồ sơ nếu hồ sơ còn Offered; hiện tại không ném lỗi khi số dòng cập nhật bằng 0. Vì vậy bảng trên mô tả chuyển trạng thái mong muốn, không phải bảo đảm rằng mọi thay đổi đồng thời của hồ sơ đều đã được chặn.
+Offer hiện dùng query transition sẵn có của ApplicationRepository và bắt buộc cập nhật đúng 1 dòng từ Offered. Nếu không đạt, giao dịch rollback cả phản hồi Offer. Không sửa mã ApplicationStatusService của người phụ trách hồ sơ.
 
 ## 3. Bản đồ gọi hàm cần nhớ
 
@@ -102,7 +103,7 @@ Các con số trong bảng là giới hạn phần mềm đang áp dụng, khôn
 
 Vì sao vừa đọc kiểm tra vừa UPDATE có điều kiện? Hai request có thể cùng đọc Pending_Director; điều kiện trong UPDATE mới quyết định request nào được ghi. Đây là kiểm tra-và-cập nhật nguyên tử, thường gọi CAS.
 
-Lý do từ chối của Director bắt buộc ở `OfferController.rejectOfferJson`; DTO giới hạn tối đa 2.000 ký tự. Hiện service dùng chung chưa tự kiểm tra lý do trống nếu bị gọi trực tiếp bằng Java. Không học nhầm rằng service đã bao hết điều kiện này.
+Lý do từ chối của Director bắt buộc ở `OfferController.rejectOfferJson`; DTO giới hạn tối đa 2.000 ký tự. Service hiện cũng bắt buộc lý do khác trống và giới hạn 2.000 ký tự để bảo vệ lời gọi Java trực tiếp.
 
 Thẻ “đã duyệt/từ chối” của Director đếm log của chính người đó; bộ đếm trạng thái của danh sách đếm vòng đời Offer. Nhóm “đã duyệt” trên danh sách Director gồm cả Sent_Candidate/Accepted/Declined; bộ lọc Approved của HR/Excel không có nghĩa nhóm rộng như vậy.
 
@@ -120,15 +121,15 @@ Thông báo trong ứng dụng của các đường HR tạo/trình/phát hành 
 
 ## 9. Ứng viên xem và trả lời
 
-Query chỉ lấy thư mời thuộc UserId đang đăng nhập, thuộc Sent_Candidate/Accepted/Declined. ID của người khác không được xem; đổi ID trên URL không cấp thêm quyền. Xem chi tiết còn đánh dấu thông báo đã đọc.
+Query chỉ lấy thư mời thuộc UserId đang đăng nhập, thuộc Sent_Candidate/Accepted/Declined/Expired, chưa xóa mềm. Expired chỉ được xem, không được phản hồi. ID của người khác không được xem; đổi ID trên URL không cấp thêm quyền. Xem chi tiết còn đánh dấu thông báo đã đọc.
 
 `answer` nhận cả hai trường hợp: accepted=true để nhận; false để từ chối. Lý do từ chối của ứng viên tùy chọn, được trim và giới hạn 1.000 ký tự. Khác với lý do bắt buộc của Director.
 
 `requireAnswerable` yêu cầu còn Sent_Candidate, không qua hạn trả lời và không qua ngày bắt đầu. Sau đó `answerIfSent` chỉ cập nhật khi trạng thái vẫn Sent_Candidate. Hai lần bấm nhận/từ chối gần nhau không được ghi đè câu trả lời trước.
 
-Ví dụ: nhận thành công rồi bấm từ chối phải lỗi; thời điểm lớn hơn hạn phải lỗi; bằng đúng hạn chưa bị chặn bởi isAfter; ngày bắt đầu bằng hôm nay chưa bị chặn bởi điều kiện “ngày bắt đầu trước hôm nay”. Điều kiện thời gian hiện được đọc trước UPDATE, chưa nằm trong chính UPDATE.
+Ví dụ: nhận thành công rồi bấm từ chối phải lỗi; thời điểm lớn hơn hạn phải lỗi; bằng đúng hạn chưa bị chặn bởi isAfter; ngày bắt đầu bằng hôm nay chưa bị chặn bởi điều kiện “ngày bắt đầu trước hôm nay”. UPDATE hiện kiểm tra lại hạn, ngày bắt đầu, chủ sở hữu, xóa mềm và hồ sơ còn Offered. Mốc xét hạn là thời gian server truyền ngay trước UPDATE, không phải thời điểm commit hay đồng hồ trình duyệt.
 
-Hết hạn không tự ghi Expired vào DB và không tự đóng Application. `isResponseExpiredAt` tính nhãn/quyền bấm; `initCountdowns` chỉ cập nhật chữ đếm ngược. Đổi đồng hồ hoặc sửa DOM không bỏ được kiểm tra server.
+Khi được bật, OfferExpirationJob chạy mỗi 60 giây và cập nhật Sent_Candidate đã quá hạn thành Expired; không đổi Application. UI vẫn tính quá hạn tức thời trong lúc chờ job. `initCountdowns` chỉ cập nhật chữ; UPDATE bảo vệ thao tác ghi. Job tắt mặc định cho đến khi Application được duyệt hỗ trợ Expired.
 
 ## 10. Excel và JavaScript
 
@@ -149,7 +150,7 @@ Giữ tên code bằng tiếng Anh theo quy ước dự án, giải thích ý ng
 | decideOffer | Ghi quyết định của Giám đốc | recordDirectorDecision |
 | answer | Ứng viên trả lời thư mời | respondToOffer |
 | requireAnswerable | Kiểm tra còn được phản hồi | validateCandidateResponse |
-| resolveProposedBy | Helper tìm người thực hiện, còn fallback cũ | Dùng CurrentUserService.requireUser; không chỉ đổi tên rồi giữ fallback |
+| resolveProposedBy | Helper cũ đã được loại bỏ | Đã dùng CurrentUserService.requireUser và bỏ helper fallback |
 | mapToResponse / toResponse | Biến entity thành dữ liệu cho UI | Giữ tên hiện tại, đọc danh sách trường DTO |
 | loadLatestApprovals | Lấy quyết định mới nhất theo từng Offer | Giữ tên; nhớ “sắp giảm dần → giữ phần tử đầu của từng ID” |
 
@@ -157,20 +158,21 @@ Với stream lọc ứng viên, đọc theo bốn bước: lấy Application →
 
 Với điều kiện hết hạn, có thể đặt hai biến `responseDeadlinePassed` và `startDatePassed`, rồi trả về `isSent && (responseDeadlinePassed || startDatePassed)`. Đây là đề xuất cách trình bày; không được đổi isAfter thành bằng-hoặc-lớn-hơn hoặc bỏ ngoặc nhóm OR.
 
-## 12. Tối ưu còn hợp lý — đề xuất riêng, không trộn vào comment
+## 12. Những điểm đã tối ưu và phần còn mở
 
-| Ưu tiên | Bằng chứng hiện tại | Đề xuất và kiểm thử cần có |
+| Trạng thái | Nội dung | Hành vi hiện tại / bước tiếp |
 |---|---|---|
-| Cao | initOfferForm gọi handleSelectPassedCandidate khi select có giá trị; hàm này gán lương gợi ý kể cả ô đã có dữ liệu | Tách thao tác “khởi tạo lại form” khỏi “người dùng đổi ứng viên”; test form lỗi giữ nguyên mức lương đã nhập |
-| Cao | autoCalculateProbationSalary dùng Math.round; input cho phép step=any | Chốt cách xử lý phần lẻ; nếu chọn số VNĐ nguyên không dưới 85%, cân nhắc Math.ceil. Ví dụ 10.000.004 × 85% = 8.500.003,4 nhưng Math.round gợi ý 8.500.003, thấp hơn mức kiểm tra server |
-| Cao | resolveProposedBy vẫn có fallback lấy user đầu tiên; reject lý do trống chỉ chặn ở controller | Dùng CurrentUserService và đưa kiểm tra nghiệp vụ bắt buộc xuống service; test tài khoản thiếu/không hoạt động, lời gọi Java trực tiếp |
-| Vừa | listOffers HR vẫn lấy passedCandidates nhưng hiện chỉ form.html dùng model này trong các template Offer | Xác minh cả fragment/test/consumer rồi bỏ truy vấn/model không cần ở danh sách; giữ nguyên dữ liệu ở form. Không tự đổi biến binding của form |
-| Vừa | validateProbationSalaryRule chỉ còn định nghĩa; luật lương đang nằm trong validateOfferBusinessRules | Xác minh caller rồi bỏ helper chết; không tạo thêm validator class chỉ để dời vài dòng |
-| Vừa | Mở lại form tạo khi lỗi dựng model lặp ở nhiều nhánh catch | Tách helper private dựng model form trong controller hiện có, giữ DTO/errors/isLockedCandidate/fixedCandidate |
-| Cần chốt nghiệp vụ | Tạo đề xuất chấp nhận bất kỳ kết quả Passed trong lịch sử; trang chi tiết lại hiển thị kết quả phỏng vấn mới nhất | Chốt “có Passed” hay “kết quả mới nhất Passed” trước khi sửa, không coi hai cách tương đương |
-| Cần kiểm thử đồng thời | Hạn trả lời kiểm tra trước UPDATE; ApplicationStatusService bỏ qua transition 0 dòng | Thiết kế điều kiện cập nhật nhất quán cho thời gian/hồ sơ; phối hợp chủ module hồ sơ nếu cần sửa phần dùng chung |
+| Đã xử lý | Form bị gán lại lương khi dựng lại | Khởi tạo chỉ dựng preview; gợi ý chỉ điền ô trống khi chọn ứng viên, không làm mất phần lẻ lương gợi ý |
+| Đã xử lý | Làm tròn gợi ý thử việc | Làm tròn lên tới 2 chữ số thập phân theo DECIMAL(18,2); BigDecimal ở server vẫn là kiểm tra quyết định |
+| Đã xử lý | Tài khoản và lý do Director từ chối | CurrentUserService bắt buộc tài khoản Active; service tự chặn lý do null/trống và quá 2.000 ký tự |
+| Đã xử lý | Query dropdown dư ở danh sách HR | Không đọc ứng viên đủ điều kiện ở trang list; giữ model tương thích, form vẫn lấy đủ dữ liệu |
+| Đã xử lý | Helper validation không có caller | Đã bỏ validateProbationSalaryRule; validateOfferBusinessRules giữ luật lương đang dùng |
+| Đã xử lý | Phản hồi nguyên tử và hồ sơ xung đột | UPDATE kiểm tra chủ sở hữu, trạng thái, xóa mềm, hạn/ngày bắt đầu và hồ sơ Offered; transition hồ sơ 0 dòng thì rollback Offer |
+| Chuẩn bị xong, chưa bật job | Offer Expired | Migration, nhãn/filter/Excel và job đã có; job tắt mặc định chờ Dũng LT cập nhật Application theo tài liệu bàn giao |
+| Đề xuất tiếp | Dựng model form lặp ở nhiều catch | Có thể tách helper private trong controller, giữ nguyên DTO/errors/isLockedCandidate/fixedCandidate |
+| Cần chốt nghiệp vụ | Có bất kỳ Passed hay kết quả mới nhất Passed | Tạo đề xuất hiện dùng anyMatch Passed; không tự thay bằng kết quả mới nhất vì hai luật không tương đương |
 
-Đây là thứ tự ưu tiên để bàn tiếp, không phải danh sách lỗi đã được sửa trong commit tài liệu này. Không đổi database, quyền Director, trạng thái hoặc loại khóa chỉ để giảm dòng code. Comment làm tăng số dòng văn bản nhưng không tăng số file production hay thay đổi thuật toán.
+Không đổi database, quyền Director, trạng thái hoặc loại khóa chỉ để giảm dòng code. Comment tăng số dòng văn bản nhưng không tăng thuật toán. Phần Application/TalentPool không được sửa trong 5 phase này theo quyết định của người dùng.
 
 ## 13. Tự trả lời khi bảo vệ bài
 
@@ -180,9 +182,17 @@ Với điều kiện hết hạn, có thể đặt hai biến `responseDeadlineP
 4. **Tại sao có kiểm tra ở JS, DTO và service?** Phản hồi tức thời, kiểm tra request, bảo vệ nghiệp vụ là ba trách nhiệm khác nhau.
 5. **Tại sao email lỗi mà Offer vẫn Sent_Candidate?** Phát hành trên cổng đã commit; email là tác vụ sau commit với kết quả riêng.
 6. **Tại sao Director Rejected không làm Application Rejected?** Một cái từ chối đề xuất đãi ngộ, một cái kết thúc hồ sơ tuyển dụng.
-7. **Tại sao ứng viên từ chối thành Withdrawn?** Theo ApplicationStatusService, đây là ứng viên tự dừng, khác công ty loại hồ sơ.
+7. **Tại sao ứng viên từ chối thành Withdrawn?** Offer giữ quy tắc ứng viên tự dừng của Application; không coi là công ty loại hồ sơ.
 8. **Tại sao không thay UPDATE có điều kiện bằng save?** Có nguy cơ ghi đè một thay đổi đồng thời vừa được lưu.
 9. **Tại sao không gộp mọi filter Approved?** Director có nhóm lịch sử đã duyệt rộng hơn HR/Excel.
-10. **Hết hạn có tự đóng đơn không?** Hiện chưa; nhãn quá hạn và điều kiện trả lời không phải job cập nhật trạng thái.
+10. **Hết hạn có tự đóng đơn không?** Không. Job (khi bật) chỉ đổi Offer sang Expired; Application giữ nguyên.
 
 Thứ tự học: bảng vai trò/trạng thái → tạo và nháp → quyết định Director → phát hành/email → ứng viên trả lời → Excel → các cơ chế khóa/CAS/afterCommit. Mỗi tính năng tập nói được bốn ý: ai gọi, điều kiện trước, dữ liệu đổi, kết quả/lỗi trả về.
+
+## 14. Triển khai Expired an toàn
+
+- Chạy migration 021 trước khi bật job. Script chỉ mở rộng CHECK hiện hữu, không cập nhật dữ liệu Offer/Application.
+- Job tắt mặc định; bật bằng `--app.offer.expiration.enabled=true` sau khi 4 điểm đọc trạng thái trong Application được duyệt tương thích.
+- Không bật chỉ vì migration đã chạy: ApplicationProgressResolver và MyApplicationRepository/MyApplicationJourney cũ chưa hiểu Expired, có thể mất nhãn/timeline.
+- Dù job tắt, API vẫn chặn phản hồi quá hạn; khi job bật, candidate vẫn xem được Expired nhưng không trả lời được.
+- Hai request/job tranh chấp đều UPDATE có điều kiện trạng thái; kết quả đã Accepted/Declined không bị job ghi đè. Không tự gia hạn, phát hành lại hoặc đóng tin tuyển dụng.

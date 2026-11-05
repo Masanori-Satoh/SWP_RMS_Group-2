@@ -64,7 +64,7 @@ public class OfferProposal extends BaseEntity {
     private User proposedBy;
 
     /**
-     * Draft, Pending_Director, Director_Approved, Director_Rejected, Sent_Candidate, Accepted, Declined
+     * Draft, Pending_Director, Director_Approved, Director_Rejected, Sent_Candidate, Expired, Accepted, Declined
      */
     @Column(name = "OfferStatus", nullable = false, length = 40)
     private String offerStatus;
@@ -82,11 +82,11 @@ public class OfferProposal extends BaseEntity {
     @Builder.Default
     private Boolean isDeleted = false;
     /**
-     * Hết hạn chỉ khi Offer đang Sent_Candidate và đã qua hạn phản hồi HOẶC qua ngày bắt đầu dự kiến.
+     * Expired là hết hạn đã lưu; Sent_Candidate cũng coi là hết hạn nếu đã qua mốc thời gian, dù job chưa chạy.
      * Dùng chung cho nhãn quá hạn của HR/ứng viên; chỉ tính toán, không thay đổi dữ liệu database.
      */
     public boolean isResponseExpiredAt(LocalDateTime now) {
-        return "Sent_Candidate".equals(offerStatus)
+        return "Expired".equals(offerStatus) || "Sent_Candidate".equals(offerStatus)
                 && (responseDeadline != null && now.isAfter(responseDeadline)
                     || expectedStartDate != null && expectedStartDate.isBefore(now.toLocalDate()));
     }

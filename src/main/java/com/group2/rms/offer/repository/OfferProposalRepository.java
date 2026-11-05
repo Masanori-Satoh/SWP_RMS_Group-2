@@ -39,6 +39,18 @@ public interface OfferProposalRepository extends JpaRepository<OfferProposal, In
             + "AND (o.isDeleted IS NULL OR o.isDeleted = false)")
     List<Integer> findActiveApplicationIds(@Param("ids") List<Integer> ids);
 
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+            UPDATE OfferProposal o SET o.offerStatus = 'Expired', o.updatedAt = CURRENT_TIMESTAMP
+            WHERE o.offerStatus = 'Sent_Candidate' AND (o.isDeleted IS NULL OR o.isDeleted = false)
+                AND ((o.responseDeadline IS NOT NULL AND o.responseDeadline < :now)
+                    OR (o.expectedStartDate IS NOT NULL AND o.expectedStartDate < :today))
+            """)
+    int expireDue(@Param("now") java.time.LocalDateTime now, @Param("today") java.time.LocalDate today);
+
+    @Query("SELECT COUNT(o) FROM OfferProposal o WHERE (o.isDeleted IS NULL OR o.isDeleted = false) AND o.offerStatus = 'Expired'")
+    long countExpired();
+
     /**
      * Bộ lọc HR/Excel: luôn loại bản ghi xóa mềm, chuẩn hóa tên trạng thái cũ/mới và tìm theo tên/vị trí.
      * ListFilters escape các ký tự %, _ và [ để tìm đúng ký tự người dùng nhập, không coi chúng là mẫu LIKE.

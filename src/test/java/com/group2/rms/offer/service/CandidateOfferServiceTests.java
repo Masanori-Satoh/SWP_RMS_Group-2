@@ -44,6 +44,20 @@ class CandidateOfferServiceTests {
     private CandidateOfferServiceImpl service;
 
     @Test
+    void persistedExpiredOfferRemainsVisibleButCannotBeAnswered() {
+        OfferProposal expired = offer(OFFER_ID, "Expired");
+        when(offers.findVisibleByUserId(eq(USER_ID), anyCollection())).thenReturn(List.of(expired));
+        when(offers.findVisibleById(eq(OFFER_ID), eq(USER_ID), anyCollection())).thenReturn(Optional.of(expired));
+        assertTrue(service.list().getFirst().isExpired());
+        assertFalse(service.list().getFirst().canRespond());
+        assertTrue(service.getDetail(OFFER_ID).isExpired());
+        assertFalse(service.getDetail(OFFER_ID).canRespond());
+        assertThrows(OfferResponseException.class, () -> service.accept(OFFER_ID));
+        assertThrows(OfferResponseException.class, () -> service.decline(OFFER_ID));
+        verify(offers, never()).answerIfEligible(anyInt(), anyInt(), anyString(), nullable(String.class), any(), any());
+    }
+
+    @Test
     void applicationConflictAbortsTheAnswerBeforeNotifications() {
         when(offers.findVisibleById(eq(OFFER_ID), eq(USER_ID), anyCollection()))
                 .thenReturn(Optional.of(offer(OFFER_ID, "Sent_Candidate")));
@@ -80,7 +94,7 @@ class CandidateOfferServiceTests {
     void listAsksOnlyForOffersAlreadySentToTheCandidate() {
         service.list();
 
-        verify(offers).findVisibleByUserId(USER_ID, java.util.Set.of("Sent_Candidate", "Accepted", "Declined"));
+        verify(offers).findVisibleByUserId(USER_ID, java.util.Set.of("Sent_Candidate", "Accepted", "Declined", "Expired"));
     }
 
     @Test

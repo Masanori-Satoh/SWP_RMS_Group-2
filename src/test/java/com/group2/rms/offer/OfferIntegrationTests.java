@@ -136,6 +136,24 @@ class OfferIntegrationTests {
         when(userRepository.findByUsernameIgnoreCase("admin")).thenReturn(Optional.of(adminUser));
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {"HR", "DIRECTOR"})
+    void expiredOffersRenderWithTheirOwnFilterAndLabel(String role) throws Exception {
+        var page = new PageImpl<>(List.of(OfferResponse.builder().offerId(42)
+                .offerStatus("Expired").responseExpired(true).offeredPositionTitle("Test position").build()));
+        when(offerService.getAllOffersForHr(any(), any(), any(), any())).thenReturn(page);
+        when(offerService.getDirectorOffers(any(), any(), any(), any())).thenReturn(page);
+        when(offerService.getOfferStats()).thenReturn(Map.of());
+        when(offerService.getDirectorOfferStats()).thenReturn(Map.of());
+        when(offerService.getDirectorStatusCounts()).thenReturn(Map.of("Expired", 1L));
+        mvc.perform(get("/offers").param("status", "Expired")
+                        .with(user("HR".equals(role) ? "hr_specialist" : "director_user").roles(role)))
+                .andExpect(status().isOk())
+                .andExpect(model().attribute("currentStatus", "Expired"))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("value=\"Expired\"")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Đã quá hạn phản hồi")));
+    }
+
     @Test
     @DisplayName("IT-01 GET /offers: Danh sách Offer trả về View offers/list và HTTP 200")
     @WithMockUser(username = "hr_specialist", roles = {"HR"})

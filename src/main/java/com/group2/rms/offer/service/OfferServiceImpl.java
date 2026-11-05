@@ -82,7 +82,7 @@ public class OfferServiceImpl implements OfferService {
      */
     public static final Set<String> LOCKED_STATUSES = Set.of(
             "Draft", "Pending_Director", "Approved", "Director_Approved", "Sent_Candidate", "Accepted",
-            "Rejected", "Director_Rejected", "Declined", "Canceled", "Voided");
+            "Rejected", "Director_Rejected", "Declined", "Expired", "Canceled", "Voided");
 
     // Hai helper trạng thái tương thích cũ chưa có caller trong production hiện tại; luồng ghi kiểm tra trực tiếp bên dưới.
     public static boolean isOverridableStatus(String status) {
@@ -859,6 +859,7 @@ public class OfferServiceImpl implements OfferService {
         counts.put("Pending_Director", offerProposalRepository.countPendingDirector());
         counts.put("Director_Approved", offerProposalRepository.countDirectorApproved());
         counts.put("Sent_Candidate", offerProposalRepository.countSentCandidate());
+        counts.put("Expired", offerProposalRepository.countExpired());
         counts.put("Accepted", offerProposalRepository.countAccepted());
         counts.put("Declined", offerProposalRepository.countDeclined());
         counts.put("Director_Rejected", offerProposalRepository.countDirectorRejected());
@@ -932,7 +933,8 @@ public class OfferServiceImpl implements OfferService {
                             builder.equal(builder.lower(root.get("offerStatus")), "approved"),
                             builder.equal(builder.lower(root.get("offerStatus")), "sent_candidate"),
                             builder.equal(builder.lower(root.get("offerStatus")), "accepted"),
-                            builder.equal(builder.lower(root.get("offerStatus")), "declined")
+                            builder.equal(builder.lower(root.get("offerStatus")), "declined"),
+                            builder.equal(builder.lower(root.get("offerStatus")), "expired")
                     ));
                 } else if ("Director_Rejected".equalsIgnoreCase(s) || "Rejected".equalsIgnoreCase(s)) {
                     predicates.add(builder.or(

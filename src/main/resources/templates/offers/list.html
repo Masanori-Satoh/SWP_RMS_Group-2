@@ -119,6 +119,7 @@
                 <option value="Draft" th:selected="${currentStatus == 'Draft'}">Bản nháp</option>
                 <option value="Pending_Director" th:selected="${currentStatus == 'Pending_Director'}">Chờ Giám đốc duyệt</option>
                 <option value="Director_Approved" th:selected="${currentStatus == 'Director_Approved' or currentStatus == 'Approved'}">Giám đốc đã duyệt</option>
+                <option value="Expired" th:selected="${currentStatus == 'Expired'}">Đã quá hạn phản hồi</option>
                 <option value="Director_Rejected" th:selected="${currentStatus == 'Director_Rejected' or currentStatus == 'Rejected'}">Giám đốc từ chối</option>
                 <option value="Sent_Candidate" th:selected="${currentStatus == 'Sent_Candidate'}">Đã gửi thư mời</option>
                 <option value="Accepted" th:selected="${currentStatus == 'Accepted'}">Ứng viên đã nhận việc</option>

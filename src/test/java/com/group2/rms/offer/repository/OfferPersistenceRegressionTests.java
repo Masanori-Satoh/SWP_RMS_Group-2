@@ -49,7 +49,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 /** Opt-in SQL Server regression tests. Schema creation is restricted to a dedicated temporary database. */
 @DataJpaTest(showSql = false)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@Import({com.group2.rms.core.security.CurrentUserService.class, OfferServiceImpl.class, com.group2.rms.offer.service.CandidateOfferServiceImpl.class, com.group2.rms.offer.service.OfferExportServiceImpl.class, ClockConfig.class, SchemaNamingConfig.class})
+@Import({com.group2.rms.offer.service.OfferExpirationJob.class, com.group2.rms.core.security.CurrentUserService.class, OfferServiceImpl.class, com.group2.rms.offer.service.CandidateOfferServiceImpl.class, com.group2.rms.offer.service.OfferExportServiceImpl.class, ClockConfig.class, SchemaNamingConfig.class})
 @EnabledIfSystemProperty(named = "offer.integration.url", matches = ".*databaseName=OfferRegression_[a-f0-9]{32};.*")
 class OfferPersistenceRegressionTests {
     @DynamicPropertySource
@@ -61,6 +61,7 @@ class OfferPersistenceRegressionTests {
         properties.add("spring.datasource.url", () -> url);
         properties.add("spring.jpa.hibernate.ddl-auto", () -> "create-drop");
         properties.add("spring.sql.init.mode", () -> "never");
+        properties.add("app.offer.expiration.enabled", () -> "true");
         properties.add("spring.jpa.properties.hibernate.generate_statistics", () -> "true");
         properties.add("logging.level.org.hibernate.engine.internal.StatisticalLoggingSessionEventListener", () -> "OFF");
     }
@@ -69,6 +70,7 @@ class OfferPersistenceRegressionTests {
     @Autowired OfferService service;
     @Autowired OfferProposalRepository proposalRepository;
     @Autowired CandidateOfferRepository candidateRepository;
+    @Autowired com.group2.rms.offer.service.OfferExpirationJob expirationJob;
     @Autowired com.group2.rms.offer.service.CandidateOfferService candidateService;
     @org.springframework.test.context.bean.override.mockito.MockitoSpyBean
     com.group2.rms.candidate.domain.repository.ApplicationRepository applications;
@@ -77,6 +79,87 @@ class OfferPersistenceRegressionTests {
     @MockitoBean OfferMailSender mailSender;
     @MockitoBean com.group2.rms.notification.service.NotificationService notificationService;
     private OfferProposal offer;
+
+    @Test
+    void expiredOfferIsStillQueryableByItsOwnerOnly() {
+        offer.setOfferStatus("Expired");
+        entityManager.flush();
+        var statuses = java.util.Set.of("Sent_Candidate", "Accepted", "Declined", "Expired");
+        assertTrue(candidateRepository.findVisibleById(offer.getOfferId(), offer.getProposedBy().getUserId(), statuses).isPresent());
+        assertTrue(candidateRepository.findVisibleById(offer.getOfferId(), -1, statuses).isEmpty());
+    }
+
+    @ParameterizedTest
+    @org.junit.jupiter.params.provider.CsvSource({
+            "Sent_Candidate,-1,false,Expired", "Sent_Candidate,10,false,Sent_Candidate",
+            "Sent_Candidate,-1,true,Sent_Candidate", "Accepted,-1,false,Accepted",
+            "Declined,-1,false,Declined", "Draft,-1,false,Draft",
+            "Pending_Director,-1,false,Pending_Director", "Director_Approved,-1,false,Director_Approved"
+    })
+    void expirationJobOnlyClosesDueSentOffersAndIsIdempotent(String status, int minutes, boolean deleted, String expected) {
+        offer.setOfferStatus(status);
+        offer.setIsDeleted(deleted);
+        offer.setResponseDeadline(java.time.LocalDateTime.now().plusMinutes(minutes));
+        Integer id = offer.getOfferId();
+        Integer applicationId = offer.getApplication().getApplicationId();
+        String originalApplicationStatus = offer.getApplication().getApplicationStatus();
+        entityManager.flush();
+        expirationJob.expireNow();
+        assertEquals(expected, entityManager.find(OfferProposal.class, id).getOfferStatus());
+        assertEquals(originalApplicationStatus, entityManager.find(Application.class, applicationId).getApplicationStatus());
+        assertEquals(0, expirationJob.expireNow());
+    }
+
+    @Test
+    void pastStartDateExpiresEvenWhenDeadlineIsInTheFuture() {
+        offer.setOfferStatus("Sent_Candidate");
+        offer.setExpectedStartDate(LocalDate.now().minusDays(1));
+        offer.setResponseDeadline(java.time.LocalDateTime.now().plusDays(2));
+        Integer id = offer.getOfferId();
+        entityManager.flush();
+        assertEquals(1, expirationJob.expireNow());
+        assertEquals("Expired", entityManager.find(OfferProposal.class, id).getOfferStatus());
+    }
+
+    @RepeatedTest(3)
+    void responseAndExpirationCannotOverwriteEachOther() throws Exception {
+        var deadline = java.time.LocalDateTime.now().withNano(0);
+        offer.setOfferStatus("Sent_Candidate");
+        offer.setResponseDeadline(deadline);
+        offer.getApplication().setApplicationStatus("Offered");
+        Integer id = offer.getOfferId();
+        Integer owner = offer.getProposedBy().getUserId();
+        TestTransaction.flagForCommit();
+        TestTransaction.end();
+        var executor = Executors.newFixedThreadPool(2);
+        var ready = new CountDownLatch(2);
+        var start = new CountDownLatch(1);
+        try {
+            var answer = executor.submit(() -> {
+                ready.countDown();
+                if (!start.await(10, TimeUnit.SECONDS)) throw new AssertionError("Start timeout");
+                return new TransactionTemplate(transactionManager).execute(tx -> candidateRepository.answerIfEligible(
+                        id, owner, "Accepted", null, deadline.minusSeconds(1), deadline.toLocalDate()));
+            });
+            var expire = executor.submit(() -> {
+                ready.countDown();
+                if (!start.await(10, TimeUnit.SECONDS)) throw new AssertionError("Start timeout");
+                return new TransactionTemplate(transactionManager).execute(tx ->
+                        proposalRepository.expireDue(deadline.plusSeconds(1), deadline.toLocalDate()));
+            });
+            assertTrue(ready.await(10, TimeUnit.SECONDS));
+            start.countDown();
+            int answerCount = answer.get(30, TimeUnit.SECONDS);
+            int expiryCount = expire.get(30, TimeUnit.SECONDS);
+            assertEquals(1, answerCount + expiryCount);
+            new TransactionTemplate(transactionManager).executeWithoutResult(tx ->
+                    assertEquals(answerCount == 1 ? "Accepted" : "Expired",
+                            entityManager.find(OfferProposal.class, id).getOfferStatus()));
+        } finally {
+            start.countDown(); executor.shutdownNow();
+            assertTrue(executor.awaitTermination(10, TimeUnit.SECONDS));
+        }
+    }
 
     @ParameterizedTest
     @ValueSource(ints = {-1, 0, 1})

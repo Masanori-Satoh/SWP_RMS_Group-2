@@ -544,6 +544,7 @@ CREATE TABLE OfferProposal (
             N'Director_Approved',
             N'Director_Rejected',
             N'Sent_Candidate',
+            N'Expired',
             N'Accepted',
             N'Declined'
         )),

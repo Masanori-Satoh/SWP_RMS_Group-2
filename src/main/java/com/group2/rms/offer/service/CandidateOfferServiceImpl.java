@@ -26,7 +26,7 @@ public class CandidateOfferServiceImpl implements CandidateOfferService {
     static final String DECLINED = "Declined";
 
     /** Offer nội bộ (Draft, Pending_Director, Director_*) không hiện cho ứng viên. */
-    static final Set<String> CANDIDATE_VISIBLE_STATUSES = Set.of(SENT, ACCEPTED, DECLINED);
+    static final Set<String> CANDIDATE_VISIBLE_STATUSES = Set.of(SENT, ACCEPTED, DECLINED, "Expired");
 
     private final CandidateOfferRepository offers;
     private final CurrentUserService currentUserService;
@@ -61,7 +61,7 @@ public class CandidateOfferServiceImpl implements CandidateOfferService {
     }
 
     /**
-     * Lấy thư mời của chính ứng viên đăng nhập, chỉ gồm Sent_Candidate, Accepted và Declined.
+     * Lấy thư mời của chính ứng viên đăng nhập, gồm Sent_Candidate, Accepted, Declined và Expired (chỉ xem, không được trả lời).
      * Query ràng buộc UserId tại database; không lấy mọi Offer rồi mới lọc quyền ở JavaScript.
      */
     @Override
@@ -157,6 +157,9 @@ public class CandidateOfferServiceImpl implements CandidateOfferService {
      * Đây là lỗi giải thích sớm; câu UPDATE còn kiểm tra lại hạn, chủ sở hữu và trạng thái hồ sơ.
      */
     private void requireAnswerable(OfferProposal offer) {
+        if ("Expired".equals(offer.getOfferStatus())) {
+            throw new OfferResponseException("Thư mời này đã quá hạn phản hồi. Vui lòng liên hệ bộ phận Tuyển dụng để được hỗ trợ.");
+        }
         if (!SENT.equals(offer.getOfferStatus())) {
             throw new OfferResponseException("Thư mời này đã được trả lời nên không thể thay đổi.");
         }
