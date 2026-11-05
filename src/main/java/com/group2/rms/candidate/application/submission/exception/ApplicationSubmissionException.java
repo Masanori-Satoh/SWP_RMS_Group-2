@@ -1,4 +1,4 @@
-package com.group2.rms.candidate.application.submission;
+package com.group2.rms.candidate.application.submission.exception;
 
 import com.group2.rms.core.exception.BaseBusinessException;
 

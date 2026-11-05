@@ -102,10 +102,6 @@
                             <dd th:text="|${req.numberOfPositions} người|">2 người</dd>
                         </div>
                         <div>
-                            <dt>Loại tuyển dụng</dt>
-                            <dd th:text="${req.hiringTypeLabel}">Tuyển mới</dd>
-                        </div>
-                        <div>
                             <dt>Người tạo yêu cầu</dt>
                             <dd th:text="${req.hiringManagerName}">Đỗ Thu Hương</dd>
                         </div>
@@ -118,12 +114,12 @@
                             <dd th:text="${req.workModelLabel}">Kết hợp</dd>
                         </div>
                         <div>
-                            <dt>Yêu cầu giới tính</dt>
-                            <dd th:text="${req.genderLabel}">Không yêu cầu</dd>
-                        </div>
-                        <div>
                             <dt>Thời gian thử việc</dt>
                             <dd th:text="${req.probationLabel}">60 ngày</dd>
+                        </div>
+                        <div>
+                            <dt>Yêu cầu giới tính</dt>
+                            <dd th:text="${req.genderLabel}">Không yêu cầu</dd>
                         </div>
                         <div>
                             <dt>Mức lương</dt>

@@ -8,6 +8,7 @@ import com.group2.rms.candidate.domain.repository.ApplicationRepository;
 import com.group2.rms.candidate.domain.repository.ApplicationReviewRepository;
 import com.group2.rms.candidate.domain.rule.ApplicationProgressFacts;
 import com.group2.rms.candidate.domain.rule.ApplicationProgressResolver;
+import com.group2.rms.candidate.domain.rule.ApplicationProgressStep;
 import com.group2.rms.candidate.domain.rule.ApplicationScope;
 import com.group2.rms.user.entity.User;
 import com.group2.rms.user.repository.UserRepository;
@@ -185,15 +186,21 @@ class ApplicationPipelineQueryTests {
     }
 
     @Test
-    void progressFactsFlagWithdrawnApplications() {
-        List<?> withdrawn = entityManager.createNativeQuery("SELECT TOP 1 CAST(l.EntityId AS INT) FROM AuditLog l "
-                + "WHERE l.EntityName = 'Application' AND l.NewValue = 'Withdrawn'").getResultList();
-        Assumptions.assumeFalse(withdrawn.isEmpty(), "DB local chưa có đơn nào bị rút");
-        Integer id = ((Number) withdrawn.getFirst()).intValue();
+    @Transactional
+    void withdrawnAndCancelledStatusesPassTheCheckConstraintAndResolveToTheirSteps() {
+        Integer first = ids(ApplicationScope.ALL, null, "Applied", null).getFirst();
+        Integer second = ids(ApplicationScope.ALL, null, "Applied", null).get(1);
+        assertEquals(1, applications.transition(first, List.of("Applied"), "Withdrawn"));
+        assertEquals(1, applications.transition(second, List.of("Applied"), "Cancelled"));
+        entityManager.clear();
 
-        ApplicationRepository.ProgressFactsRow row = applications.findProgressFacts(List.of(id)).getFirst();
-
-        assertTrue(row.getWithdrawn());
+        LocalDateTime now = LocalDateTime.now();
+        assertEquals(ApplicationProgressStep.WITHDRAWN, ApplicationProgressResolver.resolve(
+                ApplicationProgressFacts.from(applications.findProgressFacts(List.of(first)).getFirst()), now).step());
+        assertEquals(ApplicationProgressStep.POSTING_CLOSED, ApplicationProgressResolver.resolve(
+                ApplicationProgressFacts.from(applications.findProgressFacts(List.of(second)).getFirst()), now).step());
+        assertTrue(ids(ApplicationScope.ALL, null, "Withdrawn", null).contains(first), "lọc ?status=Withdrawn tìm thấy đơn");
+        assertTrue(ids(ApplicationScope.ALL, null, "Cancelled", null).contains(second));
     }
 
     /** Ghi thật rồi rollback khi test kết thúc (transaction của test không commit): DB không đổi. */
@@ -210,6 +217,46 @@ class ApplicationPipelineQueryTests {
         Application moved = applications.findById(id).orElseThrow();
         assertEquals("HR_Passed", moved.getApplicationStatus());
         assertNotNull(moved.getUpdatedAt());
+    }
+
+    /** Ô tìm kiếm /applications bỏ dấu như /jobs: gõ tên không dấu vẫn ra ứng viên có tên tiếng Việt có dấu. */
+    @Test
+    void keywordWithoutAccentsFindsVietnameseName() {
+        ApplicationPipelineResponse accented = search(ApplicationScope.ALL, null, null, null).stream()
+                .filter(r -> r.fullName() != null && !withoutAccents(r.fullName()).equals(r.fullName()))
+                .findFirst().orElse(null);
+        Assumptions.assumeTrue(accented != null, "DB local không có ứng viên tên có dấu");
+        String plain = withoutAccents(accented.fullName()).toLowerCase();
+
+        List<Integer> found = ids(ApplicationScope.ALL, plain, null, null);
+
+        assertTrue(found.contains(accented.applicationId()),
+                "\"" + plain + "\" phải ra \"" + accented.fullName() + "\"");
+    }
+
+    /** Gõ đúng tên có dấu cũng phải ra (bản cũ trả 0 kết quả với mọi từ khóa có dấu tiếng Việt). */
+    @Test
+    void keywordWithVietnameseAccentsFindsSameName() {
+        ApplicationPipelineResponse accented = search(ApplicationScope.ALL, null, null, null).stream()
+                .filter(r -> r.fullName() != null && !withoutAccents(r.fullName()).equals(r.fullName()))
+                .findFirst().orElse(null);
+        Assumptions.assumeTrue(accented != null, "DB local không có ứng viên tên có dấu");
+
+        assertTrue(ids(ApplicationScope.ALL, accented.fullName(), null, null).contains(accented.applicationId()),
+                "\"" + accented.fullName() + "\" phải ra chính ứng viên đó");
+    }
+
+    /** Ký tự đại diện của LIKE người dùng gõ được hiểu là chữ: "%" không khớp mọi đơn. */
+    @Test
+    void percentSignIsTreatedAsTextNotWildcard() {
+        Assumptions.assumeFalse(ids(ApplicationScope.ALL, null, null, null).isEmpty(), "DB local chưa có đơn");
+
+        assertTrue(ids(ApplicationScope.ALL, "%", null, null).isEmpty(), "không tên hay email nào chứa dấu %");
+    }
+
+    private static String withoutAccents(String text) {
+        return java.text.Normalizer.normalize(text, java.text.Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "").replace('đ', 'd').replace('Đ', 'D');
     }
 
     private List<Integer> ids(ApplicationScope scope, String keyword, String status, String sort) {

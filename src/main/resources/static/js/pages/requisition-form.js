@@ -152,22 +152,9 @@
         return isNaN(num) ? null : num;
     }
 
-    /** Các quy tắc liên quan nhiều ô: thử việc, lương. Khớp RequisitionValidator. */
+    /** Quy tắc lương (tối thiểu ≤ tối đa). Khớp RequisitionValidator; thử việc là chữ tự do nên chỉ giới hạn bằng maxlength. */
     function validateNumbers() {
         let valid = true;
-
-        const probation = document.getElementById('probationDays');
-        if (probation && probation.value.trim()) {
-            const days = Number(probation.value);
-            const min = Number(probation.min) || 1;
-            const max = Number(probation.max) || 180;
-            const message = Number.isInteger(days) && days >= min && days <= max
-                ? '' : `Thời gian thử việc phải từ ${min} đến ${max} ngày.`;
-            showError('probationDays', message);
-            valid = valid && !message;
-        } else {
-            showError('probationDays', '');
-        }
 
         const minSalaryInput = document.getElementById('minSalary');
         const maxSalaryInput = document.getElementById('maxSalary');
@@ -221,30 +208,6 @@
             input.addEventListener('blur', validateNumbers);
         }
     });
-
-    document.getElementById('probationDays')?.addEventListener('input', validateNumbers);
-
-    // Sao chép sang đợt mới: tên vị trí khác tên gốc thì là yêu cầu mới, hiện "Đợt 1".
-    // Khớp RequisitionServiceImpl.isSameTitle (bỏ khoảng trắng đầu/cuối, không phân biệt hoa/thường)
-    const titleInput = document.getElementById('title');
-    const roundLabel = document.getElementById('rqf-round');
-    const originalTitle = document.getElementById('originalTitle')?.value.trim().toLowerCase();
-    if (titleInput && roundLabel && originalTitle) {
-        const updateRound = () => {
-            const sameTitle = titleInput.value.trim().toLowerCase() === originalTitle;
-            roundLabel.textContent = `Đợt ${sameTitle ? roundLabel.dataset.round : 1}`;
-        };
-        titleInput.addEventListener('input', updateRound);
-        updateRound();
-    }
-
-    // Loại tuyển dụng không bắt buộc: chưa chọn gì thì chọn sẵn "Chưa xác định"
-    if (!form.querySelector('input[name="hiringType"]:checked')) {
-        const notSet = form.querySelector('input[name="hiringType"][value=""]');
-        if (notSet) {
-            notSet.checked = true;
-        }
-    }
 
     /* -------------------------------------------------------------------------
      * 2. Ô TĂNG/GIẢM SỐ VÀ BỘ ĐẾM KÝ TỰ

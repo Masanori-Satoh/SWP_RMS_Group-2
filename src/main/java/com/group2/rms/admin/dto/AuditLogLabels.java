@@ -12,7 +12,8 @@ public final class AuditLogLabels {
             Map.entry("Candidate", "Ứng viên"), Map.entry("Application", "Hồ sơ ứng tuyển"),
             Map.entry("TalentPoolNote", "Ghi chú ứng viên"), Map.entry("JobPosting", "Tin tuyển dụng"),
             Map.entry("JobRequisition", "Yêu cầu tuyển dụng"), Map.entry("InterviewSchedule", "Lịch phỏng vấn"),
-            Map.entry("SystemConfig", "Cấu hình hệ thống"), Map.entry("System", "Hệ thống"));
+            Map.entry("SystemConfig", "Cấu hình hệ thống"), Map.entry("System", "Hệ thống"),
+            Map.entry("PolicyDocument", "Tài liệu chính sách"));
     private static final Map<String, String> APPLICATION_VALUES = Map.ofEntries(
             Map.entry("TalentPoolHrRecommended", "Trạng thái: HR đã gửi gợi ý"),
             Map.entry("TalentPoolSuggested", "Trạng thái: HM đã đề xuất"),
@@ -29,6 +30,8 @@ public final class AuditLogLabels {
             Map.entry("Hired", "Trạng thái: Đã tuyển dụng"),
             Map.entry("Rejected", "Trạng thái: Đã bị loại"),
             Map.entry("Withdrawn", "Trạng thái: Ứng viên đã rút hồ sơ"),
+            // dunglt bổ sung: trạng thái đơn mới (migration 019)
+            Map.entry("Cancelled", "Trạng thái: Dừng hồ sơ do đóng đợt tuyển"),
             Map.entry("PostingClosed", "Trạng thái: Dừng hồ sơ do đóng đợt tuyển"),
             Map.entry("InterviewCancelledOnClose", "Đã hủy lịch phỏng vấn do đóng đợt tuyển"));
     private static final Map<String, String> MAIL_VALUES = Map.of(
@@ -98,7 +101,7 @@ public final class AuditLogLabels {
             case "Department" -> "M4 21V3h16v18M9 3v18M13 7h3M13 11h3M13 15h3M2 21h20";
             case "JobPosting", "JobRequisition" -> "M9 7V4h6v3M3 7h18v14H3zM3 12h18M10 12v3h4v-3";
             case "System", "SystemConfig" -> "M4 4h16v12H4zM8 21h8M12 16v5M7 8h10M7 12h6";
-            case "TalentPoolNote" -> "M5 3h14v18H5zM8 7h8M8 11h8M8 15h5";
+            case "TalentPoolNote", "PolicyDocument" -> "M5 3h14v18H5zM8 7h8M8 11h8M8 15h5";
             case "InterviewSchedule" -> "M4 5h16v16H4zM4 10h16M8 3v4M16 3v4M8 14h3";
             default -> "M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75";
         };

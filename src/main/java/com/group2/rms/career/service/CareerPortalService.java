@@ -1,6 +1,6 @@
 package com.group2.rms.career.service;
 
-import com.group2.rms.candidate.application.submission.ApplicationSubmissionService;
+import com.group2.rms.candidate.application.submission.service.ApplicationSubmissionService;
 import com.group2.rms.core.exception.ResourceNotFoundException;
 import com.group2.rms.career.dto.PublicJobDetailResponse;
 import com.group2.rms.career.dto.PublicJobListResponse;
@@ -9,6 +9,7 @@ import com.group2.rms.career.dto.ViewerProfileResponse;
 import com.group2.rms.career.repository.PublicJobSearch;
 import com.group2.rms.jobposting.entity.JobPosting;
 import com.group2.rms.jobposting.repository.JobPostingRepository;
+import com.group2.rms.requisition.service.RequisitionLabels;
 import com.group2.rms.user.repository.DepartmentRepository;
 import com.group2.rms.user.repository.UserRepository;
 import org.springframework.data.domain.Page;
@@ -20,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -58,7 +60,7 @@ public class CareerPortalService {
                         ? job.getRequisition().getDepartment().getDepartmentName()
                         : "",
                 job.getWorkLocation(),
-                job.getRequisition() != null ? job.getRequisition().getEmploymentType() : "",
+                Objects.toString(job.effectiveEmploymentType(), ""),
                 job.getSalaryDisplay(),
                 job.getApplicationDeadline(),
                 job.getPostingDate()));
@@ -103,7 +105,12 @@ public class CareerPortalService {
                         ? job.getRequisition().getDepartment().getDepartmentName()
                         : "",
                 job.getWorkLocation(),
-                job.getRequisition() != null ? job.getRequisition().getEmploymentType() : "",
+                job.getWorkingHours(),
+                job.getProbationPeriod(),
+                Objects.toString(job.effectiveEmploymentType(), ""),
+                RequisitionLabels.workModel(job.effectiveWorkModel()),
+                RequisitionLabels.gender(job.effectiveGender()),
+                job.getNumberOfPositionsDisplay(),
                 job.getSalaryDisplay(),
                 job.getApplicationDeadline(),
                 job.getPostingDate(),

@@ -4,6 +4,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.*;
+import java.time.Clock;
+import java.time.LocalDateTime;
 import java.util.List;
 
 /** Truy vấn audit/đối chiếu liên module bằng SQL; không import Entity của admin/interview/offer. */
@@ -11,6 +13,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class TalentPoolAuditRepository {
     private final JdbcTemplate jdbc;
+    private final Clock clock;
     @Transactional
     public void record(Integer actorId, String action, String entity, Number id, String oldValue, String value) {
         jdbc.update("INSERT INTO AuditLog(UserId,[Action],EntityName,EntityId,OldValue,NewValue) VALUES(?,?,?,?,?,?)",
@@ -31,9 +34,19 @@ public class TalentPoolAuditRepository {
                 (rs, n) -> rs.getString(1), id.toString()).stream().findFirst().orElse("—");
     }
     public boolean hasOpenOffers(Integer jobId) {
-        return jdbc.queryForObject("SELECT COUNT(*) FROM OfferProposal o JOIN Application a ON a.ApplicationId=o.ApplicationId " +
-                "WHERE a.JobPostingId=? AND o.OfferStatus NOT IN ('Accepted','Declined','Director_Rejected')",
-                Integer.class, jobId) > 0;
+        // Match CandidateOfferServiceImpl: either elapsed deadline or past start date
+        // expires a sent offer. Missing dates alone never imply expiry.
+        LocalDateTime now = LocalDateTime.now(clock);
+        return jdbc.queryForObject("""
+                SELECT COUNT(*) FROM OfferProposal o
+                JOIN Application a ON a.ApplicationId=o.ApplicationId
+                WHERE a.JobPostingId=?
+                  AND o.OfferStatus NOT IN
+                      ('Accepted','Declined','Director_Rejected','Voided','Canceled','Rejected','Expired')
+                  AND (o.OfferStatus <> 'Sent_Candidate' OR (
+                      (o.ResponseDeadline IS NULL OR o.ResponseDeadline >= ?)
+                      AND (o.ExpectedStartDate IS NULL OR o.ExpectedStartDate >= ?)))
+                """, Integer.class, jobId, now, now.toLocalDate()) > 0;
     }
     public boolean hasAcceptedOffer(Integer appId) {
         return jdbc.queryForObject("SELECT COUNT(*) FROM OfferProposal WHERE ApplicationId=? AND OfferStatus='Accepted'",

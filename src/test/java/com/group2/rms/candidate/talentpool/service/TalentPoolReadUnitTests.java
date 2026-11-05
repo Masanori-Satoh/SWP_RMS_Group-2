@@ -988,13 +988,24 @@ class TalentPoolReadUnitTests {
     }
 
     @Test
-    void withdrawnCvUsesAuditFactRatherThanRejectedStatusAlone() {
+    void withdrawnCvIsReadFromTheStatusNotFromTheAuditLog() {
         when(currentUser.requireUser()).thenReturn(hr);
         when(candidates.findById(8)).thenReturn(Optional.of(candidate));
+        application.setApplicationStatus("Withdrawn");
         when(poolApplications.findPreviousCvByCandidateId(8)).thenReturn(List.of(application));
-        when(audit.has("Application", 100, "Withdrawn")).thenReturn(true);
         var row = service.detail(8).cvs().getFirst();
-        assertEquals("Đã rút", row.statusLabel());
+        assertEquals("Đã rút đơn", row.statusLabel());
         assertEquals("neutral", row.statusTone());
+        verify(audit, never()).has("Application", 100, "Withdrawn");
+    }
+
+    @Test
+    void cancelledAndRejectedCvKeepTheirOwnLabelAndTone() {
+        var cancelled = new TalentPoolCvResponse(1, "Java", null, null, null, "Cancelled");
+        assertEquals("Dừng do đóng tin", cancelled.statusLabel());
+        assertEquals("neutral", cancelled.statusTone());
+        var rejected = new TalentPoolCvResponse(2, "Java", null, null, null, "Rejected");
+        assertEquals("Không tiếp tục", rejected.statusLabel());
+        assertEquals("error", rejected.statusTone());
     }
 }

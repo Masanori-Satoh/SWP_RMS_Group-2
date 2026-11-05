@@ -107,7 +107,6 @@ class RequisitionIntegrationTests {
                                 .recruitmentRound(1)
                                 .numberOfPositions(1)
                                 .employmentType("Full-time")
-                                .gender("Any")
                                 .workModel("On-site")
                                 .jobDescription("Integration-test responsibilities")
                                 .requirementDetails("Integration-test requirements");
@@ -141,7 +140,6 @@ class RequisitionIntegrationTests {
                                 .title("Integration Java Dev")
                                 .numberOfPositions(2)
                                 .employmentType("Full-time")
-                                .gender("Any")
                                 .workModel("On-site")
                                 .jobDescription("Integration-test responsibilities")
                                 .requirementDetails("Integration-test requirements")
@@ -168,8 +166,8 @@ class RequisitionIntegrationTests {
                 // Arrange
                 JobRequisition requisition = requisitions.saveAndFlush(validRequisition()
                                 .title("Unicode read regression").hiringManager(hiringManager).department(department)
-                                .approvalStatus(RequisitionAccess.STATUS_DRAFT).gender("Female")
-                                .workLocation("Văn phòng Hà Nội").workModel("Hybrid").probationDays(60).build());
+                                .approvalStatus(RequisitionAccess.STATUS_DRAFT)
+                                .workLocation("Văn phòng Hà Nội").workModel("Hybrid").probationPeriod("60 ngày").build());
                 Integer id = requisition.getRequisitionId();
                 entityManager.clear(); // Đọc lại từ JDBC, không lấy từ cache của persistence context
 
@@ -179,11 +177,10 @@ class RequisitionIntegrationTests {
                 RequisitionResponse detail = service.getById(id);
 
                 // Assert
-                assertEquals("Female", entityManager.createNativeQuery(
-                                "SELECT RequiredGender FROM JobRequisition WHERE RequisitionId = :id")
+                assertEquals("60 ngày", entityManager.createNativeQuery(
+                                "SELECT ProbationPeriod FROM JobRequisition WHERE RequisitionId = :id")
                                 .setParameter("id", id).getSingleResult());
                 assertEquals("Văn phòng Hà Nội", row.workLocation());
-                assertEquals("Nữ", detail.genderLabel());
                 assertEquals("60 ngày", detail.probationLabel());
                 assertEquals("Kết hợp", detail.workModelLabel());
                 mvc.perform(get("/requisitions")).andExpect(status().isOk()).andExpect(view().name("requisitions/list"));
@@ -247,7 +244,6 @@ class RequisitionIntegrationTests {
                                 .title("DevOps Engineer")
                                 .numberOfPositions(2)
                                 .employmentType("Full-time")
-                                .gender("Any")
                                 .workLocation("Hà Nội")
                                 .workModel("On-site")
                                 .jobDescription("DevOps responsibilities")

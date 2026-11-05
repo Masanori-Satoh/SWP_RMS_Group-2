@@ -1,4 +1,4 @@
-package com.group2.rms.candidate.application.submission;
+package com.group2.rms.candidate.application.submission.dto;
 
 import org.springframework.web.multipart.MultipartFile;
 

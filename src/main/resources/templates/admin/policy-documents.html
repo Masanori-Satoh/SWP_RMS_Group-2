@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/internal(activeMenu='policy-documents',role='System Admin')}">
+<head>
+    <title>Tài liệu chính sách · Mộc RMS</title>
+    <th:block layout:fragment="styles">
+        <link rel="stylesheet" th:href="@{/css/pages/admin-surfaces.css}">
+        <link rel="stylesheet" th:href="@{/css/pages/flash-toast.css}">
+        <link rel="stylesheet" th:href="@{/css/pages/policy-documents.css}">
+    </th:block>
+</head>
+<body>
+<!-- System Admin: xem và thay 2 file PDF ứng viên đọc (/terms, /privacy-policy). PolicyDocumentAdminController. -->
+<main id="main" layout:fragment="content" class="page-content container ads-page adw-page pdoc-page" tabindex="-1">
+    <th:block th:replace="~{fragments/ui/admin-workspace :: scene}"></th:block>
+    <header class="page-header adw-heading">
+        <div>
+            <h1 class="page-title adw-title">Tài liệu chính sách</h1>
+            <p>File PDF ứng viên đọc và đồng ý khi dùng trang tuyển dụng.</p>
+        </div>
+    </header>
+    <th:block th:replace="~{fragments/ui/flash-toast :: flashToast(${successMessage}, null)}"></th:block>
+
+    <section class="pdoc-card adw-surface" aria-labelledby="pdoc-title">
+        <header class="pdoc-card-head">
+            <h2 id="pdoc-title" class="adw-panel-title">Tài liệu hiển thị cho ứng viên</h2>
+            <span class="badge badge--neutral" th:text="|${#lists.size(documents)} tài liệu|">2 tài liệu</span>
+        </header>
+        <div class="table-wrapper" tabindex="0" role="region" aria-labelledby="pdoc-title">
+            <table class="table adw-data-table pdoc-table">
+                <caption class="sr-only">Tài liệu chính sách, file đang dùng và lần cập nhật gần nhất</caption>
+                <thead>
+                <tr><th scope="col">Tài liệu</th><th scope="col">File hiện tại</th><th scope="col">Cập nhật</th><th scope="col" class="pdoc-actions-col">Thao tác</th></tr>
+                </thead>
+                <tbody>
+                <tr th:each="doc : ${documents}">
+                    <td>
+                        <strong class="pdoc-name" th:text="${doc.title}">Điều khoản sử dụng</strong>
+                        <span class="pdoc-sub" th:text="|Đường dẫn công khai: ${doc.publicPath}|">Đường dẫn công khai: /terms</span>
+                    </td>
+                    <td>
+                        <span class="pdoc-file" th:text="|${doc.fileName} · ${doc.sizeLabel}|">terms.pdf · 312 KB</span>
+                        <span class="badge badge--success" th:if="${doc.uploaded}">Đã tải lên</span>
+                        <span class="badge badge--neutral" th:unless="${doc.uploaded}">Bản mặc định</span>
+                    </td>
+                    <td>
+                        <th:block th:if="${doc.updatedAt != null}">
+                            <time th:datetime="${doc.updatedAt}" th:text="${#temporals.format(doc.updatedAt, 'dd/MM/yyyy HH:mm')}">01/11/2026 09:30</time>
+                            <span class="pdoc-sub" th:text="|bởi ${doc.updatedBy}|">bởi Quản trị</span>
+                        </th:block>
+                        <span class="pdoc-sub" th:if="${doc.updatedAt == null}">Chưa tải bản nào</span>
+                    </td>
+                    <td class="pdoc-actions">
+                        <a class="btn btn--secondary btn--sm" th:href="@{${doc.publicPath}}" target="_blank" rel="noopener">
+                            Xem PDF<span class="sr-only"> <th:block th:text="${doc.title}"></th:block> (mở ở tab mới)</span>
+                        </a>
+                        <button class="btn btn--primary btn--sm" type="button"
+                                th:attr="data-pdoc-open=${doc.code}, aria-controls=|pdoc-dialog-${doc.code}|">
+                            Tải bản mới<span class="sr-only" th:text="| ${doc.title}|"></span>
+                        </button>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <p class="pdoc-note adw-surface">
+        Chỉ nhận file PDF, tối đa 10MB.
+    </p>
+
+    <!-- Mỗi tài liệu một hộp thoại tải lên; lỗi từ server (uploadErrorCode) → mở lại đúng hộp kèm lỗi -->
+    <dialog class="confirm-dialog pdoc-dialog" th:each="doc : ${documents}"
+            th:id="|pdoc-dialog-${doc.code}|"
+            th:attr="aria-labelledby=|pdoc-dialog-title-${doc.code}|, data-open-on-load=${uploadErrorCode == doc.code}">
+        <form class="dialog-content" th:action="@{/admin/policy-documents/{code}(code=${doc.code})}" method="post"
+              enctype="multipart/form-data">
+            <div class="dialog-header">
+                <h2 class="dialog-title" th:id="|pdoc-dialog-title-${doc.code}|" th:text="|Tải bản mới: ${doc.title}|">Tải bản mới</h2>
+                <p class="pdoc-sub" th:text="|File mới sẽ thay bản đang hiển thị tại ${doc.publicPath}.|"></p>
+            </div>
+            <div class="pdoc-field">
+                <label class="form-label" th:for="|pdoc-file-${doc.code}|">File PDF <span aria-hidden="true">*</span></label>
+                <input class="form-control" type="file" name="file" accept="application/pdf,.pdf" required
+                       th:id="|pdoc-file-${doc.code}|"
+                       th:attr="aria-invalid=${uploadErrorCode == doc.code}, aria-describedby=${uploadErrorCode == doc.code ? 'pdoc-error-' + doc.code : null}">
+                <p class="pdoc-error" role="alert" th:if="${uploadErrorCode == doc.code}"
+                   th:id="|pdoc-error-${doc.code}|" th:text="${uploadError}"></p>
+            </div>
+            <p class="alert alert--warning pdoc-warning">Bản cũ bị thay hẳn, không lưu lịch sử. Hãy giữ một bản sao trước khi tải.</p>
+            <div class="dialog-actions">
+                <button class="btn btn--secondary" type="button" data-pdoc-close>Hủy</button>
+                <button class="btn btn--primary" type="submit">Thay file</button>
+            </div>
+        </form>
+    </dialog>
+</main>
+<th:block layout:fragment="scripts">
+    <th:block th:replace="~{fragments/ui/admin-workspace :: scripts}"></th:block>
+    <script th:src="@{/js/pages/flash-toast.js}" defer></script>
+    <script th:src="@{/js/pages/policy-documents.js}" defer></script>
+</th:block>
+</body>
+</html>

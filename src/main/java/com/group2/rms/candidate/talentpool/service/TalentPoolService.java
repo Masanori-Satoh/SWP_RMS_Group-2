@@ -8,6 +8,7 @@ import com.group2.rms.candidate.infra.cv.CvStorage;
 import com.group2.rms.candidate.infra.cv.LocalCvStorage;
 import com.group2.rms.candidate.domain.repository.ApplicationRepository;
 import com.group2.rms.candidate.domain.repository.ApplicationReviewRepository;
+import com.group2.rms.candidate.domain.rule.ApplicationStatusService;
 import com.group2.rms.candidate.domain.repository.CandidateRepository;
 import com.group2.rms.candidate.talentpool.repository.TalentPoolApplicationRepository;
 import com.group2.rms.candidate.talentpool.repository.TalentPoolCandidateRepository;
@@ -673,7 +674,8 @@ public class TalentPoolService {
             if (audit.hasAcceptedOffer(app.getApplicationId()))
                 continue;
             String old = app.getApplicationStatus();
-            if (applications.transition(app.getApplicationId(), Set.of(old), "Rejected") == 1) {
+            // dunglt bổ sung: đơn chính thức dừng vì tin bị đóng là Cancelled (không phải Rejected: công ty không loại ứng viên)
+            if (applications.transition(app.getApplicationId(), Set.of(old), ApplicationStatusService.CANCELLED) == 1) {
                 if (audit.cancelInterviews(app.getApplicationId()) > 0)
                     audit.record(user.getUserId(), "UPDATE", "Application", app.getApplicationId(), null,
                             "InterviewCancelledOnClose");
@@ -771,7 +773,7 @@ public class TalentPoolService {
                 : RequisitionLabels.employmentType(requisition.getEmploymentType());
         return new TalentPoolCvResponse(a.getApplicationId(), a.getJobPosting().getPostingTitle(),
                 a.getSubmissionDate(), department, employmentType,
-                audit.has("Application", a.getApplicationId(), "Withdrawn") ? "Withdrawn" : a.getApplicationStatus());
+                a.getApplicationStatus()); // dunglt bổ sung: Withdrawn nằm ngay trong trạng thái, không cần tra AuditLog
     }
 
     private TalentPoolCandidateResponse candidateResponse(Candidate c) {

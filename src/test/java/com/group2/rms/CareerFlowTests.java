@@ -1,8 +1,8 @@
 package com.group2.rms;
 
 import com.group2.rms.auth.controller.AuthController;
-import com.group2.rms.candidate.application.submission.ApplicationSubmissionException;
-import com.group2.rms.candidate.application.submission.ApplicationSubmissionService;
+import com.group2.rms.candidate.application.submission.exception.ApplicationSubmissionException;
+import com.group2.rms.candidate.application.submission.service.ApplicationSubmissionService;
 import com.group2.rms.career.controller.CareerPortalController;
 import com.group2.rms.career.dto.DepartmentFilterResponse;
 import com.group2.rms.career.dto.PublicJobDetailResponse;
@@ -140,6 +140,11 @@ class CareerFlowTests {
                                                 containsString("<title>Senior Java Engineer — Mộc Careers</title>")))
                                 .andExpect(content().string(containsString("VND 30–45 million")))
                                 .andExpect(content().string(containsString("Hà Nội")))
+                                .andExpect(content().string(containsString("Mô hình làm việc")))
+                                .andExpect(content().string(containsString("Kết hợp")))
+                                .andExpect(content().string(containsString("Số lượng tuyển")))
+                                .andExpect(content().string(containsString("2 người")))
+                                .andExpect(content().string(containsString("Yêu cầu giới tính")))
                                 .andExpect(content().string(containsString("href=\"/jobs/41/apply\"")))
                                 .andExpect(content().string(containsString("Ứng tuyển ngay")))
                                 .andExpect(content().string(not(containsString("onclick="))))
@@ -483,8 +488,8 @@ class CareerFlowTests {
 
         private PublicJobDetailResponse detail(int id, String title, LocalDateTime deadline,
                         boolean hasApplied, boolean accepting) {
-                return new PublicJobDetailResponse(id, title, "Engineering", "Hà Nội", "Full-time",
-                                "VND 30–45 million", deadline, POSTED,
+                return new PublicJobDetailResponse(id, title, "Engineering", "Hà Nội", "Thứ 2 - Thứ 6 (09:00 - 18:00)", "2 tháng", "Full-time",
+                                "Kết hợp", "Không yêu cầu", "2 người", "VND 30–45 million", deadline, POSTED,
                                 "Build clear, dependable workflow software.",
                                 List.of("Build clear, dependable workflow software."),
                                 "Experience with Java and Spring Boot.",

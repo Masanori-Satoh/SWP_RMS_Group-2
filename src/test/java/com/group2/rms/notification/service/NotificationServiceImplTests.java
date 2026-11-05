@@ -416,6 +416,9 @@ class NotificationServiceImplTests {
         assertFalse(saved.getIsRead());
         assertTrue(saved.getTitle().contains("Huỳnh Hoàng Trung"));
         assertTrue(saved.getContent().contains("Mức đãi ngộ chưa đạt kỳ vọng"));
+        // dunglt bổ sung: từ chối offer đặt đơn thành Withdrawn (ứng viên tự dừng), không còn là "Không tiếp tục" (Rejected)
+        assertTrue(saved.getContent().contains("Đã rút đơn"));
+        assertFalse(saved.getContent().contains("Không tiếp tục"));
         assertEquals("OFFER_RESP_DEC_1", saved.getEventId());
     }
 

@@ -60,29 +60,26 @@ class DirectorDashboardServiceTests {
                 .role(Role.builder().roleName("Director").build()).build();
     }
 
-    private PendingRequisitionRow requisition(int id, String hiringType, Integer round, int waitedDays) {
-        return new PendingRequisitionRow(id, null, "Vị trí " + id, "Kỹ thuật", "Hoài Nam", 2, hiringType, round,
+    private PendingRequisitionRow requisition(int id, Integer round, int waitedDays) {
+        return new PendingRequisitionRow(id, null, "Vị trí " + id, "Kỹ thuật", "Hoài Nam", 2, round,
                 NOW.minusDays(waitedDays));
     }
 
     @Test
-    @DisplayName("Yêu cầu chờ: mã sinh từ id, tuyển thay thế được nhấn, đợt 2 ghi 'Tuyển lại lần 2', chờ 9 ngày tô đỏ")
-    void build_shouldMapPendingRequisition_whenReplacementSecondRound() {
+    @DisplayName("Yêu cầu chờ: mã sinh từ id, đợt 2 ghi 'Tuyển lại lần 2', chờ 9 ngày tô đỏ")
+    void build_shouldMapPendingRequisition_whenSecondRound() {
         // Arrange
         when(lists.pendingRequisitions(USER_ID)).thenReturn(List.of(
-                requisition(12, "Replacement", 2, 9),
-                requisition(13, "New", 1, 1)));
+                requisition(12, 2, 9),
+                requisition(13, 1, 1)));
 
         // Act
         List<PendingRequisitionItem> items = service.build(director()).pendingRequisitions();
 
         // Assert
         assertEquals("REQ-0012", items.get(0).code());
-        assertTrue(items.get(0).replacement());
-        assertEquals("Tuyển thay thế", items.get(0).hiringTypeLabel());
         assertEquals("Tuyển lại lần 2", items.get(0).roundText());
         assertEquals("danger", items.get(0).waitTone());
-        assertFalse(items.get(1).replacement());
         assertNull(items.get(1).roundText());
         assertEquals("/requisitions/13", items.get(1).href());
     }
@@ -93,7 +90,7 @@ class DirectorDashboardServiceTests {
         // Arrange
         List<PendingRequisitionRow> rows = new ArrayList<>();
         for (int i = 1; i <= 7; i++) {
-            rows.add(requisition(i, "New", 1, i));
+            rows.add(requisition(i, 1, i));
         }
         when(lists.pendingRequisitions(USER_ID)).thenReturn(rows);
 

@@ -123,7 +123,7 @@ class JobPostingIntegrationTests {
     /** Yêu cầu đã duyệt, đủ các cột NOT NULL. */
     private JobRequisition savedRequisition(String title, Department inDepartment) {
         return requisitions.saveAndFlush(JobRequisition.builder().title(title).recruitmentRound(1).numberOfPositions(1)
-                .employmentType("Full-time").gender("Any").workModel("On-site")
+                .employmentType("Full-time").workModel("On-site")
                 .jobDescription("Integration-test responsibilities").requirementDetails("Integration-test requirements")
                 .approvalStatus(RequisitionAccess.STATUS_APPROVED).hiringManager(hiringManager)
                 .department(inDepartment).build());

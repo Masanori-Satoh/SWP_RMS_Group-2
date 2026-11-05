@@ -101,6 +101,15 @@
             </span>
             <span class="nav-label-text">Giám sát API</span>
         </a>
+
+        <!-- Tài liệu chính sách: 2 file PDF ứng viên đồng ý (Điều khoản, Chính sách bảo mật) -->
+        <a th:href="@{/admin/policy-documents}" class="sidebar-nav-link"
+            th:classappend="${activeMenu == 'policy-documents' ? 'active' : ''}"
+            th:attr="aria-current=${activeMenu == 'policy-documents' ? 'page' : null}" title="Tài liệu chính sách"
+            data-tooltip="Tài liệu chính sách">
+            <span class="nav-icon-wrapper"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><path d="M14 2v6h6"/><path d="M9 13h6M9 17h4"/></svg></span>
+            <span class="nav-label-text">Tài liệu chính sách</span>
+        </a>
     </th:block>
 </body>
 

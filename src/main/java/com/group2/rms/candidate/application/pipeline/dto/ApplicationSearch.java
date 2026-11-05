@@ -2,6 +2,7 @@ package com.group2.rms.candidate.application.pipeline.dto;
 
 import com.group2.rms.candidate.domain.rule.ApplicationStage;
 import com.group2.rms.candidate.domain.rule.ApplicationStatusLabels;
+import com.group2.rms.core.util.ListFilters;
 
 import java.util.Arrays;
 
@@ -14,13 +15,11 @@ import java.util.Arrays;
  */
 public record ApplicationSearch(Integer jobPostingId, String status, String keyword, String stage) {
 
-    static final int KEYWORD_MAX_LENGTH = 100;
-
     public ApplicationSearch normalized() {
         String cleanStatus = status != null && ApplicationStatusLabels.STATUSES.contains(status) ? status : null;
-        String cleanKeyword = keyword == null || keyword.isBlank() ? null : keyword.strip();
-        if (cleanKeyword != null && cleanKeyword.length() > KEYWORD_MAX_LENGTH) {
-            cleanKeyword = cleanKeyword.substring(0, KEYWORD_MAX_LENGTH);
+        String cleanKeyword = ListFilters.cleanKeyword(keyword);
+        if (cleanKeyword.isEmpty()) {
+            cleanKeyword = null;
         }
         String cleanStage = Arrays.stream(ApplicationStage.values()).map(Enum::name)
                 .filter(name -> name.equals(stage)).findFirst().orElse(null);

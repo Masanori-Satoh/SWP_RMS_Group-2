@@ -125,11 +125,13 @@ class RequisitionServiceTests {
     }
 
     private RequisitionRequest draft(String title) {
-        return RequisitionRequest.builder().action(RequisitionValidator.ACTION_DRAFT).title(title).build();
+        return RequisitionRequest.builder().action(RequisitionValidator.ACTION_DRAFT).title(title).recruitmentRound(1)
+                .build();
     }
 
     private RequisitionRequest submit(String title) {
-        return RequisitionRequest.builder().action(RequisitionValidator.ACTION_SUBMIT).title(title).build();
+        return RequisitionRequest.builder().action(RequisitionValidator.ACTION_SUBMIT).title(title).recruitmentRound(1)
+                .build();
     }
 
     /** Yêu cầu của HM đang đăng nhập, ở trạng thái cho trước; findForUpdate / findById đều trả về nó. */
@@ -166,10 +168,9 @@ class RequisitionServiceTests {
                     .employmentType("Full-time")
                     .minSalary(new BigDecimal("20000000"))
                     .maxSalary(new BigDecimal("35000000"))
-                    .gender("Any")
                     .workLocation("Hanoi")
                     .workModel("Hybrid")
-                    .probationDays(60)
+                    .probationPeriod("60 ngày")
                     .reasonForHiring("Expansion")
                     .jobDescription("Develop RMS")
                     .requirementDetails("Spring Boot, SQL")
@@ -398,12 +399,12 @@ class RequisitionServiceTests {
         }
 
         @Test
-        @DisplayName("Giữ tên vị trí (khác hoa/thường, thừa khoảng trắng) -> Trỏ về phiếu gốc, đợt = max + 1")
+        @DisplayName("Giữ tên vị trí (khác hoa/thường, thừa khoảng trắng) -> Trỏ về phiếu gốc, đợt = số HM nhập")
         void createRequisition_shouldUseNextRound_whenCopyKeepsTitle() {
             // Arrange
-            when(requisitions.findMaxRoundInChain(80)).thenReturn(2);
             RequisitionRequest request = draft("  java engineer ");
             request.setOriginalRequisitionId(80);
+            request.setRecruitmentRound(3);
 
             // Act
             service.createRequisition(request);
@@ -415,11 +416,12 @@ class RequisitionServiceTests {
         }
 
         @Test
-        @DisplayName("Đổi tên vị trí -> Yêu cầu mới ở đợt 1, không có phiếu gốc")
+        @DisplayName("Đổi tên vị trí -> Không nối phiếu gốc, đợt giữ số HM nhập")
         void createRequisition_shouldResetToRound1_whenCopyChangesTitle() {
             // Arrange
             RequisitionRequest request = draft("Python Engineer");
             request.setOriginalRequisitionId(80);
+            request.setRecruitmentRound(2);
 
             // Act
             service.createRequisition(request);
@@ -427,12 +429,12 @@ class RequisitionServiceTests {
             // Assert
             JobRequisition saved = savedRequisition();
             assertNull(saved.getOriginalRequisition());
-            assertEquals(1, saved.getRecruitmentRound());
+            assertEquals(2, saved.getRecruitmentRound());
             verify(requisitions, never()).findMaxRoundInChain(any());
         }
 
         @Test
-        @DisplayName("Giám đốc sao chép rồi chọn phòng ban khác -> Yêu cầu mới ở đợt 1, không nối chuỗi phòng cũ")
+        @DisplayName("Giám đốc sao chép rồi chọn phòng ban khác -> Không nối chuỗi phòng cũ, đợt giữ số HM nhập")
         void createRequisition_shouldResetToRound1_whenDirectorCopiesToAnotherDepartment() {
             // Arrange
             Department sales = Department.builder().departmentId(2).departmentName("Sales").departmentStatus("Active").build();
@@ -552,7 +554,7 @@ class RequisitionServiceTests {
         }
 
         @Test
-        @DisplayName("Bản nháp đợt 2 bị đổi tên vị trí -> Về đợt 1, bỏ phiếu gốc, audit ghi 'Đợt tuyển dụng: 2 → 1'")
+        @DisplayName("Bản nháp đợt 2 đổi tên vị trí, HM nhập đợt 1 -> Bỏ phiếu gốc, audit ghi 'Đợt tuyển dụng: 2 → 1'")
         void updateRequisition_shouldResetToRound1_whenCopiedDraftChangesTitle() {
             // Arrange
             JobRequisition root = JobRequisition.builder().requisitionId(80).title("Java Engineer").recruitmentRound(1).build();

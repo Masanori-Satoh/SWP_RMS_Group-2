@@ -1,6 +1,6 @@
 package com.group2.rms.career.controller;
 
-import com.group2.rms.candidate.application.submission.ApplicationSubmissionService;
+import com.group2.rms.candidate.application.submission.service.ApplicationSubmissionService;
 import com.group2.rms.career.service.CareerPortalService;
 import com.group2.rms.core.config.SecurityConfig;
 import com.group2.rms.core.exception.ResourceNotFoundException;

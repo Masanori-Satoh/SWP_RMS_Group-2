@@ -34,17 +34,8 @@ public class JobPostingRequest {
     private String requisitionTitle;
     private String departmentName;
     private Integer recruitmentRound;
-    /** Nhãn tiếng Việt, ví dụ "Toàn thời gian". */
-    private String employmentType;
-    /** Nhãn tiếng Việt, ví dụ "Kết hợp". */
-    private String workModel;
     private Integer numberOfPositions;
     private String hiringManagerName;
-    /** Thông tin nội bộ: chỉ HR xem, không đưa vào nội dung tin công khai (CLAUDE.md §22). */
-    private String reasonForHiring;
-    private Integer probationDays;
-    /** Nhãn tiếng Việt, ví dụ "Không yêu cầu". */
-    private String gender;
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     private LocalDate expectedStartDate;
     /** Tin này là lần đăng thứ mấy của yêu cầu. */
@@ -55,6 +46,11 @@ public class JobPostingRequest {
     private String sourceWorkLocation;
     private String sourceJobDescription;
     private String sourceRequirements;
+    private String sourceEmploymentType;
+    private String sourceWorkModel;
+    private String sourceGender;
+    private String sourceProbationPeriod;
+    private String sourcePositionsDisplay;
 
     // ----- Trạng thái form (service tính, template chỉ đọc; server không dùng giá trị gửi lên) -----
     /** Tạo mới hoặc đang sửa bản nháp: có nút "Lưu nháp" + "Đăng tin". */
@@ -72,6 +68,17 @@ public class JobPostingRequest {
     private String benefits;
     @Size(max = JobPostingValidator.LOCATION_LIMIT, message = JobPostingValidator.LOCATION_TOO_LONG)
     private String workLocation;
+    @Size(max = JobPostingValidator.WORKING_HOURS_LIMIT, message = JobPostingValidator.WORKING_HOURS_TOO_LONG)
+    private String workingHours;
+    /** Mã hình thức, ví dụ "Full-time" (điền sẵn từ yêu cầu, HR đổi được). */
+    private String employmentType;
+    /** Mã mô hình, ví dụ "Hybrid" (điền sẵn từ yêu cầu, HR đổi được). */
+    private String workModel;
+    /** Yêu cầu giới tính của riêng tin, mặc định lấy từ yêu cầu. */
+    private String gender;
+    /** Thời gian thử việc dạng chữ (điền sẵn từ yêu cầu, HR sửa được); trống = không hiển thị. */
+    @Size(max = JobPostingValidator.PROBATION_LIMIT, message = JobPostingValidator.PROBATION_TOO_LONG)
+    private String probationPeriod;
 
     /** "range" (theo yêu cầu), "nego" (thỏa thuận) hoặc "custom" (tự nhập). */
     private String salaryMode;

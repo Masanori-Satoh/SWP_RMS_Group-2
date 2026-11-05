@@ -1,5 +1,6 @@
 package com.group2.rms.career.repository;
 
+import com.group2.rms.core.util.ListFilters;
 import com.group2.rms.jobposting.entity.JobPosting;
 import com.group2.rms.jobposting.service.JobPostingAccess;
 import jakarta.persistence.criteria.Expression;
@@ -31,7 +32,7 @@ public final class PublicJobSearch {
 
     /** Tối đa số từ lấy từ ô tìm kiếm (chặn chuỗi dài làm câu SQL phình). */
     static final int MAX_TERMS = 5;
-    static final String ACCENT_INSENSITIVE = "Latin1_General_100_CI_AI";
+    static final String ACCENT_INSENSITIVE = ListFilters.ACCENT_INSENSITIVE;
     static final char ESCAPE = '\\';
 
     static final int WEIGHT_TITLE = 5;
@@ -59,14 +60,7 @@ public final class PublicJobSearch {
 
     /** Mẫu LIKE "chứa từ này", đã thoát {@code \ % _ [} bằng {@link #ESCAPE}. */
     static String containsPattern(String term) {
-        StringBuilder pattern = new StringBuilder("%");
-        for (char c : term.toCharArray()) {
-            if (c == ESCAPE || c == '%' || c == '_' || c == '[') {
-                pattern.append(ESCAPE);
-            }
-            pattern.append(c);
-        }
-        return pattern.append('%').toString();
+        return "%" + ListFilters.escapeLike(term) + "%";
     }
 
     /**
@@ -91,7 +85,9 @@ public final class PublicJobSearch {
                 where.add(cb.equal(department.get("departmentId"), departmentId));
             }
             if (employmentType != null) {
-                where.add(cb.equal(requisition.get("employmentType"), employmentType));
+                // Hình thức của tin; tin cũ chưa có thì lấy của yêu cầu (JobPosting#effectiveEmploymentType)
+                where.add(cb.equal(cb.coalesce(root.<String>get("employmentType"),
+                        requisition.<String>get("employmentType")), employmentType));
             }
 
             if (!terms.isEmpty()) {
