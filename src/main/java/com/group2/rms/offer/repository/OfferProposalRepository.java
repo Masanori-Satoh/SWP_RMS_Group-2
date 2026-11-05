@@ -11,12 +11,59 @@ import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.data.jpa.repository.EntityGraph;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.domain.Sort;
+import com.group2.rms.core.util.ListFilters;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.JoinType;
+import java.util.ArrayList;
+import java.util.Locale;
 
 import java.util.List;
 import java.util.Optional;
 
 @Repository
 public interface OfferProposalRepository extends JpaRepository<OfferProposal, Integer>, JpaSpecificationExecutor<OfferProposal> {
+
+    // Only to-one relations: safe for paginated queries, with no collection fetch join.
+    @Override
+    @EntityGraph(attributePaths = {"application.candidate.account", "application.jobPosting.requisition.department", "proposedBy"})
+    Page<OfferProposal> findAll(Specification<OfferProposal> spec, Pageable pageable);
+
+    @Override
+    @EntityGraph(attributePaths = {"application.candidate.account", "application.jobPosting.requisition.department", "proposedBy"})
+    List<OfferProposal> findAll(Specification<OfferProposal> spec, Sort sort);
+
+    @Query("SELECT o.application.applicationId FROM OfferProposal o WHERE o.application.applicationId IN :ids "
+            + "AND (o.isDeleted IS NULL OR o.isDeleted = false)")
+    List<Integer> findActiveApplicationIds(@Param("ids") List<Integer> ids);
+
+    // HR list and export share exactly the same status aliases and literal keyword matching.
+    static Specification<OfferProposal> matchingFilters(String search, String status) {
+        String keyword = ListFilters.cleanKeyword(search);
+        String normalized = status == null ? "" : status.trim().toLowerCase(Locale.ROOT);
+        return (root, query, builder) -> {
+            var predicates = new ArrayList<Predicate>();
+            predicates.add(builder.or(builder.isNull(root.get("isDeleted")), builder.isFalse(root.get("isDeleted"))));
+            if (!keyword.isEmpty()) {
+                var account = root.join("application", JoinType.LEFT).join("candidate", JoinType.LEFT).join("account", JoinType.LEFT);
+                String pattern = ListFilters.containsPattern(keyword);
+                predicates.add(builder.or(
+                        builder.like(builder.lower(root.get("offeredPositionTitle")), pattern, '\\'),
+                        builder.like(builder.lower(account.get("fullName")), pattern, '\\')));
+            }
+            if (!normalized.isEmpty() && !"all".equals(normalized)) {
+                var statuses = switch (normalized) {
+                    case "approved", "director_approved" -> List.of("approved", "director_approved");
+                    case "rejected", "director_rejected" -> List.of("rejected", "director_rejected");
+                    default -> List.of(normalized);
+                };
+                predicates.add(builder.lower(root.get("offerStatus")).in(statuses));
+            }
+            return builder.and(predicates.toArray(new Predicate[0]));
+        };
+    }
 
     // Tìm các OfferProposal của Application mà chưa bị đóng / không còn active (GBR-14)
     List<OfferProposal> findByApplication_ApplicationIdAndOfferStatusNotIn(
@@ -51,8 +98,10 @@ public interface OfferProposalRepository extends JpaRepository<OfferProposal, In
     Page<OfferProposal> findAllByOrderByOfferIdAsc(Pageable pageable);
 
     @Query("SELECT o FROM OfferProposal o WHERE (o.isDeleted IS NULL OR o.isDeleted = false) ORDER BY o.offerId ASC")
+    @EntityGraph(attributePaths = {"application.candidate.account", "application.jobPosting.requisition.department", "proposedBy"})
     Page<OfferProposal> findAllActiveByOrderByOfferIdAsc(Pageable pageable);
 
+    @EntityGraph(attributePaths = {"application.candidate.account", "application.jobPosting.requisition.department", "proposedBy"})
     @Query("SELECT o FROM OfferProposal o WHERE (o.isDeleted IS NULL OR o.isDeleted = false) " +
            "AND (LOWER(o.offerStatus) = LOWER(:status) " +
            "     OR (LOWER(:status) = 'director_approved' AND LOWER(o.offerStatus) = 'approved') " +

@@ -2,6 +2,7 @@ package com.group2.rms.offer.repository;
 
 import com.group2.rms.offer.entity.OfferApproval;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.stereotype.Repository;
 
 import org.springframework.data.domain.Page;
@@ -13,6 +14,9 @@ import java.util.List;
 public interface OfferApprovalRepository extends JpaRepository<OfferApproval, Integer> {
 
     List<OfferApproval> findByOfferProposal_OfferIdOrderByApprovedAtDesc(Integer offerId);
+
+    @EntityGraph(attributePaths = "director")
+    List<OfferApproval> findByOfferProposal_OfferIdInOrderByApprovedAtDescOfferApprovalIdDesc(List<Integer> offerIds);
 
     Page<OfferApproval> findByDirector_UserIdOrderByApprovedAtDesc(Integer directorId, Pageable pageable);
 

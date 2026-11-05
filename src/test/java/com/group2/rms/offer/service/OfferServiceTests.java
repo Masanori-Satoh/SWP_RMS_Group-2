@@ -661,17 +661,8 @@ class OfferServiceTests {
         InterviewSchedule s5 = InterviewSchedule.builder().application(app5).build();
         InterviewFinalResult r5 = InterviewFinalResult.builder().finalResultId(5).interviewSchedule(s5).finalDecision("Passed").build();
 
-        OfferProposal offer1 = OfferProposal.builder().offerId(101).offerStatus("Pending_Director").build();
-        OfferProposal offer2 = OfferProposal.builder().offerId(102).offerStatus("Accepted").build();
-        OfferProposal offer3 = OfferProposal.builder().offerId(103).offerStatus("Draft").build();
-        OfferProposal offer5 = OfferProposal.builder().offerId(105).offerStatus("Rejected").build();
-
         when(interviewFinalResultRepository.findAllPassedWithDetails()).thenReturn(List.of(r1, r2, r3, r4, r5));
-        when(offerProposalRepository.findByApplication_ApplicationId(1)).thenReturn(Optional.of(offer1));
-        when(offerProposalRepository.findByApplication_ApplicationId(2)).thenReturn(Optional.of(offer2));
-        when(offerProposalRepository.findByApplication_ApplicationId(3)).thenReturn(Optional.of(offer3));
-        when(offerProposalRepository.findByApplication_ApplicationId(4)).thenReturn(Optional.empty());
-        when(offerProposalRepository.findByApplication_ApplicationId(5)).thenReturn(Optional.of(offer5));
+        when(offerProposalRepository.findActiveApplicationIds(List.of(1, 2, 3, 4, 5))).thenReturn(List.of(1, 2, 3, 5));
 
         List<PassedCandidateResponse> list = offerService.getPassedCandidatesForOffer();
 
@@ -679,6 +670,20 @@ class OfferServiceTests {
         assertEquals(1, list.size(), "Chỉ có ứng viên chưa có bất kỳ Offer nào mới được gợi ý tạo mới");
         assertEquals(4, list.get(0).getApplicationId());
         assertNull(list.get(0).getExistingOfferStatus());
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {25, 500, 501})
+    void candidateEligibilityLooksUpExistingOffersInBoundedBatches(int count) {
+        var results = java.util.stream.IntStream.rangeClosed(1, count)
+                .mapToObj(id -> InterviewFinalResult.builder().interviewSchedule(InterviewSchedule.builder()
+                        .application(Application.builder().applicationId(id).applicationStatus("Interviewing").build())
+                        .build()).build()).toList();
+        when(interviewFinalResultRepository.findAllPassedWithDetails()).thenReturn(results);
+        when(offerProposalRepository.findActiveApplicationIds(anyList())).thenReturn(List.of());
+        assertEquals(count, offerService.getPassedCandidatesForOffer().size());
+        verify(offerProposalRepository, times((count + 499) / 500)).findActiveApplicationIds(anyList());
+        verify(offerProposalRepository, never()).findByApplication_ApplicationId(anyInt());
     }
 
     @ParameterizedTest

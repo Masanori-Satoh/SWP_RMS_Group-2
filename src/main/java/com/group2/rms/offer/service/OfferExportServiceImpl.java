@@ -1,7 +1,5 @@
 package com.group2.rms.offer.service;
 
-import com.group2.rms.candidate.domain.entity.Application;
-import com.group2.rms.candidate.domain.entity.Candidate;
 import com.group2.rms.offer.exception.OfferValidationException;
 import com.group2.rms.offer.dto.OfferExportFilterRequest;
 import com.group2.rms.offer.dto.OfferExportRequest;
@@ -11,10 +9,6 @@ import com.group2.rms.offer.entity.OfferApproval;
 import com.group2.rms.offer.entity.OfferProposal;
 import com.group2.rms.offer.repository.OfferApprovalRepository;
 import com.group2.rms.offer.repository.OfferProposalRepository;
-import com.group2.rms.user.entity.User;
-import jakarta.persistence.criteria.Join;
-import jakarta.persistence.criteria.JoinType;
-import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.*;
@@ -93,8 +87,9 @@ public class OfferExportServiceImpl implements OfferExportService {
                 col.equals("directorName") || col.equals("directorDecision")
                         || col.equals("directorComments") || col.equals("approvedAt"));
 
+        Map<Integer, OfferApproval> latestApprovals = needDirectorDetails ? loadLatestApprovals(entities) : Map.of();
         List<OfferExportRow> rows = entities.stream()
-                .map(entity -> mapToExportRow(entity, needDirectorDetails))
+                .map(entity -> mapToExportRow(entity, latestApprovals.get(entity.getOfferId())))
                 .toList();
 
         // 3. Xây dựng Apache POI Workbook với 2 sheet: Offers & Summary
@@ -179,50 +174,8 @@ public class OfferExportServiceImpl implements OfferExportService {
             return offerProposalRepository.findAll(baseActiveSpec, sort);
         }
 
-        // Scope: FILTERED
-        String keyword = filters != null ? filters.keyword() : null;
-        String status = filters != null ? filters.status() : null;
-
-        boolean hasSearch = keyword != null && !keyword.trim().isEmpty();
-        boolean hasStatus = status != null && !status.trim().isEmpty() && !"ALL".equalsIgnoreCase(status.trim());
-
-        Specification<OfferProposal> filteredSpec = (root, query, builder) -> {
-            List<Predicate> predicates = new ArrayList<>();
-            predicates.add(baseActiveSpec.toPredicate(root, query, builder));
-
-            if (hasSearch) {
-                String pattern = "%" + keyword.trim().toLowerCase(Locale.ROOT) + "%";
-                Join<OfferProposal, Application> appJoin = root.join("application", JoinType.LEFT);
-                Join<Application, Candidate> candJoin = appJoin.join("candidate", JoinType.LEFT);
-                Join<Candidate, User> userJoin = candJoin.join("account", JoinType.LEFT);
-
-                predicates.add(builder.or(
-                        builder.like(builder.lower(root.get("offeredPositionTitle")), pattern),
-                        builder.like(builder.lower(userJoin.get("fullName")), pattern)
-                ));
-            }
-
-            if (hasStatus) {
-                String s = status.trim();
-                if ("Director_Approved".equalsIgnoreCase(s) || "Approved".equalsIgnoreCase(s)) {
-                    predicates.add(builder.or(
-                            builder.equal(builder.lower(root.get("offerStatus")), "director_approved"),
-                            builder.equal(builder.lower(root.get("offerStatus")), "approved")
-                    ));
-                } else if ("Director_Rejected".equalsIgnoreCase(s) || "Rejected".equalsIgnoreCase(s)) {
-                    predicates.add(builder.or(
-                            builder.equal(builder.lower(root.get("offerStatus")), "director_rejected"),
-                            builder.equal(builder.lower(root.get("offerStatus")), "rejected")
-                    ));
-                } else {
-                    predicates.add(builder.equal(builder.lower(root.get("offerStatus")), s.toLowerCase(Locale.ROOT)));
-                }
-            }
-
-            return builder.and(predicates.toArray(new Predicate[0]));
-        };
-
-        return offerProposalRepository.findAll(filteredSpec, sort);
+        return offerProposalRepository.findAll(OfferProposalRepository.matchingFilters(
+                filters != null ? filters.keyword() : null, filters != null ? filters.status() : null), sort);
     }
 
     private Sort resolveSort(String timeSort) {
@@ -239,7 +192,18 @@ public class OfferExportServiceImpl implements OfferExportService {
     // DTO MAPPING
     // =========================================================================
 
-    private OfferExportRow mapToExportRow(OfferProposal offer, boolean needDirectorDetails) {
+    private Map<Integer, OfferApproval> loadLatestApprovals(List<OfferProposal> offers) {
+        Map<Integer, OfferApproval> latest = new HashMap<>();
+        List<Integer> ids = offers.stream().map(OfferProposal::getOfferId).toList();
+        for (int offset = 0; offset < ids.size(); offset += 500) {
+            offerApprovalRepository.findByOfferProposal_OfferIdInOrderByApprovedAtDescOfferApprovalIdDesc(
+                    ids.subList(offset, Math.min(offset + 500, ids.size())))
+                    .forEach(approval -> latest.putIfAbsent(approval.getOfferProposal().getOfferId(), approval));
+        }
+        return latest;
+    }
+
+    private OfferExportRow mapToExportRow(OfferProposal offer, OfferApproval latest) {
         var app = offer.getApplication();
         var cand = app != null ? app.getCandidate() : null;
         var user = cand != null ? cand.getAccount() : null;
@@ -261,18 +225,11 @@ public class OfferExportServiceImpl implements OfferExportService {
         String directorComments = null;
         LocalDateTime approvedAt = null;
 
-        if (needDirectorDetails) {
-            List<OfferApproval> approvals = offerApprovalRepository
-                    .findByOfferProposal_OfferIdOrderByApprovedAtDesc(offer.getOfferId());
-            if (!approvals.isEmpty()) {
-                OfferApproval latest = approvals.get(0);
-                if (latest.getDirector() != null) {
-                    directorName = latest.getDirector().getFullName();
-                }
-                directorDecision = mapDirectorStatusLabel(latest.getStatus());
-                directorComments = latest.getDirectorComments();
-                approvedAt = latest.getApprovedAt();
-            }
+        if (latest != null) {
+            if (latest.getDirector() != null) directorName = latest.getDirector().getFullName();
+            directorDecision = mapDirectorStatusLabel(latest.getStatus());
+            directorComments = latest.getDirectorComments();
+            approvedAt = latest.getApprovedAt();
         }
 
         String proposedByName = offer.getProposedBy() != null ? offer.getProposedBy().getFullName() : null;

@@ -131,6 +131,17 @@ public class OfferServiceImpl implements OfferService {
             return Collections.emptyList();
         }
 
+        List<Integer> applicationIds = passedResults.stream().map(result -> result.getInterviewSchedule())
+                .filter(java.util.Objects::nonNull).map(schedule -> schedule.getApplication())
+                .filter(application -> application != null && application.getApplicationId() != null && !isApplicationEnded(application))
+                .map(Application::getApplicationId).distinct().toList();
+        Set<Integer> existingApplications = new HashSet<>();
+        // Bound IN parameters to stay below SQL Server's 2100-parameter limit.
+        for (int offset = 0; offset < applicationIds.size(); offset += 500) {
+            existingApplications.addAll(offerProposalRepository.findActiveApplicationIds(
+                    applicationIds.subList(offset, Math.min(offset + 500, applicationIds.size()))));
+        }
+
         List<PassedCandidateResponse> list = new ArrayList<>();
         Set<Integer> processedAppIds = new HashSet<>();
 
@@ -149,10 +160,8 @@ public class OfferServiceImpl implements OfferService {
                 continue;
             }
 
-            // Quy tắc GBR-07: Chỉ chấp nhận tạo mới đối với ứng viên chưa từng có bất kỳ Offer nào (kể cả bản Draft)
-            Optional<OfferProposal> offerOpt = offerProposalRepository.findByApplication_ApplicationId(appId);
-            if (offerOpt.isPresent() && !Boolean.TRUE.equals(offerOpt.get().getIsDeleted())) {
-                continue; // Ứng viên đã có Offer (kể cả Draft) -> Không gợi ý trong mục tạo đề xuất mới
+            if (existingApplications.contains(appId)) {
+                continue;
             }
 
             processedAppIds.add(appId);
@@ -333,48 +342,7 @@ public class OfferServiceImpl implements OfferService {
 
         Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
 
-        Specification<OfferProposal> spec = (root, query, builder) -> {
-            List<Predicate> predicates = new ArrayList<>();
-
-            // 1. Chỉ lấy các bản ghi chưa bị xóa mềm
-            predicates.add(builder.or(
-                    builder.isNull(root.get("isDeleted")),
-                    builder.isFalse(root.get("isDeleted"))
-            ));
-
-            // 2. Lọc theo từ khóa (tên ứng viên, vị trí đề xuất)
-            if (hasSearch) {
-                String pattern = "%" + search.trim().toLowerCase(Locale.ROOT) + "%";
-                Join<OfferProposal, Application> appJoin = root.join("application", JoinType.LEFT);
-                Join<Application, Candidate> candJoin = appJoin.join("candidate", JoinType.LEFT);
-                Join<Candidate, User> userJoin = candJoin.join("account", JoinType.LEFT);
-
-                predicates.add(builder.or(
-                        builder.like(builder.lower(root.get("offeredPositionTitle")), pattern),
-                        builder.like(builder.lower(userJoin.get("fullName")), pattern)
-                ));
-            }
-
-            // 3. Lọc theo trạng thái
-            if (hasStatus) {
-                String s = status.trim();
-                if ("Director_Approved".equalsIgnoreCase(s) || "Approved".equalsIgnoreCase(s)) {
-                    predicates.add(builder.or(
-                            builder.equal(builder.lower(root.get("offerStatus")), "director_approved"),
-                            builder.equal(builder.lower(root.get("offerStatus")), "approved")
-                    ));
-                } else if ("Director_Rejected".equalsIgnoreCase(s) || "Rejected".equalsIgnoreCase(s)) {
-                    predicates.add(builder.or(
-                            builder.equal(builder.lower(root.get("offerStatus")), "director_rejected"),
-                            builder.equal(builder.lower(root.get("offerStatus")), "rejected")
-                    ));
-                } else {
-                    predicates.add(builder.equal(builder.lower(root.get("offerStatus")), s.toLowerCase(Locale.ROOT)));
-                }
-            }
-
-            return builder.and(predicates.toArray(new Predicate[0]));
-        };
+        Specification<OfferProposal> spec = OfferProposalRepository.matchingFilters(search, status);
 
         Page<OfferProposal> pagedEntities = offerProposalRepository.findAll(spec, sortedPageable);
         return pagedEntities.map(this::mapToResponse);

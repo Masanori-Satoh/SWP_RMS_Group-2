@@ -49,7 +49,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 /** Opt-in SQL Server regression tests. Schema creation is restricted to a dedicated temporary database. */
 @DataJpaTest(showSql = false)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@Import({OfferServiceImpl.class, ClockConfig.class, SchemaNamingConfig.class})
+@Import({OfferServiceImpl.class, com.group2.rms.offer.service.OfferExportServiceImpl.class, ClockConfig.class, SchemaNamingConfig.class})
 @EnabledIfSystemProperty(named = "offer.integration.url", matches = ".*databaseName=OfferRegression_[a-f0-9]{32};.*")
 class OfferPersistenceRegressionTests {
     @DynamicPropertySource
@@ -61,10 +61,14 @@ class OfferPersistenceRegressionTests {
         properties.add("spring.datasource.url", () -> url);
         properties.add("spring.jpa.hibernate.ddl-auto", () -> "create-drop");
         properties.add("spring.sql.init.mode", () -> "never");
+        properties.add("spring.jpa.properties.hibernate.generate_statistics", () -> "true");
+        properties.add("logging.level.org.hibernate.engine.internal.StatisticalLoggingSessionEventListener", () -> "OFF");
     }
 
     @Autowired EntityManager entityManager;
     @Autowired OfferService service;
+    @Autowired OfferProposalRepository proposalRepository;
+    @Autowired com.group2.rms.offer.service.OfferExportService exportService;
     @Autowired PlatformTransactionManager transactionManager;
     @MockitoBean OfferMailSender mailSender;
     @MockitoBean com.group2.rms.notification.service.NotificationService notificationService;
@@ -126,6 +130,98 @@ class OfferPersistenceRegressionTests {
         assertEquals("Director_Approved", offer.getOfferStatus());
         assertEquals(status, offer.getApplication().getApplicationStatus());
         verifyNoInteractions(mailSender, notificationService);
+    }
+
+    private String createQueryFixture() {
+        String keyword = "Batch_" + UUID.randomUUID().toString().substring(0, 8);
+        Application original = offer.getApplication();
+        for (int index = 0; index < 25; index++) {
+            OfferProposal current = offer;
+            if (index > 0) {
+                Application application = Application.builder().candidate(original.getCandidate())
+                        .jobPosting(original.getJobPosting()).applicationStatus("Interviewing")
+                        .appliedCvUrl("/test/cv.pdf").build();
+                entityManager.persist(application);
+                current = OfferProposal.builder().application(application).proposedBy(offer.getProposedBy())
+                        .offeredPositionTitle(keyword).proposedSalary(offer.getProposedSalary())
+                        .probationSalary(offer.getProbationSalary()).offerStatus("Draft").build();
+                entityManager.persist(current);
+            }
+            current.setOfferedPositionTitle(keyword);
+            for (int decision = 0; decision < 2; decision++) {
+                entityManager.persist(com.group2.rms.offer.entity.OfferApproval.builder().offerProposal(current)
+                        .director(offer.getProposedBy()).status("Approved")
+                        .directorComments(decision == 1 ? "Latest decision" : "Old decision")
+                        .approvedAt(java.time.LocalDateTime.of(2026, 1, decision + 1, 12, 0)).build());
+            }
+        }
+        entityManager.flush();
+        entityManager.clear();
+        return keyword;
+    }
+
+    @Test
+    void listingTwentyFiveOffersHasABoundedQueryBudget() {
+        String keyword = createQueryFixture();
+        var statistics = entityManager.getEntityManagerFactory().unwrap(org.hibernate.SessionFactory.class).getStatistics();
+        statistics.clear();
+        var result = service.getAllOffersForHr(keyword, "Draft", "LATEST",
+                org.springframework.data.domain.PageRequest.of(0, 100));
+        assertEquals(25, result.getTotalElements());
+        System.out.println("OFFER_QUERY_COUNT list25=" + statistics.getPrepareStatementCount());
+        assertTrue(statistics.getPrepareStatementCount() <= 2, "Listing must not query each Offer's relationships separately");
+    }
+
+    @Test
+    void exportingTwentyFiveOffersUsesLatestDecisionsAndABoundedQueryBudget() throws Exception {
+        String keyword = createQueryFixture();
+        var statistics = entityManager.getEntityManagerFactory().unwrap(org.hibernate.SessionFactory.class).getStatistics();
+        statistics.clear();
+        byte[] result = exportService.exportOffersToExcel(new com.group2.rms.offer.dto.OfferExportRequest(
+                com.group2.rms.offer.dto.OfferExportScope.FILTERED, null,
+                new com.group2.rms.offer.dto.OfferExportFilterRequest(keyword, "Draft", "LATEST"),
+                java.util.List.of("offerId", "offeredPositionTitle", "directorName", "directorComments")), "Test HR");
+        System.out.println("OFFER_QUERY_COUNT export25=" + statistics.getPrepareStatementCount());
+        assertTrue(statistics.getPrepareStatementCount() <= 2, "Export must batch relationships and approval history");
+        try (var workbook = new org.apache.poi.xssf.usermodel.XSSFWorkbook(new java.io.ByteArrayInputStream(result))) {
+            int positions = 0, latest = 0;
+            for (var row : workbook.getSheetAt(0)) {
+                for (var cell : row) {
+                    if (cell.getCellType() == org.apache.poi.ss.usermodel.CellType.STRING) {
+                        if (keyword.equals(cell.getStringCellValue())) positions++;
+                        if ("Latest decision".equals(cell.getStringCellValue())) latest++;
+                    }
+                }
+            }
+            assertEquals(25, positions);
+            assertEquals(25, latest);
+        }
+    }
+
+    @Test
+    void sharedFiltersPreserveAliasesSoftDeletionAndLiteralLikeCharacters() {
+        offer.setOfferedPositionTitle("Engineer 50%_[x]");
+        offer.setOfferStatus("Approved");
+        entityManager.flush();
+        var criteria = entityManager.getCriteriaBuilder();
+        var query = criteria.createQuery(OfferProposal.class);
+        var root = query.from(OfferProposal.class);
+        query.where(OfferProposalRepository.matchingFilters("%_[", "Director_Approved")
+                .toPredicate(root, query, criteria));
+        assertEquals(1, entityManager.createQuery(query).getResultList().size());
+        offer.setIsDeleted(true);
+        entityManager.flush();
+        assertTrue(entityManager.createQuery(query).getResultList().isEmpty());
+    }
+
+    @Test
+    void activeApplicationLookupIgnoresDeletedOffers() {
+        Integer id = offer.getApplication().getApplicationId();
+        // Exercise the actual repository query, including its soft-delete predicate.
+        assertEquals(java.util.List.of(id), proposalRepository.findActiveApplicationIds(java.util.List.of(id)));
+        offer.setIsDeleted(true);
+        entityManager.flush();
+        assertTrue(proposalRepository.findActiveApplicationIds(java.util.List.of(id)).isEmpty());
     }
 
     @RepeatedTest(3)
