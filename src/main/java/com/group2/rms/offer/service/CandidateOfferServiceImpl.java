@@ -1,6 +1,6 @@
 package com.group2.rms.offer.service;
 
-import com.group2.rms.candidate.domain.rule.ApplicationStatusService;
+import com.group2.rms.candidate.domain.repository.ApplicationRepository;
 import com.group2.rms.core.exception.ResourceNotFoundException;
 import com.group2.rms.core.security.CurrentUserService;
 import com.group2.rms.offer.dto.CandidateOfferDetailResponse;
@@ -30,34 +30,34 @@ public class CandidateOfferServiceImpl implements CandidateOfferService {
 
     private final CandidateOfferRepository offers;
     private final CurrentUserService currentUserService;
-    private final ApplicationStatusService applicationStatusService;
+    private final ApplicationRepository applications;
     private final com.group2.rms.notification.service.NotificationService systemNotificationService;
     private final Clock clock;
 
     @org.springframework.beans.factory.annotation.Autowired
     public CandidateOfferServiceImpl(CandidateOfferRepository offers,
                                     CurrentUserService currentUserService,
-                                    ApplicationStatusService applicationStatusService,
+                                    ApplicationRepository applications,
                                     com.group2.rms.notification.service.NotificationService systemNotificationService,
                                     Clock clock) {
         this.offers = offers;
         this.currentUserService = currentUserService;
-        this.applicationStatusService = applicationStatusService;
+        this.applications = applications;
         this.systemNotificationService = systemNotificationService;
         this.clock = clock != null ? clock : Clock.systemDefaultZone();
     }
 
     public CandidateOfferServiceImpl(CandidateOfferRepository offers,
                                     CurrentUserService currentUserService,
-                                    ApplicationStatusService applicationStatusService,
+                                    ApplicationRepository applications,
                                     com.group2.rms.notification.service.NotificationService systemNotificationService) {
-        this(offers, currentUserService, applicationStatusService, systemNotificationService, Clock.systemDefaultZone());
+        this(offers, currentUserService, applications, systemNotificationService, Clock.systemDefaultZone());
     }
 
     public CandidateOfferServiceImpl(CandidateOfferRepository offers,
                                     CurrentUserService currentUserService,
-                                    ApplicationStatusService applicationStatusService) {
-        this(offers, currentUserService, applicationStatusService, null, Clock.systemDefaultZone());
+                                    ApplicationRepository applications) {
+        this(offers, currentUserService, applications, null, Clock.systemDefaultZone());
     }
 
     /**
@@ -116,7 +116,7 @@ public class CandidateOfferServiceImpl implements CandidateOfferService {
     /**
      * Luồng chung nhận/từ chối: xác định chủ sở hữu → kiểm tra hạn/trạng thái → cập nhật nếu còn Sent_Candidate.
      * Chỉ một yêu cầu cập nhật được; yêu cầu đến sau nhận lỗi thay vì ghi đè câu trả lời trước đó.
-     * Sau đó gọi module hồ sơ: nhận thư mời chuyển Offered → Hired; từ chối chuyển Offered → Withdrawn.
+     * Cập nhật hồ sơ Offered → Hired/Withdrawn bằng query sẵn có; 0 dòng thì rollback cả phản hồi Offer.
      * Lý do từ chối của ứng viên là tùy chọn, khác với lý do từ chối đề xuất của Giám đốc.
      */
     private String answer(Integer offerId, boolean accepted, String declineReason) {
@@ -130,13 +130,16 @@ public class CandidateOfferServiceImpl implements CandidateOfferService {
         if (cleanReason != null && cleanReason.length() > 1000) {
             cleanReason = cleanReason.substring(0, 1000);
         }
-        int updated = (cleanReason != null)
-                ? offers.answerIfSent(offerId, toStatus, cleanReason)
-                : offers.answerIfSent(offerId, toStatus);
+        LocalDateTime responseTime = LocalDateTime.now(clock);
+        int updated = offers.answerIfEligible(offerId, userId, toStatus, cleanReason,
+                responseTime, responseTime.toLocalDate());
         if (updated == 0) {
-            throw new OfferResponseException("Thư mời vừa được cập nhật. Vui lòng tải lại trang.");
+            throw new OfferResponseException("Thư mời đã cập nhật, đã hết hạn hoặc hồ sơ không còn chờ phản hồi. Vui lòng tải lại trang.");
         }
-        applicationStatusService.onOfferAnswered(offer.getApplication().getApplicationId(), accepted);
+        if (applications.transition(offer.getApplication().getApplicationId(), Set.of("Offered"),
+                accepted ? "Hired" : "Withdrawn") != 1) {
+            throw new OfferResponseException("Hồ sơ vừa thay đổi. Vui lòng tải lại trang để kiểm tra kết quả.");
+        }
         if (systemNotificationService != null) {
             try {
                 systemNotificationService.markOfferNotificationRead(userId, offerId);
@@ -151,7 +154,7 @@ public class CandidateOfferServiceImpl implements CandidateOfferService {
     /**
      * Chấp nhận phản hồi khi còn Sent_Candidate, chưa qua hạn trả lời và chưa qua ngày bắt đầu dự kiến.
      * Đúng thời điểm bằng hạn vẫn hợp lệ vì code dùng isAfter; ngày bắt đầu bằng hôm nay chưa bị chặn bởi điều kiện ngày.
-     * Kiểm tra này chạy trước câu UPDATE; điều kiện thời gian chưa nằm trong chính câu UPDATE nguyên tử.
+     * Đây là lỗi giải thích sớm; câu UPDATE còn kiểm tra lại hạn, chủ sở hữu và trạng thái hồ sơ.
      */
     private void requireAnswerable(OfferProposal offer) {
         if (!SENT.equals(offer.getOfferStatus())) {

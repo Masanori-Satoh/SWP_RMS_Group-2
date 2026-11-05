@@ -49,7 +49,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 /** Opt-in SQL Server regression tests. Schema creation is restricted to a dedicated temporary database. */
 @DataJpaTest(showSql = false)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@Import({com.group2.rms.core.security.CurrentUserService.class, OfferServiceImpl.class, com.group2.rms.offer.service.OfferExportServiceImpl.class, ClockConfig.class, SchemaNamingConfig.class})
+@Import({com.group2.rms.core.security.CurrentUserService.class, OfferServiceImpl.class, com.group2.rms.offer.service.CandidateOfferServiceImpl.class, com.group2.rms.offer.service.OfferExportServiceImpl.class, ClockConfig.class, SchemaNamingConfig.class})
 @EnabledIfSystemProperty(named = "offer.integration.url", matches = ".*databaseName=OfferRegression_[a-f0-9]{32};.*")
 class OfferPersistenceRegressionTests {
     @DynamicPropertySource
@@ -68,11 +68,67 @@ class OfferPersistenceRegressionTests {
     @Autowired EntityManager entityManager;
     @Autowired OfferService service;
     @Autowired OfferProposalRepository proposalRepository;
+    @Autowired CandidateOfferRepository candidateRepository;
+    @Autowired com.group2.rms.offer.service.CandidateOfferService candidateService;
+    @org.springframework.test.context.bean.override.mockito.MockitoSpyBean
+    com.group2.rms.candidate.domain.repository.ApplicationRepository applications;
     @Autowired com.group2.rms.offer.service.OfferExportService exportService;
     @Autowired PlatformTransactionManager transactionManager;
     @MockitoBean OfferMailSender mailSender;
     @MockitoBean com.group2.rms.notification.service.NotificationService notificationService;
     private OfferProposal offer;
+
+    @ParameterizedTest
+    @ValueSource(ints = {-1, 0, 1})
+    void responseUpdateChecksTheDeadlineAtTheDatabase(int seconds) {
+        var now = java.time.LocalDateTime.now().withNano(0);
+        offer.setOfferStatus("Sent_Candidate");
+        offer.setResponseDeadline(now.plusSeconds(seconds));
+        offer.getApplication().setApplicationStatus("Offered");
+        entityManager.flush();
+        int updated = candidateRepository.answerIfEligible(offer.getOfferId(), offer.getProposedBy().getUserId(),
+                "Accepted", null, now, now.toLocalDate());
+        assertEquals(seconds < 0 ? 0 : 1, updated);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"wrong-owner", "deleted", "ended-application", "past-start"})
+    void responseUpdateRejectsIneligibleRecords(String scenario) {
+        var now = java.time.LocalDateTime.now();
+        offer.setOfferStatus("Sent_Candidate");
+        offer.setResponseDeadline(now.plusDays(1));
+        offer.getApplication().setApplicationStatus("Offered");
+        if ("deleted".equals(scenario)) offer.setIsDeleted(true);
+        if ("ended-application".equals(scenario)) offer.getApplication().setApplicationStatus("Withdrawn");
+        if ("past-start".equals(scenario)) offer.setExpectedStartDate(now.toLocalDate().minusDays(1));
+        entityManager.flush();
+        int owner = "wrong-owner".equals(scenario) ? -1 : offer.getProposedBy().getUserId();
+        assertEquals(0, candidateRepository.answerIfEligible(offer.getOfferId(), owner, "Declined", null,
+                now, now.toLocalDate()));
+    }
+
+    @Test
+    void failedApplicationTransitionRollsBackTheOfferResponse() {
+        offer.setOfferStatus("Sent_Candidate");
+        offer.setResponseDeadline(java.time.LocalDateTime.now().plusDays(1));
+        offer.getApplication().setApplicationStatus("Offered");
+        Integer id = offer.getOfferId();
+        String username = offer.getProposedBy().getUsername();
+        TestTransaction.flagForCommit();
+        TestTransaction.end();
+        org.mockito.Mockito.doReturn(0).when(applications).transition(org.mockito.ArgumentMatchers.anyInt(),
+                org.mockito.ArgumentMatchers.anyCollection(), org.mockito.ArgumentMatchers.anyString());
+        var security = org.springframework.security.core.context.SecurityContextHolder.getContext();
+        var previous = security.getAuthentication();
+        security.setAuthentication(new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+                username, "test-only", java.util.List.of()));
+        try {
+            assertThrows(com.group2.rms.offer.exception.OfferResponseException.class, () -> candidateService.accept(id));
+            new TransactionTemplate(transactionManager).executeWithoutResult(status ->
+                    assertEquals("Sent_Candidate", entityManager.find(OfferProposal.class, id).getOfferStatus()));
+            verifyNoInteractions(notificationService);
+        } finally { security.setAuthentication(previous); }
+    }
 
     @BeforeEach
     void createSyntheticOffer() {

@@ -23,6 +23,7 @@ public interface CandidateOfferRepository extends JpaRepository<OfferProposal, I
                 join fetch o.application a
                 join fetch a.jobPosting
             where a.candidate.account.userId = :userId and o.offerStatus in :statuses
+                and (o.isDeleted is null or o.isDeleted = false)
             order by o.offerId desc
             """)
     List<OfferProposal> findVisibleByUserId(@Param("userId") Integer userId,
@@ -38,25 +39,26 @@ public interface CandidateOfferRepository extends JpaRepository<OfferProposal, I
                 left join fetch req.department dept
                 left join fetch o.proposedBy p
             where o.offerId = :id and u.userId = :userId and o.offerStatus in :statuses
+                and (o.isDeleted is null or o.isDeleted = false)
             """)
     Optional<OfferProposal> findVisibleById(@Param("id") Integer offerId, @Param("userId") Integer userId,
                                             @Param("statuses") Collection<String> statuses);
 
     /**
-     * Chỉ chuyển {@code Sent_Candidate → to}. Trả 0 nghĩa là offer đã được trả lời (hoặc đổi trạng thái)
-     * trước đó, để hai lần bấm gần nhau không ghi đè nhau.
+     * Kiểm tra và ghi trong cùng UPDATE, theo một mốc thời gian server truyền vào.
+     * Bằng đúng hạn vẫn hợp lệ; 0 dòng là quá hạn, đổi trạng thái, sai chủ sở hữu hoặc hồ sơ không còn Offered.
      */
-    @Modifying
-    @Query("UPDATE OfferProposal o SET o.offerStatus = :to, o.updatedAt = CURRENT_TIMESTAMP " +
-           "WHERE o.offerId = :id AND o.offerStatus = 'Sent_Candidate'")
-    /**
-     * Cập nhật có điều kiện Sent_Candidate → Accepted/Declined; 0 dòng nghĩa là trạng thái đã thay đổi.
-     * Chủ sở hữu và hạn phản hồi được service kiểm tra trước; câu UPDATE này chỉ bảo vệ điều kiện trạng thái.
-     */
-    int answerIfSent(@Param("id") Integer offerId, @Param("to") String to);
-
-    @Modifying
-    @Query("UPDATE OfferProposal o SET o.offerStatus = :to, o.declineReason = :reason, o.updatedAt = CURRENT_TIMESTAMP " +
-           "WHERE o.offerId = :id AND o.offerStatus = 'Sent_Candidate'")
-    int answerIfSent(@Param("id") Integer offerId, @Param("to") String to, @Param("reason") String reason);
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+            UPDATE OfferProposal o SET o.offerStatus = :to, o.declineReason = :reason, o.updatedAt = CURRENT_TIMESTAMP
+            WHERE o.offerId = :id AND o.offerStatus = 'Sent_Candidate'
+                AND (o.isDeleted IS NULL OR o.isDeleted = false)
+                AND (o.responseDeadline IS NULL OR o.responseDeadline >= :now)
+                AND (o.expectedStartDate IS NULL OR o.expectedStartDate >= :today)
+                AND EXISTS (SELECT a.applicationId FROM Application a WHERE a.applicationId = o.application.applicationId
+                    AND a.candidate.account.userId = :userId AND a.applicationStatus = 'Offered')
+            """)
+    int answerIfEligible(@Param("id") Integer offerId, @Param("userId") Integer userId,
+                         @Param("to") String to, @Param("reason") String reason,
+                         @Param("now") java.time.LocalDateTime now, @Param("today") java.time.LocalDate today);
 }
