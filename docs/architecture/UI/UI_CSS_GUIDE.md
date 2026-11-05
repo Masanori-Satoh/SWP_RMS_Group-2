@@ -107,5 +107,6 @@ Khi một khối đã xuất hiện ở ≥ 2 trang:
 | File | Ngoại lệ | Lý do |
 |---|---|---|
 | `landing.css` | Tự định nghĩa `:root` (màu, bo góc, font riêng); không nạp `tokens.css`/`components.css` | Trang "bộ mặt" có phong cách riêng. Topbar và logo vẫn chuẩn nhờ khối cầu nối token trong `topbar.css`. |
+| `pages/job-theme.css` | Khai báo lại màu (có hex) trong `.jb-page, .jd-page`, chép từ `:root` của `landing.css` | `/jobs`, `/jobs/{id}` cùng bảng màu với landing. Chỉ có hiệu lực trong vùng nội dung hai trang. |
 | `topbar.css` (khối `.public-topbar, .wordmark`) | Ghi lại giá trị token bằng hex | Cầu nối để topbar/logo đúng màu trên landing. Giá trị phải luôn khớp `tokens.css`. |
 | `design-tokens.css`, `interface.css` | Bộ token/CSS cũ song song | Không còn trang nội bộ nào nạp (`interfaceHead` đã gỡ 28/10); chờ xóa theo `UI_LEGACY_CLEANUP.md`. |

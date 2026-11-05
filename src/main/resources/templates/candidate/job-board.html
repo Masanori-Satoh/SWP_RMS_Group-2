@@ -13,6 +13,11 @@
 <head>
     <title>Vị trí đang tuyển — Mộc Tuyển dụng</title>
     <th:block layout:fragment="styles">
+        <!-- Font Plus Jakarta Sans tải về máy chủ (css/fonts-modern.css); preload để chữ không nháy đổi kiểu lúc tải -->
+        <link rel="preload" as="font" type="font/woff2" crossorigin th:href="@{/fonts/plus-jakarta-sans-normal-latin.woff2}">
+        <link rel="preload" as="font" type="font/woff2" crossorigin th:href="@{/fonts/plus-jakarta-sans-normal-vietnamese.woff2}">
+        <link rel="stylesheet" th:href="@{/css/fonts-modern.css}">
+        <link rel="stylesheet" th:href="@{/css/pages/job-theme.css}">
         <link rel="stylesheet" th:href="@{/css/pages/job-board.css}">
     </th:block>
 </head>
@@ -25,7 +30,7 @@
         <div class="page-header jb-header">
             <div>
                 <h1 class="page-title jb-title">Vị trí đang tuyển</h1>
-                <p class="page-subtitle">Tìm vị trí phù hợp theo từ khóa, phòng ban và hình thức làm việc.</p>
+                <p class="page-subtitle jb-subtitle">Tìm vị trí phù hợp theo từ khóa, phòng ban và hình thức làm việc.</p>
             </div>
             <div class="jb-results">
                 <p class="jb-results__count"><strong th:text="${jobsPage.totalElements}">0</strong> vị trí đang tuyển</p>

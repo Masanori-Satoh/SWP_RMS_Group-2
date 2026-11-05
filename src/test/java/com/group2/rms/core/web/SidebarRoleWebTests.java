@@ -80,7 +80,8 @@ class SidebarRoleWebTests {
 
         for (String page : List.of("/portal/applications", "/portal/offers", "/portal/interviews", "/notifications")) {
             String html = render(page, as(candidate));
-            assertFalse(html.contains("<nav class=\"sidebar-menu-list\""), page + ": ứng viên không còn sidebar");
+            // dunglt bổ sung: bỏ dấu " đóng vì nav nay có thêm class adw-sidebar-menu viết sẵn trong HTML
+            assertFalse(html.contains("<nav class=\"sidebar-menu-list"), page + ": ứng viên không còn sidebar");
             String nav = cut(html, "<nav class=\"candidate-topbar__nav\"", page + ": không có menu ứng viên trên topbar");
 
             assertFalse(nav.contains("href=\"/applications\""), page + ": lộ menu HR /applications");
@@ -137,7 +138,7 @@ class SidebarRoleWebTests {
     }
 
     private String sidebar(String page, RequestPostProcessor viewer) throws Exception {
-        return cut(render(page, viewer), "<nav class=\"sidebar-menu-list\"", page + ": không có sidebar");
+        return cut(render(page, viewer), "<nav class=\"sidebar-menu-list", page + ": không có sidebar");
     }
 
     private String render(String page, RequestPostProcessor viewer) throws Exception {
