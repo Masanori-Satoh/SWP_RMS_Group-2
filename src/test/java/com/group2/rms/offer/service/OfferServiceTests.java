@@ -92,6 +92,11 @@ class OfferServiceTests {
 
     @org.junit.jupiter.api.BeforeEach
     void useApplicationClock() {
+        lenient().when(offerProposalRepository.findActiveForUpdate(anyInt())).thenAnswer(invocation ->
+                offerProposalRepository.findById(invocation.getArgument(0))
+                        .filter(offer -> !Boolean.TRUE.equals(offer.getIsDeleted())));
+        lenient().when(offerProposalRepository.findByApplicationForUpdate(anyInt())).thenAnswer(invocation ->
+                offerProposalRepository.findByApplication_ApplicationId(invocation.getArgument(0)));
         lenient().when(applicationRepository.transition(anyInt(), anyCollection(), eq("Offered"))).thenReturn(1);
         lenient().when(clock.getZone()).thenReturn(ZoneId.systemDefault());
         lenient().when(clock.instant()).thenAnswer(invocation -> Clock.systemUTC().instant());

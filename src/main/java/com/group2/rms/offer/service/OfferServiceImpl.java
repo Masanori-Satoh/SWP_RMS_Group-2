@@ -175,6 +175,11 @@ public class OfferServiceImpl implements OfferService {
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đề xuất thư mời với ID: " + id));
     }
 
+    private OfferProposal findActiveOfferForUpdate(Integer id) {
+        return offerProposalRepository.findActiveForUpdate(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đề xuất thư mời với ID: " + id));
+    }
+
     @Override
     @Transactional(readOnly = true)
     public OfferResponse getOfferById(Integer offerId) {
@@ -289,7 +294,7 @@ public class OfferServiceImpl implements OfferService {
         // Áp dụng quy tắc Single Active Offer Rule (GBR-07):
         // Chỉ chấp nhận tạo mới cho ứng viên chưa có Offer; nếu đã tồn tại Offer (kể cả Draft) thì chặn lại
         Optional<OfferProposal> existingOfferOpt = offerProposalRepository
-                .findByApplication_ApplicationId(application.getApplicationId());
+                .findByApplicationForUpdate(application.getApplicationId());
 
         if (existingOfferOpt.isPresent() && !Boolean.TRUE.equals(existingOfferOpt.get().getIsDeleted())) {
             String currentStatus = existingOfferOpt.get().getOfferStatus();
@@ -549,7 +554,7 @@ public class OfferServiceImpl implements OfferService {
 
     @Override
     public OfferResponse updateOfferByHr(Integer id, UpdateOfferRequest dto) {
-        OfferProposal offer = findActiveOffer(id);
+        OfferProposal offer = findActiveOfferForUpdate(id);
         requireActiveApplication(offer.getApplication());
 
         String currentStatus = offer.getOfferStatus();
@@ -634,7 +639,7 @@ public class OfferServiceImpl implements OfferService {
 
     @Override
     public void deleteDraftOfferByHr(Integer id) {
-        OfferProposal offer = findActiveOffer(id);
+        OfferProposal offer = findActiveOfferForUpdate(id);
 
         if (!"Draft".equalsIgnoreCase(offer.getOfferStatus())) {
             throw new OfferValidationException(
@@ -650,7 +655,7 @@ public class OfferServiceImpl implements OfferService {
 
     @Override
     public OfferResponse sendOfferToCandidate(Integer id) {
-        OfferProposal offer = findActiveOffer(id);
+        OfferProposal offer = findActiveOfferForUpdate(id);
         requireActiveApplication(offer.getApplication());
 
         String currentStatus = offer.getOfferStatus();

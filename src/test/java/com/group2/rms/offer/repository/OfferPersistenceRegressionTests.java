@@ -16,6 +16,7 @@ import com.group2.rms.user.entity.User;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -26,12 +27,23 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.transaction.TestTransaction;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 
 /** Opt-in SQL Server regression tests. Schema creation is restricted to a dedicated temporary database. */
@@ -53,19 +65,21 @@ class OfferPersistenceRegressionTests {
 
     @Autowired EntityManager entityManager;
     @Autowired OfferService service;
+    @Autowired PlatformTransactionManager transactionManager;
     @MockitoBean OfferMailSender mailSender;
     @MockitoBean com.group2.rms.notification.service.NotificationService notificationService;
     private OfferProposal offer;
 
     @BeforeEach
     void createSyntheticOffer() {
-        Role role = Role.builder().roleName("HR").build();
+        String suffix = UUID.randomUUID().toString().substring(0, 8);
+        Role role = Role.builder().roleName("HR_" + suffix).build();
         entityManager.persist(role);
-        User hr = User.builder().role(role).username("offer_regression")
-                .passwordHash("test-only").email("offer-regression@example.invalid")
+        User hr = User.builder().role(role).username("offer_regression_" + suffix)
+                .passwordHash("test-only").email(suffix + "@example.invalid")
                 .fullName("Offer Regression").accountStatus("Active").build();
         entityManager.persist(hr);
-        Department department = Department.builder().departmentName("Offer Regression")
+        Department department = Department.builder().departmentName("Offer Regression " + suffix)
                 .departmentStatus("Active").build();
         entityManager.persist(department);
         JobRequisition requisition = JobRequisition.builder().title("Test position").department(department)
@@ -112,5 +126,49 @@ class OfferPersistenceRegressionTests {
         assertEquals("Director_Approved", offer.getOfferStatus());
         assertEquals(status, offer.getApplication().getApplicationStatus());
         verifyNoInteractions(mailSender, notificationService);
+    }
+
+    @RepeatedTest(3)
+    void concurrentPublicationSendsOnlyOneLetter() throws Exception {
+        offer.setOfferStatus("Director_Approved");
+        Integer id = offer.getOfferId();
+        Integer applicationId = offer.getApplication().getApplicationId();
+        // Worker transactions need a committed fixture; all data stays in the disposable database.
+        TestTransaction.flagForCommit();
+        TestTransaction.end();
+        var executor = Executors.newFixedThreadPool(2);
+        var ready = new CountDownLatch(2);
+        var start = new CountDownLatch(1);
+        java.util.concurrent.Callable<Boolean> publish = () -> {
+            ready.countDown();
+            if (!start.await(10, TimeUnit.SECONDS)) {
+                throw new AssertionError("Concurrent publication did not start");
+            }
+            try {
+                service.sendOfferToCandidate(id);
+                return true;
+            } catch (com.group2.rms.offer.exception.OfferValidationException error) {
+                assertEquals("OFFER_NOT_APPROVED", error.getErrorCode());
+                return false;
+            }
+        };
+        try {
+            var first = executor.submit(publish);
+            var second = executor.submit(publish);
+            assertTrue(ready.await(10, TimeUnit.SECONDS));
+            start.countDown();
+            assertEquals(1, (first.get(30, TimeUnit.SECONDS) ? 1 : 0)
+                    + (second.get(30, TimeUnit.SECONDS) ? 1 : 0));
+            new TransactionTemplate(transactionManager).executeWithoutResult(status -> {
+                assertEquals("Sent_Candidate", entityManager.find(OfferProposal.class, id).getOfferStatus());
+                assertEquals("Offered", entityManager.find(Application.class, applicationId).getApplicationStatus());
+            });
+            verify(mailSender, times(1)).sendOfferLetterToCandidate(any());
+            verify(notificationService, times(1)).notifyOfferLetterSent(any());
+        } finally {
+            start.countDown();
+            executor.shutdownNow();
+            assertTrue(executor.awaitTermination(10, TimeUnit.SECONDS));
+        }
     }
 }
