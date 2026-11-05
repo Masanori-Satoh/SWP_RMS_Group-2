@@ -134,6 +134,15 @@ class ApplicationProgressResolverTests {
                     "Đã gửi offer, chờ ứng viên trả lời", "Ứng viên", "brand");
         }
 
+        /** Offer hết hạn: không còn chờ ứng viên, HR xử lý tiếp; đơn vẫn Offered, chưa kết thúc. */
+        @Test
+        void offerExpired_handsBackToHr() {
+            ApplicationProgressResponse progress = resolve(offer("Offered", "Expired"));
+
+            assertProgress(progress, ApplicationStage.OFFER, OFFER_EXPIRED,
+                    "Thư mời đã quá hạn phản hồi", "HR", "neutral");
+        }
+
         @Test
         void hired() {
             ApplicationProgressResponse progress = resolve(offer("Hired", "Accepted"));

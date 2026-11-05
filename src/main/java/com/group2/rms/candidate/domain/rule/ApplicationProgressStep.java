@@ -27,6 +27,8 @@ public enum ApplicationProgressStep {
     OFFER_RETURNED(OFFER, "Giám đốc trả offer, HR sửa lại", "HR", "danger"),
     OFFER_AWAITING_SEND(OFFER, "Chờ HR gửi offer", "HR", "warning"),
     OFFER_SENT(OFFER, "Đã gửi offer, chờ ứng viên trả lời", "Ứng viên", "brand"),
+    // Offer quá hạn: đơn vẫn Offered, không còn chờ ứng viên, HR xử lý tiếp
+    OFFER_EXPIRED(OFFER, "Thư mời đã quá hạn phản hồi", "HR", "neutral"),
     HIRED_DONE(HIRED, "Đã nhận việc", null, "success"),
     WITHDRAWN(CLOSED, "Ứng viên đã rút hồ sơ", null, "neutral"),
     OFFER_DECLINED(CLOSED, "Ứng viên từ chối offer", null, "neutral"),

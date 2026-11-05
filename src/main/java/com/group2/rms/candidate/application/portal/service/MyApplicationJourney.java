@@ -74,7 +74,7 @@ public final class MyApplicationJourney {
         }
     }
 
-    /** Offer ứng viên được thấy ({@code Sent_Candidate}, {@code Accepted}, {@code Declined}). */
+    /** Offer ứng viên được thấy ({@code Sent_Candidate}, {@code Accepted}, {@code Declined}, {@code Expired}). */
     public record Offer(Integer offerId, String status, LocalDateTime responseDeadline, LocalDateTime at) {
     }
 
@@ -253,6 +253,12 @@ public final class MyApplicationJourney {
             return new Status(Round.OFFER, Mode.IN_FLOW, "Có thư mời", note, "warning",
                     "Trả lời thư mời", offerHref(offer));
         }
+        // Quá hạn: đơn vẫn Offered, ứng viên chỉ xem lại được, không còn trả lời.
+        if (offer != null && "Expired".equals(offer.status())) {
+            return new Status(Round.OFFER, Mode.IN_FLOW, "Thư mời đã quá hạn",
+                    "Vui lòng liên hệ bộ phận tuyển dụng nếu cần hỗ trợ.", "neutral",
+                    "Xem thư mời", offerHref(offer));
+        }
         // Dữ liệu lệch: trạng thái đã là Offered nhưng ứng viên chưa thấy offer nào.
         return new Status(Round.OFFER, Mode.IN_FLOW, "Có thư mời", "Bộ phận tuyển dụng sẽ liên hệ với bạn.",
                 "neutral", null, null);
@@ -364,6 +370,11 @@ public final class MyApplicationJourney {
                 case "Sent_Candidate" -> items.add(new TimelineItem(offer.at(), "Nhận thư mời nhận việc", null, null, "warning"));
                 case "Accepted" -> items.add(new TimelineItem(offer.at(), "Bạn đã nhận lời", null, null, "success"));
                 case "Declined" -> items.add(new TimelineItem(offer.at(), "Bạn đã từ chối thư mời", null, null, "neutral"));
+                // Lấy mốc hạn: at là lúc job ghi, có thể muộn hơn. Không có hạn (hết hạn vì qua ngày bắt đầu) thì
+                // chỉ biết lúc hệ thống ghi nhận.
+                case "Expired" -> items.add(new TimelineItem(
+                        offer.responseDeadline() != null ? offer.responseDeadline() : offer.at(),
+                        "Thư mời đã quá hạn phản hồi", null, null, "neutral"));
                 default -> { }
             }
         }
