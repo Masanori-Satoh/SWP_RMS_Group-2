@@ -126,26 +126,6 @@ dialog.confirm-dialog#offerExportModal {
     flex-wrap: wrap;
 }
 
-.modal-box,
-.modal-card {
-    background: var(--surface);
-    border: 1px solid var(--line);
-    border-radius: var(--radius-md, 8px);
-    width: 100%;
-    max-width: 620px;
-    box-shadow: var(--shadow-lg);
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    max-height: 90vh;
-    animation: popInModal 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.ofw-modal-box--sm {
-    max-width: 500px;
-}
-
-.modal-close-btn,
 .ofw-modal-close {
     border: none;
     background: transparent;
@@ -160,69 +140,15 @@ dialog.confirm-dialog#offerExportModal {
     transition: all 0.15s ease;
 }
 
-.modal-close-btn:hover,
 .ofw-modal-close:hover {
     background: color-mix(in srgb, var(--ink) 5%, transparent);
     color: var(--ink);
-}
-
-@keyframes popInModal {
-    from {
-        transform: scale(0.96);
-        opacity: 0;
-    }
-    to {
-        transform: scale(1);
-        opacity: 1;
-    }
-}
-
-.modal-header {
-    padding: var(--s4, 16px) var(--s6, 24px);
-    background: var(--page);
-    border-bottom: 1px solid var(--line);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-family: var(--serif, inherit);
-    font-weight: 600;
-    font-size: 18px;
-    color: var(--ink);
-    flex-shrink: 0;
 }
 
 .ofw-modal-title-group {
     display: flex;
     align-items: center;
     gap: 8px;
-}
-
-.ofw-modal-title--medium {
-    font-weight: 600;
-    font-size: 16px;
-}
-
-.modal-body {
-    padding: var(--s6, 24px);
-    overflow-y: auto;
-    flex: 1;
-}
-
-.modal-footer {
-    padding: var(--s3, 12px) var(--s6, 24px);
-    background: var(--page);
-    border-top: 1px solid var(--line);
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-    gap: var(--s3, 12px);
-    flex-shrink: 0;
-}
-
-.ofw-modal-footer--end {
-    justify-content: flex-end;
-    gap: var(--s3, 12px);
-    margin-top: var(--s4, 16px);
 }
 
 .ofw-modal-title-icon {
@@ -378,12 +304,6 @@ dialog.confirm-dialog#offerExportModal {
    SECTION 5 — SHARED OFFER LAYOUT & UTILITY TOKENS
    Common typography, counters, empty states, and layout helpers.
    ----------------------------------------------------------------------------- */
-.ofw-counter-label {
-    font-size: 12px;
-    color: var(--muted);
-    font-weight: normal;
-}
-
 .offer-position-title {
     font-weight: 600;
     color: var(--ink);
@@ -947,21 +867,6 @@ button.director-stat-card {
 }
 
 /* .ofw-empty-state-icon migrated to offer-hr.css (Task 15) */
-
-.ofw-modal-box--sm {
-  max-width: 500px;
-}
-
-.ofw-modal-title--medium {
-  font-weight: 600;
-  font-size: 16px;
-}
-
-.ofw-modal-footer--end {
-  justify-content: flex-end;
-  gap: var(--s3);
-  margin-top: var(--s4);
-}
 
 /* ==========================================================================
    16. Detail Screen Semantic Classes (Clean inline styles)
@@ -1803,18 +1708,6 @@ button.director-stat-card {
 }
 
 /* Modal Form Controls (Export modal & dialogs) */
-.modal-body .form-group {
-    margin-bottom: var(--s4);
-}
-
-.modal-body label {
-    display: block;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--ink);
-    margin-bottom: var(--s1);
-}
-
 .input-control {
     width: 100%;
     height: 40px;
