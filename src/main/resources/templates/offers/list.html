@@ -35,7 +35,7 @@
     <!-- Stats Overview Cards -->
     <div class="offers-stats-grid ofw-stats-grid">
         <button type="button" class="offer-stat-card adw-surface ofw-stat-card"
-                onclick="filterOffersByStatus('ALL')"
+                form="offerFilters" onclick="this.form.elements.status.value = 'ALL'; this.form.requestSubmit()"
                 th:classappend="${currentStatus == 'ALL' or currentStatus == null or currentStatus == ''} ? ' ofw-stat-card--active' : ''"
                 th:attr="aria-pressed=${currentStatus == 'ALL' or currentStatus == null or currentStatus == '' ? 'true' : 'false'}">
             <div class="ofw-stat-label">Tổng đề xuất</div>
@@ -48,7 +48,7 @@
         </button>
 
         <button type="button" class="offer-stat-card adw-surface ofw-stat-card"
-                onclick="filterOffersByStatus('Pending_Director')"
+                form="offerFilters" onclick="this.form.elements.status.value = 'Pending_Director'; this.form.requestSubmit()"
                 th:classappend="${currentStatus == 'Pending_Director'} ? ' ofw-stat-card--active' : ''"
                 th:attr="aria-pressed=${currentStatus == 'Pending_Director' ? 'true' : 'false'}">
             <div class="ofw-stat-label">Chờ Giám đốc duyệt</div>
@@ -61,7 +61,7 @@
         </button>
 
         <button type="button" class="offer-stat-card adw-surface ofw-stat-card"
-                onclick="filterOffersByStatus('Director_Approved')"
+                form="offerFilters" onclick="this.form.elements.status.value = 'Director_Approved'; this.form.requestSubmit()"
                 th:classappend="${currentStatus == 'Director_Approved' or currentStatus == 'Approved'} ? ' ofw-stat-card--active' : ''"
                 th:attr="aria-pressed=${currentStatus == 'Director_Approved' or currentStatus == 'Approved' ? 'true' : 'false'}">
             <div class="ofw-stat-label">Giám đốc đã duyệt</div>
@@ -74,7 +74,7 @@
         </button>
 
         <button type="button" class="offer-stat-card adw-surface ofw-stat-card"
-                onclick="filterOffersByStatus('Sent_Candidate')"
+                form="offerFilters" onclick="this.form.elements.status.value = 'Sent_Candidate'; this.form.requestSubmit()"
                 th:classappend="${currentStatus == 'Sent_Candidate'} ? ' ofw-stat-card--active' : ''"
                 th:attr="aria-pressed=${currentStatus == 'Sent_Candidate' ? 'true' : 'false'}">
             <div class="ofw-stat-label">Đã gửi thư mời</div>
@@ -87,7 +87,7 @@
         </button>
 
         <button type="button" class="offer-stat-card adw-surface ofw-stat-card"
-                onclick="filterOffersByStatus('Accepted')"
+                form="offerFilters" onclick="this.form.elements.status.value = 'Accepted'; this.form.requestSubmit()"
                 th:classappend="${currentStatus == 'Accepted'} ? ' ofw-stat-card--active' : ''"
                 th:attr="aria-pressed=${currentStatus == 'Accepted' ? 'true' : 'false'}">
             <div class="ofw-stat-label">Ứng viên đã nhận việc</div>
@@ -101,20 +101,20 @@
     </div>
 
     <!-- Filter Toolbar -->
-    <div class="card offers-toolbar ofw-toolbar adw-surface">
+    <form id="offerFilters" class="card offers-toolbar ofw-toolbar adw-surface" th:action="@{/offers}" method="get" role="search">
+        <button type="submit" hidden></button>
         <div class="ofw-toolbar-left">
             <div class="ofw-search-box">
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                <input type="text" id="searchInput" class="ofw-search-input" placeholder="Tìm theo tên ứng viên, vị trí..."
-                       th:value="${search}"
-                       onkeydown="if(event.key==='Enter'){ applyOfferFilters(); }">
-                <button type="button" th:if="${search != null and search != ''}" onclick="clearSearchInput()"
+                <input type="text" id="searchInput" name="search" class="ofw-search-input" placeholder="Tìm theo tên ứng viên, vị trí..."
+                       th:value="${search}">
+                <button type="submit" th:if="${search != null and search != ''}" onclick="this.form.elements.search.value = ''"
                         class="ofw-search-clear" title="Xóa từ khóa">
                     ✕
                 </button>
             </div>
 
-            <select id="statusFilter" class="filter-select ofw-filter-select" onchange="applyOfferFilters()">
+            <select id="statusFilter" name="status" class="filter-select ofw-filter-select" onchange="this.form.requestSubmit()">
                 <option value="ALL" th:selected="${currentStatus == 'ALL'}">-- Tất cả trạng thái --</option>
                 <option value="Draft" th:selected="${currentStatus == 'Draft'}">Bản nháp</option>
                 <option value="Pending_Director" th:selected="${currentStatus == 'Pending_Director'}">Chờ Giám đốc duyệt</option>
@@ -125,13 +125,13 @@
                 <option value="Declined" th:selected="${currentStatus == 'Declined'}">Ứng viên từ chối</option>
             </select>
 
-            <select id="timeSortFilter" class="filter-select ofw-filter-select" onchange="applyOfferFilters()">
+            <select id="timeSortFilter" name="timeSort" class="filter-select ofw-filter-select" onchange="this.form.requestSubmit()">
                 <option value="DEFAULT" th:selected="${currentTimeSort == 'DEFAULT'}">-- Sắp xếp theo thời gian --</option>
                 <option value="EARLIEST" th:selected="${currentTimeSort == 'EARLIEST'}">Sớm nhất</option>
                 <option value="LATEST" th:selected="${currentTimeSort == 'LATEST'}">Muộn nhất</option>
             </select>
         </div>
-    </div>
+    </form>
 
     <!-- Selection Toolbar -->
     <div id="selectionToolbar" class="selection-toolbar ofw-selection-toolbar" hidden>

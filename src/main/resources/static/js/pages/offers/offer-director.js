@@ -190,72 +190,6 @@ function submitDirectorDecision() {
 }
 
 // =========================================================================
-// SECTION B — DIRECTOR LIST WORKSPACE (Screen 30D List Filters & Tabs)
-// =========================================================================
-
-/**
- * Áp dụng tiêu chí tìm kiếm và sắp xếp cho danh sách Giám đốc
- */
-function applyDirectorFilters() {
-    const searchEl = document.getElementById('searchInput');
-    const timeSortEl = document.getElementById('timeSortFilter');
-    const statusEl = document.getElementById('statusFilter');
-
-    const search = searchEl ? searchEl.value.trim() : '';
-    const timeSort = timeSortEl ? timeSortEl.value : 'DEFAULT';
-    const statusVal = statusEl ? statusEl.value : '';
-
-    const urlParams = new URLSearchParams(window.location.search);
-    let targetStatus = statusVal;
-    if (!targetStatus || targetStatus === '') {
-        targetStatus = urlParams.get('status') === 'HISTORY' ? 'HISTORY' : 'Pending_Director';
-    }
-
-    let url = '/offers?status=' + encodeURIComponent(targetStatus);
-    if (search !== '') {
-        url += '&search=' + encodeURIComponent(search);
-    }
-    if (timeSort && timeSort !== 'DEFAULT') {
-        url += '&timeSort=' + encodeURIComponent(timeSort);
-    }
-    url += '&page=0';
-
-    window.location.href = url;
-}
-
-/**
- * Chuyển tab trạng thái trên danh sách của Giám đốc (Pending_Director / Approved / Rejected)
- */
-function filterDirectorOffersByStatus(status) {
-    const statusFilter = document.getElementById('statusFilter');
-    if (statusFilter) {
-        statusFilter.value = status;
-    }
-    const searchEl = document.getElementById('searchInput');
-    const timeSortEl = document.getElementById('timeSortFilter');
-
-    const search = searchEl ? searchEl.value.trim() : '';
-    const timeSort = timeSortEl ? timeSortEl.value : 'DEFAULT';
-
-    let url = '/offers?status=' + encodeURIComponent(status);
-    if (search !== '') {
-        url += '&search=' + encodeURIComponent(search);
-    }
-    if (timeSort && timeSort !== 'DEFAULT') {
-        url += '&timeSort=' + encodeURIComponent(timeSort);
-    }
-    url += '&page=0';
-
-    window.location.href = url;
-}
-
-function clearDirectorSearch() {
-    const searchEl = document.getElementById('searchInput');
-    if (searchEl) searchEl.value = '';
-    applyDirectorFilters();
-}
-
-// =========================================================================
 // SECTION C — DIRECTOR DETAIL WORKFLOW (Screen 32 Detail Decisions)
 // =========================================================================
 
@@ -453,9 +387,6 @@ window.handleDirectorDecisionCommentInput = handleDirectorDecisionCommentInput;
 window.closeDirectorDecisionModal = closeDirectorDecisionModal;
 window.submitDirectorDecision = submitDirectorDecision;
 
-window.applyDirectorFilters = applyDirectorFilters;
-window.filterDirectorOffersByStatus = filterDirectorOffersByStatus;
-window.clearDirectorSearch = clearDirectorSearch;
 
 window.updateDirectorDetailCommentCounter = updateDirectorDetailCommentCounter;
 window.scrollToDirectorDecision = scrollToDirectorDecision;

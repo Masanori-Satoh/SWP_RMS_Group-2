@@ -12,46 +12,6 @@
 // =========================================================================
 
 /**
- * Áp dụng tiêu chí tìm kiếm, lọc trạng thái và sắp xếp thời gian cho danh sách HR
- */
-function applyOfferFilters() {
-    const search = (document.getElementById('searchInput')?.value || '').trim();
-    const status = document.getElementById('statusFilter')?.value || 'ALL';
-    const timeSort = document.getElementById('timeSortFilter')?.value || 'DEFAULT';
-
-    const url = new URL(window.location.origin + window.location.pathname);
-    const filterMap = {
-        search: search || null,
-        status: (status && status !== 'ALL') ? status : null,
-        timeSort: (timeSort && timeSort !== 'DEFAULT') ? timeSort : null
-    };
-
-    Object.entries(filterMap).forEach(([key, val]) => {
-        if (val) url.searchParams.set(key, val);
-        else url.searchParams.delete(key);
-    });
-
-    url.searchParams.set('page', '0'); // Reset về trang đầu khi thay đổi tiêu chí lọc
-    window.location.href = url.toString();
-}
-
-function filterOffersByStatus(status) {
-    const statusFilter = document.getElementById('statusFilter');
-    if (statusFilter) {
-        statusFilter.value = status || 'ALL';
-    }
-    applyOfferFilters();
-}
-
-function clearSearchInput() {
-    const searchInput = document.getElementById('searchInput');
-    if (searchInput) {
-        searchInput.value = '';
-    }
-    applyOfferFilters();
-}
-
-/**
  * Xác nhận và gọi API xóa bản nháp đề xuất (Chỉ áp dụng cho trạng thái Draft)
  */
 function confirmDeleteOffer(offerId) {
@@ -554,9 +514,6 @@ if (document.readyState === 'loading') {
 // =========================================================================
 // SECTION E — WINDOW GLOBAL EXPORTS
 // =========================================================================
-window.applyOfferFilters = applyOfferFilters;
-window.filterOffersByStatus = filterOffersByStatus;
-window.clearSearchInput = clearSearchInput;
 window.confirmDeleteOffer = confirmDeleteOffer;
 window.executeDeleteOffer = executeDeleteOffer;
 window.getSelectedOfferIds = getSelectedOfferIds;
