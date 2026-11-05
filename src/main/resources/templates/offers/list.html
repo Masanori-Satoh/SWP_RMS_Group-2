@@ -4,7 +4,7 @@
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout/internal}">
 <head>
-  <title>Quản lý Đề Xuất Nhận Việc | Mộc RMS</title>
+  <title>Quản lý thư mời nhận việc | Mộc RMS</title>
   <link rel="stylesheet" th:href="@{/css/pages/offers/offer-common.css}">
   <link rel="stylesheet" th:href="@{/css/pages/offers/offer-hr.css}">
   <link rel="stylesheet" th:href="@{/css/pages/flash-toast.css}">
@@ -16,7 +16,7 @@
 
     <!-- Header Section -->
     <div class="offers-header adw-heading ofw-heading">
-        <h1 class="page-title adw-title">Quản lý Đề Xuất Nhận Việc</h1>
+        <h1 class="page-title adw-title">Quản lý thư mời nhận việc</h1>
         <div class="offers-header-actions ofw-header-actions">
             <button type="button" class="btn btn--secondary" id="btnOpenExportModal" onclick="openExportModal()">
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
@@ -156,7 +156,7 @@
             <span class="ofw-list-icon" aria-hidden="true">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3h8l4 4v14H4V3h4Z"/><path d="M16 3v5h4M8 12h8M8 16h8"/></svg>
             </span>
-            <h2 id="offer-list-title" class="adw-panel-title">Danh sách đề xuất nhận việc</h2>
+            <h2 id="offer-list-title" class="adw-panel-title">Danh sách thư mời nhận việc</h2>
             <span class="badge badge--neutral ofw-list-count" th:text="|${totalElements} đề xuất|">0 đề xuất</span>
         </header>
         <div class="offers-table-wrapper ofw-table-wrapper">
@@ -180,7 +180,7 @@
                     <tr th:if="${#lists.isEmpty(offers)}">
                         <td colspan="9" class="offer-empty-state-cell">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="ofw-empty-state-icon"><path d="M22 12h-6l-2 3h-4l-2-3H2v7a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-7Z"/><path d="M5.45 5.11 2 12v0h20v0l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>
-                            Không tìm thấy đề xuất nhận việc nào phù hợp với bộ lọc.
+                            Không tìm thấy đề xuất thư mời nào phù hợp với bộ lọc.
                         </td>
                     </tr>
                     <tr th:each="o : ${offers}" th:attr="data-id=${o.offerId}, data-status=${o.offerStatus}">
@@ -265,7 +265,7 @@
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
                 </div>
                 <div>
-                    <div id="offerExportTitle" class="dialog-title">Xuất dữ liệu Đề xuất nhận việc</div>
+                    <div id="offerExportTitle" class="dialog-title">Xuất dữ liệu thư mời nhận việc</div>
                     <div class="ofw-modal-desc">Tải dữ liệu đề xuất lương ra file Microsoft Excel (.xlsx)</div>
                 </div>
             </div>
@@ -443,7 +443,7 @@
 <dialog id="deleteOfferDialog" class="confirm-dialog" aria-labelledby="deleteOfferTitle">
     <div class="dialog-content">
         <div class="dialog-header"><h3 id="deleteOfferTitle" class="dialog-title">Xóa bản nháp?</h3></div>
-        <div class="dialog-body"><p>Bạn có chắc chắn muốn xóa bản nháp đề xuất nhận việc này?</p></div>
+        <div class="dialog-body"><p>Bạn có chắc chắn muốn xóa bản nháp đề xuất thư mời này?</p></div>
         <div class="dialog-actions">
             <button type="button" class="btn btn--secondary" autofocus onclick="this.closest('dialog').close()">Hủy</button>
             <button type="button" onclick="executeDeleteOffer(this)" class="btn btn--danger">Xóa bản nháp</button>

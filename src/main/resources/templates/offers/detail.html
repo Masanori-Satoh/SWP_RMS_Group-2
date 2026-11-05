@@ -3,7 +3,7 @@
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout/internal}">
 <head>
-  <title th:text="'Chi tiết Đề xuất nhận việc #' + ${detail.offerId} + ' | Mộc RMS'">Chi tiết Đề xuất nhận việc | Mộc RMS</title>
+  <title th:text="'Chi tiết thư mời nhận việc #' + ${detail.offerId} + ' | Mộc RMS'">Chi tiết thư mời nhận việc | Mộc RMS</title>
   <link rel="stylesheet" th:href="@{/css/pages/offers/offer-common.css}">
   <link rel="stylesheet" th:href="@{/css/pages/offers/offer-director.css}">
   <link rel="stylesheet" th:href="@{/css/pages/flash-toast.css}">
@@ -21,7 +21,7 @@
         <div class="offers-detail-header-left">
             <!-- Title & Status Badge -->
             <div class="offers-detail-title-row">
-                <h1 class="offers-detail-title adw-title" th:text="'Đề Xuất Nhận Việc #' + ${detail.offerId}">Đề Xuất Nhận Việc #12</h1>
+                <h1 class="offers-detail-title adw-title" th:text="'Thư mời nhận việc #' + ${detail.offerId}">Thư mời nhận việc #12</h1>
                 
                 <!-- STATUS BADGES -->
                 <span th:if="${detail.offerStatus == 'Draft'}" class="status-badge status-draft">
@@ -422,7 +422,7 @@
     <dialog id="directorApproveConfirmDialog" class="confirm-dialog" aria-labelledby="directorApproveTitle">
         <div class="dialog-content">
             <div class="dialog-header">
-                <h3 id="directorApproveTitle" class="dialog-title">Phê duyệt đề xuất nhận việc?</h3>
+                <h3 id="directorApproveTitle" class="dialog-title">Phê duyệt đề xuất thư mời?</h3>
             </div>
             <div class="dialog-body">
                 <p>Sau khi phê duyệt, Bộ phận Tuyển dụng sẽ được thông báo để tiếp tục phát hành Thư mời nhận việc cho ứng viên.</p>
@@ -440,10 +440,10 @@
     <dialog id="directorRejectConfirmDialog" class="confirm-dialog" aria-labelledby="directorRejectTitle">
         <div class="dialog-content">
             <div class="dialog-header">
-                <h3 id="directorRejectTitle" class="dialog-title">Từ chối đề xuất nhận việc?</h3>
+                <h3 id="directorRejectTitle" class="dialog-title">Từ chối đề xuất thư mời?</h3>
             </div>
             <div class="dialog-body">
-                <p id="directorRejectDialogDesc">Bạn có chắc chắn muốn từ chối đề xuất nhận việc này?</p>
+                <p id="directorRejectDialogDesc">Bạn có chắc chắn muốn từ chối đề xuất thư mời này?</p>
                 <div class="ofw-dialog-subnote">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
                     <span>Lý do từ chối sẽ được gửi lại để Bộ phận Tuyển dụng xử lý tiếp.</span>
@@ -481,7 +481,7 @@
 <dialog th:if="${userRole == 'HR' and detail.offerStatus == 'Draft'}" id="deleteOfferDialog" class="confirm-dialog" aria-labelledby="deleteOfferTitle">
     <div class="dialog-content">
         <div class="dialog-header"><h3 id="deleteOfferTitle" class="dialog-title">Xóa bản nháp?</h3></div>
-        <div class="dialog-body"><p>Bạn có chắc chắn muốn xóa bản nháp đề xuất nhận việc này?</p></div>
+        <div class="dialog-body"><p>Bạn có chắc chắn muốn xóa bản nháp đề xuất thư mời này?</p></div>
         <div class="dialog-actions">
             <button type="button" class="btn btn--secondary" autofocus onclick="this.closest('dialog').close()">Hủy</button>
             <button type="submit" form="deleteOfferForm" class="btn btn--danger">Xóa bản nháp</button>
