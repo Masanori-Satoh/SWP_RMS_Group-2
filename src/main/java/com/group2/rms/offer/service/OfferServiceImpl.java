@@ -208,6 +208,9 @@ public class OfferServiceImpl implements OfferService {
             if (application == null || application.getApplicationId() == null) {
                 continue;
             }
+            if (isApplicationEnded(application)) {
+                continue;
+            }
 
             Integer appId = application.getApplicationId();
             if (processedAppIds.contains(appId)) {
@@ -276,6 +279,8 @@ public class OfferServiceImpl implements OfferService {
         Application application = applicationRepository.findById(dto.getApplicationId())
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Không tìm thấy đơn ứng tuyển với ID: " + dto.getApplicationId()));
+
+        requireActiveApplication(application);
 
         String status = Boolean.TRUE.equals(dto.getIsDraft()) ? "Draft" : "Pending_Director";
 
@@ -545,6 +550,7 @@ public class OfferServiceImpl implements OfferService {
     @Override
     public OfferResponse updateOfferByHr(Integer id, UpdateOfferRequest dto) {
         OfferProposal offer = findActiveOffer(id);
+        requireActiveApplication(offer.getApplication());
 
         String currentStatus = offer.getOfferStatus();
         boolean canEdit = "Draft".equalsIgnoreCase(currentStatus);
@@ -645,6 +651,7 @@ public class OfferServiceImpl implements OfferService {
     @Override
     public OfferResponse sendOfferToCandidate(Integer id) {
         OfferProposal offer = findActiveOffer(id);
+        requireActiveApplication(offer.getApplication());
 
         String currentStatus = offer.getOfferStatus();
         boolean isApproved = "Approved".equalsIgnoreCase(currentStatus)
@@ -672,18 +679,22 @@ public class OfferServiceImpl implements OfferService {
         offer.setOfferStatus("Sent_Candidate");
         OfferProposal saved = offerProposalRepository.save(offer);
 
+        if (saved.getApplication() != null) {
+            Application application = saved.getApplication();
+            if (application.getApplicationStatus() == null
+                    || applicationRepository.transition(application.getApplicationId(),
+                            Set.of(application.getApplicationStatus()), "Offered") != 1) {
+                throw new OfferValidationException("Hồ sơ đã được cập nhật. Vui lòng tải lại trang.",
+                        "APPLICATION_STATE_CONFLICT");
+            }
+        }
+
         if (systemNotificationService != null) {
             try {
                 systemNotificationService.notifyOfferLetterSent(saved);
             } catch (Exception e) {
                 log.warn("Lỗi khi gửi in-app notification thư mời nhận việc cho ứng viên Offer ID {}: {}", saved.getOfferId(), e.getMessage());
             }
-        }
-
-        if (saved.getApplication() != null) {
-            Application application = saved.getApplication();
-            application.setApplicationStatus("Offered");
-            applicationRepository.save(application);
         }
 
         OfferResponse response = mapToResponse(saved);
@@ -707,6 +718,19 @@ public class OfferServiceImpl implements OfferService {
         } catch (Exception e) {
             log.warn("Lỗi khi gửi email cho Offer ID {}: {}", offer.getOfferId(), e.getClass().getSimpleName());
         }
+    }
+
+    private void requireActiveApplication(Application application) {
+        if (isApplicationEnded(application)) {
+            throw new OfferValidationException("Hồ sơ đã kết thúc nên không thể xử lý đề xuất thư mời.",
+                    "APPLICATION_TERMINATED");
+        }
+    }
+
+    private boolean isApplicationEnded(Application application) {
+        return application != null && application.getApplicationStatus() != null
+                && Set.of("Hired", "Rejected", "Withdrawn", "Cancelled")
+                        .contains(application.getApplicationStatus());
     }
 
     private void validateProbationSalaryRule(BigDecimal proposedSalary, BigDecimal probationSalary) {
@@ -870,6 +894,7 @@ public class OfferServiceImpl implements OfferService {
 
     private OfferResponse decideOffer(Integer id, String comments, boolean approved) {
         OfferProposal offer = findActiveOffer(id);
+        requireActiveApplication(offer.getApplication());
         if (!"Pending_Director".equalsIgnoreCase(offer.getOfferStatus())) {
             throw decisionConflict();
         }

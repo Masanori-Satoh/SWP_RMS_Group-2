@@ -54,6 +54,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.Set;
 import java.util.Map;
 import java.util.Optional;
 
@@ -91,6 +92,7 @@ class OfferServiceTests {
 
     @org.junit.jupiter.api.BeforeEach
     void useApplicationClock() {
+        lenient().when(applicationRepository.transition(anyInt(), anyCollection(), eq("Offered"))).thenReturn(1);
         lenient().when(clock.getZone()).thenReturn(ZoneId.systemDefault());
         lenient().when(clock.instant()).thenAnswer(invocation -> Clock.systemUTC().instant());
     }
@@ -1136,10 +1138,10 @@ class OfferServiceTests {
 
         assertNotNull(response);
         assertEquals("Sent_Candidate", response.getOfferStatus());
-        assertEquals("Offered", app.getApplicationStatus());
+        verify(applicationRepository).transition(app.getApplicationId(), Set.of("Interview_Passed"), "Offered");
         assertEquals(5, response.getResponsePeriodDays());
         assertNotNull(response.getResponseDeadline());
-        verify(applicationRepository).save(app);
+        verify(applicationRepository, never()).save(app);
         verify(offerMailSender).sendOfferLetterToCandidate(offer);
     }
 
@@ -1268,6 +1270,37 @@ class OfferServiceTests {
         assertNotNull(response);
         assertEquals("Director_Rejected", response.getOfferStatus());
         verify(offerApprovalRepository).save(any(com.group2.rms.offer.entity.OfferApproval.class));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"Rejected", "Withdrawn", "Cancelled", "Hired"})
+    void endedApplicationCannotReceiveANewOffer(String status) {
+        when(applicationRepository.findById(1)).thenReturn(Optional.of(
+                Application.builder().applicationId(1).applicationStatus(status).build()));
+        CreateOfferRequest request = CreateOfferRequest.builder().applicationId(1)
+                .offeredPositionTitle("Test position").proposedSalary(new BigDecimal("20000000"))
+                .probationSalary(new BigDecimal("17000000")).probationDays(45).responsePeriodDays(5)
+                .expectedStartDate(LocalDate.now().plusDays(30)).workLocation("Test office").build();
+        OfferValidationException error = assertThrows(OfferValidationException.class,
+                () -> offerService.createOfferByHr(request));
+        assertEquals("APPLICATION_TERMINATED", error.getErrorCode());
+        verify(offerProposalRepository, never()).save(any());
+    }
+
+    @Test
+    void sourceStateChangedBeforePublicationDoesNotSendNotifications() {
+        Application app = Application.builder().applicationId(10).applicationStatus("Interviewing").build();
+        OfferProposal offer = OfferProposal.builder().offerId(1).application(app)
+                .offerStatus("Director_Approved").responsePeriodDays(5)
+                .expectedStartDate(LocalDate.now().plusDays(30)).build();
+        when(offerProposalRepository.findById(1)).thenReturn(Optional.of(offer));
+        when(offerProposalRepository.save(offer)).thenReturn(offer);
+        when(applicationRepository.transition(10, Set.of("Interviewing"), "Offered")).thenReturn(0);
+
+        OfferValidationException error = assertThrows(OfferValidationException.class,
+                () -> offerService.sendOfferToCandidate(1));
+        assertEquals("APPLICATION_STATE_CONFLICT", error.getErrorCode());
+        verifyNoInteractions(offerMailSender, systemNotificationService);
     }
 
     @Test
@@ -1571,9 +1604,9 @@ class OfferServiceTests {
 
         assertNotNull(response);
         assertEquals("Sent_Candidate", response.getOfferStatus());
-        assertEquals("Offered", app.getApplicationStatus());
+        verify(applicationRepository).transition(app.getApplicationId(), Set.of("Interview_Passed"), "Offered");
         assertNotNull(response.getResponseDeadline());
-        verify(applicationRepository).save(app);
+        verify(applicationRepository, never()).save(app);
     }
 
     @ParameterizedTest
@@ -1620,8 +1653,8 @@ class OfferServiceTests {
 
         assertNotNull(response);
         assertEquals("Sent_Candidate", response.getOfferStatus());
-        assertEquals("Offered", app.getApplicationStatus());
-        verify(applicationRepository).save(app);
+        verify(applicationRepository).transition(app.getApplicationId(), Set.of("Interview_Passed"), "Offered");
+        verify(applicationRepository, never()).save(app);
     }
 
     @Test

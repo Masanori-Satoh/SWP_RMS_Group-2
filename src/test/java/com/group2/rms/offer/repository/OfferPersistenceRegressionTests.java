@@ -17,6 +17,8 @@ import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -29,6 +31,8 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 /** Opt-in SQL Server regression tests. Schema creation is restricted to a dedicated temporary database. */
 @DataJpaTest(showSql = false)
@@ -94,5 +98,19 @@ class OfferPersistenceRegressionTests {
         assertEquals(45, service.getOfferById(id).getProbationDays());
         assertEquals(45, service.getUpdateOfferRequestById(id).getProbationDays());
         assertEquals(45, service.getOfferDetailForHr(id).getProbationDays());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"Rejected", "Withdrawn", "Cancelled", "Hired"})
+    void terminalApplicationCannotBePublished(String status) {
+        offer.setOfferStatus("Director_Approved");
+        offer.getApplication().setApplicationStatus(status);
+        entityManager.flush();
+        var error = assertThrows(com.group2.rms.offer.exception.OfferValidationException.class,
+                () -> service.sendOfferToCandidate(offer.getOfferId()));
+        assertEquals("APPLICATION_TERMINATED", error.getErrorCode());
+        assertEquals("Director_Approved", offer.getOfferStatus());
+        assertEquals(status, offer.getApplication().getApplicationStatus());
+        verifyNoInteractions(mailSender, notificationService);
     }
 }
