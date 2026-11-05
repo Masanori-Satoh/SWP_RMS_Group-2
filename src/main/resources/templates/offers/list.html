@@ -278,7 +278,7 @@
                 <label class="export-section-title">Phạm vi xuất</label>
                 <div class="export-scope-options">
                     <label class="scope-radio-label">
-                        <input type="radio" name="exportScope" value="FILTERED" checked onchange="handleScopeChange()">
+                        <input type="radio" name="exportScope" value="FILTERED" checked>
                         <div class="scope-radio-content">
                             <div class="scope-name">Danh sách đang lọc</div>
                             <div class="scope-desc" id="scopeFilteredDesc">Xuất tất cả đề xuất phù hợp với bộ lọc hiện tại (bỏ phân trang)</div>
@@ -286,7 +286,7 @@
                     </label>
 
                     <label class="scope-radio-label" id="scopeSelectedWrapper">
-                        <input type="radio" name="exportScope" value="SELECTED" onchange="handleScopeChange()">
+                        <input type="radio" name="exportScope" value="SELECTED">
                         <div class="scope-radio-content">
                             <div class="scope-name">Các đề xuất đã chọn (<span id="scopeSelectedCount">0</span>)</div>
                             <div class="scope-desc">Chỉ xuất các bản ghi đã tích chọn qua checkbox</div>
@@ -294,7 +294,7 @@
                     </label>
 
                     <label class="scope-radio-label">
-                        <input type="radio" name="exportScope" value="ALL" onchange="handleScopeChange()">
+                        <input type="radio" name="exportScope" value="ALL">
                         <div class="scope-radio-content">
                             <div class="scope-name">Toàn bộ đề xuất</div>
                             <div class="scope-desc">Xuất tất cả đề xuất đang hoạt động trong hệ thống</div>

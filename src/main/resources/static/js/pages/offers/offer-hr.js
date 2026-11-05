@@ -27,31 +27,10 @@ function executeDeleteOffer(button) {
     if (!offerId || button.disabled) return;
     button.disabled = true;
 
-    const csrf = (typeof getCsrfInfo === 'function') ? getCsrfInfo() : { token: '', header: 'X-CSRF-TOKEN' };
-    const headers = { 'Accept': 'application/json' };
-    if (csrf.token) {
-        headers[csrf.header] = csrf.token;
-    }
-
-    fetch(`/offers/${offerId}`, {
-        method: 'DELETE',
-        headers: headers
-    })
-        .then(async res => {
-            const isJson = res.headers.get('content-type')?.includes('application/json');
-            const data = isJson ? await res.json() : null;
-            if (!res.ok) {
-                throw new Error(data?.message || `Lỗi xóa bản nháp (${res.status})`);
-            }
-            return data;
-        })
+    offerRequest(`/offers/${offerId}`, { method: 'DELETE' })
         .then(res => {
-            if (res && res.success) {
-                queueOfferToast(res.message || 'Đã xóa bản nháp đề xuất thành công.');
-                window.location.reload();
-            } else if (typeof showFlashToast === 'function') {
-                showFlashToast(res?.message || 'Lỗi xóa bản nháp.', 'error');
-            }
+            queueOfferToast(res.message || 'Đã xóa bản nháp đề xuất thành công.');
+            window.location.reload();
         })
         .catch(err => {
             if (typeof showFlashToast === 'function') {
@@ -167,7 +146,6 @@ function openExportModalWithScope(scope) {
         const radio = document.querySelector(`input[name="exportScope"][value="${scope}"]`);
         if (radio && !radio.disabled) {
             radio.checked = true;
-            handleScopeChange();
         }
     }
 }
@@ -183,10 +161,6 @@ function handleExportModalBackdropClick(e) {
     if (e.target && e.target.id === 'offerExportModal') {
         closeExportModal();
     }
-}
-
-function handleScopeChange() {
-    // Được kích hoạt bởi radio scope để đồng bộ giao diện nếu cần
 }
 
 function selectAllColumns() {
@@ -275,7 +249,7 @@ function executeOfferExport() {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': csrf.token || ''
+            [csrf.header]: csrf.token || ''
         },
         body: JSON.stringify(payload)
     })
@@ -359,7 +333,6 @@ window.openExportModal = openExportModal;
 window.openExportModalWithScope = openExportModalWithScope;
 window.closeExportModal = closeExportModal;
 window.handleExportModalBackdropClick = handleExportModalBackdropClick;
-window.handleScopeChange = handleScopeChange;
 window.selectAllColumns = selectAllColumns;
 window.deselectAllColumns = deselectAllColumns;
 window.resetDefaultColumns = resetDefaultColumns;

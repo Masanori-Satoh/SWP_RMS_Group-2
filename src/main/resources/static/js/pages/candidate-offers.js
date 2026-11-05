@@ -164,12 +164,6 @@
     });
   });
 
-  // 4. Logic trang Từ chối riêng (/portal/offers/{id}/decline) - tương thích ngược
-  var declinePageContainer = document.querySelector('.cof-decline-form');
-  if (declinePageContainer) {
-    initReasonChips(declinePageContainer);
-  }
-
   // Mở modal từ nút kích hoạt trên thanh tác vụ trang chi tiết
   document.querySelectorAll('[data-detail-trigger]').forEach(function (btn) {
     btn.addEventListener('click', function () {

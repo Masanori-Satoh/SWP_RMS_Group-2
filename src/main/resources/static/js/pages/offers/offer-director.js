@@ -277,59 +277,14 @@ function confirmDirectorRejectAction() {
     }
 }
 
-/**
- * Gửi yêu cầu AJAX POST JSON tới /offers/{id}/approve hoặc /offers/{id}/reject
- */
-async function postDirectorDecision(url, comments) {
-    const csrf = (typeof getCsrfInfo === 'function') ? getCsrfInfo() : { token: '', header: 'X-CSRF-TOKEN' };
-    const headers = {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-    };
-    if (csrf.token) {
-        headers[csrf.header] = csrf.token;
-    }
-
-    const res = await fetch(url, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({ comments })
-    });
-    let data = null;
-    if (res.headers.get('content-type')?.includes('application/json')) {
-        try {
-            data = await res.json();
-        } catch (error) {
-            console.warn('Cannot parse JSON response from director decision API:', error);
-        }
-    }
-    return { res, data };
-}
-
 async function executeDirectorDecisionApi(url, comments, onSuccess = () => { window.location.href = '/offers'; }) {
-    let result;
     try {
-        result = await postDirectorDecision(url, comments);
-    } catch (err) {
-        console.error('Director decision network error:', err);
-        showFlashToast('Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại kết nối mạng.', 'error');
-        return;
-    }
-
-    const { res, data } = result;
-    if (res.ok && data?.success) {
+        const data = await offerRequest(url, { body: { comments } });
         queueOfferToast(data.message || 'Xử lý quyết định thành công!');
         onSuccess();
-        return;
+    } catch (error) {
+        showFlashToast(error.message, 'error');
     }
-    if (res.status === 403) {
-        showFlashToast('Bạn không có quyền thực hiện thao tác này hoặc phiên làm việc đã hết hạn.', 'warning');
-        return;
-    }
-    const fallback = res.status >= 500
-        ? `Máy chủ phản hồi mã lỗi ${res.status}. Vui lòng thử lại sau hoặc liên hệ quản trị viên.`
-        : `Thao tác không thành công. Mã trạng thái: ${res.status}`;
-    showFlashToast(data?.message || fallback, 'error');
 }
 
 // =========================================================================

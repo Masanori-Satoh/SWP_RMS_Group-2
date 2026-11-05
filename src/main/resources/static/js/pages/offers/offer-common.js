@@ -25,6 +25,32 @@ function getCsrfInfo() {
 // 2. ESCAPE HTML HELPER
 // =========================================================================
 
+// JSON requests used by Offer actions; binary Excel downloads remain separate.
+async function offerRequest(url, { method = 'POST', body } = {}) {
+    const csrf = getCsrfInfo();
+    const headers = { Accept: 'application/json' };
+    if (csrf.token) headers[csrf.header] = csrf.token;
+    if (body !== undefined) headers['Content-Type'] = 'application/json';
+    let response;
+    try {
+        response = await fetch(url, { method, headers,
+            ...(body !== undefined ? { body: JSON.stringify(body) } : {}) });
+    } catch {
+        throw new Error('Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại kết nối mạng.');
+    }
+    let data = null;
+    if (response.headers.get('content-type')?.includes('application/json')) {
+        try { data = await response.json(); } catch { /* Invalid responses are handled below. */ }
+    }
+    if (!response.ok || !data?.success) {
+        const fallback = response.status === 403
+            ? 'Bạn không có quyền thực hiện thao tác này hoặc phiên làm việc đã hết hạn.'
+            : 'Thao tác không thành công. Vui lòng thử lại. (' + response.status + ')';
+        throw new Error(data?.message || fallback);
+    }
+    return data;
+}
+
 function escapeOfferHtml(str) {
     if (str == null) return '';
     return String(str)
@@ -111,10 +137,6 @@ if (document.readyState === 'loading') {
     checkOfferPendingFlashToast();
 }
 
-function showToast(message, type = 'info') {
-    showFlashToast(message, type === 'danger' ? 'error' : type);
-}
-
 // =========================================================================
 // 4. THAO TÁC PHÁT HÀNH OFFER (Send Offer Confirmation Dialog & Action)
 // =========================================================================
@@ -149,32 +171,11 @@ function executeSendOfferAction() {
 
     showFlashToast('Đang phát hành thư mời nhận việc...', 'info');
 
-    const csrf = getCsrfInfo();
-    const headers = { 'Accept': 'application/json' };
-    if (csrf.token) {
-        headers[csrf.header] = csrf.token;
-    }
-
-    fetch(`/offers/${offerId}/send`, {
-        method: 'POST',
-        headers: headers
-    })
-        .then(async res => {
-            const isJson = res.headers.get('content-type')?.includes('application/json');
-            const data = isJson ? await res.json() : null;
-            if (!res.ok) {
-                throw new Error(data?.message || `Lỗi phát hành thư mời nhận việc (${res.status})`);
-            }
-            return data;
-        })
+    offerRequest(`/offers/${offerId}/send`)
         .then(res => {
-            if (res && res.success) {
-                queueOfferToast(res.message || 'Đã phát hành thư mời nhận việc.',
-                    res.data?.emailStatus === 'SENT' ? 'success' : 'warning');
-                window.location.reload();
-            } else {
-                showFlashToast(res?.message || 'Lỗi phát hành thư mời nhận việc.', 'error');
-            }
+            queueOfferToast(res.message || 'Đã phát hành thư mời nhận việc.',
+                res.data?.emailStatus === 'SENT' ? 'success' : 'warning');
+            window.location.reload();
         })
         .catch(err => {
             showFlashToast(err.message || 'Không thể phát hành thư mời nhận việc.', 'error');
@@ -193,6 +194,5 @@ function executeSendOfferAction() {
 window.getCsrfInfo = getCsrfInfo;
 window.escapeOfferHtml = escapeOfferHtml;
 window.showFlashToast = showFlashToast;
-window.showToast = showToast;
 window.confirmSendOffer = confirmSendOffer;
 window.executeSendOfferAction = executeSendOfferAction;
