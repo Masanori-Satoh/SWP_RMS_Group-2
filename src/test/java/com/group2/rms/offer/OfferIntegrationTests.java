@@ -216,6 +216,33 @@ class OfferIntegrationTests {
                 .andExpect(model().attributeExists("detail"));
     }
 
+    @ParameterizedTest
+    @CsvSource({
+            "hr_specialist, HR, Draft, true, false",
+            "hr_specialist, HR, Director_Approved, false, true",
+            "hr_specialist, HR, Sent_Candidate, false, false",
+            "director_user, DIRECTOR, Draft, false, false",
+            "director_user, DIRECTOR, Director_Approved, false, false"
+    })
+    void sharedConfirmationsKeepRoleAndStatusVisibility(String username, String role, String offerStatus,
+                                                       boolean deleteVisible, boolean sendVisible) throws Exception {
+        when(offerService.getOfferDetailForHr(1)).thenReturn(OfferDetailResponse.builder()
+                .offerId(1).offerStatus(offerStatus).candidateName("Candidate")
+                .proposedSalary(new BigDecimal("30000000")).probationSalary(new BigDecimal("25500000"))
+                .expectedStartDate(LocalDate.now().plusDays(14)).build());
+
+        String html = mvc.perform(get("/offers/1").with(user(username).roles(role)))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        org.junit.jupiter.api.Assertions.assertEquals(deleteVisible, html.contains("id=\"deleteOfferDialog\""));
+        org.junit.jupiter.api.Assertions.assertEquals(sendVisible, html.contains("id=\"sendOfferConfirmDialog\""));
+        if (deleteVisible) {
+            org.junit.jupiter.api.Assertions.assertTrue(html.contains("form=\"deleteOfferForm\""));
+        }
+        if (sendVisible) {
+            org.junit.jupiter.api.Assertions.assertTrue(html.contains("aria-labelledby=\"sendOfferTitle\""));
+        }
+    }
+
     @Test
     @DisplayName("IT-04 POST /offers/{id}/delete: Xóa bản thảo Offer điều hướng về /offers")
     @WithMockUser(username = "hr_specialist", roles = {"HR"})
