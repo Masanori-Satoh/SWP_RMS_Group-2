@@ -30,6 +30,8 @@ public final class AuditLogLabels {
             Map.entry("Hired", "Trạng thái: Đã tuyển dụng"),
             Map.entry("Rejected", "Trạng thái: Đã bị loại"),
             Map.entry("Withdrawn", "Trạng thái: Ứng viên đã rút hồ sơ"),
+            // dunglt bổ sung: trạng thái đơn mới (migration 019)
+            Map.entry("Cancelled", "Trạng thái: Dừng hồ sơ do đóng đợt tuyển"),
             Map.entry("PostingClosed", "Trạng thái: Dừng hồ sơ do đóng đợt tuyển"),
             Map.entry("InterviewCancelledOnClose", "Đã hủy lịch phỏng vấn do đóng đợt tuyển"));
     private static final Map<String, String> MAIL_VALUES = Map.of(

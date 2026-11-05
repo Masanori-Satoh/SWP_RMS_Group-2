@@ -83,7 +83,7 @@ public class AuditLogService {
         public String oldContent() { return AuditLogLabels.content(entityName, action, oldValue, true, newValue); }
         public String newContent() { return AuditLogLabels.content(entityName, action, newValue, false, newValue); }
         public String contentTone() {
-            if ("Application".equals(entityName) && List.of("TalentPoolCancelled", "TalentPoolHrWithdrawn", "Withdrawn", "PostingClosed", "InterviewCancelledOnClose", "Rejected").contains(newValue == null ? "" : newValue)) return "danger";
+            if ("Application".equals(entityName) && List.of("TalentPoolCancelled", "TalentPoolHrWithdrawn", "Withdrawn", "Cancelled", "PostingClosed", "InterviewCancelledOnClose", "Rejected").contains(newValue == null ? "" : newValue)) return "danger";
             if (("Application".equals(entityName) || "InterviewSchedule".equals(entityName)) && newValue != null && newValue.startsWith("MailFailed:")) return "danger";
             return "LOGIN".equals(action) ? "neutral" : "success";
         }

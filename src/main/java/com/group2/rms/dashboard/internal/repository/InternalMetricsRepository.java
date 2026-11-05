@@ -1,5 +1,6 @@
 package com.group2.rms.dashboard.internal.repository;
 
+import com.group2.rms.candidate.domain.rule.ApplicationStatusService;
 import com.group2.rms.jobposting.service.JobPostingAccess;
 import com.group2.rms.requisition.service.RequisitionAccess;
 import jakarta.persistence.EntityManager;
@@ -23,7 +24,6 @@ public class InternalMetricsRepository {
     public static final String ACTIVE_INTERVIEW_STATUSES = "('Scheduled', 'Rescheduled')";
     /** Giá trị Application.ApplicationStatus và OfferProposal.OfferStatus dùng trong truy vấn (khớp CHECK của db.sql). */
     public static final String APPLICATION_HIRED = "Hired";
-    public static final String APPLICATION_REJECTED = "Rejected";
     public static final String OFFER_PENDING_DIRECTOR = "Pending_Director";
     public static final String OFFER_DECLINED = "Declined";
 
@@ -97,10 +97,10 @@ public class InternalMetricsRepository {
     /** Rule (D2): mốc bắt đầu chờ của hồ sơ chưa kết thúc = UpdatedAt, chưa cập nhật thì CreatedAt. */
     public Map<Integer, LocalDateTime> applicationWaitingSince() {
         List<Object[]> rows = entityManager.createQuery("select a.applicationId, coalesce(a.updatedAt, a.createdAt) "
-                + "from Application a where a.applicationStatus not in (:hired, :rejected) and " + FORMAL_FILTER,
+                + "from Application a where a.applicationStatus not in :terminal and " + FORMAL_FILTER,
                 Object[].class)
-                .setParameter("hired", APPLICATION_HIRED)
-                .setParameter("rejected", APPLICATION_REJECTED)
+                // dunglt bổ sung: đơn đã rút / dừng do đóng tin cũng là đã kết thúc, không đếm là "đang chờ"
+                .setParameter("terminal", ApplicationStatusService.TERMINAL)
                 .getResultList();
         Map<Integer, LocalDateTime> result = new HashMap<>();
         for (Object[] row : rows) {

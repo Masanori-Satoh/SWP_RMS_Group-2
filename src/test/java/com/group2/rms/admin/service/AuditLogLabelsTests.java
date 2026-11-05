@@ -29,6 +29,13 @@ class AuditLogLabelsTests {
         assertEquals("Trạng thái: HR đã rút lại gợi ý", row("Application", "UPDATE", "HM_Suggested", "TalentPoolHrWithdrawn").newContent());
     }
 
+    @Test void terminalStatusesInTheLogAreLabelledAndMarkedDanger() {
+        assertEquals("Trạng thái: Ứng viên đã rút hồ sơ", row("Application", "UPDATE", "Applied", "Withdrawn").newContent());
+        var cancelled = row("Application", "UPDATE", "Interviewing", "Cancelled");
+        assertEquals("Trạng thái: Dừng hồ sơ do đóng đợt tuyển", cancelled.newContent());
+        assertEquals("danger", cancelled.contentTone());
+    }
+
     @Test void markAndUnmarkExplainBooleanValues() {
         assertEquals("Tiềm năng: Chưa đánh dấu", row("Candidate", "UPDATE", "false", "TalentPoolMarked").oldContent());
         assertEquals("Tiềm năng: Đã bỏ đánh dấu", row("Candidate", "UPDATE", "true", "TalentPoolUnmarked").newContent());
