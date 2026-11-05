@@ -126,6 +126,7 @@ public class OfferServiceImpl implements OfferService {
             offerToSave.setOfferedPositionTitle(request.getOfferedPositionTitle());
             offerToSave.setProposedSalary(request.getProposedSalary());
             offerToSave.setProbationSalary(request.getProbationSalary());
+            offerToSave.setProbationDays(request.getProbationDays() != null ? request.getProbationDays() : 60);
             offerToSave.setExpectedStartDate(request.getExpectedStartDate());
             offerToSave.setWorkLocation(request.getWorkLocation());
             offerToSave.setBenefitsPackage(request.getBenefitsPackage());
@@ -141,6 +142,7 @@ public class OfferServiceImpl implements OfferService {
                     .offeredPositionTitle(request.getOfferedPositionTitle())
                     .proposedSalary(request.getProposedSalary())
                     .probationSalary(request.getProbationSalary())
+                    .probationDays(request.getProbationDays() != null ? request.getProbationDays() : 60)
                     .expectedStartDate(request.getExpectedStartDate())
                     .workLocation(request.getWorkLocation())
                     .benefitsPackage(request.getBenefitsPackage())
@@ -315,6 +317,7 @@ public class OfferServiceImpl implements OfferService {
             offerToSave.setOfferedPositionTitle(dto.getOfferedPositionTitle());
             offerToSave.setProposedSalary(dto.getProposedSalary());
             offerToSave.setProbationSalary(dto.getProbationSalary());
+            offerToSave.setProbationDays(dto.getProbationDays());
             offerToSave.setExpectedStartDate(dto.getExpectedStartDate());
             offerToSave.setWorkLocation(dto.getWorkLocation());
             offerToSave.setBenefitsPackage(dto.getBenefitsPackage());
@@ -330,6 +333,7 @@ public class OfferServiceImpl implements OfferService {
                     .offeredPositionTitle(dto.getOfferedPositionTitle())
                     .proposedSalary(dto.getProposedSalary())
                     .probationSalary(dto.getProbationSalary())
+                    .probationDays(dto.getProbationDays())
                     .expectedStartDate(dto.getExpectedStartDate())
                     .workLocation(dto.getWorkLocation())
                     .benefitsPackage(dto.getBenefitsPackage())
@@ -507,7 +511,7 @@ public class OfferServiceImpl implements OfferService {
                 .offeredPositionTitle(offer.getOfferedPositionTitle())
                 .proposedSalary(offer.getProposedSalary())
                 .probationSalary(offer.getProbationSalary())
-                .probationDays(60)
+                .probationDays(offer.getProbationDays())
                 .expectedStartDate(offer.getExpectedStartDate())
                 .workLocation(offer.getWorkLocation())
                 .benefitsPackage(offer.getBenefitsPackage())
@@ -566,6 +570,7 @@ public class OfferServiceImpl implements OfferService {
         }
         offer.setProposedSalary(dto.getProposedSalary());
         offer.setProbationSalary(dto.getProbationSalary());
+        offer.setProbationDays(dto.getProbationDays());
         offer.setExpectedStartDate(dto.getExpectedStartDate());
         offer.setWorkLocation(dto.getWorkLocation());
         offer.setBenefitsPackage(dto.getBenefitsPackage());
@@ -612,7 +617,7 @@ public class OfferServiceImpl implements OfferService {
                 .offeredPositionTitle(offer.getOfferedPositionTitle())
                 .proposedSalary(offer.getProposedSalary())
                 .probationSalary(offer.getProbationSalary())
-                .probationDays(60)
+                .probationDays(offer.getProbationDays())
                 .expectedStartDate(offer.getExpectedStartDate())
                 .workLocation(offer.getWorkLocation())
                 .benefitsPackage(offer.getBenefitsPackage())
@@ -753,8 +758,8 @@ public class OfferServiceImpl implements OfferService {
         if (probationSalary.compareTo(proposedSalary) > 0) {
             throw new OfferValidationException("Lương thử việc không được vượt quá lương chính thức.");
         }
-        if (probationDays == null || probationDays <= 0) {
-            throw new OfferValidationException("Thời gian thử việc phải lớn hơn 0.");
+        if (probationDays == null || probationDays <= 0 || probationDays > 365) {
+            throw new OfferValidationException("Thời gian thử việc phải từ 1 đến 365 ngày.");
         }
         if (expectedStartDate == null) {
             throw new OfferValidationException("Ngày bắt đầu dự kiến không được để trống.");
@@ -837,6 +842,7 @@ public class OfferServiceImpl implements OfferService {
                 .offeredPositionTitle(entity.getOfferedPositionTitle())
                 .proposedSalary(entity.getProposedSalary())
                 .probationSalary(entity.getProbationSalary())
+                .probationDays(entity.getProbationDays())
                 .expectedStartDate(entity.getExpectedStartDate())
                 .workLocation(entity.getWorkLocation())
                 .benefitsPackage(entity.getBenefitsPackage())

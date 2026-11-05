@@ -296,7 +296,7 @@ public class OfferExportServiceImpl implements OfferExportService {
                 .departmentName(department != null ? department.getDepartmentName() : null)
                 .requisitionId(requisition != null ? requisition.getRequisitionId() : null)
                 .jobPostingId(jobPosting != null ? jobPosting.getJobPostingId() : null)
-                .probationDays(60) // Quy chuẩn mặc định BR-OFF-01
+                .probationDays(offer.getProbationDays())
                 .benefitsPackage(offer.getBenefitsPackage())
                 .proposedByName(proposedByName)
                 .directorName(directorName)

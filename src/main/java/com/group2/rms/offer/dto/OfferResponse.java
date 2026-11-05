@@ -30,6 +30,7 @@ public class OfferResponse {
     private String offeredPositionTitle;
     private BigDecimal proposedSalary;
     private BigDecimal probationSalary;
+    private Integer probationDays;
     private LocalDate expectedStartDate;
     private String workLocation;
     private String benefitsPackage;

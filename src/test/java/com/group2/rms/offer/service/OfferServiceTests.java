@@ -236,7 +236,7 @@ class OfferServiceTests {
             offerService.createOfferByHr(request);
         });
 
-        assertTrue(ex.getMessage().contains("Thời gian thử việc phải lớn hơn 0"));
+        assertTrue(ex.getMessage().contains("Thời gian thử việc phải từ 1 đến 365 ngày"));
         verify(offerProposalRepository, never()).save(any());
     }
 
@@ -301,7 +301,7 @@ class OfferServiceTests {
                 .offeredPositionTitle("Senior Java Engineer")
                 .proposedSalary(new BigDecimal("25000000"))
                 .probationSalary(new BigDecimal("21250000")) // 85%
-                .probationDays(60)
+                .probationDays(45)
                 .expectedStartDate(LocalDate.now().plusDays(10)) // Sau hôm nay + responsePeriodDays (5 ngày)
                 .workLocation("Văn phòng Mộc RMS Hà Nội")
                 .benefitsPackage(null) // Để trống phúc lợi -> vẫn hợp lệ
@@ -332,6 +332,7 @@ class OfferServiceTests {
             context.setAuthentication(previousAuth);
         }
         assertEquals(17, response.getProposedById());
+        assertEquals(45, response.getProbationDays());
         verify(userRepository, never()).findById(999);
 
         assertNotNull(response);

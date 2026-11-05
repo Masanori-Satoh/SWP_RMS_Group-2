@@ -73,6 +73,7 @@ public class OfferMailSender {
                         + "THÔNG TIN ĐÃI NGỘ CHÍNH THỨC:\n"
                         + "• Mức lương chính thức (Trước thuế): " + officialSalary + "\n"
                         + "• Mức lương thử việc (Trước thuế): " + probationSalary + "\n"
+                        + "• Thời gian thử việc: " + offer.getProbationDays() + " ngày\n"
                         + "• Địa điểm làm việc: " + (offer.getWorkLocation() != null ? offer.getWorkLocation() : "Văn phòng công ty") + "\n"
                         + deadlineInfo
                         + "Bạn có thể xem chi tiết Thư mời nhận việc và gửi phản hồi trực tiếp tại đường dẫn sau:\n"

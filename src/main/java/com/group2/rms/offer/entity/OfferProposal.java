@@ -46,6 +46,10 @@ public class OfferProposal extends BaseEntity {
     @Column(name = "ProbationSalary", nullable = false, precision = 18, scale = 2)
     private BigDecimal probationSalary;
 
+    @Column(name = "ProbationDays", nullable = false)
+    @Builder.Default
+    private Integer probationDays = 60;
+
     @Column(name = "ExpectedStartDate")
     private LocalDate expectedStartDate;
 

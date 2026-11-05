@@ -515,6 +515,8 @@ CREATE TABLE OfferProposal (
     OfferedPositionTitle NVARCHAR(200) NOT NULL,
     ProposedSalary DECIMAL(18,2) NOT NULL,
     ProbationSalary DECIMAL(18,2) NOT NULL,
+    ProbationDays INT NOT NULL CONSTRAINT DF_OfferProposal_ProbationDays DEFAULT 60
+        CONSTRAINT CK_OfferProposal_ProbationDays CHECK (ProbationDays BETWEEN 1 AND 365),
     ExpectedStartDate DATE NULL,
     WorkLocation NVARCHAR(255) NULL,
     BenefitsPackage NVARCHAR(MAX) NULL,

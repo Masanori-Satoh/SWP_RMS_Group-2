@@ -97,6 +97,19 @@ class OfferExportServiceTests {
     }
 
     @Test
+    void exportUsesTheSavedProbationDuration() throws Exception {
+        mockOffer1.setProbationDays(45);
+        when(offerProposalRepository.findAll(any(Specification.class), any(Sort.class)))
+                .thenReturn(List.of(mockOffer1));
+        OfferExportRequest request = new OfferExportRequest(
+                OfferExportScope.SELECTED, List.of(1), null, List.of("probationDays"));
+        byte[] result = exportService.exportOffersToExcel(request, "HR");
+        try (Workbook workbook = new XSSFWorkbook(new ByteArrayInputStream(result))) {
+            assertThat(workbook.getSheet("Offers").getRow(1).getCell(0).getNumericCellValue()).isEqualTo(45);
+        }
+    }
+
+    @Test
     @DisplayName("Export SELECTED scope: Thành công tạo workbook đúng số bản ghi và đúng kiểu dữ liệu cell")
     void testExportSelectedScope_Success() throws Exception {
         when(offerProposalRepository.findAll(any(Specification.class), any(Sort.class)))
