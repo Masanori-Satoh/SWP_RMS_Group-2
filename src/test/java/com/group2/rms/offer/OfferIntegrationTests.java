@@ -265,6 +265,17 @@ class OfferIntegrationTests {
                         "Đã phát hành thư mời nhận việc trên cổng ứng viên. Chưa gửi được email thông báo."));
     }
 
+    @Test
+    @WithMockUser(username = "hr_specialist", roles = {"HR"})
+    void hrListDoesNotLoadTheCreateFormCandidateDropdown() throws Exception {
+        when(offerService.getAllOffersForHr(any(), any(), any(), any()))
+                .thenReturn(new PageImpl<>(List.of()));
+        when(offerService.getOfferStats()).thenReturn(Map.of());
+        mvc.perform(get("/offers")).andExpect(status().isOk())
+                .andExpect(view().name("offers/list"));
+        org.mockito.Mockito.verify(offerService, org.mockito.Mockito.never()).getPassedCandidatesForOffer();
+    }
+
     @ParameterizedTest
     @ValueSource(strings = {"/offers/create", "/offers/1/edit"})
     @WithMockUser(username = "hr_specialist", roles = {"HR"})

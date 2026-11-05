@@ -663,28 +663,6 @@ public class OfferServiceImpl implements OfferService {
                         .contains(application.getApplicationStatus());
     }
 
-    private void validateProbationSalaryRule(BigDecimal proposedSalary, BigDecimal probationSalary) {
-        if (proposedSalary == null || probationSalary == null) {
-            throw new OfferValidationException("Mức lương đề xuất và lương thử việc không được để trống.");
-        }
-
-        if (proposedSalary.compareTo(BigDecimal.ZERO) <= 0 || probationSalary.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new OfferValidationException("Mức lương đề xuất và lương thử việc phải lớn hơn 0.");
-        }
-
-        BigDecimal minProbationSalary = proposedSalary.multiply(new BigDecimal("0.85"));
-
-        if (probationSalary.compareTo(minProbationSalary) < 0) {
-            throw new OfferValidationException(
-                    "Lương thử việc (" + probationSalary + " VND) phải đạt tối thiểu 85% lương chính thức ("
-                            + minProbationSalary + " VND) theo quy định Luật Lao động .");
-        }
-
-        if (probationSalary.compareTo(proposedSalary) > 0) {
-            throw new OfferValidationException("Lương thử việc không được vượt quá lương chính thức.");
-        }
-    }
-
     /**
      * Kiểm tra ở service để cả form và lời gọi Java đều chịu cùng luật lương/ngày/thời gian thử việc.
      * Lương thử việc phải trong khoảng 85%–100% lương chính thức; thử việc 1–365 ngày.
@@ -723,7 +701,7 @@ public class OfferServiceImpl implements OfferService {
         if (expectedStartDate == null) {
             throw new OfferValidationException("Ngày bắt đầu dự kiến không được để trống.");
         }
-        if (!expectedStartDate.isAfter(LocalDate.now())) {
+        if (!expectedStartDate.isAfter(LocalDate.now(clock))) {
             throw new OfferValidationException("Ngày bắt đầu dự kiến phải lớn hơn ngày hiện tại.");
         }
         if (workLocation == null || workLocation.isBlank()) {
@@ -732,8 +710,8 @@ public class OfferServiceImpl implements OfferService {
         if (responsePeriodDays == null || responsePeriodDays <= 0) {
             throw new OfferValidationException("Thời gian phản hồi phải lớn hơn 0 ngày.");
         }
-        if (!expectedStartDate.isAfter(LocalDate.now().plusDays(responsePeriodDays))) {
-            LocalDate minStartDate = LocalDate.now().plusDays(responsePeriodDays + 1);
+        if (!expectedStartDate.isAfter(LocalDate.now(clock).plusDays(responsePeriodDays))) {
+            LocalDate minStartDate = LocalDate.now(clock).plusDays(responsePeriodDays + 1);
             throw new OfferValidationException(
                     "Ngày bắt đầu dự kiến phải sau ngày hiện tại cộng với thời hạn phản hồi ("
                             + responsePeriodDays + " ngày). Vui lòng chọn ngày bắt đầu từ ngày "
@@ -809,9 +787,6 @@ public class OfferServiceImpl implements OfferService {
         }
 
         User director = currentUserService.requireUser();
-        if (director == null) {
-            throw new OfferValidationException("Không xác định được danh tính Giám đốc.", "USER_NOT_FOUND");
-        }
 
         if (!approved && (comments == null || comments.isBlank())) {
             throw new OfferValidationException("Vui lòng nhập lý do từ chối vào ô nhận xét trước khi tiếp tục.", "DIRECTOR_REASON_REQUIRED");

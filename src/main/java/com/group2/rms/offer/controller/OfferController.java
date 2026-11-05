@@ -125,7 +125,6 @@ public class OfferController {
         Page<OfferResponse> pagedData = offerService.getAllOffersForHr(search, status, timeSort,
                 PageRequest.of(validPage, size));
         model.addAttribute("activeMenu", "offers");
-        List<PassedCandidateResponse> passedCandidates = offerService.getPassedCandidatesForOffer();
 
         Map<String, Long> stats = offerService.getOfferStats();
         model.addAttribute("statTotal", stats.getOrDefault("statTotal", 0L));
@@ -142,7 +141,7 @@ public class OfferController {
         model.addAttribute("search", search != null ? search.trim() : "");
         model.addAttribute("currentStatus", status != null && !status.isBlank() ? status.trim() : "ALL");
         model.addAttribute("currentTimeSort", timeSort != null && !timeSort.isBlank() ? timeSort.trim() : "DEFAULT");
-        model.addAttribute("passedCandidates", passedCandidates);
+        model.addAttribute("passedCandidates", List.of());
 
         return "offers/list";
     }
