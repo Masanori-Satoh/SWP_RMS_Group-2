@@ -5,6 +5,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -20,6 +21,14 @@ public interface OfferProposalRepository extends JpaRepository<OfferProposal, In
             Integer applicationId,
             List<String> inactiveStatuses
     );
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+            UPDATE OfferProposal o SET o.offerStatus = :status, o.updatedAt = CURRENT_TIMESTAMP
+            WHERE o.offerId = :id AND LOWER(o.offerStatus) = 'pending_director'
+                AND (o.isDeleted IS NULL OR o.isDeleted = false)
+            """)
+    int decideIfPending(@Param("id") Integer id, @Param("status") String status);
 
     Optional<OfferProposal> findByApplication_ApplicationId(Integer applicationId);
 

@@ -480,7 +480,8 @@ public class OfferController {
             OfferResponse approved = offerService.approveOfferByDirector(id, request.getComments());
             return ResponseEntity.ok(new ApiResponse<>(true, "Đã phê duyệt đề xuất nhận việc thành công!", approved));
         } catch (BaseBusinessException e) {
-            HttpStatus status = (e instanceof ResourceNotFoundException) ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST;
+            HttpStatus status = e instanceof ResourceNotFoundException ? HttpStatus.NOT_FOUND
+                    : "OFFER_STATUS_INVALID".equals(e.getErrorCode()) ? HttpStatus.CONFLICT : HttpStatus.BAD_REQUEST;
             return ResponseEntity.status(status).body(new ApiResponse<>(false, e.getMessage()));
         } catch (Exception e) {
             log.error("Lỗi không mong muốn khi phê duyệt đề xuất nhận việc ID {}: {}", id, e.getMessage(), e);
@@ -505,7 +506,8 @@ public class OfferController {
             OfferResponse rejected = offerService.rejectOfferByDirector(id, request.getComments().trim());
             return ResponseEntity.ok(new ApiResponse<>(true, "Đã từ chối đề xuất nhận việc thành công!", rejected));
         } catch (BaseBusinessException e) {
-            HttpStatus status = (e instanceof ResourceNotFoundException) ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST;
+            HttpStatus status = e instanceof ResourceNotFoundException ? HttpStatus.NOT_FOUND
+                    : "OFFER_STATUS_INVALID".equals(e.getErrorCode()) ? HttpStatus.CONFLICT : HttpStatus.BAD_REQUEST;
             return ResponseEntity.status(status).body(new ApiResponse<>(false, e.getMessage()));
         } catch (Exception e) {
             log.error("Lỗi không mong muốn khi từ chối đề xuất nhận việc ID {}: {}", id, e.getMessage(), e);

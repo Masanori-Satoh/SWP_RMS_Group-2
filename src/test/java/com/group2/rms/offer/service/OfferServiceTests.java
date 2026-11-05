@@ -1191,7 +1191,10 @@ class OfferServiceTests {
                 .build();
         
         when(offerProposalRepository.findById(1)).thenReturn(Optional.of(offer));
-        when(offerProposalRepository.save(any(OfferProposal.class))).thenAnswer(i -> i.getArgument(0));
+        when(offerProposalRepository.decideIfPending(eq(1), anyString())).thenAnswer(invocation -> {
+            offer.setOfferStatus(invocation.getArgument(1));
+            return 1;
+        });
 
         Role role = Role.builder().roleId(1).roleName("Director").build();
         User mockUser = User.builder().userId(5).username("director1").role(role).build();
@@ -1209,6 +1212,21 @@ class OfferServiceTests {
     }
 
     @Test
+    void staleDirectorDecisionSkipsHistoryAndNotification() {
+        OfferProposal offer = OfferProposal.builder().offerId(1).offerStatus("Pending_Director").build();
+        when(offerProposalRepository.findById(1)).thenReturn(Optional.of(offer));
+        when(userRepository.findByUsernameIgnoreCase("director1"))
+                .thenReturn(Optional.of(User.builder().userId(5).username("director1").build()));
+        org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(
+                new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+                        "director1", "password", Collections.emptyList()));
+
+        assertThrows(OfferValidationException.class, () -> offerService.rejectOfferByDirector(1, "Reason"));
+        verify(offerProposalRepository).decideIfPending(1, "Director_Rejected");
+        verifyNoInteractions(offerApprovalRepository, systemNotificationService);
+    }
+
+    @Test
     @DisplayName("rejectOfferByDirector: Director từ chối Offer thành công")
     void testRejectOfferByDirector_success() {
         OfferProposal offer = OfferProposal.builder()
@@ -1217,7 +1235,10 @@ class OfferServiceTests {
                 .build();
         
         when(offerProposalRepository.findById(1)).thenReturn(Optional.of(offer));
-        when(offerProposalRepository.save(any(OfferProposal.class))).thenAnswer(i -> i.getArgument(0));
+        when(offerProposalRepository.decideIfPending(eq(1), anyString())).thenAnswer(invocation -> {
+            offer.setOfferStatus(invocation.getArgument(1));
+            return 1;
+        });
 
         Role role = Role.builder().roleId(1).roleName("Director").build();
         User mockUser = User.builder().userId(5).username("director1").role(role).build();
@@ -1325,7 +1346,10 @@ class OfferServiceTests {
                 .build();
 
         when(offerProposalRepository.findById(1)).thenReturn(Optional.of(offer));
-        when(offerProposalRepository.save(any(OfferProposal.class))).thenAnswer(i -> i.getArgument(0));
+        when(offerProposalRepository.decideIfPending(eq(1), anyString())).thenAnswer(invocation -> {
+            offer.setOfferStatus(invocation.getArgument(1));
+            return 1;
+        });
 
         Role role = Role.builder().roleId(1).roleName("Director").build();
         User mockUser = User.builder().userId(5).username("director1").role(role).build();
@@ -1351,7 +1375,10 @@ class OfferServiceTests {
                 .build();
 
         when(offerProposalRepository.findById(1)).thenReturn(Optional.of(offer));
-        when(offerProposalRepository.save(any(OfferProposal.class))).thenAnswer(i -> i.getArgument(0));
+        when(offerProposalRepository.decideIfPending(eq(1), anyString())).thenAnswer(invocation -> {
+            offer.setOfferStatus(invocation.getArgument(1));
+            return 1;
+        });
 
         Role role = Role.builder().roleId(1).roleName("Director").build();
         User mockUser = User.builder().userId(5).username("director1").role(role).build();
@@ -1591,7 +1618,10 @@ class OfferServiceTests {
                 .build();
 
         when(offerProposalRepository.findById(1)).thenReturn(Optional.of(offer));
-        when(offerProposalRepository.save(any(OfferProposal.class))).thenAnswer(i -> i.getArgument(0));
+        when(offerProposalRepository.decideIfPending(eq(1), anyString())).thenAnswer(invocation -> {
+            offer.setOfferStatus(invocation.getArgument(1));
+            return 1;
+        });
 
         Role role = Role.builder().roleId(1).roleName("Director").build();
         User mockDirector = User.builder().userId(5).username("director1").role(role).build();
@@ -1620,7 +1650,10 @@ class OfferServiceTests {
                 .build();
 
         when(offerProposalRepository.findById(1)).thenReturn(Optional.of(offer));
-        when(offerProposalRepository.save(any(OfferProposal.class))).thenAnswer(i -> i.getArgument(0));
+        when(offerProposalRepository.decideIfPending(eq(1), anyString())).thenAnswer(invocation -> {
+            offer.setOfferStatus(invocation.getArgument(1));
+            return 1;
+        });
 
         Role role = Role.builder().roleId(1).roleName("Director").build();
         User mockDirector = User.builder().userId(5).username("director1").role(role).build();
@@ -1669,7 +1702,10 @@ class OfferServiceTests {
                 .build();
 
         when(offerProposalRepository.findById(1)).thenReturn(Optional.of(offer));
-        when(offerProposalRepository.save(any(OfferProposal.class))).thenAnswer(i -> i.getArgument(0));
+        when(offerProposalRepository.decideIfPending(eq(1), anyString())).thenAnswer(invocation -> {
+            offer.setOfferStatus(invocation.getArgument(1));
+            return 1;
+        });
 
         Role role = Role.builder().roleId(1).roleName("Director").build();
         User mockDirector = User.builder().userId(5).username("director1").role(role).build();

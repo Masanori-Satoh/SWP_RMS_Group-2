@@ -34,6 +34,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
@@ -65,6 +68,7 @@ public class OfferServiceImpl implements OfferService {
     private final OfferApprovalRepository offerApprovalRepository;
     private final OfferMailSender offerMailSender;
     private final Clock clock;
+    private final PlatformTransactionManager transactionManager;
     private final com.group2.rms.notification.service.NotificationService systemNotificationService;
 
     /**
@@ -844,69 +848,63 @@ public class OfferServiceImpl implements OfferService {
 
     @Override
     public OfferResponse approveOfferByDirector(Integer id, String comments) {
-        OfferProposal offer = findActiveOffer(id);
-
-        if (!"Pending_Director".equalsIgnoreCase(offer.getOfferStatus())) {
-            throw new OfferValidationException(
-                    "Chỉ được phê duyệt đề xuất khi ở trạng thái Chờ Giám đốc duyệt. Trạng thái hiện tại: "
-                            + OfferExportServiceImpl.mapOfferStatusLabel(offer.getOfferStatus()),
-                    "OFFER_STATUS_INVALID");
-        }
-
-        User director = resolveProposedBy(null); // Resolve current logged in user (Director)
-        if (director == null) {
-            throw new OfferValidationException("Không xác định được danh tính Giám đốc để thực hiện phê duyệt.", "USER_NOT_FOUND");
-        }
-
-        offer.setOfferStatus("Director_Approved");
-        OfferProposal saved = offerProposalRepository.save(offer);
-
-        OfferApproval approval = new OfferApproval(saved, director, "Approved", comments);
-        offerApprovalRepository.save(approval);
-
-        if (systemNotificationService != null) {
-            try {
-                systemNotificationService.notifyDirectorDecisionOnOffer(saved, director, true, comments);
-            } catch (Exception e) {
-                log.warn("Lỗi khi gửi in-app notification duyệt Offer ID {}: {}", saved.getOfferId(), e.getMessage());
-            }
-        }
-
-        return mapToResponse(saved);
+        return decideOffer(id, comments, true);
     }
 
     @Override
     public OfferResponse rejectOfferByDirector(Integer id, String comments) {
+        return decideOffer(id, comments, false);
+    }
+
+    private OfferResponse decideOffer(Integer id, String comments, boolean approved) {
         OfferProposal offer = findActiveOffer(id);
-
         if (!"Pending_Director".equalsIgnoreCase(offer.getOfferStatus())) {
-            throw new OfferValidationException(
-                    "Chỉ được từ chối đề xuất khi ở trạng thái Chờ Giám đốc duyệt. Trạng thái hiện tại: "
-                            + OfferExportServiceImpl.mapOfferStatusLabel(offer.getOfferStatus()),
-                    "OFFER_STATUS_INVALID");
+            throw decisionConflict();
         }
 
-        User director = resolveProposedBy(null); // Resolve current logged in user (Director)
+        User director = resolveProposedBy(null);
         if (director == null) {
-            throw new OfferValidationException("Không xác định được danh tính Giám đốc để thực hiện từ chối.", "USER_NOT_FOUND");
+            throw new OfferValidationException("Không xác định được danh tính Giám đốc.", "USER_NOT_FOUND");
         }
 
-        offer.setOfferStatus("Director_Rejected");
-        OfferProposal saved = offerProposalRepository.save(offer);
+        String status = approved ? "Director_Approved" : "Director_Rejected";
+        if (offerProposalRepository.decideIfPending(id, status) == 0) {
+            throw decisionConflict();
+        }
 
-        OfferApproval approval = new OfferApproval(saved, director, "Rejected", comments);
-        offerApprovalRepository.save(approval);
+        OfferProposal decided = findActiveOffer(id);
+        offerApprovalRepository.save(new OfferApproval(decided, director, approved ? "Approved" : "Rejected", comments));
 
-        if (systemNotificationService != null) {
+        if (TransactionSynchronizationManager.isActualTransactionActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    try {
+                        TransactionTemplate notificationTransaction = new TransactionTemplate(transactionManager);
+                        notificationTransaction.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+                        notificationTransaction.executeWithoutResult(transaction ->
+                                systemNotificationService.notifyDirectorDecisionOnOffer(
+                                        findActiveOffer(id), director, approved, comments));
+                    } catch (Exception e) {
+                        log.warn("Lỗi khi gửi thông báo quyết định cho Offer ID {}", id, e);
+                    }
+                }
+            });
+        } else {
             try {
-                systemNotificationService.notifyDirectorDecisionOnOffer(saved, director, false, comments);
+                systemNotificationService.notifyDirectorDecisionOnOffer(decided, director, approved, comments);
             } catch (Exception e) {
-                log.warn("Lỗi khi gửi in-app notification từ chối Offer ID {}: {}", saved.getOfferId(), e.getMessage());
+                log.warn("Lỗi khi gửi thông báo quyết định cho Offer ID {}", id, e);
             }
         }
-
-        return mapToResponse(saved);
+        return mapToResponse(decided);
     }
+
+    private OfferValidationException decisionConflict() {
+        return new OfferValidationException("Đề xuất thư mời đã được cập nhật. Vui lòng tải lại trang.",
+                "OFFER_STATUS_INVALID");
+    }
+
     @Override
     @Transactional(readOnly = true)
     public Map<String, Long> getDirectorOfferStats() {
