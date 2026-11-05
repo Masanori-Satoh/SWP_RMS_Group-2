@@ -266,6 +266,15 @@ class OfferIntegrationTests {
     }
 
     @ParameterizedTest
+    @ValueSource(strings = {"/offers/create", "/offers/1/edit"})
+    @WithMockUser(username = "hr_specialist", roles = {"HR"})
+    void createAndEditUseOnlyFormSubmissions(String path) throws Exception {
+        mvc.perform(post(path).with(csrf()).contentType(MediaType.APPLICATION_JSON).content("{}"))
+                .andExpect(status().isUnsupportedMediaType());
+        org.mockito.Mockito.verifyNoInteractions(offerService);
+    }
+
+    @ParameterizedTest
     @ValueSource(strings = {"SELECTED", "FILTERED", "ALL"})
     @WithMockUser(username = "hr_specialist", roles = {"HR"})
     void exportAcceptsPayloadGeneratedByTheActualFrontend(String scope) throws Exception {
@@ -378,61 +387,7 @@ class OfferIntegrationTests {
                 .andExpect(status().is3xxRedirection());
     }
 
-    @Test
-    @DisplayName("IT-10 POST /offers/create (JSON): Modal tạo Offer thành công trả về HTTP 201 Created")
-    @WithMockUser(username = "hr_specialist", roles = {"HR"})
-    void it10_createOfferJson_success() throws Exception {
-        CreateOfferRequest req = new CreateOfferRequest();
-        req.setApplicationId(10);
-        req.setOfferedPositionTitle("Senior Java Dev");
-        req.setProposedSalary(new BigDecimal("25000000"));
-        req.setProbationSalary(new BigDecimal("21250000"));
-        req.setProbationDays(60);
-        req.setExpectedStartDate(LocalDate.now().plusDays(7));
-        req.setWorkLocation("Trụ sở Mộc RMS");
-        req.setIsDraft(false);
 
-        OfferResponse mockCreated = OfferResponse.builder()
-                .offerId(99)
-                .candidateName("Trần Văn B")
-                .offerStatus("Pending_Director")
-                .build();
-        when(offerService.createOfferByHr(any())).thenReturn(mockCreated);
-
-        mvc.perform(post("/offers/create")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(req)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.offerId").value(99));
-    }
-
-    @Test
-    @DisplayName("IT-11 POST /offers/create (JSON): Lỗi nghiệp vụ từ chối tạo offer trả về HTTP 400")
-    @WithMockUser(username = "hr_specialist", roles = {"HR"})
-    void it11_createOfferJson_businessError() throws Exception {
-        CreateOfferRequest req = new CreateOfferRequest();
-        req.setApplicationId(10);
-        req.setOfferedPositionTitle("Senior Java Dev");
-        req.setProposedSalary(new BigDecimal("25000000"));
-        req.setProbationSalary(new BigDecimal("21250000"));
-        req.setProbationDays(60);
-        req.setExpectedStartDate(LocalDate.now().plusDays(7));
-        req.setWorkLocation("Trụ sở Mộc RMS");
-        req.setIsDraft(false);
-
-        when(offerService.createOfferByHr(any()))
-                .thenThrow(new com.group2.rms.core.exception.BaseBusinessException("Ứng viên đã có offer", "ERR_ACTIVE_OFFER"));
-
-        mvc.perform(post("/offers/create")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(req)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.message").value("Ứng viên đã có offer"));
-    }
 
     @Test
     @DisplayName("IT-12 GET /offers/{id} (JSON): Pop-up chi tiết Offer trả về JSON ApiResponse và HTTP 200")
@@ -457,34 +412,6 @@ class OfferIntegrationTests {
                 .andExpect(jsonPath("$.data.candidateName").value("Nguyễn Văn A"));
     }
 
-    @Test
-    @DisplayName("IT-13 PUT /offers/{id} (JSON): Pop-up chỉnh sửa Offer thành công trả về HTTP 200")
-    @WithMockUser(username = "hr_specialist", roles = {"HR"})
-    void it13_updateOfferJson_success() throws Exception {
-        UpdateOfferRequest req = new UpdateOfferRequest();
-        req.setOfferedPositionTitle("Lead Engineer");
-        req.setProposedSalary(new BigDecimal("35000000"));
-        req.setProbationSalary(new BigDecimal("29750000"));
-        req.setProbationDays(60);
-        req.setExpectedStartDate(LocalDate.now().plusDays(10));
-        req.setWorkLocation("Trụ sở Mộc RMS");
-        req.setIsDraft(true);
-
-        OfferResponse mockUpdated = OfferResponse.builder()
-                .offerId(1)
-                .offeredPositionTitle("Lead Engineer")
-                .offerStatus("Draft")
-                .build();
-        when(offerService.updateOfferByHr(any(), any())).thenReturn(mockUpdated);
-
-        mvc.perform(put("/offers/1")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(req)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.offeredPositionTitle").value("Lead Engineer"));
-    }
 
     @Test
     @DisplayName("IT-14 DELETE /offers/{id} (JSON): Pop-up xóa bản thảo Offer thành công trả về HTTP 200")
@@ -599,7 +526,7 @@ class OfferIntegrationTests {
     @DisplayName("IT-21 POST /offers/create: Nhập sai định dạng ngày hoặc năm ngoài phạm vi (như 20165) trả về thông báo lỗi ngắn gọn tiếng Việt, không chứa ngoại lệ kỹ thuật Java")
     @WithMockUser(username = "hr_specialist", roles = {"HR"})
     void it21_createOfferWithInvalidDate_showsShortConciseErrorMessage() throws Exception {
-        mvc.perform(post("/offers/create")
+        mvc.perform(post("/offers/create").contentType(MediaType.APPLICATION_FORM_URLENCODED)
                         .with(csrf())
                         .param("applicationId", "1")
                         .param("offeredPositionTitle", "Java Dev")

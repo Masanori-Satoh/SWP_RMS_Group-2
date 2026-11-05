@@ -186,31 +186,23 @@ public class OfferController {
         return "offers/form";
     }
 
+
     /**
-     * 3a. SUBMIT CREATE VIA AJAX (JSON): Tiếp nhận request từ pop-up Modal trên
-     * trang danh sách
+     * 3b. SUBMIT CREATE: Tiếp nhận form tạo mới Offer (Save Draft hoặc Submit
+     * Director)
      */
-    @PostMapping(value = "/create", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(value = {"/create", "/{id}/edit"}, consumes = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
-    public ResponseEntity<ApiResponse<OfferResponse>> createOfferJson(
-            @Valid @RequestBody CreateOfferRequest createRequest) {
-        try {
-            OfferResponse created = offerService.createOfferByHr(createRequest);
-            boolean isDraft = Boolean.TRUE.equals(createRequest.getIsDraft());
-            String msg = isDraft
-                    ? "Lưu bản nháp đề xuất thư mời thành công!"
-                    : "Đã gửi đề xuất thư mời để Giám đốc duyệt.";
-            return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse<>(true, msg, created));
-        } catch (BaseBusinessException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse<>(false, e.getMessage()));
-        }
+    public ResponseEntity<ApiResponse<Void>> rejectLegacyJsonForms() {
+        return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
+                .body(new ApiResponse<>(false, "Vui lòng sử dụng biểu mẫu tạo hoặc chỉnh sửa đề xuất thư mời."));
     }
 
     /**
      * 3b. SUBMIT CREATE: Tiếp nhận form tạo mới Offer (Save Draft hoặc Submit
      * Director)
      */
-    @PostMapping("/create")
+    @PostMapping(value = "/create", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
     public String createOffer(
             @Valid @ModelAttribute("offerDto") CreateOfferRequest createRequest,
             BindingResult errors,
@@ -319,37 +311,9 @@ public class OfferController {
     }
 
     /**
-     * 6a. SUBMIT EDIT VIA AJAX (JSON): Cập nhật Offer Proposal từ pop-up Modal
+     * 6b. SUBMIT EDIT: Cập nhật Offer Proposal (Form Submit)
      */
-    @PutMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
-    @ResponseBody
-    public ResponseEntity<ApiResponse<OfferResponse>> updateOfferJson(
-            @PathVariable Integer id,
-            @Valid @RequestBody UpdateOfferRequest updateRequest) {
-        try {
-            OfferResponse updated = offerService.updateOfferByHr(id, updateRequest);
-            boolean isDraft = Boolean.TRUE.equals(updateRequest.getIsDraft());
-            String msg = isDraft
-                    ? "Cập nhật bản nháp đề xuất thư mời thành công!"
-                    : "Đã gửi đề xuất thư mời để Giám đốc duyệt.";
-            return ResponseEntity.ok(new ApiResponse<>(true, msg, updated));
-        } catch (BaseBusinessException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse<>(false, e.getMessage()));
-        }
-    }
-
-    @PostMapping(value = "/{id}/edit", consumes = MediaType.APPLICATION_JSON_VALUE)
-    @ResponseBody
-    public ResponseEntity<ApiResponse<OfferResponse>> updateOfferJsonPost(
-            @PathVariable Integer id,
-            @Valid @RequestBody UpdateOfferRequest updateRequest) {
-        return updateOfferJson(id, updateRequest);
-    }
-
-    /**
-     * 6b. SUBMIT EDIT: Cập nhật Offer Proposal (Form Submit Fallback)
-     */
-    @PostMapping("/{id}/edit")
+    @PostMapping(value = "/{id}/edit", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
     public String updateOffer(
             @PathVariable Integer id,
             @Valid @ModelAttribute("offerDto") UpdateOfferRequest updateRequest,

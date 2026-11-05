@@ -103,71 +103,6 @@ public class OfferServiceImpl implements OfferService {
         return false;
     }
 
-    @Override
-    public OfferResponse createOfferProposal(CreateOfferRequest request) {
-        validateProbationSalaryRule(request.getProposedSalary(), request.getProbationSalary());
-
-        Application application = applicationRepository.findById(request.getApplicationId())
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Không tìm thấy đơn ứng tuyển với ID: " + request.getApplicationId()));
-
-        User proposedBy = resolveProposedBy(request.getProposedById());
-
-        deactivateExistingActiveOffers(application.getApplicationId());
-
-        Integer responsePeriodDays = request.getResponsePeriodDays() != null ? request.getResponsePeriodDays() : 5;
-
-        Optional<OfferProposal> existingOfferOpt = offerProposalRepository
-                .findByApplication_ApplicationId(application.getApplicationId());
-
-        OfferProposal offerToSave;
-        if (existingOfferOpt.isPresent()) {
-            offerToSave = existingOfferOpt.get();
-            offerToSave.setOfferedPositionTitle(request.getOfferedPositionTitle());
-            offerToSave.setProposedSalary(request.getProposedSalary());
-            offerToSave.setProbationSalary(request.getProbationSalary());
-            offerToSave.setProbationDays(request.getProbationDays() != null ? request.getProbationDays() : 60);
-            offerToSave.setExpectedStartDate(request.getExpectedStartDate());
-            offerToSave.setWorkLocation(request.getWorkLocation());
-            offerToSave.setBenefitsPackage(request.getBenefitsPackage());
-            offerToSave.setResponsePeriodDays(responsePeriodDays);
-            offerToSave.setResponseDeadline(null);
-            offerToSave.setProposedBy(proposedBy);
-            offerToSave.setOfferStatus("Pending_Director");
-            offerToSave.setIsDeleted(false);
-            offerToSave.setDeclineReason(null);
-        } else {
-            offerToSave = OfferProposal.builder()
-                    .application(application)
-                    .offeredPositionTitle(request.getOfferedPositionTitle())
-                    .proposedSalary(request.getProposedSalary())
-                    .probationSalary(request.getProbationSalary())
-                    .probationDays(request.getProbationDays() != null ? request.getProbationDays() : 60)
-                    .expectedStartDate(request.getExpectedStartDate())
-                    .workLocation(request.getWorkLocation())
-                    .benefitsPackage(request.getBenefitsPackage())
-                    .responsePeriodDays(responsePeriodDays)
-                    .responseDeadline(null)
-                    .proposedBy(proposedBy)
-                    .offerStatus("Pending_Director")
-                    .isDeleted(false)
-                    .build();
-        }
-
-        OfferProposal savedOffer = offerProposalRepository.save(offerToSave);
-
-        if ("Pending_Director".equals(savedOffer.getOfferStatus())) {
-            if (systemNotificationService != null) {
-                try {
-                    systemNotificationService.notifyOfferPendingDirector(savedOffer, proposedBy);
-                } catch (Exception e) {
-                    log.warn("Lỗi khi gửi in-app notification Director về Offer mới ID {}: {}", savedOffer.getOfferId(), e.getMessage());
-                }
-            }
-        }
-
-        return mapToResponse(savedOffer);
-    }
 
     private OfferProposal findActiveOffer(Integer id) {
         return offerProposalRepository.findById(id)
@@ -187,14 +122,6 @@ public class OfferServiceImpl implements OfferService {
         return mapToResponse(offer);
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public OfferResponse getOfferByApplicationId(Integer applicationId) {
-        OfferProposal offer = offerProposalRepository.findByApplication_ApplicationId(applicationId)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Không tìm thấy đề xuất thư mời cho đơn ứng tuyển ID: " + applicationId));
-        return mapToResponse(offer);
-    }
 
     @Override
     @Transactional(readOnly = true)
@@ -811,22 +738,6 @@ public class OfferServiceImpl implements OfferService {
         }
     }
 
-    private void deactivateExistingActiveOffers(Integer applicationId) {
-        List<String> inactiveStatuses = List.of("Voided", "Canceled", "Rejected", "Declined", "Director_Rejected",
-                "Expired");
-
-        List<OfferProposal> activeOffers = offerProposalRepository
-                .findByApplication_ApplicationIdAndOfferStatusNotIn(applicationId, inactiveStatuses);
-
-        for (OfferProposal oldOffer : activeOffers) {
-            oldOffer.setOfferStatus("Voided");
-        }
-
-        if (!activeOffers.isEmpty()) {
-            offerProposalRepository.saveAll(activeOffers);
-            offerProposalRepository.flush();
-        }
-    }
 
     private User resolveProposedBy(Integer proposedById) {
         if (proposedById != null) {
@@ -1055,16 +966,5 @@ public class OfferServiceImpl implements OfferService {
         return pagedEntities.map(this::mapToResponse);
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public Page<OfferResponse> getDirectorOfferHistory(Pageable pageable) {
-        User director = resolveProposedBy(null);
-        Integer directorId = director != null ? director.getUserId() : 0;
-        
-        Page<OfferApproval> approvals = offerApprovalRepository.findByDirector_UserIdOrderByApprovedAtDesc(directorId, pageable);
-        return approvals.map(approval -> {
-            OfferProposal offer = approval.getOfferProposal();
-            return mapToResponse(offer);
-        });
-    }
+
 }

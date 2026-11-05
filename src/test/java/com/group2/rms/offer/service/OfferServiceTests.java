@@ -150,36 +150,28 @@ class OfferServiceTests {
     }
 
     @Test
-    @DisplayName("Lương thử việc đúng bằng 85% lương chính thức phải hợp lệ")
-    void testProbationSalaryExactly85Percent_passes() {
+    void probationSalaryExactly85PercentUsesSupportedHrCreation() {
         Application application = Application.builder().applicationId(1).build();
-        User proposedBy = User.builder().userId(10).fullName("Hiring Manager").build();
-
         when(applicationRepository.findById(1)).thenReturn(Optional.of(application));
-        when(userRepository.findById(10)).thenReturn(Optional.of(proposedBy));
-        when(offerProposalRepository.findByApplication_ApplicationIdAndOfferStatusNotIn(eq(1), any()))
-                .thenReturn(List.of());
-        when(offerProposalRepository.save(any(OfferProposal.class))).thenAnswer(i -> {
-            OfferProposal op = i.getArgument(0);
-            op.setOfferId(101);
-            return op;
-        });
-
-        CreateOfferRequest request = CreateOfferRequest.builder()
-                .applicationId(1)
-                .offeredPositionTitle("Senior Java Engineer")
-                .proposedSalary(new BigDecimal("20000000"))
-                .probationSalary(new BigDecimal("17000000")) // Đúng 85% của 20M
-                .expectedStartDate(LocalDate.now().plusWeeks(2))
-                .proposedById(10)
-                .build();
-
-        OfferResponse response = offerService.createOfferProposal(request);
-
-        assertNotNull(response);
-        assertEquals(new BigDecimal("20000000"), response.getProposedSalary());
-        assertEquals(new BigDecimal("17000000"), response.getProbationSalary());
-        assertEquals("Pending_Director", response.getOfferStatus());
+        when(interviewFinalResultRepository.findByApplicationIdOrderByApprovedAtDesc(1))
+                .thenReturn(List.of(InterviewFinalResult.builder().finalDecision("Passed").build()));
+        User hr = User.builder().userId(10).username("hr_boundary").build();
+        when(userRepository.findByUsernameIgnoreCase("hr_boundary")).thenReturn(Optional.of(hr));
+        when(offerProposalRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        var context = org.springframework.security.core.context.SecurityContextHolder.getContext();
+        var previous = context.getAuthentication();
+        context.setAuthentication(new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+                "hr_boundary", "test-only", Collections.emptyList()));
+        try {
+            var response = offerService.createOfferByHr(CreateOfferRequest.builder().applicationId(1)
+                    .offeredPositionTitle("Engineer").workLocation("Test office").probationDays(45)
+                    .proposedSalary(new BigDecimal("20000000")).probationSalary(new BigDecimal("17000000"))
+                    .expectedStartDate(LocalDate.now().plusDays(30)).isDraft(true).build());
+            assertEquals("Draft", response.getOfferStatus());
+            assertEquals(new BigDecimal("17000000"), response.getProbationSalary());
+        } finally {
+            context.setAuthentication(previous);
+        }
     }
 
     // Lưu ý: Đã loại bỏ testSingleActiveOfferRule_deactivatesOldOffers() cũ (triết lý Voided offer đang Pending_Director)
@@ -915,32 +907,7 @@ class OfferServiceTests {
         });
     }
 
-    @Test
-    @DisplayName("getOfferByApplicationId: Tìm thấy Offer theo ApplicationId thành công")
-    void testGetOfferByApplicationId_found_returnsOfferResponse() {
-        OfferProposal offer = OfferProposal.builder()
-                .offerId(5)
-                .offerStatus("Pending_Director")
-                .build();
 
-        when(offerProposalRepository.findByApplication_ApplicationId(10)).thenReturn(Optional.of(offer));
-
-        OfferResponse response = offerService.getOfferByApplicationId(10);
-
-        assertNotNull(response);
-        assertEquals(5, response.getOfferId());
-        assertEquals("Pending_Director", response.getOfferStatus());
-    }
-
-    @Test
-    @DisplayName("getOfferByApplicationId: Không tìm thấy Offer theo ApplicationId ném ResourceNotFoundException")
-    void testGetOfferByApplicationId_notFound_throwsException() {
-        when(offerProposalRepository.findByApplication_ApplicationId(999)).thenReturn(Optional.empty());
-
-        assertThrows(ResourceNotFoundException.class, () -> {
-            offerService.getOfferByApplicationId(999);
-        });
-    }
 
     @Test
     @DisplayName("getAllOffersForHr: Lấy toàn bộ Offer (status = null hoặc ALL)")
@@ -1350,40 +1317,6 @@ class OfferServiceTests {
         assertEquals("Accepted", result.getContent().get(0).getOfferStatus());
     }
 
-    @Test
-    @DisplayName("getDirectorOfferHistory: Giữ nguyên trạng thái vòng đời thực tế thay vì bị ghi đè")
-    void testGetDirectorOfferHistory_preservesRealtimeStatus() {
-        Role role = Role.builder().roleId(1).roleName("Director").build();
-        User mockDirector = User.builder().userId(5).username("director1").role(role).build();
-        when(userRepository.findByUsernameIgnoreCase(any())).thenReturn(Optional.of(mockDirector));
-        org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(
-                new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
-                        "director1", "password", Collections.emptyList()));
-
-        OfferProposal offer = OfferProposal.builder()
-                .offerId(20)
-                .offerStatus("Accepted") // Trạng thái thực tế: ứng viên đã chấp nhận
-                .offeredPositionTitle("Product Manager")
-                .build();
-
-        OfferApproval approval = OfferApproval.builder()
-                .offerApprovalId(1)
-                .director(mockDirector)
-                .offerProposal(offer)
-                .status("Approved") // Quyết định phê duyệt trong quá khứ của Director
-                .build();
-
-        Page<OfferApproval> approvalPage = new PageImpl<>(List.of(approval));
-        when(offerApprovalRepository.findByDirector_UserIdOrderByApprovedAtDesc(eq(5), any(Pageable.class)))
-                .thenReturn(approvalPage);
-
-        Page<OfferResponse> history = offerService.getDirectorOfferHistory(PageRequest.of(0, 10));
-
-        assertNotNull(history);
-        assertEquals(1, history.getTotalElements());
-        // Trạng thái hiển thị phải là Accepted (trạng thái vòng đời thực tế), KHÔNG bị đè thành "Approved"
-        assertEquals("Accepted", history.getContent().get(0).getOfferStatus());
-    }
 
     // =========================================================================
     // EXTENDED UNIT TESTS (English)
