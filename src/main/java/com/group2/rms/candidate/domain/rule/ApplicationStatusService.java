@@ -25,8 +25,10 @@ import java.util.Set;
  *   HM_Passed --xếp lịch / chốt Đạt--> Interviewing
  *   HM_Passed, Interviewing --chốt Không đạt--> Rejected
  *   Offered --ứng viên nhận offer--> Hired
- *   Offered --ứng viên từ chối offer--> Rejected
+ *   Offered --ứng viên từ chối offer--> Withdrawn
  * </pre>
+ * Trạng thái kết thúc trả lời "ai kết thúc đơn": {@code Rejected} công ty loại, {@code Withdrawn} ứng viên tự dừng
+ * (rút đơn, từ chối offer), {@code Cancelled} đơn dừng vì tin bị đóng, {@code Hired} nhận việc.
  */
 @Service
 @Transactional
@@ -39,6 +41,12 @@ public class ApplicationStatusService {
     static final Set<String> OFFERED = Set.of("Offered");
 
     public static final String REJECTED = "Rejected";
+    public static final String WITHDRAWN = "Withdrawn";
+    public static final String CANCELLED = "Cancelled";
+    public static final String HIRED = "Hired";
+
+    /** Một nguồn cho "đơn đã kết thúc": mọi danh sách {@code NOT IN} trạng thái kết thúc dùng hằng này. */
+    public static final Set<String> TERMINAL = Set.of(HIRED, REJECTED, WITHDRAWN, CANCELLED);
 
     private final ApplicationRepository applications;
     private final JobPostingRepository jobs;
@@ -76,9 +84,9 @@ public class ApplicationStatusService {
         }
     }
 
-    /** Ứng viên trả lời offer đã gửi: nhận thì {@code Hired}, từ chối thì {@code Rejected}. */
+    /** Ứng viên trả lời offer đã gửi: nhận thì {@code Hired}, từ chối thì {@code Withdrawn} (ứng viên tự dừng). */
     public void onOfferAnswered(Integer applicationId, boolean accepted) {
-        move(applicationId, OFFERED, accepted ? "Hired" : REJECTED);
+        move(applicationId, OFFERED, accepted ? HIRED : WITHDRAWN);
     }
 
     private void move(Integer applicationId, Set<String> from, String to) {

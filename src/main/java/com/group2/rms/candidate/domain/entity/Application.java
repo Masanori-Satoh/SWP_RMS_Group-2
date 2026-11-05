@@ -10,7 +10,8 @@ import java.time.LocalDateTime;
 /**
  * 3.13 Application - Hồ sơ ứng tuyển của ứng viên cho một vị trí.
  * ApplicationStatus: Applied, HR_Passed, HM_Passed, HM_Suggested,
- *                    Interviewing, Offered, Hired, Rejected
+ *                    Interviewing, Offered, Hired, Rejected, Withdrawn, Cancelled
+ * Kết thúc: Hired nhận việc; Rejected công ty loại; Withdrawn ứng viên tự dừng; Cancelled tin bị đóng.
  */
 @Entity
 @Table(name = "Application")
@@ -44,7 +45,7 @@ public class Application extends BaseEntity {
     private LocalDateTime submissionDate;
 
     /**
-     * Applied, HR_Passed, HM_Passed, HM_Suggested, Interviewing, Offered, Hired, Rejected
+     * Applied, HR_Passed, HM_Passed, HM_Suggested, Interviewing, Offered, Hired, Rejected, Withdrawn, Cancelled
      */
     @Column(name = "ApplicationStatus", nullable = false, length = 30)
     private String applicationStatus;

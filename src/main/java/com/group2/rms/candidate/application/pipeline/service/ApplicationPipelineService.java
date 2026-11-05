@@ -130,7 +130,7 @@ public class ApplicationPipelineService {
         JobRequisition requisition = job.getRequisition();
         String status = application.getApplicationStatus();
         ApplicationProgressFacts facts = knownFacts(applicationId, status, progressFacts(List.of(applicationId)));
-        ApplicationProgressResponse progress = progress(facts, LocalDateTime.now());
+        ApplicationProgressResponse progress = ApplicationProgressResolver.resolve(facts, LocalDateTime.now());
         boolean cancelledProposal = pipelineQueries.countTalentPoolCancellation(applicationId) > 0;
 
         return new ApplicationDetailResponse(
@@ -161,16 +161,7 @@ public class ApplicationPipelineService {
         Application application = applications.findDetailById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hồ sơ."));
         access.requireView(access.actor(), application);
-        return pipelineQueries.countPostingClosure(id) > 0;
-    }
-
-    /** Phân biệt đóng đợt thật (audit) với hồ sơ bị loại riêng lẻ. */
-    private ApplicationProgressResponse progress(ApplicationProgressFacts facts, LocalDateTime now) {
-        if ("Rejected".equals(facts.applicationStatus()) && pipelineQueries.countPostingClosure(facts.applicationId()) > 0) {
-            ApplicationProgressStep step = ApplicationProgressStep.POSTING_CLOSED;
-            return new ApplicationProgressResponse(step.stage(), step, step.label(), step.owner(), step.tone());
-        }
-        return ApplicationProgressResolver.resolve(facts, now);
+        return ApplicationStatusService.CANCELLED.equals(application.getApplicationStatus());
     }
 
     /** CV của đơn, cùng quyền với trang chi tiết. Dạng {@code AppliedCvUrl}: {@link ApplicationCv#of}. */
@@ -209,7 +200,7 @@ public class ApplicationPipelineService {
         LocalDateTime now = LocalDateTime.now();
         Map<Integer, ApplicationProgressResponse> progress = new LinkedHashMap<>();
         ids.stream().filter(facts::containsKey)
-                .forEach(id -> progress.put(id, progress(facts.get(id), now)));
+                .forEach(id -> progress.put(id, ApplicationProgressResolver.resolve(facts.get(id), now)));
         return progress;
     }
 
@@ -250,7 +241,7 @@ public class ApplicationPipelineService {
     private static ApplicationProgressFacts knownFacts(Integer applicationId, String status,
                                                        Map<Integer, ApplicationProgressFacts> facts) {
         return facts.getOrDefault(applicationId,
-                new ApplicationProgressFacts(applicationId, status, false, null, null, null, 0, 0, null, null));
+                new ApplicationProgressFacts(applicationId, status, null, null, null, 0, 0, null, null));
     }
 
     /** Hành trình của đơn, mới nhất trước: nộp, các lượt duyệt, lịch và kết quả phỏng vấn, offer. */
@@ -297,7 +288,7 @@ public class ApplicationPipelineService {
                 null, null, ApplicationStatusLabels.interviewResultTone(event.getStatus()))));
         pipelineQueries.findOfferEvents(id).forEach(event -> items.add(new TimelineItem(
                 event.getAt(), "Offer: " + event.getStatus(), null, null, "success")));
-        if ("Rejected".equals(application.getApplicationStatus()) && pipelineQueries.countPostingClosure(id) > 0) {
+        if (ApplicationStatusService.CANCELLED.equals(application.getApplicationStatus())) {
             items.add(new TimelineItem(application.getUpdatedAt(), "Đóng đợt tuyển dụng", "Hệ thống",
                     "Đợt tuyển dụng đã kết thúc, hồ sơ dừng xử lý", "neutral"));
         }
