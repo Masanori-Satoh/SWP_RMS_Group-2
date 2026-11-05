@@ -21,6 +21,7 @@
 .req-form-page .rqf-full { grid-column:1 / -1; }
 .req-form-page .rqf-field { display:grid; gap:var(--s2); align-content:start; min-width:0; margin:0; padding:0; border:0; }
 .req-form-page .rqf-field .form-label { margin:0; }
+.req-form-page .rqf-field .form-input:disabled { color:var(--muted); background:var(--page); border-color:var(--line); cursor:not-allowed; }
 .req-form-page .rqf-hint { color:var(--muted); font-size:var(--font-sm); font-weight:400; }
 .req-form-page .rqf-readonly { display:flex; flex-wrap:wrap; align-items:center; gap:var(--s2); min-height:var(--input-h); padding:var(--s2) var(--s3); border:1px dashed var(--control-line); border-radius:var(--radius-md); background:var(--surface-subtle); font-weight:600; }
 .req-form-page .rqf-counter { color:var(--muted); font-size:var(--font-xs); text-align:right; font-variant-numeric:tabular-nums; }

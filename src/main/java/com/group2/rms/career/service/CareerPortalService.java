@@ -59,7 +59,7 @@ public class CareerPortalService {
                 job.getRequisition() != null && job.getRequisition().getDepartment() != null
                         ? job.getRequisition().getDepartment().getDepartmentName()
                         : "",
-                job.getWorkLocation(),
+                "Remote".equals(job.effectiveWorkModel()) ? "Từ xa" : job.getWorkLocation(),
                 Objects.toString(job.effectiveEmploymentType(), ""),
                 job.getSalaryDisplay(),
                 job.getApplicationDeadline(),
@@ -104,7 +104,7 @@ public class CareerPortalService {
                 job.getRequisition() != null && job.getRequisition().getDepartment() != null
                         ? job.getRequisition().getDepartment().getDepartmentName()
                         : "",
-                job.getWorkLocation(),
+                job.effectiveWorkLocation(),
                 job.getWorkingHours(),
                 job.getProbationPeriod(),
                 Objects.toString(job.effectiveEmploymentType(), ""),

@@ -252,6 +252,7 @@
                             </div>
                             <input class="form-input" th:field="*{workLocation}" th:maxlength="${locationLimit}"
                                 placeholder="Nhập địa điểm làm việc"
+                                th:disabled="*{workModel == 'Remote'}"
                                 aria-describedby="workLocation-help workLocation-error">
                             <!-- Bản đồ thu gọn (D3): chỉ bung ra khi bấm "Xem bản đồ"; job-posting-form.js chỉ tải Google Maps khi đang mở -->
                             <details class="jpf-map-toggle" id="jpf-map-toggle">

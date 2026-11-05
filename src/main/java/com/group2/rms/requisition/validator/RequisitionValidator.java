@@ -84,6 +84,9 @@ public class RequisitionValidator {
         requisitionRequest.setRequirementDetails(cleanMultiline(requisitionRequest.getRequirementDetails()));
         requisitionRequest.setWorkLocation(cleanString(requisitionRequest.getWorkLocation()));
         requisitionRequest.setWorkModel(cleanString(requisitionRequest.getWorkModel()));
+        if ("Remote".equals(requisitionRequest.getWorkModel())) {
+            requisitionRequest.setWorkLocation(null);
+        }
         requisitionRequest.setGender(cleanString(requisitionRequest.getGender()));
         requisitionRequest.setProbationPeriod(cleanString(requisitionRequest.getProbationPeriod()));
         if (requisitionRequest.getGender() == null) {
@@ -105,7 +108,7 @@ public class RequisitionValidator {
         validateTextField(errors, "requirementDetails", requisitionRequest.getRequirementDetails(),
                 TEXT_FIELD_CHAR_LIMIT, isSubmitAction);
         validateTextField(errors, "workLocation", requisitionRequest.getWorkLocation(), SHORT_FIELD_CHAR_LIMIT,
-                isSubmitAction);
+                isSubmitAction && !"Remote".equals(requisitionRequest.getWorkModel()));
 
         // Rule: thử việc không bắt buộc, chữ tự do (VD "2 tháng", "Thỏa thuận"), tối đa PROBATION_CHAR_LIMIT ký tự
         validateTextField(errors, "probationPeriod", requisitionRequest.getProbationPeriod(), PROBATION_CHAR_LIMIT, false);
