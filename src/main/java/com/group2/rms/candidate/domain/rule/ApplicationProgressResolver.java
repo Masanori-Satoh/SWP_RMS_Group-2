@@ -93,6 +93,7 @@ public final class ApplicationProgressResolver {
             case "Director_Rejected" -> OFFER_RETURNED;
             case "Director_Approved", "Approved" -> OFFER_AWAITING_SEND;
             case "Sent_Candidate" -> OFFER_SENT;
+            case "Expired" -> OFFER_EXPIRED;
             case "Accepted" -> HIRED_DONE;
             case "Declined" -> OFFER_DECLINED;
             default -> null;

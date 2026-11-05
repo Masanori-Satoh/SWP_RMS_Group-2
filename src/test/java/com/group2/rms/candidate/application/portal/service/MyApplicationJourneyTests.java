@@ -496,6 +496,70 @@ class MyApplicationJourneyTests {
 
     // ---- Dựng dữ kiện ----
 
+    /** Thư mời Expired: đơn vẫn Offered, ứng viên xem được nhưng không còn phải trả lời. */
+    @Nested
+    class ExpiredOffer {
+
+        private static final LocalDateTime DEADLINE = LocalDateTime.of(2026, 10, 17, 17, 0);
+        /** Job ghi muộn hơn hạn: UpdatedAt không phải lúc hết hạn. */
+        private static final LocalDateTime JOB_WROTE_AT = LocalDateTime.of(2026, 10, 19, 2, 0);
+
+        @Test
+        void showsOverdueWithViewLinkAndNoAnswerAction() {
+            View view = resolve(facts("Offered").interviews(completed())
+                    .offer(new Offer(3, "Expired", DEADLINE, JOB_WROTE_AT)));
+
+            assertStatus(view, "Thư mời đã quá hạn", "Vui lòng liên hệ bộ phận tuyển dụng nếu cần hỗ trợ.", "neutral",
+                    "Xem thư mời", "/portal/offers/3");
+            assertSteps(view, "done", "done", "current", "upcoming");
+        }
+
+        @Test
+        void isNotUrgentNotUpcomingAndNotEnded() {
+            View view = resolve(facts("Offered").offer(new Offer(3, "Expired", NOW.plusDays(1), JOB_WROTE_AT)));
+
+            assertNull(view.urgentUntil());
+            assertNull(view.urgentLabel());
+            assertNull(view.upcomingAt());
+            assertEquals(MyApplicationJourney.PRIORITY_IN_FLOW, view.priority());
+            assertFalse(view.ended());
+            assertFalse(view.stopped());
+        }
+
+        @Test
+        void timelineUsesTheDeadlineNotTheLateJobTime() {
+            View view = resolve(facts("Offered").offer(new Offer(3, "Expired", DEADLINE, JOB_WROTE_AT)));
+
+            TimelineItem item = expiredItem(view);
+            assertEquals(DEADLINE, item.at());
+        }
+
+        /** Hết hạn vì qua ngày bắt đầu, không có hạn trả lời: chỉ biết lúc hệ thống ghi nhận. */
+        @Test
+        void timelineFallsBackToRecordedTimeWithoutDeadline() {
+            View view = resolve(facts("Offered").offer(new Offer(3, "Expired", null, JOB_WROTE_AT)));
+
+            assertEquals(JOB_WROTE_AT, expiredItem(view).at());
+        }
+
+        @Test
+        void closedPostingAfterExpiryStillEndsTheApplication() {
+            View view = resolve(facts("Cancelled").interviews(completed())
+                    .offer(new Offer(3, "Expired", DEADLINE, JOB_WROTE_AT))
+                    .marks(mark("PostingClosed", "Offered", PAST)));
+
+            assertTrue(view.ended());
+            assertSteps(view, "done", "done", "done", "upcoming");
+            assertEquals(DEADLINE, expiredItem(view).at());
+        }
+
+        private static TimelineItem expiredItem(View view) {
+            return view.journey().stream()
+                    .filter(item -> "Thư mời đã quá hạn phản hồi".equals(item.title()))
+                    .findFirst().orElseThrow();
+        }
+    }
+
     private static View resolve(FactsBuilder builder) {
         return MyApplicationJourney.resolve(builder.build(), NOW);
     }

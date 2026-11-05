@@ -74,7 +74,7 @@ public interface MyApplicationRepository extends org.springframework.data.reposi
                             JOIN Candidate c ON c.CandidateId = a.CandidateId
                         WHERE c.UserId = :userId
                           AND o.IsDeleted = 0
-                          AND o.OfferStatus IN ('Sent_Candidate', 'Accepted', 'Declined')
+                          AND o.OfferStatus IN ('Sent_Candidate', 'Accepted', 'Declined', 'Expired')
                         """, nativeQuery = true)
         List<MyOfferRow> findMyVisibleOffers(@Param("userId") Integer userId);
 
