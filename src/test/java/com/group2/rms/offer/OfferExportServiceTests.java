@@ -147,7 +147,7 @@ class OfferExportServiceTests {
 
             // Summary Sheet Check
             Sheet summarySheet = wb.getSheetAt(1);
-            assertThat(summarySheet.getRow(0).getCell(0).getStringCellValue()).contains("BÁO CÁO TỔNG HỢP DANH SÁCH ĐỀ XUẤT NHẬN VIỆC");
+            assertThat(summarySheet.getRow(0).getCell(0).getStringCellValue()).contains("BÁO CÁO TỔNG HỢP DANH SÁCH THƯ MỜI NHẬN VIỆC");
             assertThat(summarySheet.getRow(2).getCell(1).getStringCellValue()).isEqualTo("hr_tester");
             assertThat(summarySheet.getRow(6).getCell(1).getNumericCellValue()).isEqualTo(2.0);
         }
@@ -281,7 +281,7 @@ class OfferExportServiceTests {
 
         assertThatThrownBy(() -> exportService.exportOffersToExcel(request, "hr"))
                 .isInstanceOf(BaseBusinessException.class)
-                .hasMessageContaining("Không có dữ liệu đề xuất nhận việc phù hợp");
+                .hasMessageContaining("Không có dữ liệu thư mời nhận việc phù hợp");
     }
 
     @Test

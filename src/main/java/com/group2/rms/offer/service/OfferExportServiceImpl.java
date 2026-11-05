@@ -85,7 +85,7 @@ public class OfferExportServiceImpl implements OfferExportService {
         // 1. Lấy danh sách entities theo Scope & Filters
         List<OfferProposal> entities = fetchOffersByScope(request);
         if (entities.isEmpty()) {
-            throw new OfferValidationException("Không có dữ liệu đề xuất nhận việc phù hợp để xuất Excel.", "EMPTY_EXPORT_DATA");
+            throw new OfferValidationException("Không có dữ liệu thư mời nhận việc phù hợp để xuất Excel.", "EMPTY_EXPORT_DATA");
         }
 
         // 2. Chuyển đổi entities sang DTO phẳng (OfferExportRow)
@@ -643,7 +643,7 @@ public class OfferExportServiceImpl implements OfferExportService {
         // Row 0: Title
         Row r0 = sheet.createRow(0);
         Cell c0 = r0.createCell(0);
-        c0.setCellValue("BÁO CÁO TỔNG HỢP DANH SÁCH ĐỀ XUẤT NHẬN VIỆC");
+        c0.setCellValue("BÁO CÁO TỔNG HỢP DANH SÁCH THƯ MỜI NHẬN VIỆC");
         c0.setCellStyle(titleStyle);
 
         // Row 2: Người xuất

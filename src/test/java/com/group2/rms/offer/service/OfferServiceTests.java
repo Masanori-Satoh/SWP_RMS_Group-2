@@ -715,7 +715,7 @@ class OfferServiceTests {
         });
 
         assertEquals("OFFER_LOCKED_STATE", ex.getErrorCode());
-        assertTrue(ex.getMessage().contains("không thể tạo mới đề xuất nhận việc"));
+        assertTrue(ex.getMessage().contains("không thể tạo mới đề xuất thư mời"));
         verify(offerProposalRepository, never()).save(any());
     }
 
