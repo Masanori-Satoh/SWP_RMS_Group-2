@@ -57,7 +57,16 @@ public interface TalentPoolApplicationRepository extends org.springframework.dat
         @Query("""
                         SELECT a FROM Application a
                         WHERE a.jobPosting.jobPostingId = :jobPostingId
-                          AND a.applicationStatus NOT IN ('Hired', 'Rejected', 'HM_Suggested')
+                          AND a.applicationStatus NOT IN :excluded
                         """)
-        List<Application> findPendingApplicationsForClosedJob(@Param("jobPostingId") Integer jobPostingId);
+        List<Application> findPendingApplicationsForClosedJob(@Param("jobPostingId") Integer jobPostingId,
+                        @Param("excluded") java.util.Collection<String> excluded);
+
+        // dunglt bổ sung: bỏ qua mọi đơn đã kết thúc (ApplicationStatusService.TERMINAL) và bản nháp đề xuất
+        default List<Application> findPendingApplicationsForClosedJob(Integer jobPostingId) {
+                java.util.Set<String> excluded = new java.util.HashSet<>(
+                                com.group2.rms.candidate.domain.rule.ApplicationStatusService.TERMINAL);
+                excluded.add("HM_Suggested");
+                return findPendingApplicationsForClosedJob(jobPostingId, excluded);
+        }
 }

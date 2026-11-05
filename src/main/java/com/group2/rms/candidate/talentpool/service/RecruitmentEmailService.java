@@ -63,12 +63,19 @@ public class RecruitmentEmailService {
         }, id).stream().findFirst().orElseThrow(() -> new TalentPoolException("Không tìm thấy đơn để gửi email."));
     }
     private RecruitmentEmailMessage interviewMessage(Long id) {
+        // dunglt bổ sung: không mời phỏng vấn đơn đã kết thúc (ApplicationStatusService.TERMINAL) hay bản nháp đề xuất
+        java.util.List<String> excluded = new java.util.ArrayList<>(
+                com.group2.rms.candidate.domain.rule.ApplicationStatusService.TERMINAL);
+        excluded.add("HM_Suggested");
+        java.util.List<Object> params = new java.util.ArrayList<>();
+        params.add(id);
+        params.addAll(excluded);
         return jdbc.query("SELECT u.Email,u.FullName,j.PostingTitle,s.StartTime,s.EndTime,s.InterviewFormat,s.LocationOrLink " +
                 "FROM InterviewSchedule s JOIN Application a ON a.ApplicationId=s.ApplicationId " +
                 "JOIN Candidate c ON c.CandidateId=a.CandidateId JOIN [User] u ON u.UserId=c.UserId " +
                 "JOIN JobPosting j ON j.JobPostingId=a.JobPostingId " +
                 "WHERE s.InterviewId=? AND s.InterviewStatus IN ('Scheduled','Rescheduled') " +
-                "AND a.ApplicationStatus NOT IN ('HM_Suggested','Rejected')", (rs, n) -> {
+                "AND a.ApplicationStatus NOT IN (" + String.join(",", java.util.Collections.nCopies(excluded.size(), "?")) + ")", (rs, n) -> {
             var fmt = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
             String name = rs.getString(2), job = rs.getString(3);
             String start = rs.getTimestamp(4).toLocalDateTime().format(fmt);
@@ -81,7 +88,7 @@ public class RecruitmentEmailService {
                     + "\n\nVui lòng liên hệ Nhân sự nếu bạn cần thay đổi lịch.\nTrân trọng,\nPhòng Nhân sự Mộc";
             return new RecruitmentEmailMessage("InterviewSchedule", id, "InterviewInvitation", rs.getString(1),
                     "Thư mời phỏng vấn — " + job, text, interviewHtml(name, job, start, end, format, location));
-        }, id).stream().findFirst().orElseThrow(() -> new TalentPoolException("Lịch này không còn đủ điều kiện gửi thư mời."));
+        }, params.toArray()).stream().findFirst().orElseThrow(() -> new TalentPoolException("Lịch này không còn đủ điều kiện gửi thư mời."));
     }
     /** Bản HTML của thư mời phỏng vấn: nạp khuôn templates/interview/email/interview-invitation.html, mọi giá trị đều được escape. */
     private static String interviewHtml(String name, String job, String start, String end, String format, String location) {

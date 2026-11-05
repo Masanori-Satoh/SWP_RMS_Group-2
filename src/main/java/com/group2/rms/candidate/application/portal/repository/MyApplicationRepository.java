@@ -42,14 +42,6 @@ public interface MyApplicationRepository extends org.springframework.data.reposi
                         """)
         Optional<Application> findOwnedById(@Param("id") Integer applicationId, @Param("userId") Integer userId);
 
-        /**
-         * Các đơn ứng viên {@code userId} đã tự rút (dấu do {@link ApplicationRepository#recordWithdrawal}
-         * ghi).
-         */
-        @Query(value = "SELECT CAST(l.EntityId AS INT) FROM AuditLog l "
-                        + "WHERE l.EntityName = 'Application' AND l.NewValue = 'Withdrawn' AND l.UserId = :userId", nativeQuery = true)
-        List<Integer> findWithdrawnApplicationIds(@Param("userId") Integer userId);
-
         // dunglt bổ sung: 3 câu dữ kiện cho My Applications (5.1.38), mỗi câu lấy cho mọi đơn của
         // một ứng viên (theo userId) nên số câu không tăng theo số đơn. SQL thuần, cùng lý do với
         // ApplicationPipelineRepository.findInterviewEvents.
@@ -87,8 +79,9 @@ public interface MyApplicationRepository extends org.springframework.data.reposi
         List<MyOfferRow> findMyVisibleOffers(@Param("userId") Integer userId);
 
         /**
-         * Dấu {@code Withdrawn} (ứng viên tự rút) và {@code PostingClosed} (dừng do đóng tin) trên các đơn
-         * của ứng viên {@code userId}, cũ nhất trước. Lọc theo chủ đơn, không theo người ghi dấu: dấu
+         * Nhật ký {@code Withdrawn} (ứng viên tự rút) và {@code PostingClosed} (dừng do đóng tin) trên các đơn
+         * của ứng viên {@code userId}, cũ nhất trước. Chỉ cho biết ngày và bước đang đứng; trạng thái đơn đã nằm ở
+         * {@code Application.ApplicationStatus}. Lọc theo chủ đơn, không theo người ghi dấu: dấu
          * {@code PostingClosed} do HR ghi. {@code OldValue} là trạng thái đơn ngay trước khi dừng.
          */
         @Query(value = """

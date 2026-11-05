@@ -353,6 +353,28 @@ class ApplicationPipelineServiceTests {
         assertEquals("Kết thúc đề xuất", detail.timeline().getFirst().title());
     }
 
+    /** Đóng tin: trạng thái {@code Cancelled} là nguồn sự thật, không cần tra AuditLog. */
+    @Test
+    void cancelledApplicationShowsPostingClosedFromStatusAlone() {
+        var a = application(); a.setApplicationStatus("Cancelled");
+        when(applications.findDetailById(ID)).thenReturn(Optional.of(a));
+
+        var detail = service.detail(ID);
+
+        assertEquals("Dừng do đợt tuyển đóng", detail.statusLabel());
+        assertTrue(detail.timeline().stream().anyMatch(item -> "Đóng đợt tuyển dụng".equals(item.title())));
+        assertTrue(service.closedByPosting(ID));
+    }
+
+    @Test
+    void rejectedApplicationIsNeverReportedAsClosedByPosting() {
+        var a = application(); a.setApplicationStatus("Rejected");
+        when(applications.findDetailById(ID)).thenReturn(Optional.of(a));
+
+        assertFalse(service.closedByPosting(ID));
+        assertTrue(service.detail(ID).timeline().stream().noneMatch(item -> "Đóng đợt tuyển dụng".equals(item.title())));
+    }
+
     @Test
     void detailStepperFollowsProgressAndExposesLatestInterviewId() {
         when(applications.findDetailById(ID)).thenReturn(Optional.of(application()));
@@ -461,7 +483,6 @@ class ApplicationPipelineServiceTests {
         return new ProgressFactsRow() {
             @Override public Integer getApplicationId() { return id; }
             @Override public String getApplicationStatus() { return status; }
-            @Override public Boolean getWithdrawn() { return false; }
             @Override public Long getInterviewId() { return interviewed ? 77L : null; }
             @Override public String getInterviewStatus() { return interviewed ? "Completed" : null; }
             @Override public LocalDateTime getInterviewStart() { return interviewed ? SUBMITTED.plusDays(3) : null; }

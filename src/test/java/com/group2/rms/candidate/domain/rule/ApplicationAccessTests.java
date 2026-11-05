@@ -684,7 +684,7 @@ class ApplicationAccessTests {
     void hiringManagerPassedWithoutScheduleOffersSchedulingOnly() {
         // Given: HM_Passed chưa có lịch.
         ApplicationProgressResponse progress = ApplicationProgressResolver.resolve(
-            new ApplicationProgressFacts(APPLICATION_ID, "HM_Passed", false, null, null, null, 0, 0, null, null),
+            new ApplicationProgressFacts(APPLICATION_ID, "HM_Passed", null, null, null, 0, 0, null, null),
             LocalDateTime.now());
         // When: Gọi access.canScheduleInterview với dữ liệu đã chuẩn bị.
         // Then: HR được lên lịch, chưa được tạo offer.

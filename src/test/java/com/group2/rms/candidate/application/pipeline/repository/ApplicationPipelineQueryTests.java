@@ -8,6 +8,7 @@ import com.group2.rms.candidate.domain.repository.ApplicationRepository;
 import com.group2.rms.candidate.domain.repository.ApplicationReviewRepository;
 import com.group2.rms.candidate.domain.rule.ApplicationProgressFacts;
 import com.group2.rms.candidate.domain.rule.ApplicationProgressResolver;
+import com.group2.rms.candidate.domain.rule.ApplicationProgressStep;
 import com.group2.rms.candidate.domain.rule.ApplicationScope;
 import com.group2.rms.user.entity.User;
 import com.group2.rms.user.repository.UserRepository;
@@ -185,15 +186,21 @@ class ApplicationPipelineQueryTests {
     }
 
     @Test
-    void progressFactsFlagWithdrawnApplications() {
-        List<?> withdrawn = entityManager.createNativeQuery("SELECT TOP 1 CAST(l.EntityId AS INT) FROM AuditLog l "
-                + "WHERE l.EntityName = 'Application' AND l.NewValue = 'Withdrawn'").getResultList();
-        Assumptions.assumeFalse(withdrawn.isEmpty(), "DB local chưa có đơn nào bị rút");
-        Integer id = ((Number) withdrawn.getFirst()).intValue();
+    @Transactional
+    void withdrawnAndCancelledStatusesPassTheCheckConstraintAndResolveToTheirSteps() {
+        Integer first = ids(ApplicationScope.ALL, null, "Applied", null).getFirst();
+        Integer second = ids(ApplicationScope.ALL, null, "Applied", null).get(1);
+        assertEquals(1, applications.transition(first, List.of("Applied"), "Withdrawn"));
+        assertEquals(1, applications.transition(second, List.of("Applied"), "Cancelled"));
+        entityManager.clear();
 
-        ApplicationRepository.ProgressFactsRow row = applications.findProgressFacts(List.of(id)).getFirst();
-
-        assertTrue(row.getWithdrawn());
+        LocalDateTime now = LocalDateTime.now();
+        assertEquals(ApplicationProgressStep.WITHDRAWN, ApplicationProgressResolver.resolve(
+                ApplicationProgressFacts.from(applications.findProgressFacts(List.of(first)).getFirst()), now).step());
+        assertEquals(ApplicationProgressStep.POSTING_CLOSED, ApplicationProgressResolver.resolve(
+                ApplicationProgressFacts.from(applications.findProgressFacts(List.of(second)).getFirst()), now).step());
+        assertTrue(ids(ApplicationScope.ALL, null, "Withdrawn", null).contains(first), "lọc ?status=Withdrawn tìm thấy đơn");
+        assertTrue(ids(ApplicationScope.ALL, null, "Cancelled", null).contains(second));
     }
 
     /** Ghi thật rồi rollback khi test kết thúc (transaction của test không commit): DB không đổi. */

@@ -524,8 +524,8 @@ public class NotificationServiceImpl implements NotificationService {
             hrNotification
                     .title(String.format("Ứng viên từ chối thư mời nhận việc: %s (%s)", candidateName, positionTitle))
                     .content(String.format(
-                            "Ứng viên %s đã từ chối thư mời làm việc cho vị trí \"%s\".%s Trạng thái hồ sơ đã chuyển sang \"Không tiếp tục\".",
-                            candidateName, positionTitle, reasonText))
+                            "Ứng viên %s đã từ chối thư mời làm việc cho vị trí \"%s\".%s Trạng thái hồ sơ đã chuyển sang \"%s\".",
+                            candidateName, positionTitle, reasonText, ApplicationStatusLabels.label("Withdrawn")))
                     .eventType("OFFER_DECLINED")
                     .eventId("OFFER_RESP_DEC_" + offer.getOfferId());
         }

@@ -10,7 +10,8 @@ public final class ApplicationStatusLabels {
 
     /** Các trạng thái hợp lệ, theo thứ tự luồng tuyển dụng; tham số lọc {@code status} ngoài danh sách này bị bỏ qua. */
     public static final List<String> STATUSES = List.of(
-            "Applied", "HR_Passed", "HM_Suggested", "HM_Passed", "Interviewing", "Offered", "Hired", "Rejected");
+            "Applied", "HR_Passed", "HM_Suggested", "HM_Passed", "Interviewing", "Offered", "Hired", "Rejected",
+            "Withdrawn", "Cancelled");
 
     private ApplicationStatusLabels() {
     }
@@ -25,6 +26,8 @@ public final class ApplicationStatusLabels {
             case "Offered" -> "Đã có thư mời";
             case "Hired" -> "Đã nhận việc";
             case "Rejected" -> "Không tiếp tục";
+            case "Withdrawn" -> "Đã rút đơn";
+            case "Cancelled" -> "Dừng do đóng tin";
             default -> status;
         };
     }

@@ -24,7 +24,6 @@ public record TalentPoolCvResponse(
 
     public String statusLabel() {
         if (applicationStatus == null) return "Chưa có trạng thái";
-        if ("Withdrawn".equals(applicationStatus)) return "Đã rút";
         return com.group2.rms.candidate.domain.rule.ApplicationStatusLabels.label(applicationStatus);
     }
 
@@ -33,7 +32,7 @@ public record TalentPoolCvResponse(
         return switch (applicationStatus) {
             case "Applied", "Hired", "Offered" -> "success";
             case "Rejected" -> "error";
-            case "Withdrawn" -> "neutral";
+            case "Withdrawn", "Cancelled" -> "neutral"; // dunglt bổ sung: ứng viên tự dừng / tin bị đóng, không phải lỗi
             default -> "warning";
         };
     }
