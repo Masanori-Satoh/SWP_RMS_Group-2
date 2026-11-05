@@ -20,7 +20,10 @@
 
   // Sidebar Pin & Collapsible state management
   const pinToggle = document.getElementById('sidebar-pin-toggle');
-  const isPinned = localStorage.getItem('rms_sidebar_pinned') === 'true';
+  // dunglt bổ sung: layout/internal đã đặt class lên <html> từ js/sidebar-state.js (đồng bộ, trước lần vẽ đầu)
+  // để không bị giật; ở đây chỉ làm nốt phần body và nút ghim. try/catch như sidebar-state.js.
+  let isPinned = false;
+  try { isPinned = localStorage.getItem('rms_sidebar_pinned') === 'true'; } catch (err) {}
   if (isPinned) {
     document.documentElement.classList.add('sidebar-pinned');
     if (document.body) document.body.classList.add('sidebar-pinned');

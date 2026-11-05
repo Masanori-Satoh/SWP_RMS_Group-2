@@ -191,3 +191,9 @@ DAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM
 OTHER DEALINGS IN THE FONT SOFTWARE.
 
+
+
+-----------------------------------------------------------
+Plus Jakarta Sans (https://fonts.google.com/specimen/Plus+Jakarta+Sans, Copyright 2020 The Plus Jakarta Sans Project Authors)
+Playwrite VN (https://fonts.google.com/specimen/Playwrite+VN, Copyright 2023 The Playwrite Project Authors)
+Cả hai dùng SIL Open Font License 1.1, nội dung giấy phép như ở trên. Lora (nghiêng, 500-700) tải thêm cho trang landing, cùng giấy phép.

@@ -10,7 +10,12 @@
     </th:block>
 </head>
 <body>
-<main id="main" layout:fragment="content" class="container notif-container" tabindex="-1">
+<main id="main" layout:fragment="content" class="container notif-container" tabindex="-1"
+      th:classappend="${topbarUser == null or topbarUser.roleName != 'Candidate'} ? 'adw-page'">
+    <!--/* dunglt bổ sung: nhân sự nhận khung adw ngay từ HTML (layout/internal), nên trang này cần nền adw như các trang nhân sự khác. Ứng viên có nền riêng (candidate-shell.css), giữ nguyên. */-->
+    <th:block th:if="${topbarUser == null or topbarUser.roleName != 'Candidate'}">
+        <th:block th:replace="~{fragments/ui/admin-workspace :: scene}"></th:block>
+    </th:block>
     <div class="notif-page-header">
         <div>
             <h1>Thông báo</h1>
@@ -60,5 +65,10 @@
         <p class="empty-desc">Bạn đã xem hết toàn bộ các cập nhật hệ thống.</p>
     </div>
 </main>
+<th:block layout:fragment="scripts">
+    <th:block th:if="${topbarUser == null or topbarUser.roleName != 'Candidate'}">
+        <th:block th:replace="~{fragments/ui/admin-workspace :: scripts}"></th:block>
+    </th:block>
+</th:block>
 </body>
 </html>
