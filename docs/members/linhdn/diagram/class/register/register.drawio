@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<mxfile host="Electron" agent="Codex / source-grounded UML" version="32.5.5" type="device">
+<mxfile host="Electron" version="32.5.5" type="device">
   <diagram id="register-class-diagram" name="Register — email OTP verification">
     <mxGraphModel dx="4200" dy="2760" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="4200" pageHeight="2760" math="0" shadow="0" background="#FFFFFF">
       <root>

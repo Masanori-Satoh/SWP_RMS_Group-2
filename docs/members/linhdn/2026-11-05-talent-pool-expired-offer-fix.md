@@ -1,7 +1,7 @@
 # Báo cáo sửa điều kiện Offer chặn đóng tin tuyển dụng
 
 - Ngày: 05/11/2026.
-- Người thực hiện: LinhDN (hỗ trợ triển khai bằng Codex).
+- Người thực hiện: LinhDN.
 - Yêu cầu: Offer đã quá hạn phản hồi không tiếp tục chặn HR đóng tin tuyển dụng.
 
 ## Nguyên nhân
