@@ -267,10 +267,6 @@ button.offer-stat-card {
     align-items: center;
 }
 
-.offer-cursor-pointer {
-    cursor: pointer;
-}
-
 .offer-col-w-44 {
     width: 44px;
 }
@@ -317,40 +313,9 @@ button.offer-stat-card {
     margin-top: 2px;
 }
 
-
-.offer-text-center {
-    text-align: center;
-}
-
-.offer-text-right {
-    text-align: right;
-}
-
-.offer-justify-end {
-    justify-content: flex-end;
-}
-
 .offer-row-link {
     text-decoration: none;
     color: inherit;
-}
-
-.offer-position-title {
-    font-weight: 600;
-    color: var(--ink);
-}
-
-.offer-empty-state-cell {
-    text-align: center;
-    padding: 48px 24px;
-    color: var(--muted);
-}
-
-.offer-empty-state-icon {
-    font-size: 32px;
-    margin-bottom: 12px;
-    display: block;
-    color: var(--control-line);
 }
 
 .offer-date-cell {
@@ -617,14 +582,6 @@ button.offer-stat-card {
    SECTION C — EXCEL EXPORT
    ============================================================================= */
 
-.ofw-modal-desc {
-  font-size: 12.5px;
-  color: var(--muted);
-  font-family: var(--sans);
-  font-weight: normal;
-  margin-top: 2px;
-}
-
 .ofw-modal-stat-icon {
   width: 36px;
   height: 36px;
@@ -824,10 +781,6 @@ button.offer-stat-card {
   .ofw-info-grid {
     grid-template-columns: 1fr;
     gap: var(--s3);
-  }
-
-  .ofw-card-body {
-    padding: var(--s4);
   }
 
   .ofw-form-actions {

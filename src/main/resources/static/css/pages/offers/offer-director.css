@@ -20,18 +20,6 @@
   margin-bottom: var(--s6, 24px);
 }
 
-button.ofw-stat-card,
-button.director-stat-card {
-  font-family: inherit;
-  font-size: inherit;
-  color: inherit;
-  text-align: left;
-  cursor: pointer;
-  width: 100%;
-  appearance: none;
-  -webkit-appearance: none;
-}
-
 .director-stat-card.ofw-stat-card,
 .director-stat-card {
   display: flex;
@@ -162,16 +150,6 @@ button.director-stat-card:hover {
 .director-decision-textarea.is-invalid {
   border-color: var(--error) !important;
   box-shadow: 0 0 0 3px var(--error-soft) !important;
-}
-
-.director-comment-error-msg {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 13px;
-  color: var(--error);
-  margin-top: 6px;
-  font-weight: 500;
 }
 
 .director-comment-counter {
