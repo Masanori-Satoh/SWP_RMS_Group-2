@@ -320,7 +320,11 @@ class ApplicationPipelineWebTests {
                 .andExpect(view().name("candidate/applications"))
                 .andExpect(model().attribute("activeMenu", "applications"))
                 .andExpect(model().attribute("viewerRole", "HR"))
-                .andExpect(content().string(containsString("Danh sách ứng viên")))
+                // PR W: tiêu đề HR là "Hồ sơ ứng tuyển", thẻ danh sách là "Danh sách hồ sơ" (không lặp, không còn "Danh sách ứng viên").
+                .andExpect(content().string(containsString("<h1 class=\"page-title adw-title\">Hồ sơ ứng tuyển</h1>")))
+                .andExpect(content().string(containsString(">Danh sách hồ sơ</h2>")))
+                .andExpect(content().string(not(containsString("Danh sách hồ sơ ứng tuyển"))))
+                .andExpect(content().string(not(containsString("Danh sách ứng viên"))))
                 .andExpect(content().string(not(containsString("Hồ sơ của phòng ban bạn"))))
                 .andExpect(content().string(containsString("href=\"/applications/298\"")))
                 .andExpect(content().string(containsString("data-cv-url=\"/applications/298/cv\"")))

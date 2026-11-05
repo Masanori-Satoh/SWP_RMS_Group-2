@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -64,9 +65,10 @@ class MyApplicationJourneyTests {
 
         @Test
         void row04_offerSent_asksForAnswerBeforeDeadline() {
-            View view = resolve(facts("Offered").interviews(completed()).offer(offer(3, "Sent_Candidate")));
+            // Hạn 27/10 còn sau NOW (20/10): thư mời còn trả lời được.
+            View view = resolve(facts("Offered").interviews(completed()).offer(openOffer(3)));
 
-            assertStatus(view, "Có thư mời", "Vui lòng trả lời trước 17/10.", "warning",
+            assertStatus(view, "Có thư mời", "Vui lòng trả lời trước 27/10.", "warning",
                     "Trả lời thư mời", "/portal/offers/3");
             assertSteps(view, "done", "done", "current", "upcoming");
         }
@@ -463,7 +465,7 @@ class MyApplicationJourneyTests {
         @Test
         void offerAndStopMarksUseCandidateWording() {
             assertEquals(List.of("Đã nộp hồ sơ", "Nhận thư mời nhận việc"),
-                    titles(resolve(facts("Offered").offer(offer(3, "Sent_Candidate")))));
+                    titles(resolve(facts("Offered").offer(openOffer(3)))));
             assertEquals(List.of("Đã nộp hồ sơ", "Bạn đã nhận lời"),
                     titles(resolve(facts("Hired").offer(offer(8, "Accepted")))));
             assertEquals(List.of("Đã nộp hồ sơ", "Đã rút hồ sơ"),
@@ -560,6 +562,162 @@ class MyApplicationJourneyTests {
         }
     }
 
+    /**
+     * PR W: thư mời {@code Sent_Candidate} đã quá hạn theo thời gian nhưng job chưa ghi {@code Expired}. Luật trùng
+     * {@code CandidateOfferServiceImpl.isExpired}: quá {@code ResponseDeadline} (đúng bằng hạn vẫn trả lời được) hoặc
+     * {@code ExpectedStartDate} trước hôm nay; thiếu ngày thì không suy ra hết hạn.
+     */
+    @Nested
+    class OverdueByTime {
+
+        private static final LocalDate TODAY = NOW.toLocalDate();
+        private static final LocalDateTime SENT_AT = LocalDateTime.of(2026, 10, 12, 9, 0);
+
+        private Offer sent(LocalDateTime deadline, LocalDate startDate) {
+            return new Offer(3, "Sent_Candidate", deadline, SENT_AT, startDate);
+        }
+
+        private void assertShownAsExpired(View view) {
+            assertStatus(view, "Thư mời đã quá hạn", "Vui lòng liên hệ bộ phận tuyển dụng nếu cần hỗ trợ.", "neutral",
+                    "Xem thư mời", "/portal/offers/3");
+            assertSteps(view, "done", "done", "current", "upcoming");
+            assertNull(view.urgentUntil());
+            assertNull(view.urgentLabel());
+            assertNull(view.upcomingAt());
+            assertEquals(MyApplicationJourney.PRIORITY_IN_FLOW, view.priority());
+        }
+
+        @Test
+        void pastDeadline_showsAsExpiredWithoutAnswerButton() {
+            View view = resolve(facts("Offered").interviews(completed()).offer(sent(NOW.minusMinutes(1), null)));
+
+            assertShownAsExpired(view);
+        }
+
+        @Test
+        void exactlyAtDeadline_canStillAnswer() {
+            View view = resolve(facts("Offered").interviews(completed()).offer(sent(NOW, null)));
+
+            assertEquals("Có thư mời", view.statusLabel());
+            assertEquals("Trả lời thư mời", view.actionLabel());
+        }
+
+        @Test
+        void startDatePassedWhileDeadlineIsFar_showsAsExpired() {
+            View view = resolve(facts("Offered").interviews(completed())
+                    .offer(sent(NOW.plusDays(10), TODAY.minusDays(1))));
+
+            assertShownAsExpired(view);
+        }
+
+        @Test
+        void startDateToday_canStillAnswer() {
+            View view = resolve(facts("Offered").interviews(completed()).offer(sent(NOW.plusDays(10), TODAY)));
+
+            assertEquals("Có thư mời", view.statusLabel());
+            assertEquals("Trả lời thư mời", view.actionLabel());
+        }
+
+        @Test
+        void noDeadlineAndStartDatePassed_showsAsExpired() {
+            View view = resolve(facts("Offered").interviews(completed()).offer(sent(null, TODAY.minusDays(3))));
+
+            assertShownAsExpired(view);
+        }
+
+        @Test
+        void noDeadlineAndNoStartDate_isNotInferredExpired() {
+            View view = resolve(facts("Offered").interviews(completed()).offer(sent(null, null)));
+
+            assertEquals("Có thư mời", view.statusLabel());
+            assertEquals("Trả lời thư mời", view.actionLabel());
+        }
+
+        @Test
+        void futureDeadlineAndStartDate_isUnchangedUrgentAndUpcoming() {
+            LocalDateTime deadline = NOW.plusDays(2);
+            View view = resolve(facts("Offered").interviews(completed()).offer(sent(deadline, TODAY.plusDays(20))));
+
+            assertEquals("Có thư mời", view.statusLabel());
+            assertEquals(deadline, view.urgentUntil());
+            assertEquals(deadline, view.upcomingAt());
+            assertEquals(MyApplicationJourney.PRIORITY_UPCOMING, view.priority());
+        }
+
+        @Test
+        void overdueByStartDate_timelineMomentIsStartOfNextDayAndNeverInTheFuture() {
+            View view = resolve(facts("Offered").offer(sent(NOW.plusDays(10), TODAY.minusDays(2))));
+
+            TimelineItem item = expiredItem(view);
+            assertEquals(TODAY.minusDays(1).atStartOfDay(), item.at());
+            assertFalse(item.at().isAfter(NOW));
+        }
+
+        @Test
+        void overdueByDeadline_timelineUsesTheDeadline() {
+            LocalDateTime deadline = NOW.minusDays(1);
+            View view = resolve(facts("Offered").offer(sent(deadline, null)));
+
+            assertEquals(deadline, expiredItem(view).at());
+        }
+
+        @Test
+        void overdueWithBothMoments_timelineUsesTheEarlier() {
+            LocalDateTime deadline = NOW.minusHours(5);
+            View view = resolve(facts("Offered").offer(sent(deadline, TODAY.minusDays(3))));
+
+            assertEquals(TODAY.minusDays(2).atStartOfDay(), expiredItem(view).at());
+        }
+
+        /** Hạn còn xa nhưng đã qua ngày bắt đầu: mốc Expired không được lấy hạn ở tương lai. */
+        @Test
+        void expiredByJob_deadlineInFutureStartDatePassed_timelineIsNotInTheFuture() {
+            View view = resolve(facts("Offered").offer(
+                    new Offer(3, "Expired", NOW.plusDays(10), SENT_AT.plusDays(7), TODAY.minusDays(2))));
+
+            TimelineItem item = expiredItem(view);
+            assertFalse(item.at().isAfter(NOW));
+            assertEquals(TODAY.minusDays(1).atStartOfDay(), item.at());
+        }
+
+        /** Job ghi muộn: mốc không muộn hơn lúc ghi, kể cả khi thiếu cả hạn lẫn ngày bắt đầu. */
+        @Test
+        void expiredByJob_timelineIsNotLaterThanTheRecordedTime() {
+            LocalDateTime wroteAt = NOW.minusHours(2);
+            View view = resolve(facts("Offered").offer(
+                    new Offer(3, "Expired", NOW.minusHours(1), wroteAt, null)));
+
+            assertEquals(wroteAt, expiredItem(view).at());
+        }
+
+        @Test
+        void expiredByJob_deadlineInFutureAndNoStartDate_timelineFallsBackToRecordedTimeNotFuture() {
+            LocalDateTime wroteAt = NOW.minusHours(2);
+            View view = resolve(facts("Offered").offer(new Offer(3, "Expired", NOW.plusDays(1), wroteAt, null)));
+
+            assertFalse(expiredItem(view).at().isAfter(NOW));
+        }
+
+        @Test
+        void otherStatusesIgnoreDatesInThePast() {
+            for (String status : List.of("Accepted", "Declined")) {
+                String application = "Accepted".equals(status) ? "Hired" : "Withdrawn";
+                View view = resolve(facts(application).offer(
+                        new Offer(3, status, NOW.minusDays(5), SENT_AT, TODAY.minusDays(5))));
+
+                assertNotEquals("Thư mời đã quá hạn", view.statusLabel(), status);
+                assertTrue(view.journey().stream()
+                        .noneMatch(item -> "Thư mời đã quá hạn phản hồi".equals(item.title())), status);
+            }
+        }
+
+        private TimelineItem expiredItem(View view) {
+            return view.journey().stream()
+                    .filter(item -> "Thư mời đã quá hạn phản hồi".equals(item.title()))
+                    .findFirst().orElseThrow();
+        }
+    }
+
     private static View resolve(FactsBuilder builder) {
         return MyApplicationJourney.resolve(builder.build(), NOW);
     }
@@ -574,6 +732,11 @@ class MyApplicationJourneyTests {
 
     private static Offer offer(int id, String status) {
         return new Offer(id, status, LocalDateTime.of(2026, 10, 17, 23, 59), LocalDateTime.of(2026, 10, 12, 9, 0));
+    }
+
+    /** Thư mời đã gửi, hạn 27/10 còn sau {@code NOW}: ứng viên còn trả lời được. */
+    private static Offer openOffer(int id) {
+        return new Offer(id, "Sent_Candidate", LocalDateTime.of(2026, 10, 27, 23, 59), LocalDateTime.of(2026, 10, 12, 9, 0));
     }
 
     private static Mark mark(String kind, String oldStatus, LocalDateTime at) {

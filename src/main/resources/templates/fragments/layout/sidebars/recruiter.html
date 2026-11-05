@@ -104,8 +104,8 @@
         <!-- Quản lý đề nghị tuyển dụng -->
         <a th:if="${(userRole ?: role) == 'HR' or (userRole ?: role) == 'Director' or (userRole ?: role) == 'System Admin' or (userRole ?: role) == 'HR Specialist' or ((userRole ?: role) != null and #strings.contains((userRole ?: role), 'HR'))}"
             th:href="@{/offers}" class="sidebar-nav-link" th:classappend="${activeMenu == 'offers' ? 'active' : ''}"
-            th:attr="aria-current=${activeMenu == 'offers' ? 'page' : null}" title="Đề nghị tuyển dụng"
-            data-tooltip="Đề nghị tuyển dụng">
+            th:attr="aria-current=${activeMenu == 'offers' ? 'page' : null}" title="Thư mời nhận việc"
+            data-tooltip="Thư mời nhận việc">
             <span class="nav-icon-wrapper">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -113,7 +113,7 @@
                     <polyline points="22 4 12 14.01 9 11.01" />
                 </svg>
             </span>
-            <span class="nav-label-text">Đề nghị tuyển dụng</span>
+            <span class="nav-label-text">Thư mời nhận việc</span>
         </a>
     </th:block>
 </body>

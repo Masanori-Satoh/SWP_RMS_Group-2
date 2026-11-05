@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -68,7 +69,8 @@ public interface MyApplicationRepository extends org.springframework.data.reposi
          */
         @Query(value = """
                         SELECT o.ApplicationId AS applicationId, o.OfferId AS offerId, o.OfferStatus AS status,
-                               o.ResponseDeadline AS responseDeadline, COALESCE(o.UpdatedAt, o.CreatedAt) AS at
+                               o.ResponseDeadline AS responseDeadline, o.ExpectedStartDate AS expectedStartDate,
+                               COALESCE(o.UpdatedAt, o.CreatedAt) AS at
                         FROM OfferProposal o
                             JOIN Application a ON a.ApplicationId = o.ApplicationId
                             JOIN Candidate c ON c.CandidateId = a.CandidateId
@@ -110,7 +112,7 @@ public interface MyApplicationRepository extends org.springframework.data.reposi
                 LocalDateTime getScheduledAt();
         }
 
-        /** Một dòng của {@link #findMyVisibleOffers}; {@code responseDeadline} có thể {@code null}. */
+        /** Một dòng của {@link #findMyVisibleOffers}; {@code responseDeadline}, {@code expectedStartDate} có thể {@code null}. */
         interface MyOfferRow {
                 Integer getApplicationId();
 
@@ -119,6 +121,9 @@ public interface MyApplicationRepository extends org.springframework.data.reposi
                 String getStatus();
 
                 LocalDateTime getResponseDeadline();
+
+                // dunglt bổ sung: ngày bắt đầu dự kiến, để ứng viên thấy "quá hạn" đúng luật CandidateOfferServiceImpl.isExpired.
+                LocalDate getExpectedStartDate();
 
                 LocalDateTime getAt();
         }

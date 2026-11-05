@@ -27,12 +27,12 @@ public final class NotificationLabels {
             case "INTERVIEW_RESCHEDULED" -> "Đổi lịch phỏng vấn";
             case "INTERVIEW_CANCELLED" -> "Hủy lịch phỏng vấn";
             case "INTERVIEW_RESULT_DECIDED" -> "Kết quả phỏng vấn";
-            case "OFFER_PENDING_DIRECTOR" -> "Offer chờ phê duyệt";
-            case "OFFER_DIRECTOR_APPROVED" -> "Offer đã được duyệt";
-            case "OFFER_DIRECTOR_REJECTED" -> "Offer bị từ chối";
+            case "OFFER_PENDING_DIRECTOR" -> "Thư mời chờ phê duyệt";
+            case "OFFER_DIRECTOR_APPROVED" -> "Thư mời đã được duyệt";
+            case "OFFER_DIRECTOR_REJECTED" -> "Thư mời bị từ chối";
             case "OFFER_LETTER_SENT" -> "Thư mời nhận việc";
             case "OFFER_ACCEPTED" -> "Ứng viên nhận việc";
-            case "OFFER_DECLINED" -> "Ứng viên từ chối offer";
+            case "OFFER_DECLINED" -> "Ứng viên từ chối thư mời";
             default -> null;
         };
     }

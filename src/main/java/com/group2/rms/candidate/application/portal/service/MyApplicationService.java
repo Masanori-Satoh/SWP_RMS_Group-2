@@ -125,7 +125,8 @@ public class MyApplicationService {
                         Collectors.toList())));
         Map<Integer, Offer> offers = myApplications.findMyVisibleOffers(userId).stream()
                 .collect(Collectors.toMap(MyOfferRow::getApplicationId,
-                        row -> new Offer(row.getOfferId(), row.getStatus(), row.getResponseDeadline(), row.getAt()),
+                        row -> new Offer(row.getOfferId(), row.getStatus(), row.getResponseDeadline(), row.getAt(),
+                                row.getExpectedStartDate()),
                         (first, second) -> first));
         Map<Integer, List<Mark>> marks = myApplications.findMyApplicationMarks(userId).stream()
                 .collect(Collectors.groupingBy(MyApplicationMarkRow::getApplicationId, Collectors.mapping(

@@ -26,7 +26,7 @@ public final class AuditLogLabels {
             Map.entry("HR_Passed", "Trạng thái: Đã qua vòng nhân sự"),
             Map.entry("HM_Passed", "Trạng thái: Đã qua vòng chuyên môn"),
             Map.entry("Interviewing", "Trạng thái: Đang phỏng vấn"),
-            Map.entry("Offered", "Trạng thái: Đã gửi đề nghị tuyển dụng"),
+            Map.entry("Offered", "Trạng thái: Đã gửi thư mời nhận việc"),
             Map.entry("Hired", "Trạng thái: Đã tuyển dụng"),
             Map.entry("Rejected", "Trạng thái: Đã bị loại"),
             Map.entry("Withdrawn", "Trạng thái: Ứng viên đã rút hồ sơ"),
