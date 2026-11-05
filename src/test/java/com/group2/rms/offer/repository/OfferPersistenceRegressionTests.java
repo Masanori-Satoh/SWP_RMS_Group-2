@@ -49,7 +49,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 /** Opt-in SQL Server regression tests. Schema creation is restricted to a dedicated temporary database. */
 @DataJpaTest(showSql = false)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@Import({OfferServiceImpl.class, com.group2.rms.offer.service.OfferExportServiceImpl.class, ClockConfig.class, SchemaNamingConfig.class})
+@Import({com.group2.rms.core.security.CurrentUserService.class, OfferServiceImpl.class, com.group2.rms.offer.service.OfferExportServiceImpl.class, ClockConfig.class, SchemaNamingConfig.class})
 @EnabledIfSystemProperty(named = "offer.integration.url", matches = ".*databaseName=OfferRegression_[a-f0-9]{32};.*")
 class OfferPersistenceRegressionTests {
     @DynamicPropertySource

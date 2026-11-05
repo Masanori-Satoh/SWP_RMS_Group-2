@@ -17,7 +17,7 @@ import com.group2.rms.offer.repository.OfferProposalRepository;
 import com.group2.rms.interview.repository.InterviewFinalResultRepository;
 import com.group2.rms.offer.exception.OfferValidationException;
 import com.group2.rms.user.entity.User;
-import com.group2.rms.user.repository.UserRepository;
+import com.group2.rms.core.security.CurrentUserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.group2.rms.candidate.domain.entity.Candidate;
@@ -29,9 +29,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.security.authentication.AnonymousAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -63,7 +60,7 @@ public class OfferServiceImpl implements OfferService {
 
     private final OfferProposalRepository offerProposalRepository;
     private final ApplicationRepository applicationRepository;
-    private final UserRepository userRepository;
+    private final CurrentUserService currentUserService;
     private final InterviewFinalResultRepository interviewFinalResultRepository;
     private final OfferApprovalRepository offerApprovalRepository;
     private final OfferMailSender offerMailSender;
@@ -263,13 +260,7 @@ public class OfferServiceImpl implements OfferService {
             throw new OfferValidationException("Chỉ được tạo đề xuất thư mời cho hồ sơ đã đạt phỏng vấn.");
         }
 
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated() || auth instanceof AnonymousAuthenticationToken) {
-            throw new OfferValidationException("Không xác định được tài khoản HR đang đăng nhập.", "USER_NOT_FOUND");
-        }
-        User proposedBy = userRepository.findByUsernameIgnoreCase(auth.getName())
-                .orElseThrow(() -> new OfferValidationException(
-                        "Không xác định được tài khoản HR đang đăng nhập.", "USER_NOT_FOUND"));
+        User proposedBy = currentUserService.requireUser();
 
         Integer responsePeriodDays = dto.getResponsePeriodDays() != null ? dto.getResponsePeriodDays() : 5;
 
@@ -523,7 +514,7 @@ public class OfferServiceImpl implements OfferService {
         if ("Pending_Director".equals(offer.getOfferStatus())) {
             if (systemNotificationService != null) {
                 try {
-                    User currentHr = resolveProposedBy(null);
+                    User currentHr = currentUserService.requireUser();
                     systemNotificationService.notifyOfferPendingDirector(saved, currentHr != null ? currentHr : saved.getProposedBy());
                 } catch (Exception e) {
                     log.warn("Lỗi khi gửi in-app notification Director về Offer cập nhật ID {}: {}", saved.getOfferId(), e.getMessage());
@@ -751,28 +742,6 @@ public class OfferServiceImpl implements OfferService {
     }
 
 
-    /**
-     * Helper tương thích cũ: ưu tiên ID nếu được truyền, rồi tài khoản đăng nhập; cuối cùng vẫn có nhánh lấy user đầu tiên.
-     * Tên hàm dễ gây nhầm vì cả quyết định Giám đốc cũng đang gọi hàm này.
-     * Đề xuất thay bằng CurrentUserService.requireUser trong một thay đổi riêng; không coi fallback là quy tắc phân quyền.
-     */
-    private User resolveProposedBy(Integer proposedById) {
-        if (proposedById != null) {
-            return userRepository.findById(proposedById).orElse(null);
-        }
-        try {
-            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-            if (auth != null && auth.isAuthenticated() && !(auth instanceof AnonymousAuthenticationToken)) {
-                User user = userRepository.findByUsernameIgnoreCase(auth.getName()).orElse(null);
-                if (user != null) {
-                    return user;
-                }
-            }
-        } catch (Exception ignored) {
-        }
-        return userRepository.findAll().stream().findFirst().orElse(null);
-    }
-
     private OfferResponse mapToResponse(OfferProposal entity) {
         String candidateName = null;
         String candidateEmail = null;
@@ -830,7 +799,7 @@ public class OfferServiceImpl implements OfferService {
      * decideIfPending cập nhật có điều kiện; 0 dòng nghĩa là yêu cầu đã cũ, không ghi thêm lịch sử/thông báo.
      * OfferApproval lưu quyết định Approved/Rejected; OfferProposal lưu vòng đời Director_Approved/Director_Rejected.
      * Thông báo quyết định chạy sau commit trong giao dịch mới để lỗi thông báo không làm mất quyết định đã lưu.
-     * Lý do từ chối bắt buộc đang được kiểm tra tại controller, không phải trong hàm dùng chung này.
+     * Lý do từ chối bắt buộc được kiểm tra cả controller và service để bảo vệ lời gọi Java trực tiếp.
      */
     private OfferResponse decideOffer(Integer id, String comments, boolean approved) {
         OfferProposal offer = findActiveOffer(id);
@@ -839,9 +808,16 @@ public class OfferServiceImpl implements OfferService {
             throw decisionConflict();
         }
 
-        User director = resolveProposedBy(null);
+        User director = currentUserService.requireUser();
         if (director == null) {
             throw new OfferValidationException("Không xác định được danh tính Giám đốc.", "USER_NOT_FOUND");
+        }
+
+        if (!approved && (comments == null || comments.isBlank())) {
+            throw new OfferValidationException("Vui lòng nhập lý do từ chối vào ô nhận xét trước khi tiếp tục.", "DIRECTOR_REASON_REQUIRED");
+        }
+        if (comments != null && comments.length() > 2000) {
+            throw new OfferValidationException("Phản hồi của Giám đốc không được vượt quá 2000 ký tự.");
         }
 
         String status = approved ? "Director_Approved" : "Director_Rejected";
@@ -890,7 +866,7 @@ public class OfferServiceImpl implements OfferService {
     @Override
     @Transactional(readOnly = true)
     public Map<String, Long> getDirectorOfferStats() {
-        User director = resolveProposedBy(null);
+        User director = currentUserService.requireUser();
         Integer directorId = director != null ? director.getUserId() : 0;
         
         Map<String, Long> stats = new HashMap<>();
