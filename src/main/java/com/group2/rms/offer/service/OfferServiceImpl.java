@@ -275,8 +275,6 @@ public class OfferServiceImpl implements OfferService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Không tìm thấy đơn ứng tuyển với ID: " + dto.getApplicationId()));
 
-        User proposedBy = resolveProposedBy(dto.getProposedById());
-
         String status = Boolean.TRUE.equals(dto.getIsDraft()) ? "Draft" : "Pending_Director";
 
         // Bảng OfferProposal có ràng buộc UNIQUE trên ApplicationId
@@ -300,6 +298,14 @@ public class OfferServiceImpl implements OfferService {
         if (!passedInterview) {
             throw new OfferValidationException("Chỉ được tạo đề xuất nhận việc cho hồ sơ đã đạt phỏng vấn.");
         }
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() || auth instanceof AnonymousAuthenticationToken) {
+            throw new OfferValidationException("Không xác định được tài khoản HR đang đăng nhập.", "USER_NOT_FOUND");
+        }
+        User proposedBy = userRepository.findByUsernameIgnoreCase(auth.getName())
+                .orElseThrow(() -> new OfferValidationException(
+                        "Không xác định được tài khoản HR đang đăng nhập.", "USER_NOT_FOUND"));
 
         Integer responsePeriodDays = dto.getResponsePeriodDays() != null ? dto.getResponsePeriodDays() : 5;
 

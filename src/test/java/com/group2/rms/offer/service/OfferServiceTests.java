@@ -297,6 +297,7 @@ class OfferServiceTests {
 
         CreateOfferRequest request = CreateOfferRequest.builder()
                 .applicationId(1)
+                .proposedById(999)
                 .offeredPositionTitle("Senior Java Engineer")
                 .proposedSalary(new BigDecimal("25000000"))
                 .probationSalary(new BigDecimal("21250000")) // 85%
@@ -318,7 +319,20 @@ class OfferServiceTests {
             op.setOfferId(555);
             return op;
         });
-        OfferResponse response = offerService.createOfferByHr(request);
+        User currentHr = User.builder().userId(17).username("current_hr").build();
+        when(userRepository.findByUsernameIgnoreCase("current_hr")).thenReturn(Optional.of(currentHr));
+        var context = org.springframework.security.core.context.SecurityContextHolder.getContext();
+        var previousAuth = context.getAuthentication();
+        context.setAuthentication(new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+                "current_hr", "password", Collections.emptyList()));
+        OfferResponse response;
+        try {
+            response = offerService.createOfferByHr(request);
+        } finally {
+            context.setAuthentication(previousAuth);
+        }
+        assertEquals(17, response.getProposedById());
+        verify(userRepository, never()).findById(999);
 
         assertNotNull(response);
         assertEquals(555, response.getOfferId());
