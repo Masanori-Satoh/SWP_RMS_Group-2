@@ -38,6 +38,7 @@ import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.math.BigDecimal;
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -63,6 +64,7 @@ public class OfferServiceImpl implements OfferService {
     private final InterviewFinalResultRepository interviewFinalResultRepository;
     private final OfferApprovalRepository offerApprovalRepository;
     private final OfferMailSender offerMailSender;
+    private final Clock clock;
     private final com.group2.rms.notification.service.NotificationService systemNotificationService;
 
     /**
@@ -501,6 +503,7 @@ public class OfferServiceImpl implements OfferService {
                 .benefitsPackage(offer.getBenefitsPackage())
                 .responsePeriodDays(offer.getResponsePeriodDays())
                 .responseDeadline(offer.getResponseDeadline())
+                .responseExpired(offer.isResponseExpiredAt(LocalDateTime.now(clock)))
                 .proposedById(proposedById)
                 .proposedByName(proposedByName)
                 .createdAt(offer.getCreatedAt())
@@ -643,7 +646,7 @@ public class OfferServiceImpl implements OfferService {
             throw new OfferValidationException("Thư mời nhận việc chưa có thời gian phản hồi hợp lệ.");
         }
 
-        LocalDateTime deadline = LocalDateTime.now().plusDays(offer.getResponsePeriodDays());
+        LocalDateTime deadline = LocalDateTime.now(clock).plusDays(offer.getResponsePeriodDays());
 
         if (offer.getExpectedStartDate() != null
                 && !deadline.toLocalDate().isBefore(offer.getExpectedStartDate())) {
@@ -829,6 +832,7 @@ public class OfferServiceImpl implements OfferService {
                 .benefitsPackage(entity.getBenefitsPackage())
                 .responsePeriodDays(entity.getResponsePeriodDays())
                 .responseDeadline(entity.getResponseDeadline())
+                .responseExpired(entity.isResponseExpiredAt(LocalDateTime.now(clock)))
                 .proposedById(proposedById)
                 .proposedByName(proposedByName)
                 .offerStatus(entity.getOfferStatus())

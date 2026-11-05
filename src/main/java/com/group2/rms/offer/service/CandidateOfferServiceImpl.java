@@ -155,15 +155,7 @@ public class CandidateOfferServiceImpl implements CandidateOfferService {
     }
 
     private boolean isExpired(OfferProposal offer) {
-        if (!SENT.equals(offer.getOfferStatus())) {
-            return false;
-        }
-        LocalDateTime now = LocalDateTime.now(clock);
-        boolean deadlinePassed = offer.getResponseDeadline() != null
-                && now.isAfter(offer.getResponseDeadline());
-        boolean startDatePassed = offer.getExpectedStartDate() != null
-                && offer.getExpectedStartDate().isBefore(now.toLocalDate());
-        return deadlinePassed || startDatePassed;
+        return offer.isResponseExpiredAt(LocalDateTime.now(clock));
     }
 
     private CandidateOfferResponse toResponse(OfferProposal offer) {

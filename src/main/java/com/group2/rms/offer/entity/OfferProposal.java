@@ -77,4 +77,9 @@ public class OfferProposal extends BaseEntity {
     @Column(name = "IsDeleted")
     @Builder.Default
     private Boolean isDeleted = false;
+    public boolean isResponseExpiredAt(LocalDateTime now) {
+        return "Sent_Candidate".equals(offerStatus)
+                && (responseDeadline != null && now.isAfter(responseDeadline)
+                    || expectedStartDate != null && expectedStartDate.isBefore(now.toLocalDate()));
+    }
 }

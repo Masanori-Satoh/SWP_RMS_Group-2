@@ -40,7 +40,8 @@
                     <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                     <span>Giám đốc từ chối</span>
                 </span>
-                <span th:if="${detail.offerStatus == 'Sent_Candidate'}" class="status-badge status-sent">
+                <span th:if="${detail.responseExpired}" class="status-badge status-rejected">Đã quá hạn phản hồi</span>
+                <span th:if="${detail.offerStatus == 'Sent_Candidate' and !detail.responseExpired}" class="status-badge status-sent">
                     <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
                     <span>Đã gửi thư mời</span>
                 </span>
@@ -286,7 +287,7 @@
                 <div class="detail-info-tile">
                     <div class="detail-info-tile-label">THỜI HẠN PHẢN HỒI THƯ MỜI</div>
                     <div class="detail-info-tile-val">
-                        <span th:text="${detail.responsePeriodDays != null ? detail.responsePeriodDays + ' ngày làm việc' : '5 ngày làm việc'}">3 ngày làm việc</span>
+                        <span th:text="${detail.responsePeriodDays != null ? detail.responsePeriodDays + ' ngày lịch' : '5 ngày lịch'}">3 ngày lịch</span>
                         <th:block th:if="${detail.responseDeadline != null}">
                             <div class="ofw-deadline-sub">
                                 Hạn chót: <strong class="ofw-deadline-val" th:text="${#temporals.format(detail.responseDeadline, 'HH:mm dd/MM/yyyy')}">17:00 20/10/2026</strong>

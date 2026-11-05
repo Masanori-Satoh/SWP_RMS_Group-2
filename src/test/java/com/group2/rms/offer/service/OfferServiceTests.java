@@ -49,7 +49,10 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 
 import java.math.BigDecimal;
+import java.time.Clock;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -82,6 +85,15 @@ class OfferServiceTests {
 
     @Mock
     private com.group2.rms.notification.service.NotificationService systemNotificationService;
+
+    @Mock
+    private Clock clock;
+
+    @org.junit.jupiter.api.BeforeEach
+    void useApplicationClock() {
+        lenient().when(clock.getZone()).thenReturn(ZoneId.systemDefault());
+        lenient().when(clock.instant()).thenAnswer(invocation -> Clock.systemUTC().instant());
+    }
 
     @InjectMocks
     private OfferServiceImpl offerService;
@@ -828,6 +840,27 @@ class OfferServiceTests {
 
         assertEquals("OFFER_STATUS_INVALID", ex.getErrorCode());
         assertTrue(ex.getMessage().contains("Bản nháp"));
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "Sent_Candidate, -1, 2, true",
+            "Sent_Candidate, 0, 2, false",
+            "Sent_Candidate, 1, 2, false",
+            "Sent_Candidate, , -1, true",
+            "Sent_Candidate, , 0, false",
+            "Accepted, -1, -1, false"
+    })
+    void internalOfferResponseUsesExpiryRules(String status, Integer deadlineSeconds, int startDays, boolean expired) {
+        LocalDateTime now = LocalDateTime.of(2026, 11, 5, 10, 0);
+        when(clock.instant()).thenReturn(now.atZone(ZoneId.systemDefault()).toInstant());
+        OfferProposal offer = OfferProposal.builder().offerId(1).offerStatus(status)
+                .expectedStartDate(now.toLocalDate().plusDays(startDays))
+                .responseDeadline(deadlineSeconds == null ? null : now.plusSeconds(deadlineSeconds))
+                .build();
+        when(offerProposalRepository.findById(1)).thenReturn(Optional.of(offer));
+
+        assertEquals(expired, offerService.getOfferById(1).isResponseExpired());
     }
 
     @Test

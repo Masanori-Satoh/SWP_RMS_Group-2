@@ -35,6 +35,7 @@ public class OfferResponse {
     private String benefitsPackage;
     private Integer responsePeriodDays;
     private LocalDateTime responseDeadline;
+    private boolean responseExpired;
     private Integer proposedById;
     private String proposedByName;
     private String offerStatus;
