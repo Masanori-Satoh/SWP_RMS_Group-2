@@ -5,9 +5,9 @@
 /**
  * Đọc data-* từ option ứng viên để dựng khung thông tin và gợi ý chức danh/lương/địa điểm.
  * Đây chỉ là dữ liệu gợi ý trên UI; service vẫn kiểm tra hồ sơ đạt phỏng vấn và chưa có Offer khi lưu.
- * Hiện lương gợi ý sẽ được gán khi option có data-recom-salary, kể cả khi ô lương đã có giá trị.
+ * Khởi tạo lại form chỉ dựng preview; gợi ý chỉ điền ô trống khi người dùng chọn ứng viên.
  */
-function handleSelectPassedCandidate(appId) {
+function handleSelectPassedCandidate(appId, applySuggestions = true) {
     const select = document.getElementById('createAppSelect');
     if (!select) return;
     const opt = select.options[select.selectedIndex];
@@ -42,17 +42,19 @@ function handleSelectPassedCandidate(appId) {
 
     if (grpA) grpA.hidden = false;
 
-    // Tự động gợi ý chức danh và mức lương nếu trường đang để trống
+    if (!applySuggestions) return;
+
+    // Chỉ điền gợi ý vào ô trống, không ghi đè giá trị đã nhập.
     const titleInput = document.getElementById('offeredPositionTitle');
     if (titleInput && !titleInput.value.trim()) {
         titleInput.value = opt.getAttribute('data-pos') || '';
     }
 
     const proposedInput = document.getElementById('proposedSalary');
-    if (proposedInput && recom) {
-        const numericVal = Math.round(parseFloat(recom));
+    if (proposedInput && !proposedInput.value.trim() && recom) {
+        const numericVal = Number(recom);
         proposedInput.value = isNaN(numericVal) ? recom : numericVal;
-        autoCalculateProbationSalary(true);
+        autoCalculateProbationSalary();
     }
 
     const workLocInput = document.getElementById('workLocation');
@@ -63,7 +65,7 @@ function handleSelectPassedCandidate(appId) {
 
 /**
  * Gợi ý 85% lương chính thức; chỉ ghi đè lương thử việc khi forceSet=true hoặc ô đang trống/0.
- * Phép tính hiện dùng Math.round; kiểm tra cuối cùng vẫn dùng BigDecimal ở backend.
+ * Gợi ý làm tròn lên đến 2 chữ số thập phân theo DECIMAL(18,2), không thấp hơn mức 85%.
  */
 function autoCalculateProbationSalary(forceSet = false) {
     const proposedEl = document.getElementById('proposedSalary');
@@ -72,7 +74,7 @@ function autoCalculateProbationSalary(forceSet = false) {
 
     const proposed = parseFloat(proposedEl.value);
     if (!isNaN(proposed) && proposed > 0) {
-        const minProbation = Math.round(proposed * 0.85);
+        const minProbation = Math.ceil(proposed * 0.85 * 100) / 100;
         const currentProbation = parseFloat(probationEl.value);
         if (forceSet || isNaN(currentProbation) || currentProbation === 0) {
             probationEl.value = minProbation;
@@ -103,7 +105,7 @@ function validateProbationRuleUi() {
         if (probation < minProb) {
             notice.classList.add('ofw-rule-notice--invalid');
             notice.style.color = 'var(--error)';
-            notice.innerHTML = `${PROBATION_ICONS.warn} <span>CẢNH BÁO: Lương thử việc phải đạt tối thiểu 85% lương chính thức (${Math.round(minProb).toLocaleString('vi-VN')} VNĐ).</span>`;
+            notice.innerHTML = `${PROBATION_ICONS.warn} <span>CẢNH BÁO: Lương thử việc phải đạt tối thiểu 85% lương chính thức (${(Math.ceil(minProb * 100) / 100).toLocaleString('vi-VN')} VNĐ).</span>`;
             return false;
         } else if (probation > proposed) {
             notice.classList.add('ofw-rule-notice--invalid');
@@ -154,7 +156,7 @@ function initOfferForm() {
 
     const select = document.getElementById('createAppSelect');
     if (select && select.value) {
-        handleSelectPassedCandidate(select.value);
+        handleSelectPassedCandidate(select.value, false);
     }
 
     validateProbationRuleUi();

@@ -4,6 +4,49 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
 
+function loadForm(proposed = '', probation = '') {
+    const fields = { proposedSalary: { value: proposed }, probationSalary: { value: probation },
+        offeredPositionTitle: { value: 'Entered title' }, workLocation: { value: 'Entered office' },
+        groupASection: { hidden: true } };
+    const option = { value: '42', getAttribute: name => ({ 'data-recom-salary': '12345678.90',
+        'data-pos': 'Suggested title' })[name] || '' };
+    fields.createAppSelect = { value: '42', selectedIndex: 0, options: [option] };
+    const context = { document: { readyState: 'loading', addEventListener() {},
+        getElementById: id => fields[id] || null }, window: {} };
+    vm.createContext(context);
+    vm.runInContext(fs.readFileSync('src/main/resources/static/js/pages/offers/offer-form.js', 'utf8'), context);
+    return { context, fields };
+}
+
+test('form reinitialization preserves entered salaries and text', () => {
+    const { context, fields } = loadForm('20000000.25', '19000000.75');
+    context.initOfferForm();
+    assert.equal(fields.proposedSalary.value, '20000000.25');
+    assert.equal(fields.probationSalary.value, '19000000.75');
+    assert.equal(fields.offeredPositionTitle.value, 'Entered title');
+    assert.equal(fields.workLocation.value, 'Entered office');
+    assert.equal(fields.groupASection.hidden, false);
+});
+
+test('candidate suggestions fill blanks and preserve decimal recommended salary', () => {
+    const { context, fields } = loadForm('', '');
+    context.handleSelectPassedCandidate('42');
+    assert.equal(Number(fields.proposedSalary.value), 12345678.9);
+    assert.ok(Number(fields.probationSalary.value) >= 12345678.9 * 0.85);
+    fields.proposedSalary.value = '21000000';
+    context.handleSelectPassedCandidate('42');
+    assert.equal(fields.proposedSalary.value, '21000000');
+});
+
+for (const salary of [10000004, 12.34, 0.01, 25000000.25]) {
+    test(`probation suggestion never rounds below 85%: ${salary}`, () => {
+        const { context, fields } = loadForm(String(salary), '');
+        context.autoCalculateProbationSalary();
+        assert.ok(Number(fields.probationSalary.value) >= salary * 0.85);
+        assert.ok(Number(fields.probationSalary.value) <= salary);
+    });
+}
+
 function load(fetch) {
     const context = { fetch, console, document: {
         readyState: 'loading', addEventListener() {},
