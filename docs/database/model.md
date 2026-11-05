@@ -112,7 +112,7 @@ CandidateId;NOT NULL, FOREIGN KEY -> Candidate.CandidateId;Applying candidate
 JobPostingId;NOT NULL, FOREIGN KEY -> JobPosting.JobPostingId;Position applied for
 AppliedCvUrl;NOT NULL;CV file path/URL used for this application (replaces Resume)
 SubmissionDate;NOT NULL, DEFAULT SYSDATETIME();Submission timestamp
-ApplicationStatus;NOT NULL;Applied, HR_Passed, HM_Passed, HM_Suggested, Interviewing, Offered, Hired, Rejected
+ApplicationStatus;NOT NULL;Applied, HR_Passed, HM_Passed, HM_Suggested, Interviewing, Offered, Hired, Rejected, Withdrawn, Cancelled
 CreatedAt;NOT NULL, DEFAULT SYSDATETIME();Record creation date
 UpdatedAt;NULL;Last update date
 3.12 ApplicationReview
