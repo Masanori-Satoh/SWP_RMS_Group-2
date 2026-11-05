@@ -258,10 +258,8 @@ function executeOfferExport() {
     // 3. Chuẩn bị payload DTO OfferExportRequest
     const payload = {
         scope: scope,
-        selectedIds: scope === 'SELECTED' ? selectedIds : [],
-        search: search,
-        status: status,
-        timeSort: timeSort,
+        offerIds: scope === 'SELECTED' ? selectedIds : [],
+        filters: scope === 'FILTERED' ? { keyword: search, status, sort: timeSort } : null,
         columns: selectedCols
     };
 

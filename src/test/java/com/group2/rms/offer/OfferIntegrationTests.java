@@ -265,6 +265,57 @@ class OfferIntegrationTests {
                         "Đã phát hành thư mời nhận việc trên cổng ứng viên. Chưa gửi được email thông báo."));
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {"SELECTED", "FILTERED", "ALL"})
+    @WithMockUser(username = "hr_specialist", roles = {"HR"})
+    void exportAcceptsPayloadGeneratedByTheActualFrontend(String scope) throws Exception {
+        String script = """
+                const fs = require('fs'), vm = require('vm');
+                const scope = process.argv[1];
+                const context = {
+                  window: {}, console,
+                  document: {
+                    readyState: 'loading', addEventListener() {},
+                    getElementById(id) {
+                      return {searchInput: {value: 'Java'}, statusFilter: {value: 'Sent_Candidate'},
+                              timeSortFilter: {value: 'LATEST'}}[id] || null;
+                    },
+                    querySelector() { return {value: scope}; },
+                    querySelectorAll(selector) {
+                      if (selector.includes('exportCol')) return [{value: 'offerId'}];
+                      if (selector.includes('offer-row-checkbox')) return [{value: '42'}];
+                      return [];
+                    }
+                  },
+                  fetch(url, options) {
+                    process.stdout.write(options.body);
+                    return Promise.reject(new Error('Dry run: no network request'));
+                  }
+                };
+                vm.createContext(context);
+                vm.runInContext(fs.readFileSync('src/main/resources/static/js/pages/offers/offer-hr.js', 'utf8'), context);
+                context.executeOfferExport();
+                """;
+        Process process = new ProcessBuilder("node", "-e", script, scope).redirectErrorStream(true).start();
+        try {
+            org.junit.jupiter.api.Assertions.assertTrue(process.waitFor(10, java.util.concurrent.TimeUnit.SECONDS));
+            String payload = new String(process.getInputStream().readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+            org.junit.jupiter.api.Assertions.assertEquals(0, process.exitValue(), payload);
+            OfferExportRequest expected = new OfferExportRequest(OfferExportScope.valueOf(scope),
+                    "SELECTED".equals(scope) ? List.of(42) : List.of(),
+                    "FILTERED".equals(scope) ? new OfferExportFilterRequest("Java", "Sent_Candidate", "LATEST") : null,
+                    List.of("offerId"));
+            org.junit.jupiter.api.Assertions.assertEquals(expected, objectMapper.readValue(payload, OfferExportRequest.class));
+            when(offerExportService.exportOffersToExcel(any(), any())).thenReturn(new byte[]{1});
+            when(offerExportService.generateExportFilename(any())).thenReturn("offers.xlsx");
+            mvc.perform(post("/offers/export").with(csrf()).contentType(MediaType.APPLICATION_JSON).content(payload))
+                    .andExpect(status().isOk());
+            org.mockito.Mockito.verify(offerExportService).exportOffersToExcel(eq(expected), eq("hr_specialist"));
+        } finally {
+            process.destroyForcibly();
+        }
+    }
+
     @Test
     @DisplayName("IT-06 POST /offers/export: HR xuất Excel thành công (HTTP 200 OK, Content-Type xlsx, attachment header)")
     @WithMockUser(username = "hr_specialist", roles = {"HR"})
