@@ -1,5 +1,6 @@
-package com.group2.rms.candidate.application.submission;
+package com.group2.rms.candidate.application.submission.validator;
 
+import com.group2.rms.candidate.application.submission.exception.ApplicationSubmissionException;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
