@@ -5,17 +5,9 @@
     const frame = page?.closest('.page-wrapper');
     if (!page || !frame || frame.classList.contains('page-wrapper--candidate')) return;
 
-    const chrome = [
-        [frame, 'adw-frame'],
-        [page.closest('.main-content'), 'adw-main'],
-        [document.getElementById('workspace-navigation'), 'adw-sidebar'],
-        [document.querySelector('.sidebar-top-bar'), 'adw-sidebar-head'],
-        [document.querySelector('.sidebar-menu-list'), 'adw-sidebar-menu'],
-        [document.querySelector('.workspace-header'), 'adw-topbar'],
-        [document.querySelector('.workspace-header-actions'), 'adw-actions'],
-        [document.querySelector('.sidebar-footer'), 'adw-footer']
-    ];
-    chrome.forEach(([element, className]) => element?.classList.add(className));
+    // dunglt bổ sung: các class khung adw-frame, adw-main, adw-sidebar*, adw-topbar, adw-actions, adw-footer
+    // nay viết sẵn trong HTML (layout/internal, sidebar-shell, sidebar-footer, workspace-header). Gắn bằng JS sau
+    // khi vẽ làm khung đổi kích thước giữa chừng (layout shift lớn).
 
     // Cover the full document, including the sidebar gutter on long table pages.
     const scene = page.querySelector('.adw-scene');

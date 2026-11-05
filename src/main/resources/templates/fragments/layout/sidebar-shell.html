@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <body>
-<aside th:fragment="shell(activeMenu, role)" class="workspace-sidebar" id="workspace-navigation" aria-label="Điều hướng hệ thống">
+<aside th:fragment="shell(activeMenu, role)" class="workspace-sidebar adw-sidebar" id="workspace-navigation" aria-label="Điều hướng hệ thống">
     <!-- 1. Header Sidebar: Logo thương hiệu Mộc RMS & Nút Ghim Pin -->
-    <div class="sidebar-top-bar">
+    <div class="sidebar-top-bar adw-sidebar-head">
         <a th:replace="~{fragments/brand :: wordmarkLink('RMS', '/dashboard')}"></a>
         <button type="button" class="sidebar-pin-btn" id="sidebar-pin-toggle" aria-label="Ghim thanh điều hướng luôn mở" aria-pressed="false" title="Ghim thanh điều hướng">
             <!-- Chưa ghim: đinh ghim viền -->
@@ -27,7 +27,7 @@
     </div>
 
     <!-- 2. Danh sách Menu chính theo Role -->
-    <nav class="sidebar-menu-list" aria-label="Menu chức năng" th:with="userRole=${topbarUser != null and topbarUser.roleName != null ? topbarUser.roleName : (role ?: (dashboard != null ? dashboard.roleName : (userProfile != null ? userProfile.roleName : (viewerRole != null ? viewerRole : (session.user != null ? session.user.role : null)))))}">
+    <nav class="sidebar-menu-list adw-sidebar-menu" aria-label="Menu chức năng" th:with="userRole=${topbarUser != null and topbarUser.roleName != null ? topbarUser.roleName : (role ?: (dashboard != null ? dashboard.roleName : (userProfile != null ? userProfile.roleName : (viewerRole != null ? viewerRole : (session.user != null ? session.user.role : null)))))}">
         <!-- Ưu tiên role của người đang đăng nhập (topbarUser, có ở mọi trang); fallback cũ giữ cho trang không đăng nhập / test. Thiếu dòng này các trang /portal/* rơi vào sidebar HR. -->
         <!-- userRole khai báo trên <nav> để cả link "Về trang Tuyển dụng" bên dưới cũng dùng được -->
         <th:block>
