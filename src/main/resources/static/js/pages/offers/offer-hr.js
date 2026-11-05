@@ -2,8 +2,7 @@
  * offer-hr.js — Phân hệ Offer Management (SWP391 — Mộc RMS Group 2)
  * Trách nhiệm luồng nghiệp vụ của Chuyên viên Tuyển dụng (HR / Recruiter):
  * - SECTION A: Quản lý danh sách, bộ lọc, chọn hàng loạt và xóa bản nháp Offer (HR List)
- * - SECTION B: Biểu mẫu tạo mới / chỉnh sửa, autofill ứng viên, tính 85% lương và ngày bắt đầu động (Form)
- * - SECTION C: Quản lý hộp thoại xuất Excel, tùy biến 25 cột dữ liệu và tải Blob (Excel Export)
+ * - SECTION C: Quản lý hộp thoại xuất Excel, chọn cột dữ liệu theo danh sách cho phép và tải Blob (Excel Export)
  * - SECTION D: Khởi tạo sự kiện theo sự hiện diện của phần tử DOM (Initialization)
  */
 
@@ -21,6 +20,10 @@ function confirmDeleteOffer(offerId) {
     dialog.showModal();
 }
 
+/**
+ * Xóa nháp bằng DELETE sau khi người dùng xác nhận; server mới quyết định bản ghi có được xóa hay không.
+ * Khóa nút trong lúc chờ, mở lại khi hoàn tất; chỉ reload khi ApiResponse báo thành công.
+ */
 function executeDeleteOffer(button) {
     const dialog = button.closest('dialog');
     const offerId = dialog.dataset.offerId;
@@ -88,7 +91,8 @@ function deselectAllOffers() {
 }
 
 /**
- * Cập nhật hiển thị Selection Toolbar và đếm số lượng bản ghi đã chọn
+ * Đồng bộ số dòng được chọn, thanh tác vụ và quyền chọn phạm vi SELECTED trong modal Excel.
+ * Checkbox trên trang chỉ chọn các dòng đang có trong DOM, không mặc nhiên chọn mọi trang kết quả.
  */
 function updateSelectionToolbar() {
     const count = getSelectedOfferIds().length;
@@ -186,7 +190,9 @@ function resetDefaultColumns() {
 }
 
 /**
- * Gửi yêu cầu AJAX POST JSON tới /offers/export và tải file nhị phân Blob về máy
+ * Ghép đúng hợp đồng backend: scope, offerIds, filters={keyword,status,sort}, columns.
+ * SELECTED gửi ID checkbox; FILTERED gửi bộ lọc hiện tại; ALL không dùng hai bộ dữ liệu đó.
+ * Đọc phản hồi dạng Blob để tải .xlsx; không đi qua helper JSON offerRequest.
  */
 function executeOfferExport() {
     const errDiv = document.getElementById('exportModalError');

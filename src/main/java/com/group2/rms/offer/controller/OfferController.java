@@ -64,7 +64,8 @@ public class OfferController {
     }
 
     /**
-     * 1. VIEW LIST: Danh sách Offer có phân trang và lọc (Screen 30)
+     * Điểm vào GET /offers: phân nhánh giao diện HR/Giám đốc, chuẩn hóa tab rồi gọi service đọc dữ liệu.
+     * Controller chuẩn bị model; quyền theo URL do SecurityConfig quản lý, không dựa vào việc nút có hiện trên UI hay không.
      */
     @GetMapping
     public String listOffers(
@@ -199,8 +200,8 @@ public class OfferController {
     }
 
     /**
-     * 3b. SUBMIT CREATE: Tiếp nhận form tạo mới Offer (Save Draft hoặc Submit
-     * Director)
+     * Nhận form tạo đề xuất: Bean Validation trước, sau đó service kiểm tra nghiệp vụ và lưu.
+     * Có lỗi thì dựng lại đúng form cùng dữ liệu đã nhập; thành công mới redirect kèm flash message.
      */
     @PostMapping(value = "/create", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
     public String createOffer(
@@ -311,7 +312,8 @@ public class OfferController {
     }
 
     /**
-     * 6b. SUBMIT EDIT: Cập nhật Offer Proposal (Form Submit)
+     * Nhận form chỉnh sửa; service kiểm tra Draft và khóa bản ghi, không tin trạng thái do trình duyệt gửi.
+     * Validation lỗi trả về form; lưu thành công dùng redirect để tránh gửi lại form khi refresh.
      */
     @PostMapping(value = "/{id}/edit", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
     public String updateOffer(
@@ -433,7 +435,8 @@ public class OfferController {
     }
 
     /**
-     * 9a. DIRECTOR APPROVE VIA AJAX (JSON): Director duyệt Offer Proposal
+     * Nhận quyết định duyệt của Giám đốc qua JSON; service dùng cập nhật có điều kiện để chặn quyết định cũ.
+     * Xung đột OFFER_STATUS_INVALID được trả HTTP 409 để người dùng tải lại dữ liệu.
      */
     @PostMapping(value = "/{id}/approve", consumes = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
@@ -455,7 +458,8 @@ public class OfferController {
     }
 
     /**
-     * 9b. DIRECTOR REJECT VIA AJAX (JSON): Director từ chối Offer Proposal
+     * Từ chối đề xuất nội bộ: controller bắt buộc lý do trước khi gọi service lưu quyết định.
+     * Không nhầm với việc ứng viên từ chối thư mời đã phát hành ở /portal/offers.
      */
     @PostMapping(value = "/{id}/reject", consumes = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody

@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 
 /**
  * Gửi email cho luồng Offer: phát hành thư mời nhận việc (Offer Letter) tới ứng viên.
- * Không có cấu hình SMTP thì chỉ ghi log (mock).
+ * Không có cấu hình SMTP thì ghi log và trả NOT_SENT, không giả lập gửi thành công.
  * Thông báo in-app cho nội bộ (Giám đốc, HR) nằm ở {@link com.group2.rms.notification.service.NotificationService}.
  */
 @Slf4j
@@ -33,6 +33,11 @@ public class OfferMailSender {
         this.baseUrl = baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;
     }
 
+    /**
+     * Gửi email thực sau khi Offer đã được phát hành; testRecipient có cấu hình thì chuyển tới địa chỉ kiểm thử.
+     * SENT: gửi tới ứng viên; TEST_RECIPIENT: gửi tới địa chỉ thử; NOT_SENT: thiếu email/SMTP hoặc gửi lỗi.
+     * Kết quả này phục vụ thông báo UI, không phải trạng thái vòng đời của Offer.
+     */
     public EmailStatus sendOfferLetterToCandidate(OfferProposal offer) {
         String candidateEmail = null;
         String candidateName = "Ứng viên";

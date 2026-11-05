@@ -3,7 +3,9 @@
 // =========================================================================
 
 /**
- * Xử lý khi người dùng chọn ứng viên đỗ phỏng vấn từ dropdown ở màn hình tạo mới
+ * Đọc data-* từ option ứng viên để dựng khung thông tin và gợi ý chức danh/lương/địa điểm.
+ * Đây chỉ là dữ liệu gợi ý trên UI; service vẫn kiểm tra hồ sơ đạt phỏng vấn và chưa có Offer khi lưu.
+ * Hiện lương gợi ý sẽ được gán khi option có data-recom-salary, kể cả khi ô lương đã có giá trị.
  */
 function handleSelectPassedCandidate(appId) {
     const select = document.getElementById('createAppSelect');
@@ -60,7 +62,8 @@ function handleSelectPassedCandidate(appId) {
 }
 
 /**
- * Tự động tính toán mức lương thử việc tối thiểu 85% (theo quy định BR-OFF-01 & Luật Lao Động 2019)
+ * Gợi ý 85% lương chính thức; chỉ ghi đè lương thử việc khi forceSet=true hoặc ô đang trống/0.
+ * Phép tính hiện dùng Math.round; kiểm tra cuối cùng vẫn dùng BigDecimal ở backend.
  */
 function autoCalculateProbationSalary(forceSet = false) {
     const proposedEl = document.getElementById('proposedSalary');
@@ -84,7 +87,7 @@ const PROBATION_ICONS = {
 };
 
 /**
- * Kiểm tra và hiển thị phản hồi trực quan về tỷ lệ lương thử việc trên giao diện
+ * Phản hồi tức thời cho khoảng lương thử việc 85%–100%; không thay thế validation DTO/service.
  */
 function validateProbationRuleUi() {
     const proposedEl = document.getElementById('proposedSalary');
@@ -119,7 +122,8 @@ function validateProbationRuleUi() {
 }
 
 /**
- * Cập nhật động ngày bắt đầu tối thiểu: min = hôm nay + thời hạn phản hồi + 1 ngày
+ * Đặt min ngày bắt đầu = ngày trên máy người dùng + số ngày phản hồi + 1.
+ * Server kiểm tra lại bằng ngày của server; hai phía có thể lệch nếu máy người dùng sai ngày/múi giờ.
  */
 function updateMinExpectedStartDate() {
     const periodInput = document.getElementById('responsePeriodDays');

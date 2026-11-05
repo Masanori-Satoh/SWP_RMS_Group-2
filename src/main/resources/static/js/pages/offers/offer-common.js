@@ -1,9 +1,9 @@
 /**
  * offer-common.js — Phân hệ Offer Management (SWP391 — Mộc RMS Group 2)
- * Trách nhiệm dùng chung giữa các trang Offer nội bộ (HR List, Form, Detail, Director List):
+ * Trách nhiệm dùng chung giữa các trang Offer nội bộ (HR List, Detail, Director List):
  * - Đọc CSRF Token từ thẻ meta (getCsrfInfo)
  * - Khử ký tự HTML độc hại chống XSS (escapeOfferHtml)
- * - Hiển thị Flash Toast thông báo phản hồi (showFlashToast, showToast)
+ * - Hiển thị Flash Toast thông báo phản hồi (showFlashToast)
  * - Tự động hiển thị toast của Offer từ sessionStorage sau khi reload trang
  * - Điều khiển Modal xác nhận phát hành Thư mời nhận việc (confirmSendOffer, executeSendOfferAction)
  */
@@ -25,7 +25,11 @@ function getCsrfInfo() {
 // 2. ESCAPE HTML HELPER
 // =========================================================================
 
-// JSON requests used by Offer actions; binary Excel downloads remain separate.
+/**
+ * Gửi thao tác JSON của Offer: tự gắn CSRF, đọc ApiResponse và ném lỗi nếu HTTP hoặc success không hợp lệ.
+ * Ví dụ: offerRequest(url, { body: { comments } }); lỗi được hàm gọi hiển thị bằng toast.
+ * Không dùng cho tải Excel vì phản hồi Excel là Blob, không phải JSON.
+ */
 async function offerRequest(url, { method = 'POST', body } = {}) {
     const csrf = getCsrfInfo();
     const headers = { Accept: 'application/json' };
@@ -67,6 +71,10 @@ function escapeOfferHtml(str) {
 
 const OFFER_PENDING_TOAST_KEY = 'offer.pendingFlashToast';
 
+/**
+ * Lưu thông báo trong tab trước khi reload/redirect; trang đến đọc rồi xóa để thông báo chỉ hiện một lần.
+ * SessionStorage chỉ phục vụ UI, không phải bằng chứng thao tác đã được lưu ở server.
+ */
 function queueOfferToast(message, type = 'success') {
     try {
         sessionStorage.setItem(OFFER_PENDING_TOAST_KEY, JSON.stringify({ message, type }));
@@ -155,6 +163,10 @@ function confirmSendOffer(offerId) {
     }
 }
 
+/**
+ * Sau xác nhận: khóa nút → gọi POST /offers/{id}/send → lưu toast → tải lại dữ liệu từ server.
+ * Offer đã phát hành nhưng email chưa gửi tới ứng viên thì hiện warning, không báo toàn bộ nghiệp vụ thất bại.
+ */
 function executeSendOfferAction() {
     const offerId = pendingSendOfferId;
     if (!offerId) return;

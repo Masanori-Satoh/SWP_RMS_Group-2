@@ -73,8 +73,8 @@ public class OfferServiceImpl implements OfferService {
 
     /**
      * Quy tắc GBR-07:
-     * - Chỉ chấp nhận tạo mới Offer Proposal đối với ứng viên đã đỗ phỏng vấn (Passed) và CHƯA CÓ bất kỳ lịch sử/gói Offer nào.
-     * - Khi đơn ứng tuyển đã có Offer trong hệ thống (kể cả trạng thái Draft), không gợi ý trong mục tạo đề xuất mới
+     * - Chỉ chấp nhận tạo mới Offer Proposal đối với ứng viên đã đỗ phỏng vấn (Passed) và KHÔNG CÓ Offer chưa xóa mềm.
+     * - Khi hồ sơ đã có Offer chưa xóa mềm (kể cả Draft), không gợi ý trong mục tạo đề xuất mới
      *   và chặn thao tác tạo mới trực tiếp (bắt buộc HR chỉnh sửa trực tiếp trên danh sách Offer).
      */
     public static final Set<String> OVERRIDABLE_STATUSES = Collections.emptySet();
@@ -87,6 +87,7 @@ public class OfferServiceImpl implements OfferService {
             "Draft", "Pending_Director", "Approved", "Director_Approved", "Sent_Candidate", "Accepted",
             "Rejected", "Director_Rejected", "Declined", "Canceled", "Voided");
 
+    // Hai helper trạng thái tương thích cũ chưa có caller trong production hiện tại; luồng ghi kiểm tra trực tiếp bên dưới.
     public static boolean isOverridableStatus(String status) {
         if (status == null) return false;
         for (String s : OVERRIDABLE_STATUSES) {
@@ -110,6 +111,10 @@ public class OfferServiceImpl implements OfferService {
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đề xuất thư mời với ID: " + id));
     }
 
+    /**
+     * Đọc Offer chưa xóa và giữ khóa ghi đến khi giao dịch kết thúc.
+     * HR phải kiểm tra trạng thái sau khi có khóa để hai yêu cầu không cùng phát hành hoặc ghi đè bản nháp.
+     */
     private OfferProposal findActiveOfferForUpdate(Integer id) {
         return offerProposalRepository.findActiveForUpdate(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đề xuất thư mời với ID: " + id));
@@ -123,6 +128,11 @@ public class OfferServiceImpl implements OfferService {
     }
 
 
+    /**
+     * Nguồn cho dropdown tạo đề xuất: hồ sơ có kết quả Passed, chưa kết thúc và chưa có Offer chưa xóa mềm.
+     * Loại theo ApplicationId, không theo CandidateId: một ứng viên có thể ứng tuyển nhiều tin.
+     * Đọc Offer hiện hữu theo lô 500 ID; kết quả trùng hồ sơ chỉ đưa vào dropdown một lần.
+     */
     @Override
     @Transactional(readOnly = true)
     public List<PassedCandidateResponse> getPassedCandidatesForOffer() {
@@ -136,7 +146,7 @@ public class OfferServiceImpl implements OfferService {
                 .filter(application -> application != null && application.getApplicationId() != null && !isApplicationEnded(application))
                 .map(Application::getApplicationId).distinct().toList();
         Set<Integer> existingApplications = new HashSet<>();
-        // Bound IN parameters to stay below SQL Server's 2100-parameter limit.
+        // Chia lô 500 ID để không vượt giới hạn 2100 tham số của SQL Server.
         for (int offset = 0; offset < applicationIds.size(); offset += 500) {
             existingApplications.addAll(offerProposalRepository.findActiveApplicationIds(
                     applicationIds.subList(offset, Math.min(offset + 500, applicationIds.size()))));
@@ -206,6 +216,12 @@ public class OfferServiceImpl implements OfferService {
         return list;
     }
 
+    /**
+     * HR tạo đề xuất: kiểm tra đãi ngộ → hồ sơ còn mở → chưa có Offer chưa xóa → có ít nhất một kết quả Passed.
+     * Người đề xuất lấy từ tài khoản đăng nhập, không tin proposedById gửi lên từ giao diện.
+     * isDraft=true lưu Draft; trường hợp còn lại trình Pending_Director và thông báo cho Giám đốc.
+     * Nếu bản nháp cũ đã xóa mềm thì tái sử dụng bản ghi để giữ ràng buộc một Offer cho mỗi hồ sơ.
+     */
     @Override
     public OfferResponse createOfferByHr(CreateOfferRequest dto) {
         validateOfferBusinessRules(
@@ -312,6 +328,10 @@ public class OfferServiceImpl implements OfferService {
         return getAllOffersForHr(null, status, null, pageable);
     }
 
+    /**
+     * Danh sách HR: lọc bản ghi chưa xóa, phân trang và chuyển entity thành DTO trong giao dịch đọc.
+     * Khi có tìm kiếm/sắp xếp tùy chọn, dùng cùng bộ lọc với xuất Excel để kết quả nhất quán.
+     */
     @Override
     @Transactional(readOnly = true)
     public Page<OfferResponse> getAllOffersForHr(String search, String status, String timeSort, Pageable pageable) {
@@ -360,6 +380,10 @@ public class OfferServiceImpl implements OfferService {
         return stats;
     }
 
+    /**
+     * Ghép trang chi tiết: thông tin hồ sơ/phỏng vấn, nội dung đề xuất và lịch sử quyết định của Giám đốc.
+     * Trạng thái hiện tại của Offer và quyết định trong lịch sử là hai dữ liệu khác nhau.
+     */
     @Override
     @Transactional(readOnly = true)
     public OfferDetailResponse getOfferDetailForHr(Integer id) {
@@ -447,6 +471,10 @@ public class OfferServiceImpl implements OfferService {
                 .build();
     }
 
+    /**
+     * HR chỉ sửa Draft: lấy khóa ghi → kiểm tra hồ sơ/trạng thái → kiểm tra dữ liệu → lưu.
+     * Lưu nháp giữ Draft; trình duyệt chuyển sang Pending_Director. Offer đã bị từ chối không được sửa ở đường này.
+     */
     @Override
     public OfferResponse updateOfferByHr(Integer id, UpdateOfferRequest dto) {
         OfferProposal offer = findActiveOfferForUpdate(id);
@@ -532,6 +560,10 @@ public class OfferServiceImpl implements OfferService {
                 .build();
     }
 
+    /**
+     * Xóa mềm bản nháp: khóa và kiểm tra Draft rồi đặt isDeleted=true.
+     * Bản ghi vẫn nằm trong database; thao tác này không phải hủy một thư mời đã phát hành.
+     */
     @Override
     public void deleteDraftOfferByHr(Integer id) {
         OfferProposal offer = findActiveOfferForUpdate(id);
@@ -548,6 +580,12 @@ public class OfferServiceImpl implements OfferService {
         offerProposalRepository.save(offer);
     }
 
+    /**
+     * Phát hành là bước riêng sau khi Giám đốc duyệt: Approved/Director_Approved → Sent_Candidate.
+     * Hạn trả lời tính từ thời điểm phát hành, phải trước ngày bắt đầu dự kiến; hồ sơ chuyển sang Offered.
+     * Nếu hồ sơ vừa đổi trạng thái, cập nhật có điều kiện thất bại thì hủy giao dịch để không hồi sinh hồ sơ đã đóng.
+     * Email chỉ gửi sau commit; gửi email thất bại không đảo ngược việc thư mời đã xuất hiện trên cổng ứng viên.
+     */
     @Override
     public OfferResponse sendOfferToCandidate(Integer id) {
         OfferProposal offer = findActiveOfferForUpdate(id);
@@ -581,6 +619,7 @@ public class OfferServiceImpl implements OfferService {
 
         if (saved.getApplication() != null) {
             Application application = saved.getApplication();
+            // So sánh trạng thái đã đọc với trạng thái còn trong DB; không gọi setApplicationStatus rồi save đè.
             if (application.getApplicationStatus() == null
                     || applicationRepository.transition(application.getApplicationId(),
                             Set.of(application.getApplicationStatus()), "Offered") != 1) {
@@ -655,6 +694,11 @@ public class OfferServiceImpl implements OfferService {
         }
     }
 
+    /**
+     * Kiểm tra ở service để cả form và lời gọi Java đều chịu cùng luật lương/ngày/thời gian thử việc.
+     * Lương thử việc phải trong khoảng 85%–100% lương chính thức; thử việc 1–365 ngày.
+     * Ngày bắt đầu phải sau hôm nay cộng thời gian phản hồi. DTO còn có giới hạn/định dạng riêng trước khi vào đây.
+     */
     private void validateOfferBusinessRules(
             BigDecimal proposedSalary,
             BigDecimal probationSalary,
@@ -707,6 +751,11 @@ public class OfferServiceImpl implements OfferService {
     }
 
 
+    /**
+     * Helper tương thích cũ: ưu tiên ID nếu được truyền, rồi tài khoản đăng nhập; cuối cùng vẫn có nhánh lấy user đầu tiên.
+     * Tên hàm dễ gây nhầm vì cả quyết định Giám đốc cũng đang gọi hàm này.
+     * Đề xuất thay bằng CurrentUserService.requireUser trong một thay đổi riêng; không coi fallback là quy tắc phân quyền.
+     */
     private User resolveProposedBy(Integer proposedById) {
         if (proposedById != null) {
             return userRepository.findById(proposedById).orElse(null);
@@ -776,6 +825,13 @@ public class OfferServiceImpl implements OfferService {
         return decideOffer(id, comments, false);
     }
 
+    /**
+     * Luồng chung cho Giám đốc duyệt/từ chối: chỉ nhận Offer Pending_Director và hồ sơ chưa kết thúc.
+     * decideIfPending cập nhật có điều kiện; 0 dòng nghĩa là yêu cầu đã cũ, không ghi thêm lịch sử/thông báo.
+     * OfferApproval lưu quyết định Approved/Rejected; OfferProposal lưu vòng đời Director_Approved/Director_Rejected.
+     * Thông báo quyết định chạy sau commit trong giao dịch mới để lỗi thông báo không làm mất quyết định đã lưu.
+     * Lý do từ chối bắt buộc đang được kiểm tra tại controller, không phải trong hàm dùng chung này.
+     */
     private OfferResponse decideOffer(Integer id, String comments, boolean approved) {
         OfferProposal offer = findActiveOffer(id);
         requireActiveApplication(offer.getApplication());
@@ -801,6 +857,7 @@ public class OfferServiceImpl implements OfferService {
                 @Override
                 public void afterCommit() {
                     try {
+                        // Quyết định đã commit; mở giao dịch mới để ghi thông báo mà không kéo dài giao dịch duyệt.
                         TransactionTemplate notificationTransaction = new TransactionTemplate(transactionManager);
                         notificationTransaction.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
                         notificationTransaction.executeWithoutResult(transaction ->
@@ -826,6 +883,10 @@ public class OfferServiceImpl implements OfferService {
                 "OFFER_STATUS_INVALID");
     }
 
+    /**
+     * Thẻ thống kê: số chờ duyệt là toàn hệ thống; số đã duyệt/từ chối đếm log quyết định của Giám đốc hiện tại.
+     * Không đồng nhất các số này với bộ đếm trạng thái vòng đời ở getDirectorStatusCounts.
+     */
     @Override
     @Transactional(readOnly = true)
     public Map<String, Long> getDirectorOfferStats() {
@@ -853,6 +914,11 @@ public class OfferServiceImpl implements OfferService {
         return counts;
     }
 
+    /**
+     * Danh sách Giám đốc luôn ẩn Draft. Nhóm đã duyệt còn bao gồm các Offer đã gửi/được nhận/bị ứng viên từ chối.
+     * Đây là nhóm nghiệp vụ khác bộ lọc Approved của HR/Excel, nên không gộp máy móc hai điều kiện.
+     * Tìm kiếm hỗ trợ thêm mã Offer; sắp xếp mặc định mới nhất theo ID, khác HR mặc định tăng dần.
+     */
     @Override
     @Transactional(readOnly = true)
     public Page<OfferResponse> getDirectorOffers(String search, String status, String timeSort, Pageable pageable) {

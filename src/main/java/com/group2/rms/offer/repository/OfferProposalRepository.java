@@ -26,7 +26,7 @@ import java.util.Optional;
 @Repository
 public interface OfferProposalRepository extends JpaRepository<OfferProposal, Integer>, JpaSpecificationExecutor<OfferProposal> {
 
-    // Only to-one relations: safe for paginated queries, with no collection fetch join.
+    // Chỉ tải quan hệ tới một bản ghi; không fetch collection gây sai kết quả phân trang.
     @Override
     @EntityGraph(attributePaths = {"application.candidate.account", "application.jobPosting.requisition.department", "proposedBy"})
     Page<OfferProposal> findAll(Specification<OfferProposal> spec, Pageable pageable);
@@ -39,7 +39,10 @@ public interface OfferProposalRepository extends JpaRepository<OfferProposal, In
             + "AND (o.isDeleted IS NULL OR o.isDeleted = false)")
     List<Integer> findActiveApplicationIds(@Param("ids") List<Integer> ids);
 
-    // HR list and export share exactly the same status aliases and literal keyword matching.
+    /**
+     * Bộ lọc HR/Excel: luôn loại bản ghi xóa mềm, chuẩn hóa tên trạng thái cũ/mới và tìm theo tên/vị trí.
+     * ListFilters escape các ký tự %, _ và [ để tìm đúng ký tự người dùng nhập, không coi chúng là mẫu LIKE.
+     */
     static Specification<OfferProposal> matchingFilters(String search, String status) {
         String keyword = ListFilters.cleanKeyword(search);
         String normalized = status == null ? "" : status.trim().toLowerCase(Locale.ROOT);
@@ -71,6 +74,7 @@ public interface OfferProposalRepository extends JpaRepository<OfferProposal, In
             List<String> inactiveStatuses
     );
 
+    // Chỉ ghi khi vẫn Pending_Director; 0 dòng là xung đột. Xóa context để lần đọc sau không dùng entity cũ.
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
             UPDATE OfferProposal o SET o.offerStatus = :status, o.updatedAt = CURRENT_TIMESTAMP

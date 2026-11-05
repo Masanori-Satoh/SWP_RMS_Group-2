@@ -49,6 +49,10 @@ public interface CandidateOfferRepository extends JpaRepository<OfferProposal, I
     @Modifying
     @Query("UPDATE OfferProposal o SET o.offerStatus = :to, o.updatedAt = CURRENT_TIMESTAMP " +
            "WHERE o.offerId = :id AND o.offerStatus = 'Sent_Candidate'")
+    /**
+     * Cập nhật có điều kiện Sent_Candidate → Accepted/Declined; 0 dòng nghĩa là trạng thái đã thay đổi.
+     * Chủ sở hữu và hạn phản hồi được service kiểm tra trước; câu UPDATE này chỉ bảo vệ điều kiện trạng thái.
+     */
     int answerIfSent(@Param("id") Integer offerId, @Param("to") String to);
 
     @Modifying

@@ -222,6 +222,10 @@
   });
 
   // 5. Đồng hồ đếm ngược hạn phản hồi thư mời
+  /**
+   * Đếm ngược để cập nhật chữ trên UI mỗi giây; không tự đổi trạng thái Offer hoặc hồ sơ trong database.
+   * Dù giao diện chưa reload lúc hết hạn, service vẫn kiểm tra hạn trước mỗi lần nhận/từ chối.
+   */
   function initCountdowns() {
     var countdownEls = document.querySelectorAll('.cof-countdown[data-deadline]');
     if (!countdownEls.length) return;

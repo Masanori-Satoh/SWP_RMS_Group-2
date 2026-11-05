@@ -71,6 +71,10 @@ public class OfferExportServiceImpl implements OfferExportService {
         COLUMN_WHITELIST.put("declineReason", "Lý do ứng viên từ chối");
     }
 
+    /**
+     * Xuất Excel: kiểm tra phạm vi/cột → đọc Offer → ghép DTO phẳng → tạo sheet dữ liệu và sheet tổng hợp.
+     * Chỉ đọc lịch sử duyệt khi người dùng chọn cột cần dữ liệu đó; không đổi trạng thái Offer.
+     */
     @Override
     @Transactional(readOnly = true)
     public byte[] exportOffersToExcel(OfferExportRequest request, String exportedBy) {
@@ -126,6 +130,10 @@ public class OfferExportServiceImpl implements OfferExportService {
     // VALIDATION
     // =========================================================================
 
+    /**
+     * Chỉ chấp nhận cột trong danh sách cho phép; SELECTED phải có ID, mọi phạm vi phải có ít nhất một cột.
+     * Đây là kiểm tra phía server, không phụ thuộc việc JavaScript đã kiểm tra modal hay chưa.
+     */
     private void validateExportRequest(OfferExportRequest request) {
         if (request == null || request.scope() == null) {
             throw new OfferValidationException("Phạm vi xuất dữ liệu không được để trống.", "INVALID_EXPORT_REQUEST");
@@ -153,6 +161,10 @@ public class OfferExportServiceImpl implements OfferExportService {
     // DATABASE QUERY / RESOLVE SCOPE
     // =========================================================================
 
+    /**
+     * SELECTED lấy các ID đã chọn; ALL lấy mọi Offer chưa xóa; FILTERED dùng keyword/status/sort trong filters.
+     * Bộ lọc FILTERED dùng cùng matchingFilters với danh sách HR.
+     */
     private List<OfferProposal> fetchOffersByScope(OfferExportRequest request) {
         OfferExportScope scope = request.scope();
         OfferExportFilterRequest filters = request.filters();
@@ -192,6 +204,10 @@ public class OfferExportServiceImpl implements OfferExportService {
     // DTO MAPPING
     // =========================================================================
 
+    /**
+     * Đọc lịch sử theo lô 500 Offer để tránh một truy vấn cho mỗi dòng Excel.
+     * Repository sắp thời gian duyệt rồi ID giảm dần; putIfAbsent giữ quyết định đầu tiên, tức mới nhất, cho mỗi Offer.
+     */
     private Map<Integer, OfferApproval> loadLatestApprovals(List<OfferProposal> offers) {
         Map<Integer, OfferApproval> latest = new HashMap<>();
         List<Integer> ids = offers.stream().map(OfferProposal::getOfferId).toList();
@@ -203,6 +219,9 @@ public class OfferExportServiceImpl implements OfferExportService {
         return latest;
     }
 
+    /**
+     * Chuyển quan hệ entity sang một dòng Excel; latest đã được đọc theo lô, không truy vấn thêm ở mỗi dòng.
+     */
     private OfferExportRow mapToExportRow(OfferProposal offer, OfferApproval latest) {
         var app = offer.getApplication();
         var cand = app != null ? app.getCandidate() : null;
@@ -395,6 +414,9 @@ public class OfferExportServiceImpl implements OfferExportService {
         }
     }
 
+    /**
+     * Ghi giá trị theo mã cột đã được kiểm tra; giữ kiểu số/ngày để Excel còn tính toán và sắp xếp được.
+     */
     private void writeCellValue(Cell cell, String colKey, OfferExportRow r,
                                 CellStyle defaultStyle, CellStyle centerStyle,
                                 CellStyle salaryStyle, CellStyle percentStyle,

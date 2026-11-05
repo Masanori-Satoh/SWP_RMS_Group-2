@@ -11,7 +11,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
- * 3.19 OfferProposal - Đề xuất offer lương do Hiring Manager / HR tạo.
+ * 3.19 OfferProposal - Đề xuất thư mời do HR tạo; Giám đốc chỉ duyệt hoặc từ chối.
  * Quan hệ 1-1 với Application (UNIQUE constraint trên ApplicationId).
  * OfferStatus: Draft, Pending_Director, Director_Approved, Director_Rejected, Sent_Candidate,
  * Accepted, Declined
@@ -81,6 +81,10 @@ public class OfferProposal extends BaseEntity {
     @Column(name = "IsDeleted")
     @Builder.Default
     private Boolean isDeleted = false;
+    /**
+     * Hết hạn chỉ khi Offer đang Sent_Candidate và đã qua hạn phản hồi HOẶC qua ngày bắt đầu dự kiến.
+     * Dùng chung cho nhãn quá hạn của HR/ứng viên; chỉ tính toán, không thay đổi dữ liệu database.
+     */
     public boolean isResponseExpiredAt(LocalDateTime now) {
         return "Sent_Candidate".equals(offerStatus)
                 && (responseDeadline != null && now.isAfter(responseDeadline)

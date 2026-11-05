@@ -2,7 +2,6 @@
  * offer-director.js — Phân hệ Offer Management (SWP391 — Mộc RMS Group 2)
  * Trách nhiệm luồng nghiệp vụ của Giám đốc (Director Approval Workflows):
  * - SECTION A: Hộp thoại phê duyệt / từ chối nhanh (Quick Decision Modal trên List & Director List)
- * - SECTION B: Bộ lọc, tìm kiếm và phân trang danh sách đề xuất của Giám đốc (Director List)
  * - SECTION C: Các thao tác ra quyết định trên màn hình xem chi tiết (Offer Detail Decision)
  * - SECTION D: Xuất khẩu toàn cục ra window để tương thích thuộc tính inline của Thymeleaf
  */
@@ -12,9 +11,8 @@
 // =========================================================================
 
 /**
- * Mở hộp thoại phê duyệt hoặc từ chối nhanh đề xuất thư mời
- * @param {number|string} offerId
- * @param {'APPROVE'|'REJECT'} actionType
+ * Mở modal quyết định nhanh trên danh sách; APPROVE cho nhận xét tùy chọn, REJECT bắt buộc lý do.
+ * Mở modal chưa cập nhật database; chỉ khi xác nhận mới gửi request tới controller.
  */
 function openDirectorDecisionModal(offerId, actionType) {
     const modal = document.getElementById('directorDecisionModal');
@@ -220,7 +218,8 @@ function showDirectorRejectReasonRequiredAlert() {
 let pendingDirectorDecision = null;
 
 /**
- * Điều phối khi Giám đốc bấm nút Duyệt hoặc Từ chối trên màn hình chi tiết
+ * Luồng từ trang chi tiết: lấy nhận xét và lưu quyết định đang chờ, sau đó mở hộp thoại xác nhận.
+ * Chưa gọi API ở nhánh có dialog cho đến khi người dùng bấm xác nhận.
  */
 function submitDirectorDecisionFromScreen(offerId, action) {
     if (!offerId) return;
@@ -277,6 +276,10 @@ function confirmDirectorRejectAction() {
     }
 }
 
+/**
+ * Gọi API duyệt/từ chối dùng helper JSON chung; thành công lưu toast rồi chạy callback điều hướng.
+ * Danh sách truyền callback reload; trang chi tiết mặc định trở về /offers.
+ */
 async function executeDirectorDecisionApi(url, comments, onSuccess = () => { window.location.href = '/offers'; }) {
     try {
         const data = await offerRequest(url, { body: { comments } });

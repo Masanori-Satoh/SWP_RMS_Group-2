@@ -60,6 +60,10 @@ public class CandidateOfferServiceImpl implements CandidateOfferService {
         this(offers, currentUserService, applicationStatusService, null, Clock.systemDefaultZone());
     }
 
+    /**
+     * Lấy thư mời của chính ứng viên đăng nhập, chỉ gồm Sent_Candidate, Accepted và Declined.
+     * Query ràng buộc UserId tại database; không lấy mọi Offer rồi mới lọc quyền ở JavaScript.
+     */
     @Override
     @Transactional(readOnly = true)
     public List<CandidateOfferResponse> list() {
@@ -71,6 +75,10 @@ public class CandidateOfferServiceImpl implements CandidateOfferService {
                 .toList();
     }
 
+    /**
+     * Xem chi tiết đúng chủ sở hữu và đánh dấu thông báo thư mời đã đọc.
+     * Có thao tác ghi thông báo nên phương thức này không chỉ là giao dịch đọc.
+     */
     @Override
     @Transactional
     public CandidateOfferDetailResponse getDetail(Integer offerId) {
@@ -105,6 +113,12 @@ public class CandidateOfferServiceImpl implements CandidateOfferService {
         return answer(offerId, false, declineReason);
     }
 
+    /**
+     * Luồng chung nhận/từ chối: xác định chủ sở hữu → kiểm tra hạn/trạng thái → cập nhật nếu còn Sent_Candidate.
+     * Chỉ một yêu cầu cập nhật được; yêu cầu đến sau nhận lỗi thay vì ghi đè câu trả lời trước đó.
+     * Sau đó gọi module hồ sơ: nhận thư mời chuyển Offered → Hired; từ chối chuyển Offered → Withdrawn.
+     * Lý do từ chối của ứng viên là tùy chọn, khác với lý do từ chối đề xuất của Giám đốc.
+     */
     private String answer(Integer offerId, boolean accepted, String declineReason) {
         Integer userId = currentUserService.requireUser().getUserId();
         OfferProposal offer = offers.findVisibleById(offerId, userId, CANDIDATE_VISIBLE_STATUSES)
@@ -135,8 +149,9 @@ public class CandidateOfferServiceImpl implements CandidateOfferService {
     }
 
     /**
-     * Nơi bổ sung ràng buộc trả lời offer (huyenpt). Accept và Decline cùng đi qua đây, ví dụ hạn trả lời,
-     * lý do từ chối, chặn theo ngày bắt đầu. Offer phải đang chờ ứng viên trả lời và chưa quá ngày bắt đầu.
+     * Chấp nhận phản hồi khi còn Sent_Candidate, chưa qua hạn trả lời và chưa qua ngày bắt đầu dự kiến.
+     * Đúng thời điểm bằng hạn vẫn hợp lệ vì code dùng isAfter; ngày bắt đầu bằng hôm nay chưa bị chặn bởi điều kiện ngày.
+     * Kiểm tra này chạy trước câu UPDATE; điều kiện thời gian chưa nằm trong chính câu UPDATE nguyên tử.
      */
     private void requireAnswerable(OfferProposal offer) {
         if (!SENT.equals(offer.getOfferStatus())) {
@@ -158,6 +173,9 @@ public class CandidateOfferServiceImpl implements CandidateOfferService {
         return offer.isResponseExpiredAt(LocalDateTime.now(clock));
     }
 
+    /**
+     * Tạo nhãn và quyền bấm cho UI; hết hạn chỉ đổi nhãn/ẩn thao tác, không ghi OfferStatus=Expired.
+     */
     private CandidateOfferResponse toResponse(OfferProposal offer) {
         String status = offer.getOfferStatus();
         boolean expired = isExpired(offer);
