@@ -47,12 +47,7 @@ function executeDeleteOffer(button) {
         })
         .then(res => {
             if (res && res.success) {
-                try {
-                    sessionStorage.setItem(OFFER_PENDING_TOAST_KEY, JSON.stringify({
-                        message: res.message || 'Đã xóa bản nháp đề xuất thành công.',
-                        type: 'success'
-                    }));
-                } catch (e) { }
+                queueOfferToast(res.message || 'Đã xóa bản nháp đề xuất thành công.');
                 window.location.reload();
             } else if (typeof showFlashToast === 'function') {
                 showFlashToast(res?.message || 'Lỗi xóa bản nháp.', 'error');

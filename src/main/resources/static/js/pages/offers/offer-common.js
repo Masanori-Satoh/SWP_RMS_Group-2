@@ -41,6 +41,12 @@ function escapeOfferHtml(str) {
 
 const OFFER_PENDING_TOAST_KEY = 'offer.pendingFlashToast';
 
+function queueOfferToast(message, type = 'success') {
+    try {
+        sessionStorage.setItem(OFFER_PENDING_TOAST_KEY, JSON.stringify({ message, type }));
+    } catch (e) { }
+}
+
 const TOAST_ICONS = {
     circle: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="flash-toast-icon"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
     warning: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="flash-toast-icon"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
@@ -135,6 +141,7 @@ function executeSendOfferAction() {
     if (dialog) dialog.close();
 
     const btnModal = document.getElementById('btnConfirmSendOfferModal');
+    const originalButtonHtml = btnModal?.innerHTML;
     if (btnModal) {
         btnModal.disabled = true;
         btnModal.innerHTML = '<span class="ofw-spinner-sm" aria-hidden="true"></span> Đang gửi...';
@@ -162,12 +169,8 @@ function executeSendOfferAction() {
         })
         .then(res => {
             if (res && res.success) {
-                try {
-                    sessionStorage.setItem(OFFER_PENDING_TOAST_KEY, JSON.stringify({
-                        message: res.message || 'Đã phát hành thư mời nhận việc.',
-                        type: res.data?.emailStatus === 'SENT' ? 'success' : 'warning'
-                    }));
-                } catch (e) { }
+                queueOfferToast(res.message || 'Đã phát hành thư mời nhận việc.',
+                    res.data?.emailStatus === 'SENT' ? 'success' : 'warning');
                 window.location.reload();
             } else {
                 showFlashToast(res?.message || 'Lỗi phát hành thư mời nhận việc.', 'error');
@@ -179,7 +182,7 @@ function executeSendOfferAction() {
         .finally(() => {
             if (btnModal) {
                 btnModal.disabled = false;
-                btnModal.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="ofw-btn-icon-inline"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Phát hành thư mời';
+                btnModal.innerHTML = originalButtonHtml;
             }
         });
 }

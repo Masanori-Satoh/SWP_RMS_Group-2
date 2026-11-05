@@ -318,12 +318,7 @@ async function executeDirectorDecisionApi(url, comments, onSuccess = () => { win
 
     const { res, data } = result;
     if (res.ok && data?.success) {
-        try {
-            sessionStorage.setItem(OFFER_PENDING_TOAST_KEY, JSON.stringify({
-                message: data.message || 'Xử lý quyết định thành công!',
-                type: 'success'
-            }));
-        } catch (e) { }
+        queueOfferToast(data.message || 'Xử lý quyết định thành công!');
         onSuccess();
         return;
     }
