@@ -438,8 +438,10 @@
   gap: 8px;
   min-height: 56px;
   box-sizing: border-box;
-  padding: 0 20px;
-  border-radius: var(--radius-lg, 16px);
+  padding: 0 24px;
+  /* Bo tròn hẳn dạng viên thuốc (dunglt 05/11): mọi vai trò ở trang công khai */
+  border-radius: 9999px;
+  align-self: center;
   background: var(--brand-dark, #2e5a45);
   color: #ffffff !important;
   font-size: calc(15px + var(--chrome-step));
@@ -554,19 +556,18 @@
   transform: translateY(-1px);
 }
 
-/* THANH MỤC LỤC 4 MỤC (Thanh ngang viên thuốc, giữa trang ngay dưới topbar — Chỉ hiện ở Trang chủ; dunglt 01/11)
-   Luôn hiển thị đầy đủ Icon + Chữ (KHÔNG TỰ ẨN CHỮ), kiểu dáng chuẩn menu dọc nội bộ */
+/* THANH MỤC LỤC 4 MỤC: nằm giữa topbar, giữa đảo logo và cụm tài khoản (dunglt 05/11; trước đó nằm lơ lửng dưới topbar).
+   Đủ chỗ thì icon + chữ; đã đăng nhập cụm phải rộng nên chỉ còn icon (có title, aria-label). Hết chỗ thì ẩn. */
 .public-scroll-rail {
-  position: fixed;
-  left: 50%;
-  /* Dưới hàng đảo trên cùng (cao tối đa 69px khi đã đăng nhập) */
-  top: calc(var(--s4, 16px) + 69px + var(--s3, 12px));
-  transform: translateX(-50%);
-  z-index: 95;
+  flex: 0 0 auto;
+  align-self: center;
+  margin-inline: auto;
   display: flex;
   flex-direction: row;
+  align-items: center;
   gap: 4px;
   padding: 5px;
+  min-height: 56px;
   width: max-content;
   box-sizing: border-box;
   border: 1px solid var(--line);
@@ -587,10 +588,10 @@
 .public-scroll-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  height: 40px;
-  min-height: 40px;
-  padding: 0 16px 0 12px;
+  gap: 8px;
+  height: 44px;
+  min-height: 44px;
+  padding: 0 14px 0 10px;
   border-radius: 9999px;
   text-decoration: none;
   color: var(--ink);
@@ -620,12 +621,9 @@
   color: var(--brand);
 }
 
-/* Chữ nhãn: LUÔN HIỂN THỊ RÕ RÀNG (không bao giờ tự ẩn), cỡ chữ 14.5px */
+/* Chữ nhãn, cỡ 14.5px */
 .public-scroll-label {
-  display: inline-block !important;
-  opacity: 1 !important;
-  visibility: visible !important;
-  transform: none !important;
+  display: inline-block;
   font-size: calc(13.5px + var(--chrome-step));
   font-weight: 550;
   color: inherit;
@@ -672,7 +670,36 @@
   .public-topbar .workspace-role {
     display: none;
   }
+}
+
+/* Thanh mục lục: mốc tính theo bề rộng thật của hai bên (đo 05/11, bề rộng 1440).
+   Chưa đăng nhập: chữ + icon cần >= 1400, chỉ icon >= 1040. Đã đăng nhập: chữ + icon >= 1800, chỉ icon >= 1390. */
+@media (max-width: 1399px) {
+  .public-scroll-label {
+    display: none;
+  }
+  .public-scroll-item {
+    padding: 0 11px;
+  }
+}
+
+@media (max-width: 1039px) {
   .public-scroll-rail {
+    display: none;
+  }
+}
+
+@media (max-width: 1799px) {
+  .public-topbar__inner:has(.public-user-island) .public-scroll-label {
+    display: none;
+  }
+  .public-topbar__inner:has(.public-user-island) .public-scroll-item {
+    padding: 0 11px;
+  }
+}
+
+@media (max-width: 1389px) {
+  .public-topbar__inner:has(.public-user-island) .public-scroll-rail {
     display: none;
   }
 }
@@ -744,13 +771,6 @@
 /* Bấm menu cuộn tới section: chừa chỗ cho khoảng nổi */
 :root:has(.public-topbar) {
   scroll-padding-top: 80px;
-}
-
-/* Trang chủ có thêm thanh mục lục dưới topbar */
-@media (min-width: 861px) {
-  :root:has(.public-scroll-rail) {
-    scroll-padding-top: 168px;
-  }
 }
 
 

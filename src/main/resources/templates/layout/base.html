@@ -15,6 +15,12 @@
     <title layout:title-pattern="$CONTENT_TITLE">Mộc RMS</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M15 27C8 23 6 13 11 7c4-5 11-4 16-3 0 9-3 18-12 23Z' fill='%233e7157'/%3E%3C/svg%3E">
 
+    <!--/* dunglt bổ sung: font khung (Source Sans 3, Lora 600; mỗi font 2 tập Latin + tiếng Việt) nạp sớm, vì fonts.css chỉ được tìm thấy sau chuỗi @import. Font về sau lần vẽ đầu thì cụm nút topbar co ~20px và chữ nhãn đổi kiểu. */-->
+    <link rel="preload" as="font" type="font/woff2" crossorigin th:href="@{/fonts/career-5.woff2}">
+    <link rel="preload" as="font" type="font/woff2" crossorigin th:href="@{/fonts/career-3.woff2}">
+    <link rel="preload" as="font" type="font/woff2" crossorigin th:href="@{/fonts/career-2.woff2}">
+    <link rel="preload" as="font" type="font/woff2" crossorigin th:href="@{/fonts/career-0.woff2}">
+
     <!-- CSS Cốt Lõi: Tokens, Global Reset, Components BEM -->
     <link rel="stylesheet" th:href="@{/css/tokens.css}">
     <link rel="stylesheet" th:href="@{/css/global.css}">
