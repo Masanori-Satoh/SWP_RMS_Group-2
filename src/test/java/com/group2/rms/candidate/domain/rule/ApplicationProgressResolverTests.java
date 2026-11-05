@@ -93,14 +93,14 @@ class ApplicationProgressResolverTests {
                     interview("Interviewing", "Completed", YESTERDAY, 3, 3, "Passed"));
 
             assertProgress(progress, ApplicationStage.OFFER, PASSED_AWAITING_OFFER,
-                    "Đạt phỏng vấn, chờ lập offer", "HR", "warning");
+                    "Đạt phỏng vấn, chờ lập thư mời", "HR", "warning");
         }
 
         @Test
         void draftOffer() {
             ApplicationProgressResponse progress = resolve(offer("Interviewing", "Draft"));
 
-            assertProgress(progress, ApplicationStage.OFFER, OFFER_DRAFT, "Offer đang soạn", "HR", "warning");
+            assertProgress(progress, ApplicationStage.OFFER, OFFER_DRAFT, "Thư mời đang soạn", "HR", "warning");
         }
 
         @Test
@@ -108,7 +108,7 @@ class ApplicationProgressResolverTests {
             ApplicationProgressResponse progress = resolve(offer("Interviewing", "Pending_Director"));
 
             assertProgress(progress, ApplicationStage.OFFER, OFFER_AWAITING_DIRECTOR,
-                    "Chờ giám đốc duyệt offer", "Giám đốc", "warning");
+                    "Chờ giám đốc duyệt thư mời", "Giám đốc", "warning");
         }
 
         @Test
@@ -116,14 +116,14 @@ class ApplicationProgressResolverTests {
             ApplicationProgressResponse progress = resolve(offer("Interviewing", "Director_Rejected"));
 
             assertProgress(progress, ApplicationStage.OFFER, OFFER_RETURNED,
-                    "Giám đốc trả offer, HR sửa lại", "HR", "danger");
+                    "Giám đốc trả thư mời, HR sửa lại", "HR", "danger");
         }
 
         @Test
         void offerApprovedByDirector_awaitsSending() {
             ApplicationProgressResponse progress = resolve(offer("Interviewing", "Director_Approved"));
 
-            assertProgress(progress, ApplicationStage.OFFER, OFFER_AWAITING_SEND, "Chờ HR gửi offer", "HR", "warning");
+            assertProgress(progress, ApplicationStage.OFFER, OFFER_AWAITING_SEND, "Chờ HR gửi thư mời", "HR", "warning");
         }
 
         @Test
@@ -131,7 +131,7 @@ class ApplicationProgressResolverTests {
             ApplicationProgressResponse progress = resolve(offer("Offered", "Sent_Candidate"));
 
             assertProgress(progress, ApplicationStage.OFFER, OFFER_SENT,
-                    "Đã gửi offer, chờ ứng viên trả lời", "Ứng viên", "brand");
+                    "Đã gửi thư mời, chờ ứng viên trả lời", "Ứng viên", "brand");
         }
 
         /** Offer hết hạn: không còn chờ ứng viên, HR xử lý tiếp; đơn vẫn Offered, chưa kết thúc. */
@@ -161,7 +161,7 @@ class ApplicationProgressResolverTests {
         void offerDeclinedByCandidate() {
             ApplicationProgressResponse progress = resolve(closed("Withdrawn", "Passed", "Declined"));
 
-            assertProgress(progress, ApplicationStage.CLOSED, OFFER_DECLINED, "Ứng viên từ chối offer", null, "neutral");
+            assertProgress(progress, ApplicationStage.CLOSED, OFFER_DECLINED, "Ứng viên từ chối thư mời", null, "neutral");
         }
 
         @Test

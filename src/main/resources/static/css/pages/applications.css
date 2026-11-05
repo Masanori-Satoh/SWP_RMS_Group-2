@@ -273,11 +273,11 @@
 }
 
 .app-table__actions-head {
-  text-align: center;
+  text-align: left;
 }
 
 .app-table__actions {
-  text-align: center;
+  text-align: left;
   white-space: nowrap;
 }
 
@@ -552,20 +552,21 @@
   text-align: left;
 }
 
+/* Cột thao tác: căn trái để dòng 3 nút và 4 nút bắt đầu cùng một chỗ (cùng nút cùng vị trí); đủ rộng cho 5 nút. */
 .app-col-actions,
 .app-table th:nth-child(6),
 .app-table td:nth-child(6),
 .app-table__actions-head,
 .app-table__actions {
-  width: 140px;
-  text-align: center;
+  width: 200px;
+  text-align: left;
   white-space: nowrap;
 }
 
 .app-row-actions {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: var(--s2);
 }
 

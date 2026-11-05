@@ -116,7 +116,7 @@ class ApplicationPipelineServiceTests {
         ApplicationPipelineResponse first = service.list(new ApplicationSearch(null, null, null, null),
                 PageRequest.of(0, 20)).applications().getContent().getFirst();
 
-        assertEquals("Đạt phỏng vấn, chờ lập offer", first.statusLabel());
+        assertEquals("Đạt phỏng vấn, chờ lập thư mời", first.statusLabel());
         assertFalse(first.canScheduleInterview());
         assertTrue(first.canCreateOffer());
     }
@@ -286,7 +286,7 @@ class ApplicationPipelineServiceTests {
         assertEquals("Chờ HR duyệt CV · Đang chờ: HR", detail.stepper().get(0).detail());
         assertNull(detail.interviewId(), "chưa có lịch phỏng vấn");
         assertEquals(new ApplicationDetailResponse.Actions(true, false, false, true), detail.actions());
-        assertEquals(List.of("Offer: Draft", "Kết quả phỏng vấn: Đạt", "Lịch phỏng vấn: Scheduled", "HR: Đạt",
+        assertEquals(List.of("Thư mời: Đang soạn", "Kết quả phỏng vấn: Đạt", "Lịch phỏng vấn: Scheduled", "HR: Đạt",
                         "Nộp hồ sơ"),
                 detail.timeline().stream().map(TimelineItem::title).toList());
         assertEquals("success", detail.timeline().get(1).tone());
@@ -385,7 +385,7 @@ class ApplicationPipelineServiceTests {
         assertEquals(77L, detail.interviewId());
         assertEquals(List.of("done", "done", "done", "current", "upcoming"),
                 detail.stepper().stream().map(StageItem::state).toList());
-        assertEquals("Đạt phỏng vấn, chờ lập offer · Đang chờ: HR", detail.stepper().get(3).detail());
+        assertEquals("Đạt phỏng vấn, chờ lập thư mời · Đang chờ: HR", detail.stepper().get(3).detail());
     }
 
     /** Nghiệm thu PR 1 dòng 2: chốt Không đạt hiện trên timeline màu đỏ. */

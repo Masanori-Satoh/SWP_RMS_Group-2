@@ -8,7 +8,7 @@ public enum ApplicationStage {
     APPLIED("Ứng tuyển"),
     SCREENING("Sàng lọc CV"),
     INTERVIEW("Phỏng vấn"),
-    OFFER("Offer"),
+    OFFER("Thư mời"),
     HIRED("Nhận việc"),
     CLOSED("Đã dừng");
 

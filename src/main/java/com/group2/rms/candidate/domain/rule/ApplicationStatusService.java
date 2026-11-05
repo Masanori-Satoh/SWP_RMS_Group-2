@@ -63,7 +63,7 @@ public class ApplicationStatusService {
         var rows = applications.findProgressFacts(List.of(id));
         //check if cv is not empty  and stage of CV is Interview
         if (!rows.isEmpty() && ApplicationProgressResolver.resolve(ApplicationProgressFacts.from(rows.getFirst()),LocalDateTime.now()).stage() != ApplicationStage.INTERVIEW)
-            throw new ApplicationStatusException("Hồ sơ đã chuyển sang vòng Offer hoặc đã kết thúc.");
+            throw new ApplicationStatusException("Hồ sơ đã chuyển sang vòng Thư mời hoặc đã kết thúc.");
     }
 
     /** HR xếp lịch phỏng vấn. */
