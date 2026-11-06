@@ -200,15 +200,30 @@ class InterviewScheduleFormWebTests {
         verify(schedulingService).cancelSchedule(7L, "Ứng viên xin dời", 13);
     }
 
+    // ducnm sửa: HM/Interviewer mở được /interviews/new (còn sidebar/topbar/tiêu đề, GET không còn bị Security
+    // chặn trước Controller) nhưng form bị ẩn, thay bằng banner "không có quyền"; các hành động ghi (POST) vẫn
+    // bị chặn cứng ở SecurityConfig như trước.
     @Test
-    void hiringManagerAndInterviewerStillCannotManageSchedules() throws Exception {
+    void hiringManagerSeesAccessDeniedBannerInsteadOfForm() throws Exception {
         // AccountSessionGuardFilter đá người không có trong DB về /login, nên phải có tài khoản thật
         when(users.findByUsernameIgnoreCase("hm_tuan")).thenReturn(Optional.of(User.builder().userId(5)
                 .username("hm_tuan").accountStatus("Active").role(Role.builder().roleName("Hiring Manager").build()).build()));
+
+        mvc.perform(get("/interviews/new").with(user("hm_tuan").authorities(() -> "ROLE_HIRING_MANAGER")))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Bạn không có quyền truy cập vào trang này.")))
+                .andExpect(content().string(not(containsString("id=\"applicationId\""))));
+
+        verifyNoInteractions(schedulingService);
+    }
+
+    @Test
+    void interviewerStillCannotManageSchedules() throws Exception {
+        // AccountSessionGuardFilter đá người không có trong DB về /login, nên phải có tài khoản thật
         when(users.findByUsernameIgnoreCase("interviewer_nam")).thenReturn(Optional.of(User.builder().userId(7)
                 .username("interviewer_nam").accountStatus("Active").role(Role.builder().roleName("Interviewer").build()).build()));
 
-        mvc.perform(get("/interviews/new").with(user("hm_tuan").authorities(() -> "ROLE_HIRING_MANAGER")))
+        mvc.perform(post("/interviews/new").with(user("interviewer_nam").authorities(() -> "ROLE_INTERVIEWER")).with(csrf()))
                 .andExpect(status().isForbidden());
         mvc.perform(post("/interviews/7/cancel")
                         .with(user("interviewer_nam").authorities(() -> "ROLE_INTERVIEWER")).with(csrf()))
