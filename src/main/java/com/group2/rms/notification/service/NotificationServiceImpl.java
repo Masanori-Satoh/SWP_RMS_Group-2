@@ -354,15 +354,23 @@ public class NotificationServiceImpl implements NotificationService {
                 "INT_RESCHED_" + interviewId(schedule) + "_" + timeKey, "");
     }
 
+    // ducnm bổ sung: hủy lịch chỉ báo ứng viên; hội đồng là người trong công ty, HR tự báo trực tiếp cho họ
     @Override
     @Transactional
     public void notifyInterviewCancelled(InterviewSchedule schedule, User actor, String reason) {
-        String reasonText = "";
-        if (reason != null && !reason.isBlank()) {
-            reasonText = " Lý do: " + reason.trim() + ".";
+        Application application = schedule == null ? null : schedule.getApplication();
+        if (NotificationMessages.requisitionOf(application) == null) {
+            log.warn("Cannot send INTERVIEW_CANCELLED notification: Schedule or Application is null");
+            return;
         }
-        notifyInterviewChange(schedule, actor, "INTERVIEW_CANCELLED", "Lịch phỏng vấn đã bị hủy",
-                "INT_CANCEL_" + interviewId(schedule), reasonText);
+        User candidateAccount = application.getCandidate() != null ? application.getCandidate().getAccount() : null;
+        notifyEach(Collections.singletonList(candidateAccount), actor, Notification.builder()
+                .title("Lịch phỏng vấn đã bị hủy: " + application.getJobPosting().getPostingTitle())
+                .content(NotificationMessages.interviewCancelledCandidateContent(schedule, reason))
+                .eventType("INTERVIEW_CANCELLED")
+                .referenceId(String.valueOf(schedule.getInterviewId()))
+                .linkUrl("/portal/interviews")
+                .eventId("INT_CANCEL_" + interviewId(schedule)));
     }
 
     @Override

@@ -199,6 +199,13 @@ public final class NotificationMessages {
                 interviewTime(schedule), interviewPlace(schedule));
     }
 
+    // ducnm bổ sung: chỉ báo ứng viên khi hủy lịch (nội bộ tự báo nhau); lý do hiển thị cho ứng viên biết
+    public static String interviewCancelledCandidateContent(InterviewSchedule schedule, String reason) {
+        return String.format("Lịch phỏng vấn vị trí \"%s\" của bạn lúc %s đã bị hủy.%s",
+                schedule.getApplication().getJobPosting().getPostingTitle(),
+                interviewTime(schedule), declineReasonText(reason));
+    }
+
     public static String interviewResultContent(Application application, String hmName, String result) {
         return String.format("%s đã chốt kết quả phỏng vấn của ứng viên %s (Vị trí: %s): %s.",
                 hmName, candidateName(application), application.getJobPosting().getPostingTitle(), result);
