@@ -118,9 +118,9 @@
                     <div class="form-group">
                         <label class="form-label" for="phone-number">Số điện thoại</label>
                         <input class="form-control" id="phone-number" type="tel" th:field="*{phoneNumber}" data-profile-field
-                               maxlength="20" autocomplete="tel"
+                               maxlength="10" autocomplete="tel"
                                th:attr="aria-invalid=${#fields.hasErrors('phoneNumber')},aria-describedby=${#fields.hasErrors('phoneNumber') ? 'phone-number-error' : 'phone-number-hint'}">
-                        <small id="phone-number-hint" class="form-hint">Tối đa 20 ký tự.</small>
+                        <small id="phone-number-hint" class="form-hint">Gồm 10 chữ số, bắt đầu bằng 0.</small>
                         <span id="phone-number-error" class="form-error" th:if="${#fields.hasErrors('phoneNumber')}" th:errors="*{phoneNumber}"></span>
                     </div>
                 </div>

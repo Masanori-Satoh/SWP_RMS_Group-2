@@ -62,7 +62,7 @@ class TalentPoolSelectionReviewTests {
 
     private Application source(int id, int candidateId) {
         var candidate = Candidate.builder().candidateId(candidateId).isPotential(true)
-                .account(User.builder().fullName("Ứng viên " + candidateId).build()).build();
+                .account(User.builder().fullName("Ứng viên " + candidateId).accountStatus("Active").build()).build();
         var source = Application.builder().applicationId(id).candidate(candidate)
                 .submissionDate(java.time.LocalDateTime.of(2026, 10, 16, 10, 30))
                 .applicationStatus("Rejected").appliedCvUrl("local:cv/" + candidateId + "/existing.pdf")

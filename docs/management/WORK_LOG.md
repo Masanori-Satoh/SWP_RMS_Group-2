@@ -6,6 +6,7 @@ Tài liệu này là lịch sử tóm tắt các thay đổi quan trọng và b�
 
 | Ngày | Tên công việc / Yêu cầu chính | Người thực hiện | Chi tiết thay đổi |
 | --- | --- | --- | --- |
+| **2026-11-06** | Sửa lỗi Auth, Tài khoản, Phòng ban, Kho ứng viên tiềm năng: 1 trưởng phòng Active/phòng, đăng xuất phiên cũ khi đổi mật khẩu, ẩn ứng viên bị khóa, lọc người đánh dấu, SĐT 10 số, audit đổi mật khẩu/hồ sơ | LinhDN | [Lỗi đã sửa, cách tái hiện và kiểm chứng](work_logs/2026-11-06-auth-account-talent-pool-bugfix.md) |
 | **2026-11-05** | Hiện thông báo lỗi thao tác trong Auth, Account, Department, Talent Pool và Audit Log; giữ đường lỗi hệ thống qua Global | LinhDN | [Phạm vi, kiến trúc và kiểm chứng](work_logs/2026-11-05-module-error-messages.md) |
 | **2026-11-05** | Đồng bộ validation họ tên/SĐT của Profile với Admin, Đăng ký và SRS | LinhDN | [Quy tắc, phạm vi và kiểm chứng](work_logs/2026-11-05-account-contact-validation-sync.md) |
 | **2026-11-05** | Làm sạch thông tin công cụ hỗ trợ trong docs, metadata sơ đồ và file kiểm tra tạm | LinhDN | [Work log](work_logs/2026-11-05-docs-cleanup.md) · [Báo cáo](../members/linhdn/2026-11-05-docs-cleanup.md) |

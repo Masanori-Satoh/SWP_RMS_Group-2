@@ -74,7 +74,7 @@ class UserProfileWebTests {
     @ValueSource(strings = {"A", "A1", "Nguyễn 123"})
     @WithMockUser(username = "testuser", authorities = "ROLE_HR")
     void updateAcceptsNamesAndPhoneAllowedByAdminForms(String fullName) throws Exception {
-        String phone = "1234567890abcdefghij";
+        String phone = "0901234567";
         mvc.perform(post("/profile/update").with(csrf())
                         .param("fullName", fullName).param("phoneNumber", phone))
                 .andExpect(redirectedUrl("/profile"))
@@ -278,4 +278,15 @@ class UserProfileWebTests {
                 .andExpect(redirectedUrl("/portal/profile"));
         org.mockito.Mockito.verify(profileService, org.mockito.Mockito.never()).getProfile(any());
     }
+
+    @org.junit.jupiter.api.Test
+    @WithMockUser(username = "testuser", authorities = "ROLE_HR")
+    void updateRejectsPhoneWithLetters() throws Exception {
+        mvc.perform(post("/profile/update").with(csrf())
+                        .param("fullName", "An").param("phoneNumber", "abcxyz"))
+                .andExpect(redirectedUrl("/profile"))
+                .andExpect(flash().attributeCount(2));
+        verify(profileService, org.mockito.Mockito.never()).updateProfile(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
+    }
 }
+

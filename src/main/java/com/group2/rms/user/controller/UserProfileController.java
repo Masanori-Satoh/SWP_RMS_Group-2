@@ -94,7 +94,8 @@ public class UserProfileController {
     public ResponseEntity<Map<String, Object>> changePasswordJson(
             Authentication authentication,
             @Valid @RequestBody ChangePasswordRequest request,
-            BindingResult bindingResult) {
+            BindingResult bindingResult,
+            jakarta.servlet.http.HttpSession session) {
 
         Map<String, Object> response = new HashMap<>();
 
@@ -120,6 +121,8 @@ public class UserProfileController {
             return ResponseEntity.badRequest().body(response);
         }
 
+        // Keep this session signed in; the guard re-records the new hash on the next request.
+        session.removeAttribute(com.group2.rms.core.security.AccountSessionGuardFilter.PASSWORD_HASH);
         response.put("success", true);
         response.put("message", "Đã đổi mật khẩu.");
         return ResponseEntity.ok(response);
@@ -133,7 +136,8 @@ public class UserProfileController {
             Authentication authentication,
             @Valid @ModelAttribute("passwordRequest") ChangePasswordRequest request,
             BindingResult bindingResult,
-            RedirectAttributes redirectAttributes) {
+            RedirectAttributes redirectAttributes,
+            jakarta.servlet.http.HttpSession session) {
 
         if (request.newPassword() != null && request.confirmPassword() != null
                 && !request.newPassword().equals(request.confirmPassword())) {
@@ -150,6 +154,7 @@ public class UserProfileController {
             redirectAttributes.addFlashAttribute("passwordRequest", new ChangePasswordRequest("", "", ""));
             return "redirect:/profile";
         }
+        session.removeAttribute(com.group2.rms.core.security.AccountSessionGuardFilter.PASSWORD_HASH);
         redirectAttributes.addFlashAttribute("successMessage", "Đã đổi mật khẩu.");
         return "redirect:/profile";
     }

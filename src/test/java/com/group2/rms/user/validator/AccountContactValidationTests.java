@@ -58,9 +58,13 @@ class AccountContactValidationTests {
                 Arguments.of(null, true),
                 Arguments.of("", true),
                 Arguments.of("   ", true),
-                Arguments.of("1234567890abcdefgh", true),
-                Arguments.of("1234567890abcdefghij", true),
-                Arguments.of("1".repeat(21), false));
+                Arguments.of("0901234567", true),
+                Arguments.of("1234567890", false),
+                Arguments.of("090123456", false),
+                Arguments.of("09012345678", false),
+                Arguments.of("+84901234567", false),
+                Arguments.of("abcxyz", false),
+                Arguments.of("0901234abc", false));
     }
 
     @ParameterizedTest

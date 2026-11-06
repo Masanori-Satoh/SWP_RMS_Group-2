@@ -29,6 +29,7 @@ import java.util.Set;
 public class AccountListService {
 
     private static final int PAGE_SIZE = 10;
+    private static final String HIRING_MANAGER = "Hiring Manager";
     private static final Set<String> STATUSES = Set.of("Active", "Inactive");
 
     private final UserRepository users;
@@ -162,8 +163,22 @@ public class AccountListService {
         }
         if ("Inactive".equals(user.getAccountStatus())) {
             var before = UserAuditLogger.userSnapshot(user);
+            Department department = user.getDepartment();
+            boolean hiringManager = HIRING_MANAGER.equals(user.getRole().getRoleName());
+            // A department has at most one active Hiring Manager.
+            if (hiringManager && department != null && users
+                    .existsByDepartmentDepartmentIdAndRoleRoleNameAndAccountStatusAndUserIdNot(
+                            department.getDepartmentId(), HIRING_MANAGER, "Active", userId)) {
+                throw new AccountOperationException(
+                        "Phòng ban này đã có trưởng phòng tuyển dụng đang hoạt động. Vui lòng thay đổi trưởng phòng trước.",
+                        "ACCOUNT_STATUS_INVALID");
+            }
             user.setAccountStatus("Active");
             users.save(user);
+            if (hiringManager && department != null && department.getManager() == null) {
+                department.setManager(user);
+                departments.save(department);
+            }
             audit.changes("User", userId, before, UserAuditLogger.userSnapshot(user));
         }
     }
@@ -179,6 +194,13 @@ public class AccountListService {
             var before = UserAuditLogger.userSnapshot(user);
             user.setAccountStatus("Inactive");
             users.save(user);
+            // An inactive account must not remain the department's manager.
+            Department department = user.getDepartment();
+            if (department != null && department.getManager() != null
+                    && userId == department.getManager().getUserId()) {
+                department.setManager(null);
+                departments.save(department);
+            }
             audit.changes("User", userId, before, UserAuditLogger.userSnapshot(user));
         }
     }
