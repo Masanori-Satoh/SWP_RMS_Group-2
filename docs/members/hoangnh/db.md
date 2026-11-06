@@ -17,13 +17,11 @@
 | 5 | `SystemConfig` | Cấu hình tham số hệ thống |
 | 6 | `JobRequisition` | Phiếu yêu cầu tuyển dụng (hỗ trợ nhiều đợt tuyển & liên kết đợt gốc) |
 | 7 | `RequisitionApproval` | Lịch sử phê duyệt yêu cầu tuyển dụng |
-| 8 | `ScreeningCriteria` | Tiêu chí sàng lọc CV |
 | 9 | `JobPosting` | Tin tuyển dụng công khai (hỗ trợ nhiều lần đăng & tùy chọn hiển thị số lượng) |
 | 10 | `Candidate` | Hồ sơ ứng viên |
 | 11 | `TalentPoolNote` | Ghi chú ứng viên tiềm năng |
 | 12 | `Application` | Hồ sơ ứng tuyển |
 | 13 | `ApplicationReview` | Đánh giá hồ sơ bởi HR & Hiring Manager |
-| 14 | `AIScreeningResult` | Kết quả AI chấm điểm CV |
 | 15 | `InterviewSchedule` | Lịch phỏng vấn |
 | 16 | `InterviewPanel` | Hội đồng phỏng vấn |
 | 17 | `InterviewEvaluation` | Phiếu đánh giá phỏng vấn cá nhân |
@@ -283,35 +281,6 @@ GO
 
 ---
 
-### 3.8 Screening Criteria (Tiêu chí sàng lọc CV)
-
-```sql
-CREATE TABLE ScreeningCriteria (
-    CriteriaId INT IDENTITY(1,1) PRIMARY KEY,
-    RequisitionId INT NOT NULL,
-    CriteriaName NVARCHAR(150) NOT NULL,
-    CriteriaType NVARCHAR(30) NOT NULL,
-    RequiredValue NVARCHAR(255) NOT NULL,
-    [Weight] DECIMAL(5,2) NOT NULL CONSTRAINT DF_ScreeningCriteria_Weight DEFAULT 1.00,
-    IsMandatory BIT NOT NULL CONSTRAINT DF_ScreeningCriteria_IsMandatory DEFAULT 0,
-
-    CONSTRAINT FK_ScreeningCriteria_Requisition
-        FOREIGN KEY (RequisitionId) REFERENCES JobRequisition(RequisitionId),
-
-    CONSTRAINT CK_ScreeningCriteria_Type
-        CHECK (CriteriaType IN (N'Education', N'Experience', N'Skill', N'Knockout')),
-
-    CONSTRAINT CK_ScreeningCriteria_Weight
-        CHECK ([Weight] > 0),
-
-    CONSTRAINT UQ_ScreeningCriteria_Requisition_Name
-        UNIQUE (RequisitionId, CriteriaName)
-);
-GO
-```
-
----
-
 ### 3.9 Job Posting (Tin tuyển dụng công khai)
 
 ```sql
@@ -425,14 +394,15 @@ CREATE TABLE Application (
     CONSTRAINT CK_Application_Status
         CHECK (ApplicationStatus IN (
             N'Applied',
-            N'AI_Screened',
             N'HR_Passed',
             N'HM_Passed',
             N'HM_Suggested',
             N'Interviewing',
             N'Offered',
             N'Hired',
-            N'Rejected'
+            N'Rejected',
+            N'Withdrawn',
+            N'Cancelled'
         ))
 );
 GO
@@ -463,26 +433,6 @@ CREATE TABLE ApplicationReview (
 
     CONSTRAINT CK_ApplicationReview_Decision
         CHECK (Decision IN (N'Pass', N'Fail', N'Hold'))
-);
-GO
-```
-
----
-
-### 3.14 AI Screening Result (Kết quả AI chấm điểm và so khớp CV)
-
-```sql
-CREATE TABLE AIScreeningResult (
-    AIScreeningId INT IDENTITY(1,1) PRIMARY KEY,
-    ApplicationId INT NOT NULL,
-    AIMatchScore DECIMAL(5,2) NOT NULL,
-    ScreenedAt DATETIME2 NOT NULL CONSTRAINT DF_AIScreeningResult_ScreenedAt DEFAULT SYSDATETIME(),
-
-    CONSTRAINT FK_AIScreeningResult_Application
-        FOREIGN KEY (ApplicationId) REFERENCES Application(ApplicationId),
-
-    CONSTRAINT CK_AIScreeningResult_Score
-        CHECK (AIMatchScore >= 0 AND AIMatchScore <= 100)
 );
 GO
 ```
@@ -771,7 +721,6 @@ Tối ưu cho luồng ứng tuyển, phỏng vấn và phê duyệt Offer:
 ```sql
 CREATE NONCLUSTERED INDEX IX_RequisitionApproval_RequisitionId ON RequisitionApproval(RequisitionId);
 CREATE NONCLUSTERED INDEX IX_RequisitionApproval_DirectorId ON RequisitionApproval(DirectorId);
-CREATE NONCLUSTERED INDEX IX_ScreeningCriteria_RequisitionId ON ScreeningCriteria(RequisitionId);
 CREATE NONCLUSTERED INDEX IX_Candidate_IsPotential ON Candidate(IsPotential) WHERE IsPotential = 1;
 CREATE NONCLUSTERED INDEX IX_Application_CandidateId ON Application(CandidateId);
 CREATE NONCLUSTERED INDEX IX_Application_JobPostingId ON Application(JobPostingId);

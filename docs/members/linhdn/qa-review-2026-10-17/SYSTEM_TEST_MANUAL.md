@@ -1,5 +1,7 @@
 # System Test thủ công trên website RMS
 
+> **Ghi chú 06/11/2026:** Chấm CV bằng AI (`AI_Screened`, `AIScreeningResult`, `OverallScore`) và tiêu chí sàng lọc (`ScreeningCriteria`) đã gỡ khỏi hệ thống (migration `013`, `014`). Phần nhắc tới chúng bên dưới là nội dung tại thời điểm viết, không còn đúng với hệ thống.
+
 Đây là **System Test**, không gọi những bước browser là bằng chứng Integration Test DB. Người kiểm thử tự chạy sau. Chưa mở website hoặc gửi request nghiệp vụ trong lượt lập tài liệu này.
 
 Base URL local thường `http://localhost:8081` theo cấu hình đang đọc; xác nhận lại port thực tế. Chuẩn bị các tài khoản giả Admin, HR, HM_A, HM_B, Director, Candidate C1/C2, dữ liệu và file theo TEST_PLAN. Dùng browser profile/cửa sổ riêng cho từng role; hai tab cùng profile thường dùng chung session, không đủ để chứng minh hai người dùng độc lập. Tên nút bên dưới dựa trên template hiện tại; nếu không thấy nút thì ghi Actual và dừng ở bước đó, không tự đoán URL mới để bỏ qua UI lỗi.
