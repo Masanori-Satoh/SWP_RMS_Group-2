@@ -52,9 +52,9 @@
                 </td>
                 <td th:text="${s.interviewFormatDisplay ?: '—'}">Trực tuyến</td>
                 <td>
-                    <a th:if="${s.locationOrLink != null and #strings.startsWith(s.locationOrLink, 'http')}"
+                    <a th:if="${s.locationOrLink != null and (#strings.startsWith(s.locationOrLink, 'http://') or #strings.startsWith(s.locationOrLink, 'https://'))}"
                        th:href="${s.locationOrLink}" target="_blank" rel="noopener">Tham gia buổi phỏng vấn</a>
-                    <span th:unless="${s.locationOrLink != null and #strings.startsWith(s.locationOrLink, 'http')}"
+                    <span th:unless="${s.locationOrLink != null and (#strings.startsWith(s.locationOrLink, 'http://') or #strings.startsWith(s.locationOrLink, 'https://'))}"
                           th:text="${s.locationOrLink ?: '—'}">Phòng họp 3</span>
                 </td>
                 <td>
