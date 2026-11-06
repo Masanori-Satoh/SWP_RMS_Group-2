@@ -13,6 +13,8 @@ import com.group2.rms.user.repository.UserRepository;
 import com.group2.rms.user.service.UserProfileService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
@@ -66,6 +68,18 @@ class UserProfileWebTests {
                 .role(Role.builder().roleName("HR").build())
                 .build();
         when(userRepository.findByUsernameIgnoreCase("testuser")).thenReturn(Optional.of(mockUser));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"A", "A1", "Nguyễn 123"})
+    @WithMockUser(username = "testuser", authorities = "ROLE_HR")
+    void updateAcceptsNamesAndPhoneAllowedByAdminForms(String fullName) throws Exception {
+        String phone = "1234567890abcdefghij";
+        mvc.perform(post("/profile/update").with(csrf())
+                        .param("fullName", fullName).param("phoneNumber", phone))
+                .andExpect(redirectedUrl("/profile"))
+                .andExpect(flash().attribute("successMessage", "Đã lưu hồ sơ."));
+        verify(profileService).updateProfile("testuser", new UpdateProfileRequest(fullName, phone));
     }
 
     @Test

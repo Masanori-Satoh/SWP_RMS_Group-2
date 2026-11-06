@@ -14,10 +14,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
+import com.group2.rms.user.exception.AccountOperationException;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -153,13 +152,13 @@ public class AccountListService {
 
     private void activateScoped(int userId, boolean candidate) {
         User user = users.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy tài khoản."));
+                .orElseThrow(() -> new AccountOperationException("Không tìm thấy tài khoản."));
         if (candidate ? !"Candidate".equals(user.getRole().getRoleName())
                 : !RoleAuthorities.INTERNAL_ROLE_NAMES.contains(user.getRole().getRoleName())) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tài khoản không thuộc nhóm này.");
+            throw new AccountOperationException("Tài khoản không thuộc nhóm này.");
         }
         if (!"Active".equals(user.getAccountStatus()) && !"Inactive".equals(user.getAccountStatus())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Trạng thái tài khoản không hợp lệ.");
+            throw new AccountOperationException("Trạng thái tài khoản không hợp lệ.", "ACCOUNT_STATUS_INVALID");
         }
         if ("Inactive".equals(user.getAccountStatus())) {
             var before = UserAuditLogger.userSnapshot(user);
@@ -171,10 +170,10 @@ public class AccountListService {
 
     private void deactivateScoped(int userId, boolean candidate) {
         User user = users.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found"));
+                .orElseThrow(() -> new AccountOperationException("Không tìm thấy tài khoản."));
         if (candidate ? !"Candidate".equals(user.getRole().getRoleName())
                 : !RoleAuthorities.INTERNAL_ROLE_NAMES.contains(user.getRole().getRoleName())) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found in this account group");
+            throw new AccountOperationException("Tài khoản không thuộc nhóm này.");
         }
         if (!"Inactive".equals(user.getAccountStatus())) {
             var before = UserAuditLogger.userSnapshot(user);

@@ -16,6 +16,7 @@
       <aside th:replace="~{auth/fragments :: story(botanical=true)}"></aside>
       <main id="main" class="card auth-card" tabindex="-1">
         <nav th:replace="~{auth/fragments :: tabs('login')}"></nav>
+        <p class="alert alert--danger auth-message" role="alert" th:if="${errorMessage}" th:text="${errorMessage}"></p>
         <h1>Chào mừng bạn trở lại!</h1>
         <p class="auth-intro">Đăng nhập để tiếp tục khám phá cơ hội nghề nghiệp phù hợp tại Mộc.</p>
         <!--error login--->

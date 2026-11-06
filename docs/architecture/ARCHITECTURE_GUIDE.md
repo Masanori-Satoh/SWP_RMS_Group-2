@@ -142,7 +142,14 @@ Không `catch (Exception e)`, không nuốt lỗi rồi trả về như thành c
 - Lỗi bị Spring Security chặn ở tầng filter (sai quyền theo URL, thiếu CSRF) hoặc URL không khớp Controller không đi qua Global; Spring Boot chuyển sang `/error` và `RmsErrorViewResolver` render cùng 4 trang trên.
 - Cả hai đường dựng trang qua **`ErrorPages.view(status, message, request)`**: câu thông báo (thiếu thì dùng câu mặc định theo mã) và nút quay về theo vai (ứng viên → `/portal/applications`, nội bộ → `/dashboard`, khách → `/`). Thêm handler mới vào Global thì cũng gọi hàm này, không tự `new ModelAndView("error/...")`.
 
+#### Phạm vi thông báo lỗi thao tác
+
+> **Phạm vi xử lý lỗi thao tác được xác nhận ngày 05/11/2026:** Auth, Account, Department, Talent Pool và Audit Log trả thông báo tại màn hình thay cho trang lỗi khi yêu cầu không hợp lệ hoặc đối tượng đang thao tác không còn khả dụng. Account dùng `AccountOperationException` của module, Controller xử lý tại chỗ. Controller Department/Talent Pool có `@ExceptionHandler` cục bộ cho dữ liệu không tồn tại/quyền trên bản ghi, trả flash message hoặc JSON lỗi; vẫn chặn thao tác và không thay đổi điều kiện phân quyền. AJAX giữ HTTP 400/403/404/409 phù hợp, không trả thành công giả.
+>
+> `core/exception/ModuleRequestExceptionResolver` chỉ xử lý lỗi định dạng request (binding, tham số, JSON, upload quá lớn, method, media type) trên danh sách URL giới hạn của các module trên. `ModuleErrorResponse` chỉ hỗ trợ trình bày flash/JSON, không đọc DB hoặc quyết định nghiệp vụ và không import module tính năng. Lỗi hệ thống, URL không tồn tại, Security filter/CSRF và các module ngoài phạm vi vẫn qua cơ chế cũ (`GlobalExceptionHandler`, `ErrorPages`, `RmsErrorViewResolver`). Không thêm handler nghiệp vụ vào Global và không bắt mọi `Exception` để chuyển thành message.
+
 ### 2.4. Validation: ba tầng
+
 
 | Tầng | Dùng khi | Đặt ở đâu | Ví dụ |
 |---|---|---|---|

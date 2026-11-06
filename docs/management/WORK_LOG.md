@@ -6,6 +6,8 @@ Tài liệu này là lịch sử tóm tắt các thay đổi quan trọng và b�
 
 | Ngày | Tên công việc / Yêu cầu chính | Người thực hiện | Chi tiết thay đổi |
 | --- | --- | --- | --- |
+| **2026-11-05** | Hiện thông báo lỗi thao tác trong Auth, Account, Department, Talent Pool và Audit Log; giữ đường lỗi hệ thống qua Global | LinhDN | [Phạm vi, kiến trúc và kiểm chứng](work_logs/2026-11-05-module-error-messages.md) |
+| **2026-11-05** | Đồng bộ validation họ tên/SĐT của Profile với Admin, Đăng ký và SRS | LinhDN | [Quy tắc, phạm vi và kiểm chứng](work_logs/2026-11-05-account-contact-validation-sync.md) |
 | **2026-11-05** | Làm sạch thông tin công cụ hỗ trợ trong docs, metadata sơ đồ và file kiểm tra tạm | LinhDN | [Work log](work_logs/2026-11-05-docs-cleanup.md) · [Báo cáo](../members/linhdn/2026-11-05-docs-cleanup.md) |
 | **2026-11-05** | Sửa Offer quá hạn phản hồi chặn đóng tin Talent Pool; đồng bộ quy tắc ngày và bổ sung test truy vấn | LinhDN | [Work log và kiểm chứng](work_logs/2026-11-05-talent-pool-expired-offer-fix.md) · [Báo cáo](../members/linhdn/2026-11-05-talent-pool-expired-offer-fix.md) |
 | **2026-11-04** | Gỡ conflict merge Work Log và email mời phỏng vấn | LinhDN | [Phạm vi và kiểm chứng](work_logs/2026-11-04-merge-conflicts.md) |

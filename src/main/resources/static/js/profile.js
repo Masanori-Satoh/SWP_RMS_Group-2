@@ -101,23 +101,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (fullNameInput) fullNameInput.classList.remove('is-invalid');
 
             const val = fullNameInput ? fullNameInput.value.trim() : '';
-            const namePattern = /^[\p{L}][\p{L}\s.'-]*$/u;
 
             if (!val) {
                 if (fullNameErr) {
-                    fullNameErr.textContent = 'Vui lòng nhập họ tên.';
-                    setVisible(fullNameErr, true);
-                }
-                if (fullNameInput) {
-                    fullNameInput.classList.add('is-invalid');
-                    fullNameInput.focus();
-                }
-                return;
-            }
-
-            if (!namePattern.test(val)) {
-                if (fullNameErr) {
-                    fullNameErr.textContent = 'Họ tên bắt đầu bằng chữ cái, chỉ gồm chữ cái, khoảng trắng, dấu chấm, dấu gạch nối và dấu nháy.';
+                    fullNameErr.textContent = 'Vui lòng nhập họ và tên.';
                     setVisible(fullNameErr, true);
                 }
                 if (fullNameInput) {

@@ -8,7 +8,7 @@ import com.group2.rms.user.service.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.server.ResponseStatusException;
+import com.group2.rms.user.exception.AccountOperationException;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -66,12 +66,12 @@ class AccountActivationDepartmentTests {
         when(users.findById(9)).thenReturn(Optional.of(u));
         // When: Gọi list.activate với dữ liệu đã chuẩn bị.
         // Then: trả 404/409 và không lưu.
-        assertEquals(404,assertThrows(ResponseStatusException.class,()->list.activate(9)).getStatusCode().value());
+        assertEquals("Tài khoản không thuộc nhóm này.",assertThrows(AccountOperationException.class,()->list.activate(9)).getMessage());
         u.setRole(hr);
-        assertThrows(ResponseStatusException.class,()->list.activateCandidate(9));
+        assertThrows(AccountOperationException.class,()->list.activateCandidate(9));
         u.setAccountStatus("Blocked");
-        assertEquals(409,assertThrows(ResponseStatusException.class,()->list.activate(9)).getStatusCode().value());
-        assertThrows(ResponseStatusException.class,()->list.activate(99));
+        assertEquals("ACCOUNT_STATUS_INVALID",assertThrows(AccountOperationException.class,()->list.activate(9)).getErrorCode());
+        assertThrows(AccountOperationException.class,()->list.activate(99));
         verify(users,times(0)).save(any());
     }
 
