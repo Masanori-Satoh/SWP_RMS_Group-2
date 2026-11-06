@@ -413,7 +413,6 @@ CREATE TABLE Application (
     AppliedCvUrl NVARCHAR(500) NOT NULL,
     SubmissionDate DATETIME2 NOT NULL CONSTRAINT DF_Application_SubmissionDate DEFAULT SYSDATETIME(),
     ApplicationStatus NVARCHAR(30) NOT NULL CONSTRAINT DF_Application_Status DEFAULT N'Applied',
-    OverallScore DECIMAL(5,2) NULL,
     CreatedAt DATETIME2 NOT NULL CONSTRAINT DF_Application_CreatedAt DEFAULT SYSDATETIME(),
     UpdatedAt DATETIME2 NULL,
 
