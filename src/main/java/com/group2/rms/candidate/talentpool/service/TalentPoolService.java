@@ -360,6 +360,7 @@ public class TalentPoolService {
                 submittedAt = source.getSubmissionDate();
                 if (!candidate.isPotential())
                     throw new TalentPoolException("Ứng viên không còn trong kho tiềm năng.");
+                requireActiveAccount(candidate);
                 if (!selected.add(candidateId))
                     throw new TalentPoolException("Ứng viên được chọn nhiều lần.");
                 if (source.getJobPosting().getJobPostingId().equals(jobId))
@@ -414,6 +415,7 @@ public class TalentPoolService {
             // check if candidate is not potential
             if (!candidate.isPotential())
                 throw new TalentPoolException("Ứng viên phải được đánh dấu tiềm năng.");
+            requireActiveAccount(candidate);
             // check if candidate is add before
             if (!selected.add(candidate.getCandidateId()))
                 throw new TalentPoolException("Chỉ chọn một CV cho mỗi ứng viên.");
@@ -710,6 +712,11 @@ public class TalentPoolService {
             return ApplicationCv
                     .file(storage.load(app.getAppliedCvUrl().substring(LocalCvStorage.URL_PREFIX.length())));
         return ApplicationCv.redirect(app.getAppliedCvUrl());
+    }
+
+    private void requireActiveAccount(Candidate candidate) {
+        if (!"Active".equals(candidate.getAccount().getAccountStatus()))
+            throw new TalentPoolException("Tài khoản ứng viên đã bị vô hiệu hóa.");
     }
 
     private void requireCv(String url) {

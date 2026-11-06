@@ -54,7 +54,7 @@ class CandidateProfileWebTests {
     @ParameterizedTest
     @ValueSource(strings = {"A", "A1", "Nguyễn 123"})
     void updateAcceptsNamesAndPhoneAllowedByAdminForms(String fullName) throws Exception {
-        String phone = "1234567890abcdefghij";
+        String phone = "0901234567";
         mvc.perform(post("/portal/profile/update").with(as("an.vo", "Candidate")).with(csrf())
                         .param("fullName", fullName).param("phoneNumber", phone))
                 .andExpect(redirectedUrl("/portal/profile"))

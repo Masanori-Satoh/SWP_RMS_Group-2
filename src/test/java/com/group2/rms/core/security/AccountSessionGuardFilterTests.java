@@ -286,5 +286,52 @@ class AccountSessionGuardFilterTests {
         verify(chain, times(0)).doFilter(request, response);
     }
 
+
+    @Test
+    @DisplayName("SEC-SESSION-PWD | Đổi mật khẩu ở nơi khác thì phiên cũ bị đăng xuất, phiên khác mật khẩu giữ nguyên thì đi tiếp")
+    void doFilter_passwordChangedAfterLogin_logsSessionOut() throws Exception {
+        User account = User.builder().username("manager").accountStatus("Active").passwordHash("old-hash")
+                .role(Role.builder().roleName("Hiring Manager").build()).build();
+        when(users.findByUsernameIgnoreCase("manager")).thenReturn(Optional.of(account));
+        authenticate();
+        request.setSession(new MockHttpSession());
+
+        filter.doFilter(request, response, chain);
+        verify(chain, times(1)).doFilter(request, response);
+
+        account.setPasswordHash("new-hash");
+        MockHttpServletResponse second = new MockHttpServletResponse();
+        filter.doFilter(request, second, chain);
+
+        verify(chain, times(1)).doFilter(request, response);
+        assertEquals("/login?session-expired", second.getRedirectedUrl());
+    }
+
+    @Test
+    @DisplayName("SEC-SESSION-API | Lời gọi nền /api/ khi mật khẩu đã đổi trả 401, giữ phiên để lần bấm trang sau có thông báo hết hạn")
+    void doFilter_apiCallAfterPasswordChange_returns401WithoutLogout() throws Exception {
+        User account = User.builder().username("manager").accountStatus("Active").passwordHash("old-hash")
+                .role(Role.builder().roleName("Hiring Manager").build()).build();
+        when(users.findByUsernameIgnoreCase("manager")).thenReturn(Optional.of(account));
+        authenticate();
+        MockHttpSession session = new MockHttpSession();
+        request.setSession(session);
+        filter.doFilter(request, response, chain);
+
+        account.setPasswordHash("new-hash");
+        MockHttpServletRequest api = new MockHttpServletRequest("GET", "/api/notifications/unread-count");
+        api.setSession(session);
+        MockHttpServletResponse apiResponse = new MockHttpServletResponse();
+        filter.doFilter(api, apiResponse, chain);
+
+        assertEquals(401, apiResponse.getStatus());
+        assertEquals(false, session.isInvalid());
+
+        MockHttpServletRequest page = new MockHttpServletRequest("GET", "/dashboard");
+        page.setSession(session);
+        MockHttpServletResponse pageResponse = new MockHttpServletResponse();
+        filter.doFilter(page, pageResponse, chain);
+        assertEquals("/login?session-expired", pageResponse.getRedirectedUrl());
+    }
 }
 

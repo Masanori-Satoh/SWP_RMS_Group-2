@@ -46,7 +46,7 @@ class UserProfileServiceTests {
     @BeforeEach
     void setUp() {
         storage = new LocalAvatarStorage(uploads.toString());
-        service = new UserProfileService(users, encoder, storage, new AvatarFileValidator());
+        service = new UserProfileService(users, encoder, storage, new AvatarFileValidator(), mock(UserAuditLogger.class));
     }
 
     @AfterEach

@@ -79,7 +79,7 @@
                             </div><div class="form-group">
                                 <label class="form-label aef-label" for="phone-number">Số điện thoại</label>
                                 <input class="form-control ads-form-control aef-input" id="phone-number" th:placeholder="${createMode} ? 'Nhập số điện thoại'" type="tel" th:field="*{phoneNumber}"
-                                       maxlength="20" autocomplete="tel" th:attr="aria-invalid=${#fields.hasErrors('phoneNumber')},aria-describedby=${#fields.hasErrors('phoneNumber') ? 'phone-number-error' : null}">
+                                       maxlength="10" autocomplete="tel" th:attr="aria-invalid=${#fields.hasErrors('phoneNumber')},aria-describedby=${#fields.hasErrors('phoneNumber') ? 'phone-number-error' : null}">
                                 <span id="phone-number-error" class="form-error" th:if="${#fields.hasErrors('phoneNumber')}" th:errors="*{phoneNumber}"></span>
                             </div></div></fieldset>
 <fieldset class="account-form-section aef-section acf-panel" th:classappend="${createMode} ? 'adw-surface'"><legend class="aef-legend acf-legend"><svg class="acf-section-icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m9 3-1 3-3 1 1 3-2 2 2 2-1 3 3 1 1 3h6l1-3 3-1-1-3 2-2-2-2 1-3-3-1-1-3z"/><circle cx="12" cy="12" r="3"/></svg><span class="acf-legend-copy"><span>Quyền truy cập và trạng thái</span><small th:if="${createMode}">Thiết lập vai trò và phòng ban cho tài khoản.</small></span></legend><div class="account-form-grid aef-grid"><div class="form-group">
