@@ -6,6 +6,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -245,11 +246,21 @@ public interface InterviewScheduleRepository extends JpaRepository<InterviewSche
             @Param("excludeInterviewId") Long excludeInterviewId);
 
     /**
-     * Hồ sơ đã có một lịch phỏng vấn còn hoạt động (Scheduled/Rescheduled) hay chưa.
-     * Dùng để tự suy trạng thái khi tạo lịch mới cho hồ sơ đã từng có lịch (coi như đổi lịch).
+     * Các lịch còn hoạt động (Scheduled/Rescheduled) của một hồ sơ.
+     * Tạo lịch mới cho hồ sơ này nghĩa là đổi lịch, nên các lịch này sẽ bị thay thế.
      */
-    @Query("SELECT CASE WHEN COUNT(s) > 0 THEN true ELSE false END FROM InterviewSchedule s " +
+    @Query("SELECT s FROM InterviewSchedule s " +
            "WHERE s.application.applicationId = :applicationId " +
            "AND s.interviewStatus IN ('Scheduled', 'Rescheduled')")
-    boolean existsActiveScheduleForApplication(@Param("applicationId") Integer applicationId);
+    List<InterviewSchedule> findActiveByApplicationId(@Param("applicationId") Integer applicationId);
+
+    /**
+     * Đã qua giờ kết thúc mà lịch vẫn còn hoạt động thì chuyển sang Completed.
+     * Gọi ở đầu các luồng xem / ghi lịch, trước khi đọc lịch, nên không cần job chạy nền.
+     * Không dùng clearAutomatically: nó tách cả tài khoản đăng nhập khỏi session và gây LazyInitializationException.
+     */
+    @Modifying(flushAutomatically = true)
+    @Query("UPDATE InterviewSchedule s SET s.interviewStatus = 'Completed' " +
+           "WHERE s.interviewStatus IN ('Scheduled', 'Rescheduled') AND s.endTime <= :now")
+    int completeEndedSchedules(@Param("now") LocalDateTime now);
 }

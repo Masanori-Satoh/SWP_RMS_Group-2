@@ -3,7 +3,6 @@ package com.group2.rms.interview.controller;
 import com.group2.rms.candidate.domain.entity.Application;
 import com.group2.rms.candidate.domain.repository.ApplicationRepository;
 import com.group2.rms.candidate.talentpool.service.RecruitmentEmailService;
-import com.group2.rms.candidate.talentpool.exception.RecruitmentEmailException;
 import com.group2.rms.candidate.domain.rule.ApplicationStatusException;
 import com.group2.rms.core.security.RoleAuthorities;
 import com.group2.rms.interview.dto.InterviewScheduleRequest;
@@ -187,16 +186,8 @@ public class InterviewSchedulingController {
             Integer creatorUserId = currentUser != null ? currentUser.getUserId() : 1;
             InterviewScheduleResponse saved = interviewSchedulingService.createSchedule(request, creatorUserId);
             redirectAttributes.addFlashAttribute("successMessage", "Tạo lịch phỏng vấn thành công!");
-            // ducnm sửa: hồ sơ đã có lịch trước đó thì lịch mới tạo tự động là Rescheduled (không còn Scheduled),
-            // nhưng vẫn là lịch vừa tạo nên vẫn phải gửi thư mời.
-            boolean stillActive = saved != null
-                    && (saved.interviewStatus() == InterviewStatus.Scheduled || saved.interviewStatus() == InterviewStatus.Rescheduled);
-            if (stillActive) {
-                try { recruitmentEmail.sendInterview(saved.interviewId()); }
-                catch (RecruitmentEmailException e) {
-                    redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
-                }
-            }
+            // ducnm sửa: gửi ngầm sau khi đã lưu; lịch mới luôn còn hoạt động nên luôn có thư mời
+            recruitmentEmail.sendInterview(saved.interviewId());
             return "redirect:/interviews";
         } catch (InterviewStatusException | IllegalArgumentException | ApplicationStatusException ex) {
             // dunglt bổ sung: requireScheduleable ném ApplicationStatusException (trước là TalentPoolException)
@@ -284,11 +275,8 @@ public class InterviewSchedulingController {
         try {
             InterviewScheduleResponse updated = interviewSchedulingService.updateSchedule(id, request, currentUser != null ? currentUser.getUserId() : 1);
             redirectAttributes.addFlashAttribute("successMessage", "Cập nhật lịch phỏng vấn thành công!");
-            // ducnm bổ sung: báo ứng viên qua email; lỗi gửi mail không ảnh hưởng tới việc đã lưu lịch
-            try { recruitmentEmail.sendInterviewRescheduled(updated.interviewId()); }
-            catch (RecruitmentEmailException e) {
-                redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
-            }
+            // ducnm bổ sung: gửi ngầm cho ứng viên, không ảnh hưởng tới việc đã lưu lịch
+            recruitmentEmail.sendInterviewRescheduled(updated.interviewId());
             return "redirect:/interviews";
         } catch (InterviewStatusException | IllegalArgumentException ex) {
             log.warn("Ngoại lệ nghiệp vụ khi cập nhật lịch #{}: {}", id, ex.getMessage());
@@ -318,11 +306,8 @@ public class InterviewSchedulingController {
             Integer updaterUserId = currentUser != null ? currentUser.getUserId() : 1;
             interviewSchedulingService.cancelSchedule(id, cancelReason, updaterUserId);
             redirectAttributes.addFlashAttribute("successMessage", "Hủy lịch phỏng vấn thành công!");
-            // ducnm bổ sung: báo ứng viên qua email; lỗi gửi mail không ảnh hưởng tới việc đã hủy lịch
-            try { recruitmentEmail.sendInterviewCancelled(id, cancelReason); }
-            catch (RecruitmentEmailException e) {
-                redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
-            }
+            // ducnm bổ sung: gửi ngầm cho ứng viên, không ảnh hưởng tới việc đã hủy lịch
+            recruitmentEmail.sendInterviewCancelled(id, cancelReason);
         } catch (InterviewStatusException | IllegalArgumentException ex) {
             log.warn("Lỗi khi hủy lịch #{}: {}", id, ex.getMessage());
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());

@@ -4,6 +4,7 @@ import com.group2.rms.candidate.talentpool.dto.RecruitmentEmailMessage;
 import com.group2.rms.candidate.talentpool.repository.TalentPoolAuditRepository;
 import com.group2.rms.candidate.talentpool.exception.RecruitmentEmailException;
 import com.group2.rms.candidate.talentpool.exception.TalentPoolException;
+import com.group2.rms.core.config.AsyncConfig;
 import com.group2.rms.core.security.CurrentUserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +15,7 @@ import org.springframework.mail.*;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
@@ -40,7 +42,9 @@ public class RecruitmentEmailService {
         if (failed) throw new RecruitmentEmailException();
     }
     public void resendClosure(Integer id) { deliver(closureMessage(id), actor()); }
-    // ducnm bổ sung: tạo lịch do HR hoặc Director; gửi thư mời cho cả hai vai trò
+    // ducnm bổ sung: tạo lịch do HR hoặc Director; gửi thư mời cho cả hai vai trò.
+    // Thư tạo / đổi / hủy lịch gửi ngầm để HR không phải chờ SMTP; gửi lỗi thì ghi MailFailed vào audit log, HR gửi lại được.
+    @Async(AsyncConfig.RECRUITMENT_MAIL_EXECUTOR)
     public void sendInterview(Long id) {
         Integer actorId = actor("ROLE_HR", "ROLE_DIRECTOR");
         if (!audit.has("InterviewSchedule", id, "MailSent:InterviewInvitation"))
@@ -49,7 +53,9 @@ public class RecruitmentEmailService {
     public void resendInterview(Long id) { deliver(interviewMessage(id), actor("ROLE_HR", "ROLE_DIRECTOR")); }
     // ducnm bổ sung: báo ứng viên qua email khi lịch được đổi giờ/địa điểm/hội đồng hoặc bị hủy.
     // Không dùng audit.has(...) để chặn trùng: đổi lịch có thể xảy ra nhiều lần, hủy lịch chỉ xảy ra một lần (trạng thái cuối).
+    @Async(AsyncConfig.RECRUITMENT_MAIL_EXECUTOR)
     public void sendInterviewRescheduled(Long id) { deliver(rescheduledMessage(id), actor("ROLE_HR", "ROLE_DIRECTOR")); }
+    @Async(AsyncConfig.RECRUITMENT_MAIL_EXECUTOR)
     public void sendInterviewCancelled(Long id, String reason) { deliver(cancelledMessage(id, reason), actor("ROLE_HR", "ROLE_DIRECTOR")); }
 
     private RecruitmentEmailMessage closureMessage(Integer id) {

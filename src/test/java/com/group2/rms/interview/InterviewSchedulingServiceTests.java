@@ -412,7 +412,10 @@ class InterviewSchedulingServiceTests {
     @Test
     @DisplayName("Tạo lịch mới cho hồ sơ đã có lịch đang hoạt động: tự động là Đã đổi lịch")
     void creatingNewScheduleForApplicationWithActiveScheduleBecomesRescheduled() {
-        when(interviewScheduleRepository.existsActiveScheduleForApplication(10)).thenReturn(true);
+        InterviewSchedule oldSchedule = InterviewSchedule.builder()
+                .interviewId(70L).application(application).interviewStatus(InterviewStatus.Scheduled)
+                .startTime(LocalDateTime.now().plusHours(2)).endTime(LocalDateTime.now().plusHours(3)).build();
+        when(interviewScheduleRepository.findActiveByApplicationId(10)).thenReturn(List.of(oldSchedule));
         LocalDateTime now = LocalDateTime.now().plusDays(1);
         InterviewScheduleRequest request = InterviewScheduleRequest.builder()
                 .applicationId(10)
@@ -431,6 +434,36 @@ class InterviewSchedulingServiceTests {
         assertEquals(InterviewStatus.Rescheduled, response.interviewStatus());
         verify(notificationService).notifyInterviewRescheduled(any(InterviewSchedule.class), eq(hrUser));
         verify(notificationService, never()).notifyInterviewScheduled(any(InterviewSchedule.class), any());
+        assertEquals(InterviewStatus.Cancelled, oldSchedule.getInterviewStatus());
+    }
+
+    // ducnm bổ sung: hội đồng có thể đang phỏng vấn nên không được thay lịch đã bắt đầu
+    @Test
+    @DisplayName("Hồ sơ có buổi phỏng vấn đang diễn ra: không tạo được lịch mới, lịch cũ giữ nguyên")
+    void cannotReplaceScheduleInProgress() {
+        InterviewSchedule running = InterviewSchedule.builder()
+                .interviewId(71L).application(application).interviewStatus(InterviewStatus.Scheduled)
+                .startTime(LocalDateTime.now().minusMinutes(5)).endTime(LocalDateTime.now().plusMinutes(30)).build();
+        when(interviewScheduleRepository.findActiveByApplicationId(10)).thenReturn(List.of(running));
+        LocalDateTime start = LocalDateTime.now().plusDays(1);
+        InterviewScheduleRequest request = InterviewScheduleRequest.builder()
+                .applicationId(10).interviewFormat(InterviewFormat.Online_GoogleMeet)
+                .startTime(start).endTime(start.plusHours(1))
+                .panelMembers(List.of(new PanelMemberRequest(3, RoleInPanel.HM))).build();
+
+        assertThrows(InterviewStatusException.class, () -> service.createSchedule(request, 1));
+        assertEquals(InterviewStatus.Scheduled, running.getInterviewStatus());
+    }
+
+    // ducnm bổ sung: mở danh sách lịch thì các lịch đã qua giờ kết thúc được chuyển Completed trước khi đọc
+    @Test
+    @DisplayName("Xem danh sách lịch: chuyển các lịch đã hết giờ sang Đã hoàn thành trước khi đọc")
+    void listingCompletesEndedSchedulesBeforeReading() {
+        service.getAllForHR();
+
+        org.mockito.InOrder order = inOrder(interviewScheduleRepository);
+        order.verify(interviewScheduleRepository).completeEndedSchedules(any(LocalDateTime.class));
+        order.verify(interviewScheduleRepository).findAllWithDetailsForHr();
     }
 
     // ducnm bổ sung: buổi phỏng vấn phải dài 15 phút đến 4 giờ
