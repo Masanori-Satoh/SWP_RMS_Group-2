@@ -384,23 +384,145 @@ class InterviewSchedulingServiceTests {
         assertTrue(ex.getMessage().contains("HR tạo lịch không được phép tự gán mình vào Hội đồng phỏng vấn"));
     }
 
+    // Trạng thái không còn do client chọn: client truyền gì cũng bị bỏ qua, hệ thống tự suy.
     @Test
-    @DisplayName("Không được phép tạo mới một lịch phỏng vấn với trạng thái Rescheduled hoặc Cancelled")
-    void cannotCreateScheduleWithRescheduledOrCancelledStatus() {
+    @DisplayName("Trạng thái người dùng gửi lên bị bỏ qua: hồ sơ chưa có lịch nào thì lịch mới luôn là Đã lên lịch")
+    void clientSuppliedStatusIsIgnoredOnCreate() {
         LocalDateTime now = LocalDateTime.now().plusDays(1);
         InterviewScheduleRequest request = InterviewScheduleRequest.builder()
                 .applicationId(10)
                 .interviewFormat(InterviewFormat.Online_GoogleMeet)
                 .startTime(now)
                 .endTime(now.plusHours(1))
-                .interviewStatus(InterviewStatus.Rescheduled)
+                .interviewStatus(InterviewStatus.Cancelled)
                 .panelMembers(List.of(new PanelMemberRequest(3, RoleInPanel.HM)))
                 .build();
+        when(interviewScheduleRepository.save(any(InterviewSchedule.class))).thenAnswer(invocation -> {
+            InterviewSchedule s = invocation.getArgument(0);
+            s.setInterviewId(106L);
+            return s;
+        });
 
-        InterviewStatusException ex = assertThrows(InterviewStatusException.class, () ->
-                service.createSchedule(request, 1)
-        );
-        assertTrue(ex.getMessage().contains("Không thể tạo mới một lịch phỏng vấn với trạng thái"));
+        InterviewScheduleResponse response = service.createSchedule(request, 1);
+        assertEquals(InterviewStatus.Scheduled, response.interviewStatus());
+    }
+
+    // ducnm bổ sung: không có nút chọn trạng thái trên form nữa; hồ sơ đã có lịch còn hoạt động
+    // thì lịch mới tạo cho hồ sơ đó coi như đổi lịch (Rescheduled), không phải lần đầu (Scheduled).
+    @Test
+    @DisplayName("Tạo lịch mới cho hồ sơ đã có lịch đang hoạt động: tự động là Đã đổi lịch")
+    void creatingNewScheduleForApplicationWithActiveScheduleBecomesRescheduled() {
+        when(interviewScheduleRepository.existsActiveScheduleForApplication(10)).thenReturn(true);
+        LocalDateTime now = LocalDateTime.now().plusDays(1);
+        InterviewScheduleRequest request = InterviewScheduleRequest.builder()
+                .applicationId(10)
+                .interviewFormat(InterviewFormat.Online_GoogleMeet)
+                .startTime(now)
+                .endTime(now.plusHours(1))
+                .panelMembers(List.of(new PanelMemberRequest(3, RoleInPanel.HM)))
+                .build();
+        when(interviewScheduleRepository.save(any(InterviewSchedule.class))).thenAnswer(invocation -> {
+            InterviewSchedule s = invocation.getArgument(0);
+            s.setInterviewId(107L);
+            return s;
+        });
+
+        InterviewScheduleResponse response = service.createSchedule(request, 1);
+        assertEquals(InterviewStatus.Rescheduled, response.interviewStatus());
+        verify(notificationService).notifyInterviewRescheduled(any(InterviewSchedule.class), eq(hrUser));
+        verify(notificationService, never()).notifyInterviewScheduled(any(InterviewSchedule.class), any());
+    }
+
+    // ducnm bổ sung: buổi phỏng vấn phải dài 15 phút đến 4 giờ
+    @Test
+    @DisplayName("Buổi phỏng vấn quá ngắn hoặc quá dài bị từ chối")
+    void interviewDurationMustBeWithinBounds() {
+        LocalDateTime now = LocalDateTime.now().plusDays(1);
+        InterviewScheduleRequest tooShort = InterviewScheduleRequest.builder()
+                .applicationId(10)
+                .interviewFormat(InterviewFormat.Online_GoogleMeet)
+                .startTime(now)
+                .endTime(now.plusMinutes(5))
+                .panelMembers(List.of(new PanelMemberRequest(3, RoleInPanel.HM)))
+                .build();
+        assertThrows(IllegalArgumentException.class, () -> service.createSchedule(tooShort, 1));
+
+        InterviewScheduleRequest tooLong = InterviewScheduleRequest.builder()
+                .applicationId(10)
+                .interviewFormat(InterviewFormat.Online_GoogleMeet)
+                .startTime(now)
+                .endTime(now.plusHours(5))
+                .panelMembers(List.of(new PanelMemberRequest(3, RoleInPanel.HM)))
+                .build();
+        assertThrows(IllegalArgumentException.class, () -> service.createSchedule(tooLong, 1));
+    }
+
+    // ducnm bổ sung: lịch Hoàn thành / Hủy là trạng thái cuối, không sửa được nữa
+    @Test
+    @DisplayName("Không thể sửa lịch đã Hoàn thành hoặc Đã hủy")
+    void cannotUpdateCompletedOrCancelledSchedule() {
+        InterviewSchedule completed = InterviewSchedule.builder()
+                .interviewId(500L)
+                .application(application)
+                .interviewStatus(InterviewStatus.Completed)
+                .startTime(LocalDateTime.now().minusDays(1))
+                .endTime(LocalDateTime.now().minusDays(1).plusHours(1))
+                .build();
+        when(interviewScheduleRepository.findByIdWithDetails(500L)).thenReturn(Optional.of(completed));
+
+        LocalDateTime future = LocalDateTime.now().plusDays(1);
+        InterviewScheduleRequest request = InterviewScheduleRequest.builder()
+                .startTime(future).endTime(future.plusHours(1)).build();
+
+        assertThrows(InterviewStatusException.class, () -> service.updateSchedule(500L, request, 1));
+        verifyNoInteractions(notificationService);
+    }
+
+    // ducnm bổ sung: sửa lịch đưa về quá khứ (so với hiện tại) là không hợp lệ, dù lịch đang Đã lên lịch
+    @Test
+    @DisplayName("Sửa lịch đang hoạt động: thời gian bắt đầu mới phải ở tương lai")
+    void cannotMoveActiveScheduleStartTimeToThePast() {
+        LocalDateTime originalStart = LocalDateTime.now().plusDays(1);
+        InterviewSchedule scheduled = InterviewSchedule.builder()
+                .interviewId(501L)
+                .application(application)
+                .interviewStatus(InterviewStatus.Scheduled)
+                .startTime(originalStart)
+                .endTime(originalStart.plusHours(1))
+                .build();
+        when(interviewScheduleRepository.findByIdWithDetails(501L)).thenReturn(Optional.of(scheduled));
+
+        LocalDateTime past = LocalDateTime.now().minusHours(1);
+        InterviewScheduleRequest request = InterviewScheduleRequest.builder()
+                .startTime(past).endTime(past.plusHours(1)).build();
+
+        assertThrows(IllegalArgumentException.class, () -> service.updateSchedule(501L, request, 1));
+    }
+
+    // ducnm bổ sung: mọi lần sửa thành công lịch Đã lên lịch đều tự chuyển sang Đã đổi lịch
+    @Test
+    @DisplayName("Sửa lịch đang Đã lên lịch thành công: tự động chuyển sang Đã đổi lịch")
+    void updatingScheduledInterviewAutoTransitionsToRescheduled() {
+        LocalDateTime start = LocalDateTime.now().plusDays(1);
+        InterviewSchedule scheduled = InterviewSchedule.builder()
+                .interviewId(502L)
+                .application(application)
+                .interviewFormat(InterviewFormat.Online_GoogleMeet)
+                .interviewStatus(InterviewStatus.Scheduled)
+                .startTime(start)
+                .endTime(start.plusHours(1))
+                .build();
+        scheduled.addPanelMember(hmUser, RoleInPanel.HM);
+        when(interviewScheduleRepository.findByIdWithDetails(502L)).thenReturn(Optional.of(scheduled));
+        when(interviewScheduleRepository.save(any(InterviewSchedule.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        LocalDateTime newStart = start.plusHours(2);
+        InterviewScheduleRequest request = InterviewScheduleRequest.builder()
+                .startTime(newStart).endTime(newStart.plusHours(1)).build();
+
+        InterviewScheduleResponse response = service.updateSchedule(502L, request, 1);
+        assertEquals(InterviewStatus.Rescheduled, response.interviewStatus());
+        verify(notificationService).notifyInterviewRescheduled(scheduled, hrUser);
     }
 
     @Test

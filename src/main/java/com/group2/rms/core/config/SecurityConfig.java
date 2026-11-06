@@ -129,9 +129,12 @@ public class SecurityConfig {
                                                 // (phải đứng trước /offers/**)
                                                 .requestMatchers("/portal/offers", "/portal/offers/**")
                                                 .hasAuthority("ROLE_CANDIDATE")
-                                                // Forms and all writes: HR, Director (UC 62-64, SRS footnote 13).
-                                                .requestMatchers("/interviews/new", "/interviews/*/edit")
+                                                // Forms (ghi): chỉ HR, Director (UC 62-64, SRS footnote 13).
+                                                .requestMatchers(HttpMethod.POST, "/interviews/new", "/interviews/*/edit")
                                                 .hasAnyAuthority("ROLE_HR", "ROLE_DIRECTOR")
+                                                // Xem form (GET): mở cho cả 4 vai trò nội bộ; Controller tự ẩn form và
+                                                // hiện thông báo "không có quyền" cho vai trò không phải HR/Director,
+                                                // vẫn giữ sidebar/topbar thay vì chuyển hẳn sang trang lỗi 403.
                                                 .requestMatchers(HttpMethod.GET, "/interviews", "/interviews/**")
                                                 .hasAnyAuthority("ROLE_HR",
                                                                 "ROLE_DIRECTOR", "ROLE_HIRING_MANAGER",
@@ -139,8 +142,11 @@ public class SecurityConfig {
                                                 .requestMatchers(HttpMethod.POST, "/interviews/*/evaluations")
                                                 .hasAnyAuthority("ROLE_INTERVIEWER", "ROLE_HIRING_MANAGER",
                                                                 "ROLE_DIRECTOR", "ROLE_HR")
+                                                // Chốt kết quả: Hiring Manager phụ trách phòng ban; Director khi
+                                                // tuyển vị trí Hiring Manager (Phương án 2) — InterviewFinalResultService
+                                                // tự kiểm tra ai đúng người, ở đây chỉ chặn 2 vai trò không liên quan.
                                                 .requestMatchers(HttpMethod.POST, "/interviews/*/final-result")
-                                                .hasAuthority("ROLE_HIRING_MANAGER")
+                                                .hasAnyAuthority("ROLE_HIRING_MANAGER", "ROLE_DIRECTOR")
                                                 .requestMatchers("/interviews", "/interviews/**")
                                                 .hasAnyAuthority("ROLE_HR", "ROLE_DIRECTOR")
                                                 .requestMatchers(HttpMethod.POST, "/offers/*/approve",

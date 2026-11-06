@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<body>
+<!--
+    Banner "không có quyền" dùng cho trang vẫn giữ layout nội bộ (sidebar/topbar/tiêu đề) nhưng ẩn phần
+    thao tác riêng của trang vì vai trò đang đăng nhập không được phép (ví dụ HM/Interviewer mở
+    /interviews/new, /interviews/{id}/edit, hoặc xem /interviews/{id}/result của buổi mình không tham gia).
+    Khác với trang lỗi 403 toàn trang (core/exception/ErrorPages): dùng khi Controller chủ động chặn sớm,
+    không phải do Spring Security chặn trước Controller.
+    CSS: .adw-validation-summary có sẵn ở css/components.css (khung đỏ dùng chung với lỗi nghiệp vụ của form).
+-->
+<div th:fragment="banner(message)" class="adw-validation-summary" role="alert">
+    <p th:text="${message ?: 'Bạn không có quyền truy cập vào trang này.'}">Bạn không có quyền truy cập vào trang này.</p>
+</div>
+</body>
+</html>

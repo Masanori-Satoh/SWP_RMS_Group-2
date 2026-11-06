@@ -998,17 +998,21 @@ class NotificationServiceImplTests {
             assertEquals("INT_SCHED_9", candidate.getEventId());
         }
 
+        // ducnm sửa: hủy lịch chỉ báo ứng viên (kèm lý do); hội đồng là người trong công ty, HR tự báo trực
+        // tiếp cho họ nên không cần thêm thông báo in-app riêng.
         @Test
-        @DisplayName("notifyInterviewCancelled: có lý do -> Lý do chỉ ghi cho hội đồng, ứng viên không thấy")
-        void notifyInterviewCancelled_shouldShowReasonOnlyToPanel() {
+        @DisplayName("notifyInterviewCancelled: chỉ ứng viên nhận, nội dung có lý do")
+        void notifyInterviewCancelled_shouldNotifyCandidateOnlyWithReason() {
             // Act
             notificationService.notifyInterviewCancelled(schedule(), hr, "Ứng viên xin dời");
 
             // Assert
-            List<Notification> saved = savedNotifications(2);
-            assertTrue(saved.get(0).getContent().contains("Ứng viên xin dời"));
-            assertFalse(saved.get(1).getContent().contains("Ứng viên xin dời"));
-            assertEquals("INTERVIEW_CANCELLED", saved.get(1).getEventType());
+            Notification saved = savedNotifications(1).get(0);
+            assertEquals(candidateUser, saved.getRecipient());
+            assertEquals(hr, saved.getActor());
+            assertEquals("/portal/interviews", saved.getLinkUrl());
+            assertEquals("INTERVIEW_CANCELLED", saved.getEventType());
+            assertTrue(saved.getContent().contains("Ứng viên xin dời"));
         }
 
         @Test

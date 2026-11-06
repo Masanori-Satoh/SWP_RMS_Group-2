@@ -227,4 +227,29 @@ public interface InterviewScheduleRepository extends JpaRepository<InterviewSche
             @Param("startTime") LocalDateTime startTime,
             @Param("endTime") LocalDateTime endTime,
             @Param("excludeInterviewId") Long excludeInterviewId);
+
+    /**
+     * Kiểm tra trùng lịch của Ứng viên (theo CandidateId, không chỉ riêng hồ sơ đang xếp) trong khoảng
+     * thời gian [startTime, endTime]. Một ứng viên có thể có nhiều hồ sơ (nhiều vị trí) cùng lúc,
+     * nên phải kiểm tra theo người, không chỉ theo từng ApplicationId riêng lẻ.
+     */
+    @Query("SELECT COUNT(s) FROM InterviewSchedule s " +
+           "WHERE s.application.candidate.candidateId = :candidateId " +
+           "AND (:excludeInterviewId IS NULL OR s.interviewId != :excludeInterviewId) " +
+           "AND s.interviewStatus IN ('Scheduled', 'Rescheduled') " +
+           "AND s.startTime < :endTime AND s.endTime > :startTime")
+    long countConflictingSchedulesForCandidate(
+            @Param("candidateId") Integer candidateId,
+            @Param("startTime") LocalDateTime startTime,
+            @Param("endTime") LocalDateTime endTime,
+            @Param("excludeInterviewId") Long excludeInterviewId);
+
+    /**
+     * Hồ sơ đã có một lịch phỏng vấn còn hoạt động (Scheduled/Rescheduled) hay chưa.
+     * Dùng để tự suy trạng thái khi tạo lịch mới cho hồ sơ đã từng có lịch (coi như đổi lịch).
+     */
+    @Query("SELECT CASE WHEN COUNT(s) > 0 THEN true ELSE false END FROM InterviewSchedule s " +
+           "WHERE s.application.applicationId = :applicationId " +
+           "AND s.interviewStatus IN ('Scheduled', 'Rescheduled')")
+    boolean existsActiveScheduleForApplication(@Param("applicationId") Integer applicationId);
 }

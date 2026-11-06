@@ -1,38 +1,43 @@
 package com.group2.rms.interview.service;
 
+import com.group2.rms.candidate.domain.entity.Application;
 import com.group2.rms.interview.dto.InterviewScheduleRequest;
 import com.group2.rms.interview.entity.InterviewSchedule;
 import com.group2.rms.interview.entity.InterviewStatus;
-import com.group2.rms.interview.exception.InterviewStatusException;
 import com.group2.rms.interview.repository.InterviewScheduleRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Set;
 
 /**
  * Service chuyên trách kiểm tra các ràng buộc về thời gian và tính hợp lệ của trạng thái
  * cho toàn bộ quy trình Xem, Tạo mới và Cập nhật Lịch phỏng vấn.
+ * Trạng thái (Scheduled/Rescheduled/Completed/Cancelled) do hệ thống tự suy, người dùng không
+ * tự chọn được nên lớp này chỉ còn kiểm tra thời gian và trùng lịch.
  */
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class InterviewTimeValidationService {
 
+    public static final Duration MIN_DURATION = Duration.ofMinutes(15);
+    public static final Duration MAX_DURATION = Duration.ofHours(4);
+
     private final InterviewScheduleRepository interviewScheduleRepository;
 
     /**
-     * Kiểm tra toàn bộ ràng buộc thời gian và trạng thái khi TẠO MỚI lịch phỏng vấn.
+     * Kiểm tra toàn bộ ràng buộc thời gian khi TẠO MỚI lịch phỏng vấn.
      * Quy tắc:
-     * 1. MSG26: endTime > startTime.
-     * 2. Trạng thái tạo mới: Chỉ cho phép Scheduled (Đã lên lịch) hoặc Completed (Đã hoàn thành).
-     *    Tuyệt đối không cho phép tạo mới với trạng thái Rescheduled (Đã đổi lịch) hoặc Cancelled (Đã hủy).
-     * 3. Nếu Scheduled: startTime phải ở trong tương lai.
-     * 4. Kiểm tra xung đột trùng lịch: Ứng viên và người phỏng vấn không được có lịch khác trùng giờ.
+     * 1. endTime phải lớn hơn startTime, buổi phỏng vấn dài 15 phút đến 4 giờ.
+     * 2. startTime phải ở trong tương lai (lịch mới luôn ở trạng thái hoạt động).
+     * 3. Kiểm tra xung đột trùng lịch: ứng viên (theo người, không chỉ theo hồ sơ) và người phỏng vấn
+     *    không được có lịch khác đang hoạt động trùng giờ.
      */
-    public void validateForCreate(InterviewScheduleRequest request) {
+    public void validateForCreate(InterviewScheduleRequest request, Application application) {
         if (request == null) {
             throw new IllegalArgumentException("Dữ liệu yêu cầu lịch phỏng vấn không được để trống.");
         }
@@ -44,41 +49,24 @@ public class InterviewTimeValidationService {
             throw new IllegalArgumentException("Thời gian bắt đầu và kết thúc phỏng vấn không được để trống.");
         }
 
-        // 1. Rule MSG26: endTime > startTime
-        if (!endTime.isAfter(startTime)) {
-            throw new IllegalArgumentException("Lỗi Rule MSG26: Thời gian kết thúc (" + endTime +
-                    ") phải lớn hơn thời gian bắt đầu (" + startTime + ").");
+        validateDuration(startTime, endTime);
+
+        // startTime phải ở trong tương lai: lịch mới tạo luôn ở trạng thái hoạt động (Scheduled/Rescheduled)
+        if (!startTime.isAfter(LocalDateTime.now())) {
+            throw new IllegalArgumentException("Thời gian bắt đầu phỏng vấn phải ở trong tương lai.");
         }
 
-        // 2. Ràng buộc trạng thái khi tạo mới: Chỉ Scheduled hoặc Completed
-        InterviewStatus status = request.getInterviewStatus();
-        if (status == null) {
-            status = InterviewStatus.Scheduled;
-        }
-
-        if (status == InterviewStatus.Rescheduled || status == InterviewStatus.Cancelled) {
-            throw new InterviewStatusException(
-                    "Quy tắc nghiệp vụ: Không thể tạo mới một lịch phỏng vấn với trạng thái '" +
-                    status.getDisplayName() + "'. Lịch mới chỉ có thể tạo ở trạng thái 'Đã lên lịch' hoặc 'Đã hoàn thành'.");
-        }
-
-        // 3. Nếu là Scheduled: startTime phải ở trong tương lai
-        if (status == InterviewStatus.Scheduled && !startTime.isAfter(LocalDateTime.now())) {
-            throw new IllegalArgumentException(
-                    "Lịch phỏng vấn mới ở trạng thái 'Đã lên lịch' phải có thời gian bắt đầu ở trong tương lai.");
-        }
-
-        // 4. Kiểm tra trùng lịch ứng viên
-        if (request.getApplicationId() != null) {
-            long appConflicts = interviewScheduleRepository.countConflictingSchedulesForApplication(
-                    request.getApplicationId(), startTime, endTime, null);
-            if (appConflicts > 0) {
+        // Kiểm tra trùng lịch của ứng viên (theo người, gồm mọi hồ sơ khác của cùng ứng viên)
+        if (application != null && application.getCandidate() != null) {
+            long candidateConflicts = interviewScheduleRepository.countConflictingSchedulesForCandidate(
+                    application.getCandidate().getCandidateId(), startTime, endTime, null);
+            if (candidateConflicts > 0) {
                 throw new IllegalArgumentException(
-                        "Hồ sơ ứng viên này đã có một lịch phỏng vấn khác đang hoạt động trùng vào khoảng thời gian đã chọn.");
+                        "Ứng viên này đã có một lịch phỏng vấn khác đang hoạt động trùng vào khoảng thời gian đã chọn.");
             }
         }
 
-        // 5. Kiểm tra trùng lịch hội đồng phỏng vấn
+        // Kiểm tra trùng lịch hội đồng phỏng vấn
         Set<Integer> interviewerIds = request.getInterviewerIds();
         if (interviewerIds != null) {
             for (Integer interviewerId : interviewerIds) {
@@ -87,8 +75,7 @@ public class InterviewTimeValidationService {
                             interviewerId, startTime, endTime, null);
                     if (intConflicts > 0) {
                         throw new IllegalArgumentException(
-                                "Thành viên hội đồng (ID: " + interviewerId +
-                                ") đã có một lịch phỏng vấn khác trùng vào khoảng thời gian này.");
+                                "Một thành viên hội đồng đã có lịch phỏng vấn khác trùng vào khoảng thời gian này.");
                     }
                 }
             }
@@ -96,7 +83,9 @@ public class InterviewTimeValidationService {
     }
 
     /**
-     * Kiểm tra toàn bộ ràng buộc thời gian và trạng thái khi CẬP NHẬT lịch phỏng vấn.
+     * Kiểm tra toàn bộ ràng buộc thời gian khi CẬP NHẬT lịch phỏng vấn.
+     * Lịch đã Hoàn thành hoặc Đã hủy không được sửa (kiểm tra ở service, GBR-01).
+     * Mọi lần sửa thành công đưa lịch về trạng thái "Đã đổi lịch", nên thời gian mới luôn phải ở tương lai.
      */
     public void validateForUpdate(Long interviewId, InterviewScheduleRequest request, InterviewSchedule existingSchedule) {
         if (request == null || existingSchedule == null) {
@@ -106,37 +95,27 @@ public class InterviewTimeValidationService {
         LocalDateTime startTime = request.getStartTime() != null ? request.getStartTime() : existingSchedule.getStartTime();
         LocalDateTime endTime = request.getEndTime() != null ? request.getEndTime() : existingSchedule.getEndTime();
 
-        // 1. Rule MSG26: endTime > startTime
-        if (startTime != null && endTime != null && !endTime.isAfter(startTime)) {
-            throw new IllegalArgumentException("Lỗi Rule MSG26: Thời gian kết thúc (" + endTime +
-                    ") phải lớn hơn thời gian bắt đầu (" + startTime + ").");
+        if (startTime != null && endTime != null) {
+            validateDuration(startTime, endTime);
         }
 
-        // 2. Rule GBR-01: Kiểm tra trạng thái chỉ đi tiến, không lùi
-        InterviewStatus targetStatus = request.getInterviewStatus();
-        if (targetStatus != null && !existingSchedule.getInterviewStatus().canTransitionTo(targetStatus)) {
-            throw new InterviewStatusException(existingSchedule.getInterviewStatus(), targetStatus,
-                    "Business Rule GBR-01: Không thể chuyển trạng thái từ [" +
-                    existingSchedule.getInterviewStatus() + "] về [" + targetStatus + "]. Trạng thái chỉ đi tiến, không lùi.");
+        // Sửa lịch luôn đưa lịch về "Đã đổi lịch" (còn hoạt động): thời gian bắt đầu mới phải ở tương lai
+        if (startTime != null && !startTime.isAfter(LocalDateTime.now())) {
+            throw new IllegalArgumentException("Thời gian bắt đầu mới của lịch phỏng vấn phải ở trong tương lai.");
         }
 
-        // 3. Nếu chuyển sang Rescheduled: thời gian mới phải ở trong tương lai
-        if (targetStatus == InterviewStatus.Rescheduled && startTime != null && !startTime.isAfter(LocalDateTime.now())) {
-            throw new IllegalArgumentException(
-                    "Khi đổi lịch phỏng vấn (Đã đổi lịch), thời gian bắt đầu mới phải ở trong tương lai.");
-        }
-
-        // 4. Kiểm tra trùng lịch ứng viên (loại trừ chính lịch đang cập nhật)
-        if (existingSchedule.getApplication() != null && startTime != null && endTime != null) {
-            long appConflicts = interviewScheduleRepository.countConflictingSchedulesForApplication(
-                    existingSchedule.getApplication().getApplicationId(), startTime, endTime, interviewId);
-            if (appConflicts > 0) {
+        // Kiểm tra trùng lịch của ứng viên (loại trừ chính lịch đang cập nhật)
+        Application application = existingSchedule.getApplication();
+        if (application != null && application.getCandidate() != null && startTime != null && endTime != null) {
+            long candidateConflicts = interviewScheduleRepository.countConflictingSchedulesForCandidate(
+                    application.getCandidate().getCandidateId(), startTime, endTime, interviewId);
+            if (candidateConflicts > 0) {
                 throw new IllegalArgumentException(
-                        "Hồ sơ ứng viên này đã có một lịch phỏng vấn khác đang hoạt động trùng vào khoảng thời gian cập nhật.");
+                        "Ứng viên này đã có một lịch phỏng vấn khác đang hoạt động trùng vào khoảng thời gian cập nhật.");
             }
         }
 
-        // 5. Kiểm tra trùng lịch hội đồng phỏng vấn (loại trừ chính lịch đang cập nhật)
+        // Kiểm tra trùng lịch hội đồng phỏng vấn (loại trừ chính lịch đang cập nhật)
         Set<Integer> interviewerIds = request.getInterviewerIds();
         if (interviewerIds != null && startTime != null && endTime != null) {
             for (Integer interviewerId : interviewerIds) {
@@ -145,11 +124,24 @@ public class InterviewTimeValidationService {
                             interviewerId, startTime, endTime, interviewId);
                     if (intConflicts > 0) {
                         throw new IllegalArgumentException(
-                                "Thành viên hội đồng (ID: " + interviewerId +
-                                ") đã có một lịch phỏng vấn khác trùng vào khoảng thời gian cập nhật.");
+                                "Một thành viên hội đồng đã có lịch phỏng vấn khác trùng vào khoảng thời gian cập nhật.");
                     }
                 }
             }
+        }
+    }
+
+    /** endTime phải sau startTime và buổi phỏng vấn dài 15 phút đến 4 giờ. */
+    private static void validateDuration(LocalDateTime startTime, LocalDateTime endTime) {
+        if (!endTime.isAfter(startTime)) {
+            throw new IllegalArgumentException("Thời gian kết thúc phải sau thời gian bắt đầu.");
+        }
+        Duration duration = Duration.between(startTime, endTime);
+        if (duration.compareTo(MIN_DURATION) < 0) {
+            throw new IllegalArgumentException("Buổi phỏng vấn phải kéo dài ít nhất 15 phút.");
+        }
+        if (duration.compareTo(MAX_DURATION) > 0) {
+            throw new IllegalArgumentException("Buổi phỏng vấn không được kéo dài quá 4 giờ.");
         }
     }
 

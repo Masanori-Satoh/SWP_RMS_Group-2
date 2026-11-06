@@ -28,7 +28,10 @@
             th:text="${isEdit ? 'Chỉnh sửa lịch phỏng vấn #' + interviewId : 'Lên lịch phỏng vấn mới'}">Lên lịch phỏng vấn mới</h1>
     </div>
 
-    <form class="card if-form adw-surface" th:action="${isEdit ? '/interviews/' + interviewId + '/edit' : '/interviews/new'}"
+    <!-- Vai trò xem được danh sách lịch (HM, Interviewer) nhưng không có quyền tạo/sửa: ẩn form, hiện banner -->
+    <div th:if="${accessDenied}" th:replace="~{fragments/ui/access-denied-banner :: banner('Bạn không có quyền truy cập vào trang này.')}"></div>
+
+    <form th:unless="${accessDenied}" class="card if-form adw-surface" th:action="${isEdit ? '/interviews/' + interviewId + '/edit' : '/interviews/new'}"
           th:object="${scheduleRequest}" method="post">
 
         <!-- Lỗi nghiệp vụ (GBR-01, MSG26, hội đồng...) -->
@@ -77,24 +80,18 @@
             <p class="form-error" th:if="${#fields.hasErrors('applicationId')}" th:errors="*{applicationId}">Vui lòng chọn hồ sơ.</p>
         </div>
 
-        <!-- 2. Hình thức & trạng thái -->
-        <div class="grid-2-col if-row">
-            <div class="form-group">
-                <label class="form-label form-label--required" for="interviewFormat">Hình thức phỏng vấn</label>
-                <select id="interviewFormat" class="form-select" th:field="*{interviewFormat}" required>
-                    <option th:each="fmt : ${interviewFormats}" th:value="${fmt}"
-                            th:text="${fmt.name() == 'Online_GoogleMeet' ? 'Trực tuyến (Google Meet)' : 'Trực tiếp tại văn phòng'}">Trực tuyến</option>
-                </select>
-                <p class="form-error" th:if="${#fields.hasErrors('interviewFormat')}" th:errors="*{interviewFormat}">Vui lòng chọn hình thức.</p>
-            </div>
-            <div class="form-group">
-                <label class="form-label" for="interviewStatus">Trạng thái buổi phỏng vấn</label>
-                <select id="interviewStatus" class="form-select" th:field="*{interviewStatus}">
-                    <option th:each="st : ${interviewStatuses}" th:value="${st}" th:text="${st.displayName}">Đã lên lịch</option>
-                </select>
-                <p class="form-hint" th:if="${isEdit}">Trạng thái chỉ đi tiến, không được lùi (GBR-01).</p>
-                <p class="form-error" th:if="${#fields.hasErrors('interviewStatus')}" th:errors="*{interviewStatus}">Trạng thái không hợp lệ.</p>
-            </div>
+        <!-- 2. Hình thức phỏng vấn -->
+        <!-- ducnm sửa: bỏ ô chọn trạng thái — hệ thống tự suy (tạo mới: Scheduled, hoặc Rescheduled nếu hồ sơ
+             đã có lịch đang hoạt động; sửa lịch đang hoạt động: luôn chuyển sang Rescheduled). Hủy lịch có
+             nút riêng ở trang danh sách. -->
+        <div class="form-group">
+            <label class="form-label form-label--required" for="interviewFormat">Hình thức phỏng vấn</label>
+            <select id="interviewFormat" class="form-select" th:field="*{interviewFormat}" required>
+                <option th:each="fmt : ${interviewFormats}" th:value="${fmt}"
+                        th:text="${fmt.name() == 'Online_GoogleMeet' ? 'Trực tuyến (Google Meet)' : 'Trực tiếp tại văn phòng'}">Trực tuyến</option>
+            </select>
+            <p class="form-error" th:if="${#fields.hasErrors('interviewFormat')}" th:errors="*{interviewFormat}">Vui lòng chọn hình thức.</p>
+            <p class="form-hint" th:if="${isEdit}">Lưu thay đổi sẽ tự chuyển lịch sang trạng thái "Đã đổi lịch".</p>
         </div>
 
         <!-- 3. Thời gian (MSG26: kết thúc sau bắt đầu) -->
@@ -114,13 +111,15 @@
             </div>
         </div>
 
-        <!-- 4. Địa điểm / link -->
+        <!-- 4. Địa điểm / link (bắt buộc) -->
         <div class="form-group">
-            <label class="form-label" for="locationOrLink">Địa điểm hoặc liên kết phòng họp</label>
-            <input type="text" id="locationOrLink" class="form-input" th:field="*{locationOrLink}"
+            <label class="form-label form-label--required" for="locationOrLink">Địa điểm hoặc liên kết phòng họp</label>
+            <input type="text" id="locationOrLink" class="form-input" th:field="*{locationOrLink}" required
+                   th:attr="aria-invalid=${#fields.hasErrors('locationOrLink') or #fields.hasErrors('locationValidForFormat')}"
                    placeholder="VD: https://meet.google.com/xyz-abcd-uvw hoặc Phòng 204, Tòa nhà Mộc">
-            <p class="form-hint">Phỏng vấn trực tuyến: nhập liên kết phòng họp. Trực tiếp: nhập địa chỉ phòng.</p>
-            <p class="form-error" th:if="${#fields.hasErrors('locationOrLink')}" th:errors="*{locationOrLink}">Địa điểm không hợp lệ.</p>
+            <p class="form-hint">Phỏng vấn trực tuyến: nhập liên kết http:// hoặc https://. Trực tiếp: nhập địa chỉ phòng.</p>
+            <p class="form-error" th:if="${#fields.hasErrors('locationOrLink')}" th:errors="*{locationOrLink}">Địa điểm không được để trống.</p>
+            <p class="form-error" th:if="${#fields.hasErrors('locationValidForFormat')}" th:errors="*{locationValidForFormat}">Liên kết không hợp lệ.</p>
         </div>
 
         <!-- 5. Hội đồng phỏng vấn -->

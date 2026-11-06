@@ -70,7 +70,7 @@ public class InterviewSchedulingServiceImpl implements InterviewSchedulingServic
 
         // 3. Kiểm tra ràng buộc thời gian & trạng thái qua InterviewTimeValidationService
         applicationStatusService.requireScheduleable(application.getApplicationId());
-        interviewTimeValidationService.validateForCreate(request);
+        interviewTimeValidationService.validateForCreate(request, application);
 
         // 4. Validate danh sách Hội đồng phỏng vấn (InterviewPanel)
         List<PanelMemberRequest> panelRequests = request.getPanelMembers();
@@ -122,7 +122,11 @@ public class InterviewSchedulingServiceImpl implements InterviewSchedulingServic
         }
 
         // 5. Khởi tạo và lưu InterviewSchedule
-        InterviewStatus initialStatus = request.getInterviewStatus() != null ? request.getInterviewStatus() : InterviewStatus.Scheduled;
+        // Trạng thái do hệ thống tự suy (không nhận giá trị người dùng chọn): hồ sơ đã có lịch còn hoạt động
+        // (Scheduled/Rescheduled) thì lịch mới này coi như đổi lịch; chưa có thì là lịch lần đầu.
+        InterviewStatus initialStatus = interviewScheduleRepository.existsActiveScheduleForApplication(application.getApplicationId())
+                ? InterviewStatus.Rescheduled
+                : InterviewStatus.Scheduled;
         InterviewSchedule schedule = InterviewSchedule.builder()
                 .application(application)
                 .interviewFormat(request.getInterviewFormat())
@@ -144,7 +148,12 @@ public class InterviewSchedulingServiceImpl implements InterviewSchedulingServic
         // dunglt bổ sung: xếp lịch thì hồ sơ HM_Passed → Interviewing (luồng trạng thái hồ sơ)
         applicationStatusService.onInterviewScheduled(application.getApplicationId());
         // hoangnh bổ sung: báo hội đồng và ứng viên
-        notificationService.notifyInterviewScheduled(fullySavedSchedule, creatorUser);
+        // ducnm sửa: hồ sơ đã có lịch trước đó -> lịch mới này là Rescheduled, báo đúng chữ "đã thay đổi"
+        if (initialStatus == InterviewStatus.Rescheduled) {
+            notificationService.notifyInterviewRescheduled(fullySavedSchedule, creatorUser);
+        } else {
+            notificationService.notifyInterviewScheduled(fullySavedSchedule, creatorUser);
+        }
         log.info("Tạo lịch phỏng vấn thành công với Interview ID {}", fullySavedSchedule.getInterviewId());
 
         return InterviewScheduleResponse.fromEntity(fullySavedSchedule);
@@ -158,12 +167,19 @@ public class InterviewSchedulingServiceImpl implements InterviewSchedulingServic
         InterviewSchedule schedule = interviewScheduleRepository.findByIdWithDetails(interviewId)
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy lịch phỏng vấn với ID: " + interviewId));
 
+        // Lịch đã Hoàn thành hoặc Đã hủy là trạng thái cuối, không sửa được nữa (GBR-01)
+        InterviewStatus statusBeforeUpdate = schedule.getInterviewStatus();
+        if (statusBeforeUpdate == InterviewStatus.Completed || statusBeforeUpdate == InterviewStatus.Cancelled) {
+            throw new InterviewStatusException("Lịch phỏng vấn đã " +
+                    (statusBeforeUpdate == InterviewStatus.Completed ? "hoàn thành" : "bị hủy") + ", không thể sửa được nữa.");
+        }
+
         User updaterUser = userRepository.findById(updaterUserId)
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy tài khoản người dùng với ID: " + updaterUserId));
         String updaterRole = updaterUser.getRole() != null ? updaterUser.getRole().getRoleName() : "";
         boolean isHrUpdater = "HR".equalsIgnoreCase(updaterRole);
 
-        // 1. Kiểm tra validation thời gian và trạng thái qua InterviewTimeValidationService
+        // 1. Kiểm tra validation thời gian qua InterviewTimeValidationService
         interviewTimeValidationService.validateForUpdate(interviewId, request, schedule);
 
         // 2. Cập nhật thời gian
@@ -182,9 +198,9 @@ public class InterviewSchedulingServiceImpl implements InterviewSchedulingServic
             schedule.setLocationOrLink(request.getLocationOrLink());
         }
 
-        InterviewStatus targetStatus = request.getInterviewStatus();
-        if (targetStatus != null && targetStatus != schedule.getInterviewStatus()) {
-            schedule.transitionTo(targetStatus);
+        // Mọi lần sửa thành công lịch đang hoạt động đều coi là đổi lịch (không cho người dùng tự chọn trạng thái)
+        if (schedule.getInterviewStatus() == InterviewStatus.Scheduled) {
+            schedule.transitionTo(InterviewStatus.Rescheduled);
         }
 
         // 4. Cập nhật Hội đồng phỏng vấn (nếu có danh sách mới)
