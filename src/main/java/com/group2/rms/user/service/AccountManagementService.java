@@ -10,11 +10,10 @@ import com.group2.rms.user.exception.AccountFieldException;
 import com.group2.rms.user.repository.DepartmentRepository;
 import com.group2.rms.user.repository.RoleRepository;
 import com.group2.rms.user.repository.UserRepository;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
+import com.group2.rms.user.exception.AccountOperationException;
 
 import java.util.Optional;
 import java.util.Set;
@@ -68,7 +67,7 @@ public class AccountManagementService {
 
     private static void requireInternal(User user) {
         if (!RoleAuthorities.INTERNAL_ROLE_NAMES.contains(user.getRole().getRoleName())) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy tài khoản nội bộ.");
+            throw new AccountOperationException("Không tìm thấy tài khoản nội bộ.");
         }
     }
 
@@ -205,7 +204,7 @@ public class AccountManagementService {
 
     private User findUser(int userId) {
         return users.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy tài khoản."));
+                .orElseThrow(() -> new AccountOperationException("Không tìm thấy tài khoản."));
     }
 
     private Role findRole(Integer roleId) {

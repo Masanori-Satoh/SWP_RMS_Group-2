@@ -14,6 +14,8 @@ import com.group2.rms.user.exception.AvatarUploadException;
 import com.group2.rms.user.repository.UserRepository;
 import com.group2.rms.user.service.UserProfileService;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -48,6 +50,17 @@ class CandidateProfileWebTests {
     @MockitoBean CandidateProfileService candidateProfiles;
     @MockitoBean UserProfileService userProfiles;
     @MockitoBean UserRepository users;
+
+    @ParameterizedTest
+    @ValueSource(strings = {"A", "A1", "Nguyễn 123"})
+    void updateAcceptsNamesAndPhoneAllowedByAdminForms(String fullName) throws Exception {
+        String phone = "1234567890abcdefghij";
+        mvc.perform(post("/portal/profile/update").with(as("an.vo", "Candidate")).with(csrf())
+                        .param("fullName", fullName).param("phoneNumber", phone))
+                .andExpect(redirectedUrl("/portal/profile"))
+                .andExpect(flash().attribute("successMessage", "Đã lưu hồ sơ."));
+        verify(candidateProfiles).update(eq("an.vo"), eq(new UpdateProfileRequest(fullName, phone)), any());
+    }
 
     @Test
     void guestIsSentToLogin() throws Exception {
