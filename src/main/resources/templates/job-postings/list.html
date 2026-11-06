@@ -245,7 +245,7 @@
                                                 th:if="${post.closable}" data-jp-action data-danger
                                                 th:data-url="@{/internal/job-postings/{id}/close(id=${post.jobPostingId})}"
                                                 data-heading="Đóng tin tuyển dụng?" th:data-title="${post.postingTitle}"
-                                                data-message="Hồ sơ đang xử lý sẽ dừng, lịch chưa diễn ra được hủy. Hệ thống chặn đóng nếu còn Offer chưa kết thúc."
+                                                data-message="Hồ sơ đang xử lý sẽ dừng, lịch chưa diễn ra được hủy. Hệ thống chặn đóng nếu còn thư mời chưa kết thúc."
                                                 data-confirm="Đóng tin">Đóng tin</button>
                                             <button class="more-menu__item jp-menu-danger" type="button"
                                                 th:if="${post.deletable}" data-jp-action data-danger

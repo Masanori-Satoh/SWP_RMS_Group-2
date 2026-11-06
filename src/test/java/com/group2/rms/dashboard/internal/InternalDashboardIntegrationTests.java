@@ -211,7 +211,7 @@ class InternalDashboardIntegrationTests {
     @ParameterizedTest(name = "{0} mở /dashboard/internal -> thấy \"{2}\"")
     @CsvSource({
             "HR,ROLE_HR,Việc cần xử lý",
-            "Director,ROLE_DIRECTOR,Đề nghị tuyển dụng chờ duyệt",
+            "Director,ROLE_DIRECTOR,Thư mời nhận việc chờ duyệt",
             "Interviewer,ROLE_INTERVIEWER,Lịch phỏng vấn"})
     @DisplayName("HR / Director / Interviewer -> có KPI icon; chỉ trang có biểu đồ mới nạp Chart.js")
     void dashboard_shouldRenderRoleSection_whenSeedAccountLogsIn(String roleName, String authority, String heading)

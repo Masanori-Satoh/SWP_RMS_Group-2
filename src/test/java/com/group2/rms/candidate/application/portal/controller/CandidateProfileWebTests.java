@@ -104,7 +104,8 @@ class CandidateProfileWebTests {
         mvc.perform(get("/portal/profile").with(as("an.vo", "Candidate")))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("adw-page")))
-                .andExpect(content().string(containsString("adw-form-wrap")))
+                // #117 bỏ adw-form-wrap, đổi sang bố cục hai cột (thẻ tổng quan + thẻ thông tin).
+                .andExpect(content().string(containsString("profile-card profile-overview adw-surface")))
                 .andExpect(content().string(not(containsString("adw-scene"))))
                 .andExpect(content().string(not(containsString("admin-workspace.js"))))
                 .andExpect(content().string(not(containsString("id=\"workspace-navigation\""))));

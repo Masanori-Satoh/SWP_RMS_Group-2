@@ -203,7 +203,7 @@ public final class NotificationMessages {
             salary = String.format("%,d ₫", offer.getProposedSalary().longValue());
         }
         return String.format(
-                "Chuyên viên tuyển dụng %s đã nộp đề xuất nhận việc cho ứng viên %s (Vị trí: %s, Lương chính thức: %s). Vui lòng xem xét và thực hiện phê duyệt.",
+                "Chuyên viên tuyển dụng %s đã nộp thư mời nhận việc cho ứng viên %s (Vị trí: %s, Lương chính thức: %s). Vui lòng xem xét và thực hiện phê duyệt.",
                 hrName, candidateName(offer.getApplication()), positionTitle(offer), salary);
     }
 
@@ -213,7 +213,7 @@ public final class NotificationMessages {
             noteText = " Ghi chú: \"" + shortComment(comments) + "\".";
         }
         return String.format(
-                "Giám đốc %s đã phê duyệt đề xuất nhận việc cho ứng viên %s (Vị trí: %s).%s Bạn có thể tiến hành phát hành Thư mời nhận việc cho ứng viên.",
+                "Giám đốc %s đã phê duyệt thư mời nhận việc cho ứng viên %s (Vị trí: %s).%s Bạn có thể tiến hành phát hành Thư mời nhận việc cho ứng viên.",
                 directorName, candidateName(offer.getApplication()), positionTitle(offer), noteText);
     }
 
@@ -223,7 +223,7 @@ public final class NotificationMessages {
             reasonText = shortComment(comments);
         }
         return String.format(
-                "Giám đốc %s đã từ chối đề xuất nhận việc cho ứng viên %s (Vị trí: %s). Lý do: \"%s\". Vui lòng kiểm tra lại điều khoản và chỉnh sửa bản thảo nếu cần.",
+                "Giám đốc %s đã từ chối thư mời nhận việc cho ứng viên %s (Vị trí: %s). Lý do: \"%s\". Vui lòng kiểm tra lại điều khoản và chỉnh sửa bản thảo nếu cần.",
                 directorName, candidateName(offer.getApplication()), positionTitle(offer), reasonText);
     }
 

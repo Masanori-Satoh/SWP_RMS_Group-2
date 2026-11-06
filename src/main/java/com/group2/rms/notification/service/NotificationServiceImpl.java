@@ -388,7 +388,7 @@ public class NotificationServiceImpl implements NotificationService {
         if (sender == null) {
             sender = offer.getProposedBy();
         }
-        String title = "Yêu cầu phê duyệt Đề xuất nhận việc: " + NotificationMessages.positionTitle(offer);
+        String title = "Yêu cầu phê duyệt Thư mời nhận việc: " + NotificationMessages.positionTitle(offer);
         String content = NotificationMessages.offerPendingContent(offer,
                 NotificationMessages.nameOr(sender, "Chuyên viên tuyển dụng"));
         String timeKey = offerTimeKey(offer);
@@ -443,12 +443,12 @@ public class NotificationServiceImpl implements NotificationService {
         String eventType;
         String eventPrefix;
         if (approved) {
-            title = "Đề xuất nhận việc đã được Giám đốc phê duyệt: " + positionTitle;
+            title = "Thư mời nhận việc đã được Giám đốc phê duyệt: " + positionTitle;
             content = NotificationMessages.offerApprovedContent(offer, directorName, comments);
             eventType = "OFFER_DIRECTOR_APPROVED";
             eventPrefix = "OFFER_DEC_APPV_";
         } else {
-            title = "Đề xuất nhận việc bị Giám đốc từ chối: " + positionTitle;
+            title = "Thư mời nhận việc bị Giám đốc từ chối: " + positionTitle;
             content = NotificationMessages.offerRejectedContent(offer, directorName, comments);
             eventType = "OFFER_DIRECTOR_REJECTED";
             eventPrefix = "OFFER_DEC_REJ_";
