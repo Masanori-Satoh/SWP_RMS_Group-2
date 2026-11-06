@@ -1,5 +1,7 @@
 # BÁO CÁO CÔNG VIỆC ITERATION 1 — MODULE JOB REQUISITION
 
+> **Ghi chú 06/11/2026:** Chấm CV bằng AI (`AI_Screened`, `AIScreeningResult`, `OverallScore`) và tiêu chí sàng lọc (`ScreeningCriteria`) đã gỡ khỏi hệ thống (migration `013`, `014`). Phần nhắc tới chúng bên dưới là nội dung tại thời điểm viết, không còn đúng với hệ thống.
+
 - **Thành viên phụ trách:** Nguyễn Huy Hoàng (hoangnh)
 - **Module:** Yêu cầu Tuyển dụng (Job Requisition)
 - **Nhánh Git:** `feat/hoang-Requisition-List-Screen`

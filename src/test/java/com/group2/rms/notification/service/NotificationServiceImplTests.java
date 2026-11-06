@@ -962,6 +962,23 @@ class NotificationServiceImplTests {
         }
 
         @Test
+        @DisplayName("notifyApplicationRejected: hồ sơ bị loại -> Chỉ ứng viên nhận, không lộ người duyệt, link về đơn của tôi")
+        void notifyApplicationRejected_shouldNotifyCandidateOnly_withoutActor() {
+            // Act
+            notificationService.notifyApplicationRejected(application());
+
+            // Assert
+            Notification saved = savedNotifications(1).get(0);
+            assertEquals(candidateUser, saved.getRecipient());
+            assertNull(saved.getActor());
+            assertEquals("APPLICATION_REJECTED", saved.getEventType());
+            assertEquals("APP_REJECTED_88", saved.getEventId());
+            assertEquals("/portal/applications/88", saved.getLinkUrl());
+            assertEquals("danger", NotificationLabels.eventTone(saved.getEventType()));
+            assertNotNull(NotificationLabels.eventLabel(saved.getEventType()));
+        }
+
+        @Test
         @DisplayName("notifyInterviewScheduled: HR tạo lịch -> Hội đồng (trừ HR tạo) và ứng viên nhận, link đúng phía")
         void notifyInterviewScheduled_shouldNotifyPanelAndCandidate_exceptActor() {
             // Act

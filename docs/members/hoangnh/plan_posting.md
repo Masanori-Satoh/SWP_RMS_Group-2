@@ -1,5 +1,7 @@
 # Kế hoạch hoàn thiện Tin tuyển dụng (Job Posting) theo mockup
 
+> **Ghi chú 06/11/2026:** Chấm CV bằng AI (`AI_Screened`, `AIScreeningResult`, `OverallScore`) và tiêu chí sàng lọc (`ScreeningCriteria`) đã gỡ khỏi hệ thống (migration `013`, `014`). Phần nhắc tới chúng bên dưới là nội dung tại thời điểm viết, không còn đúng với hệ thống.
+
 - **Người phụ trách:** Nguyễn Huy Hoàng (hoangnh)
 - **Ngày lập:** 17/10/2026
 - **Mockup đã được GV xác nhận:**

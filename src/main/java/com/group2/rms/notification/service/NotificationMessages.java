@@ -159,6 +159,13 @@ public final class NotificationMessages {
                 reviewerName, candidateName(application), application.getJobPosting().getPostingTitle());
     }
 
+    // dunglt bổ sung: chữ cho ứng viên, không nêu vòng, người loại hay lý do (GBR-02)
+    public static String applicationRejectedContent(Application application) {
+        return String.format(
+                "Cảm ơn bạn đã ứng tuyển vị trí \"%s\". Rất tiếc, hồ sơ của bạn chưa phù hợp để tiếp tục trong đợt tuyển dụng này. Bạn có thể xem chi tiết ở Đơn của tôi.",
+                application.getJobPosting().getPostingTitle());
+    }
+
     // "dd/MM/yyyy HH:mm – HH:mm"; chưa có giờ kết thúc thì chỉ hiện giờ bắt đầu
     public static String interviewTime(InterviewSchedule schedule) {
         String when = displayTime(schedule.getStartTime());
