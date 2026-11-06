@@ -322,6 +322,23 @@ public class NotificationServiceImpl implements NotificationService {
                 .eventId("APP_HM_PASS_" + application.getApplicationId()));
     }
 
+    // dunglt bổ sung: báo ứng viên khi hồ sơ bị loại; actor null để không lộ người duyệt (GBR-02)
+    @Override
+    @Transactional
+    public void notifyApplicationRejected(Application application) {
+        if (application == null || application.getCandidate() == null) {
+            log.warn("Cannot send rejection notification: Application or Candidate is null");
+            return;
+        }
+        notifyEach(Collections.singletonList(application.getCandidate().getAccount()), null, Notification.builder()
+                .title("Cập nhật hồ sơ ứng tuyển: " + application.getJobPosting().getPostingTitle())
+                .content(NotificationMessages.applicationRejectedContent(application))
+                .eventType("APPLICATION_REJECTED")
+                .referenceId(String.valueOf(application.getApplicationId()))
+                .linkUrl("/portal/applications/" + application.getApplicationId())
+                .eventId("APP_REJECTED_" + application.getApplicationId()));
+    }
+
     @Override
     @Transactional
     public void notifyInterviewScheduled(InterviewSchedule schedule, User actor) {
