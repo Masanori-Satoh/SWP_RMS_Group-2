@@ -40,6 +40,7 @@ class CandidateOfferServiceTests {
     @Mock CurrentUserService currentUserService;
     @Mock ApplicationRepository applications;
     @Mock com.group2.rms.notification.service.NotificationService systemNotificationService;
+    @Mock org.springframework.transaction.PlatformTransactionManager transactionManager;
 
     private CandidateOfferServiceImpl service;
 
@@ -69,7 +70,10 @@ class CandidateOfferServiceTests {
 
     @BeforeEach
     void setUp() {
-        service = new CandidateOfferServiceImpl(offers, currentUserService, applications, systemNotificationService);
+        service = new CandidateOfferServiceImpl(offers, currentUserService, applications, systemNotificationService,
+                java.time.Clock.systemDefaultZone(), transactionManager);
+        lenient().when(transactionManager.getTransaction(any())).thenAnswer(invocation ->
+                new org.springframework.transaction.support.SimpleTransactionStatus());
         lenient().when(applications.transition(anyInt(), anyCollection(), anyString())).thenReturn(1);
         when(currentUserService.requireUser()).thenReturn(User.builder().userId(USER_ID).build());
     }
@@ -91,6 +95,46 @@ class CandidateOfferServiceTests {
         assertFalse(detail.isExpired());
         assertEquals("Thư mời không còn nhận phản hồi", row.statusLabel());
         assertEquals(row.statusLabel(), detail.statusLabel());
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void responseNotificationsRunOnlyAfterCommit(boolean committed) {
+        OfferProposal testOffer = offer(OFFER_ID, "Sent_Candidate");
+        when(offers.findVisibleById(eq(OFFER_ID), eq(USER_ID), anyCollection())).thenReturn(Optional.of(testOffer));
+        when(offers.answerIfEligible(eq(OFFER_ID), eq(USER_ID), eq("Accepted"), isNull(), any(), any())).thenReturn(1);
+        org.springframework.transaction.support.TransactionSynchronizationManager.initSynchronization();
+        org.springframework.transaction.support.TransactionSynchronizationManager.setActualTransactionActive(true);
+        try {
+            service.accept(OFFER_ID);
+            verifyNoInteractions(systemNotificationService);
+            for (var callback : org.springframework.transaction.support.TransactionSynchronizationManager.getSynchronizations()) {
+                if (committed) callback.afterCommit();
+                else callback.afterCompletion(org.springframework.transaction.support.TransactionSynchronization.STATUS_ROLLED_BACK);
+            }
+        } finally {
+            org.springframework.transaction.support.TransactionSynchronizationManager.clearSynchronization();
+            org.springframework.transaction.support.TransactionSynchronizationManager.setActualTransactionActive(false);
+        }
+        if (committed) {
+            verify(systemNotificationService).markOfferNotificationRead(USER_ID, OFFER_ID);
+            verify(systemNotificationService).notifyOfferResponseFromCandidate(testOffer, true, null);
+            verify(transactionManager, times(2)).getTransaction(argThat(definition -> definition.getPropagationBehavior()
+                    == org.springframework.transaction.TransactionDefinition.PROPAGATION_REQUIRES_NEW));
+        } else {
+            verifyNoInteractions(systemNotificationService, transactionManager);
+        }
+    }
+
+    @Test
+    void markingNotificationReadFailureDoesNotPreventResponseNotification() {
+        OfferProposal testOffer = offer(OFFER_ID, "Sent_Candidate");
+        when(offers.findVisibleById(eq(OFFER_ID), eq(USER_ID), anyCollection())).thenReturn(Optional.of(testOffer));
+        when(offers.answerIfEligible(eq(OFFER_ID), eq(USER_ID), eq("Accepted"), isNull(), any(), any())).thenReturn(1);
+        doThrow(new IllegalStateException("Synthetic read failure")).when(systemNotificationService)
+                .markOfferNotificationRead(USER_ID, OFFER_ID);
+        assertEquals("Junior Java Developer", service.accept(OFFER_ID));
+        verify(systemNotificationService).notifyOfferResponseFromCandidate(testOffer, true, null);
     }
 
     @Test

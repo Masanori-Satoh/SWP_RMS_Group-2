@@ -8,8 +8,15 @@ import com.group2.rms.offer.dto.CandidateOfferResponse;
 import com.group2.rms.offer.entity.OfferProposal;
 import com.group2.rms.offer.exception.OfferResponseException;
 import com.group2.rms.offer.repository.CandidateOfferRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.math.BigDecimal;
 import java.time.Clock;
@@ -19,6 +26,8 @@ import java.util.Set;
 
 @Service
 @Transactional
+@RequiredArgsConstructor
+@Slf4j
 public class CandidateOfferServiceImpl implements CandidateOfferService {
 
     static final String SENT = "Sent_Candidate";
@@ -33,32 +42,7 @@ public class CandidateOfferServiceImpl implements CandidateOfferService {
     private final ApplicationRepository applications;
     private final com.group2.rms.notification.service.NotificationService systemNotificationService;
     private final Clock clock;
-
-    @org.springframework.beans.factory.annotation.Autowired
-    public CandidateOfferServiceImpl(CandidateOfferRepository offers,
-                                    CurrentUserService currentUserService,
-                                    ApplicationRepository applications,
-                                    com.group2.rms.notification.service.NotificationService systemNotificationService,
-                                    Clock clock) {
-        this.offers = offers;
-        this.currentUserService = currentUserService;
-        this.applications = applications;
-        this.systemNotificationService = systemNotificationService;
-        this.clock = clock != null ? clock : Clock.systemDefaultZone();
-    }
-
-    public CandidateOfferServiceImpl(CandidateOfferRepository offers,
-                                    CurrentUserService currentUserService,
-                                    ApplicationRepository applications,
-                                    com.group2.rms.notification.service.NotificationService systemNotificationService) {
-        this(offers, currentUserService, applications, systemNotificationService, Clock.systemDefaultZone());
-    }
-
-    public CandidateOfferServiceImpl(CandidateOfferRepository offers,
-                                    CurrentUserService currentUserService,
-                                    ApplicationRepository applications) {
-        this(offers, currentUserService, applications, null, Clock.systemDefaultZone());
-    }
+    private final PlatformTransactionManager transactionManager;
 
     /**
      * Lấy thư mời của chính ứng viên đăng nhập, gồm Sent_Candidate, Accepted, Declined và Expired (chỉ xem, không được trả lời).
@@ -140,15 +124,39 @@ public class CandidateOfferServiceImpl implements CandidateOfferService {
                 accepted ? "Hired" : "Withdrawn") != 1) {
             throw new OfferResponseException("Hồ sơ vừa thay đổi. Vui lòng tải lại trang để kiểm tra kết quả.");
         }
-        if (systemNotificationService != null) {
-            try {
-                systemNotificationService.markOfferNotificationRead(userId, offerId);
-            } catch (Exception ignored) {}
-            try {
-                systemNotificationService.notifyOfferResponseFromCandidate(offer, accepted, cleanReason);
-            } catch (Exception ignored) {}
-        }
+        notifyAfterAnswerCommit(offerId, userId, accepted, cleanReason);
         return offer.getApplication().getJobPosting().getPostingTitle();
+    }
+
+    /** Chỉ thông báo sau khi phản hồi đã commit; không giữ entity bị tách bởi UPDATE clearAutomatically. */
+    private void notifyAfterAnswerCommit(Integer offerId, Integer userId, boolean accepted, String reason) {
+        Runnable send = () -> {
+            notificationInNewTransaction(offerId, "đánh dấu thông báo đã đọc",
+                    () -> systemNotificationService.markOfferNotificationRead(userId, offerId));
+            notificationInNewTransaction(offerId, "gửi thông báo phản hồi", () -> {
+                OfferProposal current = offers.findVisibleById(offerId, userId, CANDIDATE_VISIBLE_STATUSES)
+                        .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy thư mời nhận việc."));
+                systemNotificationService.notifyOfferResponseFromCandidate(current, accepted, reason);
+            });
+        };
+        if (TransactionSynchronizationManager.isActualTransactionActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override public void afterCommit() { send.run(); }
+            });
+        } else {
+            send.run();
+        }
+    }
+
+    /** Hai thao tác thông báo độc lập: lỗi một thao tác không rollback phản hồi hoặc chặn thao tác còn lại. */
+    private void notificationInNewTransaction(Integer offerId, String operation, Runnable action) {
+        try {
+            TransactionTemplate isolated = new TransactionTemplate(transactionManager);
+            isolated.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+            isolated.executeWithoutResult(status -> action.run());
+        } catch (Exception error) {
+            log.warn("Không thể {} cho thư mời #{}", operation, offerId, error);
+        }
     }
 
     /**

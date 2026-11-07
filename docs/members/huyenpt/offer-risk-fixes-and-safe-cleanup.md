@@ -63,3 +63,19 @@ Log không commit: scratch/offer-risk-export-20261107.log và scratch/offer-risk
 CandidateOfferDetailResponse.java và offers/list.html là hai file production còn lại. Phần tăng ở candidate service là điều kiện an toàn và helper dùng chung cho danh sách/chi tiết. Test và tài liệu tăng riêng để giữ bằng chứng; không tính chúng vào mức giảm production.
 
 Không sửa JavaScript vì các request dùng chung đã được gom trước đó; không thêm abstraction hoặc file mới chỉ để giảm số dòng. Chưa đổi gửi email sang async vì đang giữ nguyên phản hồi kết quả email. Notification sau commit vẫn là best-effort có log, chưa có outbox/retry bền vững. Chưa kiểm tra trực quan browser hoặc benchmark bộ nhớ bằng MB. Không tự bật job hết hạn.
+
+## Bổ sung: sửa rollback khi candidate nhận hoặc từ chối thư mời
+
+Nền bản sửa: `5dbf1817`. Đợt cách ly notification trước mới xử lý HR/Director, còn bỏ sót nhánh candidate.
+
+- Chẩn đoán trước sửa đã tái hiện trên SQL riêng: HR khác Hiring Manager, UPDATE phản hồi clear persistence context, notification dùng Offer đã detached và truy cập username của HM gây LazyInitializationException; participant notification đánh dấu rollback-only. Commit ném UnexpectedRollbackException, Offer/Application không đổi và controller hiển thị lỗi chung.
+- Candidate đăng ký notification sau khi giao dịch phản hồi commit. Hai thao tác đánh dấu thông báo đã đọc và báo HR/HM chạy độc lập trong hai giao dịch REQUIRES_NEW.
+- Tải lại Offer của đúng candidate trong giao dịch mới trước khi soạn thông báo; không giữ entity đã bị clear. Lỗi thông báo có log theo OfferId, không rollback quyết định hoặc ngăn thao tác thông báo còn lại.
+- Giữ nguyên kiểm tra hạn, chủ sở hữu, UPDATE nguyên tử và chuyển Application Offered sang Hired/Withdrawn. Không sửa Application hoặc NotificationService chung, schema, migration, UI hay dữ liệu thư mời #12.
+- Dùng constructor injection qua RequiredArgsConstructor cho Clock và transaction manager; bỏ các constructor overload không có caller production, cập nhật chỗ khởi tạo trong unit test.
+
+Kiểm thử mới: hai ca unit commit/rollback, một ca lỗi đánh dấu đã đọc vẫn báo HR/HM; hai ca SQL nhận/từ chối với notification logic và repository thực, HR khác HM; bốn ca SQL lỗi rollback ở từng thao tác notification cho cả nhận/từ chối.
+
+Kết quả: **46 CandidateOfferServiceTests + 19 CandidateOfferWebTests + 46 SQL regression = 111 test đạt**, không lỗi hoặc bỏ qua. SQL xác minh quyết định được lưu, trạng thái hồ sơ đúng, notification cũ đã đọc và hai người nhận có thông báo riêng. Các ca lỗi notification vẫn giữ nguyên quyết định đã commit.
+
+Database tạm OfferRegression_e90d70a500fe4d3f988999f4f635e4dc đã được xóa và xác minh không còn. Log giữ trong scratch/offer-candidate-response-unit-20261107.log và scratch/offer-candidate-response-sql-20261107.log, không stage. Không khởi động lại ứng dụng đang chạy của người dùng hoặc bấm nhận/từ chối trên database ứng dụng; cần nạp lại code mới trước khi thử ở trình duyệt.

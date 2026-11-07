@@ -77,9 +77,109 @@ class OfferPersistenceRegressionTests {
     @Autowired com.group2.rms.offer.service.OfferExportService exportService;
     @Autowired PlatformTransactionManager transactionManager;
     @Autowired com.group2.rms.candidate.application.portal.repository.MyApplicationRepository myApplications;
+    @Autowired com.group2.rms.notification.repository.NotificationRepository notifications;
     @MockitoBean OfferMailSender mailSender;
     @MockitoBean com.group2.rms.notification.service.NotificationService notificationService;
     private OfferProposal offer;
+
+    /** Dùng notification thực và HM khác HR để bắt lỗi LAZY đã từng làm rollback phản hồi. */
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void candidateResponsePersistsAndNotifiesDistinctHrAndHiringManager(boolean accepted) {
+        var fixture = prepareCandidateResponseFixture();
+        var letter = notifications.save(com.group2.rms.notification.entity.Notification.builder()
+                .recipient(offer.getProposedBy()).title("Synthetic letter").content("Synthetic content")
+                .eventType("OFFER_LETTER_SENT").referenceId(fixture.id().toString())
+                .eventId("FIXTURE_LETTER_" + fixture.id()).build());
+        TestTransaction.flagForCommit();
+        TestTransaction.end();
+
+        var actualNotifications = new com.group2.rms.notification.service.NotificationServiceImpl(notifications,
+                org.mockito.Mockito.mock(com.group2.rms.user.repository.UserRepository.class),
+                org.mockito.Mockito.mock(org.springframework.context.ApplicationEventPublisher.class),
+                java.time.Clock.systemDefaultZone());
+        org.mockito.Mockito.doAnswer(invocation -> {
+            actualNotifications.markOfferNotificationRead(invocation.getArgument(0), invocation.getArgument(1));
+            return null;
+        }).when(notificationService).markOfferNotificationRead(fixture.ownerId(), fixture.id());
+        org.mockito.Mockito.doAnswer(invocation -> {
+            actualNotifications.notifyOfferResponseFromCandidate(invocation.getArgument(0),
+                    invocation.getArgument(1), invocation.getArgument(2));
+            return null;
+        }).when(notificationService).notifyOfferResponseFromCandidate(any(), org.mockito.ArgumentMatchers.eq(accepted),
+                org.mockito.ArgumentMatchers.nullable(String.class));
+
+        answerAsCandidate(fixture, accepted);
+        new TransactionTemplate(transactionManager).executeWithoutResult(status -> {
+            assertCandidateResponseStored(fixture, accepted);
+            assertTrue(notifications.findById(letter.getNotificationId()).orElseThrow().getIsRead());
+            var recipients = entityManager.createQuery("SELECT n.recipient.userId FROM Notification n "
+                            + "WHERE n.referenceId = :id AND n.eventType = :type", Integer.class)
+                    .setParameter("id", fixture.id().toString())
+                    .setParameter("type", accepted ? "OFFER_ACCEPTED" : "OFFER_DECLINED").getResultList();
+            assertEquals(java.util.Set.of(fixture.ownerId(), fixture.managerId()), new java.util.HashSet<>(recipients));
+            assertEquals(2, recipients.size());
+        });
+    }
+
+    @ParameterizedTest
+    @org.junit.jupiter.params.provider.CsvSource({"true,read", "true,response", "false,read", "false,response"})
+    void candidateResponseSurvivesNotificationRollback(boolean accepted, String failure) {
+        var fixture = prepareCandidateResponseFixture();
+        TestTransaction.flagForCommit();
+        TestTransaction.end();
+        var failing = org.mockito.Mockito.doAnswer(invocation -> {
+            new TransactionTemplate(transactionManager).executeWithoutResult(status -> {
+                status.setRollbackOnly();
+                throw new IllegalStateException("Synthetic notification rollback");
+            });
+            return null;
+        });
+        if ("read".equals(failure)) {
+            failing.when(notificationService).markOfferNotificationRead(fixture.ownerId(), fixture.id());
+        } else {
+            failing.when(notificationService).notifyOfferResponseFromCandidate(any(), org.mockito.ArgumentMatchers.eq(accepted),
+                    org.mockito.ArgumentMatchers.nullable(String.class));
+        }
+        answerAsCandidate(fixture, accepted);
+        new TransactionTemplate(transactionManager).executeWithoutResult(status -> assertCandidateResponseStored(fixture, accepted));
+        verify(notificationService).markOfferNotificationRead(fixture.ownerId(), fixture.id());
+        verify(notificationService).notifyOfferResponseFromCandidate(any(), org.mockito.ArgumentMatchers.eq(accepted),
+                org.mockito.ArgumentMatchers.nullable(String.class));
+    }
+
+    private record CandidateResponseFixture(Integer id, Integer applicationId, Integer ownerId,
+                                            Integer managerId, String username) {}
+
+    private CandidateResponseFixture prepareCandidateResponseFixture() {
+        User owner = offer.getProposedBy();
+        User manager = User.builder().role(owner.getRole()).username("response_hm_" + UUID.randomUUID())
+                .passwordHash("test-only").email(UUID.randomUUID() + "@example.invalid")
+                .fullName("Synthetic Hiring Manager").accountStatus("Active").build();
+        entityManager.persist(manager);
+        offer.getApplication().getJobPosting().getRequisition().setHiringManager(manager);
+        offer.getApplication().setApplicationStatus("Offered");
+        offer.setOfferStatus("Sent_Candidate");
+        offer.setResponseDeadline(java.time.LocalDateTime.now().plusDays(1));
+        return new CandidateResponseFixture(offer.getOfferId(), offer.getApplication().getApplicationId(),
+                owner.getUserId(), manager.getUserId(), owner.getUsername());
+    }
+
+    private void answerAsCandidate(CandidateResponseFixture fixture, boolean accepted) {
+        var context = org.springframework.security.core.context.SecurityContextHolder.getContext();
+        var previous = context.getAuthentication();
+        context.setAuthentication(new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+                fixture.username(), "test-only", java.util.List.of()));
+        try {
+            assertEquals("Test position", accepted ? candidateService.accept(fixture.id())
+                    : candidateService.decline(fixture.id(), "Synthetic reason"));
+        } finally { context.setAuthentication(previous); }
+    }
+
+    private void assertCandidateResponseStored(CandidateResponseFixture fixture, boolean accepted) {
+        assertEquals(accepted ? "Accepted" : "Declined", entityManager.find(OfferProposal.class, fixture.id()).getOfferStatus());
+        assertEquals(accepted ? "Hired" : "Withdrawn", entityManager.find(Application.class, fixture.applicationId()).getApplicationStatus());
+    }
 
     /** Lỗi ghi notification không được rollback thư mời đã phát hành hoặc trạng thái hồ sơ. */
     @Test
