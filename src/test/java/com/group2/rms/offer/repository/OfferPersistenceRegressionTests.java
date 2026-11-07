@@ -113,12 +113,18 @@ class OfferPersistenceRegressionTests {
         new TransactionTemplate(transactionManager).executeWithoutResult(status -> {
             assertCandidateResponseStored(fixture, accepted);
             assertTrue(notifications.findById(letter.getNotificationId()).orElseThrow().getIsRead());
-            var recipients = entityManager.createQuery("SELECT n.recipient.userId FROM Notification n "
-                            + "WHERE n.referenceId = :id AND n.eventType = :type", Integer.class)
+            var responses = entityManager.createQuery("SELECT n FROM Notification n "
+                            + "WHERE n.referenceId = :id AND n.eventType = :type",
+                            com.group2.rms.notification.entity.Notification.class)
                     .setParameter("id", fixture.id().toString())
                     .setParameter("type", accepted ? "OFFER_ACCEPTED" : "OFFER_DECLINED").getResultList();
+            var recipients = responses.stream().map(notification -> notification.getRecipient().getUserId()).toList();
             assertEquals(java.util.Set.of(fixture.ownerId(), fixture.managerId()), new java.util.HashSet<>(recipients));
             assertEquals(2, recipients.size());
+            for (var response : responses) {
+                assertEquals(response.getRecipient().getUserId().equals(fixture.ownerId())
+                        ? "/offers/" + fixture.id() : "/applications/" + fixture.applicationId(), response.getLinkUrl());
+            }
         });
     }
 

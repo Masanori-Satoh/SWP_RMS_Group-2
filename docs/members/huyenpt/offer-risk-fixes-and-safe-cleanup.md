@@ -79,3 +79,18 @@ Kiểm thử mới: hai ca unit commit/rollback, một ca lỗi đánh dấu đ�
 Kết quả: **46 CandidateOfferServiceTests + 19 CandidateOfferWebTests + 46 SQL regression = 111 test đạt**, không lỗi hoặc bỏ qua. SQL xác minh quyết định được lưu, trạng thái hồ sơ đúng, notification cũ đã đọc và hai người nhận có thông báo riêng. Các ca lỗi notification vẫn giữ nguyên quyết định đã commit.
 
 Database tạm OfferRegression_e90d70a500fe4d3f988999f4f635e4dc đã được xóa và xác minh không còn. Log giữ trong scratch/offer-candidate-response-unit-20261107.log và scratch/offer-candidate-response-sql-20261107.log, không stage. Không khởi động lại ứng dụng đang chạy của người dùng hoặc bấm nhận/từ chối trên database ứng dụng; cần nạp lại code mới trước khi thử ở trình duyệt.
+
+## Bổ sung: link chi tiết trong thông báo phản hồi candidate
+
+Người dùng đã duyệt mở rộng đúng phần tạo notification Offer trong NotificationServiceImpl và cập nhật hai URL cũ trên database local. Không thay đổi thông báo của nghiệp vụ khác hoặc quyền truy cập.
+
+- Cả nhận và từ chối: HR vào /offers/{offerId}; Hiring Manager vào /applications/{applicationId}. Mã tham chiếu và EventId vẫn theo OfferId để giữ chống trùng.
+- Không đưa HM vào /offers/{id}, vì SecurityConfig chỉ cho HR/Director xem Offer. HM xem hồ sơ theo ApplicationAccess hiện hữu; đã xác minh HM của hồ sơ 58 thuộc đúng phòng ban.
+- 170 test unit/MockMvc đạt (49 notification, 46 candidate service, 19 candidate web, 56 Offer web) và hai test SQL nhận/từ chối dùng notification/repository thực đạt. Test SQL xác minh URL riêng cho từng người nhận.
+- Database kiểm thử OfferRegression_2f691df5ddea46b1bb70cbc8585d7d2f đã được dọn và xác minh không còn.
+- Database local chỉ đổi LinkUrl của notification 19 và 20 sau kiểm tra EventId, người nhận và liên kết Offer 12/Application 58: /offers/12 và /applications/58. Giữ nguyên IsRead/ReadAt, nội dung, EventId và trạng thái Accepted/Hired.
+- Backup metadata hai bản ghi: scratch/offer-notification-links-before-20261107.csv. Script riêng cho đúng hai ID: scratch/offer-notification-links-repair-20261107.sql; không phải migration dùng chung cho môi trường khác.
+- Lần sửa dữ liệu đầu bị thiếu QUOTED_IDENTIFIER nên rollback, không đổi hàng nào. Đã bổ sung SET options cần cho filtered index và cập nhật đúng hai hàng thành công; log cuối: scratch/offer-notification-links-repair-20261107-v2.log.
+- Không sửa schema, giao diện chuông, Application hoặc SecurityConfig. Chưa kiểm tra click trực tiếp bằng trình duyệt; cần khởi động lại app để notification mới dùng code mới và reload trang để lấy link đã sửa.
+
+Log kiểm thử không commit: scratch/offer-notification-links-unit-20261107.log và scratch/offer-notification-links-sql-20261107.log.
