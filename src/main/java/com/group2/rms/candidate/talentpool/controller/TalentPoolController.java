@@ -7,7 +7,13 @@ import com.group2.rms.candidate.talentpool.dto.*;
 import com.group2.rms.candidate.talentpool.exception.RecruitmentEmailException;
 import com.group2.rms.candidate.talentpool.exception.TalentPoolException;
 import com.group2.rms.core.dto.ApiResponse;
+import com.group2.rms.core.exception.ModuleErrorResponse;
+import com.group2.rms.core.exception.ResourceNotFoundException;
+import org.springframework.security.access.AccessDeniedException;
 import jakarta.validation.Valid;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.web.servlet.HandlerMapping;
 import lombok.RequiredArgsConstructor;
 
 import java.net.URI;
@@ -452,5 +458,16 @@ public class TalentPoolController {
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_PDF)
                 .header("Content-Disposition", "inline").body(cv.file());
+    }
+
+    @ExceptionHandler({AccessDeniedException.class, ResourceNotFoundException.class, TalentPoolException.class})
+    public Object handleUnavailableTalentPoolData(
+            RuntimeException exception, HttpServletRequest request,
+            HttpServletResponse response) {
+        int status = exception instanceof AccessDeniedException ? 403
+                : exception instanceof ResourceNotFoundException ? 404 : 400;
+        return ModuleErrorResponse.reject(request, response,
+                request.getAttribute(HandlerMapping.BEST_MATCHING_HANDLER_ATTRIBUTE),
+                status, exception.getMessage(), "/talent-pool");
     }
 }

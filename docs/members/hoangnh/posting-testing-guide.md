@@ -51,7 +51,7 @@ Service test dựng service bằng tay: repository / `JobPostingAccess` / notifi
 | `JobPostingServiceImpl.create*` | nháp, đăng ngay, hẹn đăng, không quyền, yêu cầu bị trả lại, đã có tin mở, hạn nộp quá khứ, jobPostingId giả |
 | `JobPostingServiceImpl.update*` | sửa tin đang đăng (audit "cũ → mới"), **không đổi gì → không lưu / không audit**, hẹn đăng → đăng ngay, tạm dừng giữ / mở lại, tin đã đóng, requisitionId giả, 404 |
 | `publishJobPosting / publishNow / unschedule / pauseJobPosting / closeJobPosting / deleteJobPosting` | thành công + trạng thái không hợp lệ (trạng thái giữ nguyên), quá hạn, chỉ HR đóng, audit trước khi xóa, có hồ sơ không xóa |
-| `getInternalJobPostingDetail` | số liệu theo trạng thái + ngưỡng AI "70.00", hẹn đăng không đếm, 403, các lần đăng đếm gộp 2 câu |
+| `getInternalJobPostingDetail` | số liệu theo trạng thái + thẻ "Qua vòng CV", hẹn đăng không đếm, 403, các lần đăng đếm gộp 2 câu |
 | `prepareCreateForm / prepareRepostForm / prepareEditForm` | lần đăng kế tiếp, thiếu id / id không tồn tại, đăng lại chỉ từ tin đã đóng, sửa tin đã đóng |
 | `requisitionChoices / getDashboard` | số lần đăng tra gộp (không N+1), đếm bằng SQL (không `findAll()`) |
 | `JobPostingController` | danh sách HR / Director / chưa đăng nhập / ứng viên, HM POST bị 403, form tạo / sửa / đăng lại lỗi, lỗi theo ô, `@Size` chặn trước service, flash lưu nháp / hẹn đăng, sửa publish, thiếu CSRF, chi tiết (talent pool có / không), 404, 403, xóa, đăng lỗi, đóng tin + email |

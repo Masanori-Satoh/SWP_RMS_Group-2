@@ -14,6 +14,8 @@ import com.group2.rms.user.exception.AvatarUploadException;
 import com.group2.rms.user.repository.UserRepository;
 import com.group2.rms.user.service.UserProfileService;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -48,6 +50,17 @@ class CandidateProfileWebTests {
     @MockitoBean CandidateProfileService candidateProfiles;
     @MockitoBean UserProfileService userProfiles;
     @MockitoBean UserRepository users;
+
+    @ParameterizedTest
+    @ValueSource(strings = {"A", "A1", "Nguyễn 123"})
+    void updateAcceptsNamesAndPhoneAllowedByAdminForms(String fullName) throws Exception {
+        String phone = "0901234567";
+        mvc.perform(post("/portal/profile/update").with(as("an.vo", "Candidate")).with(csrf())
+                        .param("fullName", fullName).param("phoneNumber", phone))
+                .andExpect(redirectedUrl("/portal/profile"))
+                .andExpect(flash().attribute("successMessage", "Đã lưu hồ sơ."));
+        verify(candidateProfiles).update(eq("an.vo"), eq(new UpdateProfileRequest(fullName, phone)), any());
+    }
 
     @Test
     void guestIsSentToLogin() throws Exception {
@@ -91,7 +104,8 @@ class CandidateProfileWebTests {
         mvc.perform(get("/portal/profile").with(as("an.vo", "Candidate")))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("adw-page")))
-                .andExpect(content().string(containsString("adw-form-wrap")))
+                // #117 bỏ adw-form-wrap, đổi sang bố cục hai cột (thẻ tổng quan + thẻ thông tin).
+                .andExpect(content().string(containsString("profile-card profile-overview adw-surface")))
                 .andExpect(content().string(not(containsString("adw-scene"))))
                 .andExpect(content().string(not(containsString("admin-workspace.js"))))
                 .andExpect(content().string(not(containsString("id=\"workspace-navigation\""))));

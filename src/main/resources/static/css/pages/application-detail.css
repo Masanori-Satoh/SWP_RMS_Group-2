@@ -86,3 +86,8 @@
 .apd-grid .tpw-notes-panel .tp-note-form { margin-top: var(--s4); }
 .apd-grid .tpw-notes-panel .tp-note-input { min-height: 112px; }
 .apd-grid .tpw-notes-panel .tp-note-actions { display: flex; justify-content: flex-end; margin-top: var(--s2); }
+
+/* Thanh tiến độ hồ sơ: hiện đủ các bước, xuống dòng thay vì tràn ngang (bước "Nhận việc" từng bị che khi ghim sidebar). */
+.apd-page .stage-bar--stepper .stage-bar__list { width: auto; flex-wrap: wrap; row-gap: var(--s2); }
+.apd-page .stage-bar--stepper .stage-bar__item { flex: 0 1 auto; min-width: 0; }
+.apd-page .stage-bar--stepper .stage-bar__detail { max-width: 26ch; overflow-wrap: anywhere; }

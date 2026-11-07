@@ -105,8 +105,7 @@
                     <div class="form-group profile-field-full" th:object="${updateRequest}">
                         <label class="form-label" for="full-name">Họ và tên <span aria-hidden="true">*</span></label>
                         <input class="form-control" id="full-name" type="text" th:field="*{fullName}" data-profile-field
-                               minlength="2" maxlength="100" autocomplete="name" required pattern="^[\p{L}][\p{L}\s.'-]*$"
-                               title="Họ tên bắt đầu bằng chữ cái, chỉ gồm chữ cái, khoảng trắng, dấu gạch nối và dấu nháy."
+                               maxlength="100" autocomplete="name" required
                                th:attr="aria-invalid=${#fields.hasErrors('fullName')}" aria-describedby="full-name-error">
                         <span id="full-name-error" class="form-error" role="alert" th:hidden="${!#fields.hasErrors('fullName')}"><th:block
                               th:each="err : ${#fields.errors('fullName')}" th:text="${err}"></th:block></span>
@@ -114,10 +113,9 @@
                     <div class="form-group" th:object="${updateRequest}">
                         <label class="form-label" for="phone-number">Số điện thoại</label>
                         <input class="form-control" id="phone-number" type="tel" th:field="*{phoneNumber}" data-profile-field
-                               maxlength="15" autocomplete="tel" pattern="^[0-9+\s()-]*$"
-                               title="Chỉ gồm chữ số, khoảng trắng, dấu gạch nối, dấu cộng và ngoặc."
+                               maxlength="10" autocomplete="tel"
                                th:attr="aria-invalid=${#fields.hasErrors('phoneNumber')}" aria-describedby="phone-number-hint phone-number-error">
-                        <p id="phone-number-hint" class="form-hint">Tối đa 15 ký tự.</p>
+                        <p id="phone-number-hint" class="form-hint">Gồm 10 chữ số, bắt đầu bằng 0.</p>
                         <span id="phone-number-error" class="form-error" th:if="${#fields.hasErrors('phoneNumber')}" th:errors="*{phoneNumber}"></span>
                     </div>
                     <div class="form-group" th:object="${detailsRequest}">

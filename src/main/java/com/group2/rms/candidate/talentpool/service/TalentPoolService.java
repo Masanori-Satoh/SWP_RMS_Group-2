@@ -360,6 +360,7 @@ public class TalentPoolService {
                 submittedAt = source.getSubmissionDate();
                 if (!candidate.isPotential())
                     throw new TalentPoolException("Ứng viên không còn trong kho tiềm năng.");
+                requireActiveAccount(candidate);
                 if (!selected.add(candidateId))
                     throw new TalentPoolException("Ứng viên được chọn nhiều lần.");
                 if (source.getJobPosting().getJobPostingId().equals(jobId))
@@ -414,6 +415,7 @@ public class TalentPoolService {
             // check if candidate is not potential
             if (!candidate.isPotential())
                 throw new TalentPoolException("Ứng viên phải được đánh dấu tiềm năng.");
+            requireActiveAccount(candidate);
             // check if candidate is add before
             if (!selected.add(candidate.getCandidateId()))
                 throw new TalentPoolException("Chỉ chọn một CV cho mỗi ứng viên.");
@@ -661,7 +663,7 @@ public class TalentPoolService {
         if (!"Published".equals(posting.getPostingStatus()) && !"Paused".equals(posting.getPostingStatus()))
             throw new TalentPoolException("Chỉ tin đã đăng hoặc đang tạm dừng mới được đóng đợt tuyển.");
         if (audit.hasOpenOffers(id))
-            throw new TalentPoolException("Còn Offer chưa kết thúc. Hãy xử lý Offer trước khi đóng đợt tuyển.");
+            throw new TalentPoolException("Còn thư mời chưa kết thúc. Hãy xử lý thư mời trước khi đóng đợt tuyển.");
         posting.setPostingStatus("Closed");
         posting.setClosedAt(java.time.LocalDateTime.now());
         audit.record(user.getUserId(), "UPDATE", "JobPosting", id, null, "Closed");
@@ -710,6 +712,11 @@ public class TalentPoolService {
             return ApplicationCv
                     .file(storage.load(app.getAppliedCvUrl().substring(LocalCvStorage.URL_PREFIX.length())));
         return ApplicationCv.redirect(app.getAppliedCvUrl());
+    }
+
+    private void requireActiveAccount(Candidate candidate) {
+        if (!"Active".equals(candidate.getAccount().getAccountStatus()))
+            throw new TalentPoolException("Tài khoản ứng viên đã bị vô hiệu hóa.");
     }
 
     private void requireCv(String url) {

@@ -16,6 +16,7 @@
 </head>
 <body>
 <main id="main" layout:fragment="content" class="page-content container adw-page profile-page" tabindex="-1">
+    <div class="alert alert--danger" role="alert" th:if="${errorMessage}" th:text="${errorMessage}"></div>
     <th:block th:replace="~{fragments/ui/admin-workspace :: scene}"></th:block>
     <div class="profile-shell">
     <div class="page-header adw-heading">
@@ -110,20 +111,16 @@
                     <div class="form-group profile-field-full">
                         <label class="form-label" for="full-name">Họ và tên <span aria-hidden="true">*</span></label>
                         <input class="form-control" id="full-name" type="text" th:field="*{fullName}" data-profile-field
-                               minlength="2" maxlength="100" autocomplete="name" required
-                               pattern="^[\p{L}][\p{L}\s.'-]*$"
-                               title="Họ tên bắt đầu bằng chữ cái, chỉ gồm chữ cái, khoảng trắng, dấu chấm, dấu gạch nối và dấu nháy."
+                               maxlength="100" autocomplete="name" required
                                th:attr="aria-invalid=${#fields.hasErrors('fullName')},aria-describedby=${#fields.hasErrors('fullName') ? 'full-name-error' : null}">
                         <span id="full-name-error" class="form-error" th:if="${#fields.hasErrors('fullName')}" th:errors="*{fullName}"></span>
                     </div>
                     <div class="form-group">
                         <label class="form-label" for="phone-number">Số điện thoại</label>
                         <input class="form-control" id="phone-number" type="tel" th:field="*{phoneNumber}" data-profile-field
-                               maxlength="15" autocomplete="tel"
-                               pattern="^[0-9+\s()-]*$"
-                               title="Chỉ gồm chữ số, khoảng trắng, dấu gạch nối, dấu cộng và ngoặc."
+                               maxlength="10" autocomplete="tel"
                                th:attr="aria-invalid=${#fields.hasErrors('phoneNumber')},aria-describedby=${#fields.hasErrors('phoneNumber') ? 'phone-number-error' : 'phone-number-hint'}">
-                        <small id="phone-number-hint" class="form-hint">Tối đa 15 ký tự.</small>
+                        <small id="phone-number-hint" class="form-hint">Gồm 10 chữ số, bắt đầu bằng 0.</small>
                         <span id="phone-number-error" class="form-error" th:if="${#fields.hasErrors('phoneNumber')}" th:errors="*{phoneNumber}"></span>
                     </div>
                 </div>

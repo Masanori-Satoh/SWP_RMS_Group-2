@@ -6,6 +6,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -227,4 +228,39 @@ public interface InterviewScheduleRepository extends JpaRepository<InterviewSche
             @Param("startTime") LocalDateTime startTime,
             @Param("endTime") LocalDateTime endTime,
             @Param("excludeInterviewId") Long excludeInterviewId);
+
+    /**
+     * Kiểm tra trùng lịch của Ứng viên (theo CandidateId, không chỉ riêng hồ sơ đang xếp) trong khoảng
+     * thời gian [startTime, endTime]. Một ứng viên có thể có nhiều hồ sơ (nhiều vị trí) cùng lúc,
+     * nên phải kiểm tra theo người, không chỉ theo từng ApplicationId riêng lẻ.
+     */
+    @Query("SELECT COUNT(s) FROM InterviewSchedule s " +
+           "WHERE s.application.candidate.candidateId = :candidateId " +
+           "AND (:excludeInterviewId IS NULL OR s.interviewId != :excludeInterviewId) " +
+           "AND s.interviewStatus IN ('Scheduled', 'Rescheduled') " +
+           "AND s.startTime < :endTime AND s.endTime > :startTime")
+    long countConflictingSchedulesForCandidate(
+            @Param("candidateId") Integer candidateId,
+            @Param("startTime") LocalDateTime startTime,
+            @Param("endTime") LocalDateTime endTime,
+            @Param("excludeInterviewId") Long excludeInterviewId);
+
+    /**
+     * Các lịch còn hoạt động (Scheduled/Rescheduled) của một hồ sơ.
+     * Tạo lịch mới cho hồ sơ này nghĩa là đổi lịch, nên các lịch này sẽ bị thay thế.
+     */
+    @Query("SELECT s FROM InterviewSchedule s " +
+           "WHERE s.application.applicationId = :applicationId " +
+           "AND s.interviewStatus IN ('Scheduled', 'Rescheduled')")
+    List<InterviewSchedule> findActiveByApplicationId(@Param("applicationId") Integer applicationId);
+
+    /**
+     * Đã qua giờ kết thúc mà lịch vẫn còn hoạt động thì chuyển sang Completed.
+     * Gọi ở đầu các luồng xem / ghi lịch, trước khi đọc lịch, nên không cần job chạy nền.
+     * Không dùng clearAutomatically: nó tách cả tài khoản đăng nhập khỏi session và gây LazyInitializationException.
+     */
+    @Modifying(flushAutomatically = true)
+    @Query("UPDATE InterviewSchedule s SET s.interviewStatus = 'Completed' " +
+           "WHERE s.interviewStatus IN ('Scheduled', 'Rescheduled') AND s.endTime <= :now")
+    int completeEndedSchedules(@Param("now") LocalDateTime now);
 }

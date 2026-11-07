@@ -13,6 +13,8 @@ import com.group2.rms.user.repository.UserRepository;
 import com.group2.rms.user.service.UserProfileService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
@@ -66,6 +68,18 @@ class UserProfileWebTests {
                 .role(Role.builder().roleName("HR").build())
                 .build();
         when(userRepository.findByUsernameIgnoreCase("testuser")).thenReturn(Optional.of(mockUser));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"A", "A1", "Nguyễn 123"})
+    @WithMockUser(username = "testuser", authorities = "ROLE_HR")
+    void updateAcceptsNamesAndPhoneAllowedByAdminForms(String fullName) throws Exception {
+        String phone = "0901234567";
+        mvc.perform(post("/profile/update").with(csrf())
+                        .param("fullName", fullName).param("phoneNumber", phone))
+                .andExpect(redirectedUrl("/profile"))
+                .andExpect(flash().attribute("successMessage", "Đã lưu hồ sơ."));
+        verify(profileService).updateProfile("testuser", new UpdateProfileRequest(fullName, phone));
     }
 
     @Test
@@ -264,4 +278,15 @@ class UserProfileWebTests {
                 .andExpect(redirectedUrl("/portal/profile"));
         org.mockito.Mockito.verify(profileService, org.mockito.Mockito.never()).getProfile(any());
     }
+
+    @org.junit.jupiter.api.Test
+    @WithMockUser(username = "testuser", authorities = "ROLE_HR")
+    void updateRejectsPhoneWithLetters() throws Exception {
+        mvc.perform(post("/profile/update").with(csrf())
+                        .param("fullName", "An").param("phoneNumber", "abcxyz"))
+                .andExpect(redirectedUrl("/profile"))
+                .andExpect(flash().attributeCount(2));
+        verify(profileService, org.mockito.Mockito.never()).updateProfile(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
+    }
 }
+

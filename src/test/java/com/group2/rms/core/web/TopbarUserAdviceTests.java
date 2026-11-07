@@ -1,5 +1,6 @@
 package com.group2.rms.core.web;
 
+import com.group2.rms.user.service.UserAuditLogger;
 import com.group2.rms.user.entity.Role;
 import com.group2.rms.user.entity.User;
 import com.group2.rms.user.repository.UserRepository;
@@ -41,7 +42,7 @@ class TopbarUserAdviceTests {
     @BeforeEach
     void setUp() {
         storage = new LocalAvatarStorage(uploads.toString());
-        UserProfileService profiles = new UserProfileService(users, mock(PasswordEncoder.class), storage, new AvatarFileValidator());
+        UserProfileService profiles = new UserProfileService(users, mock(PasswordEncoder.class), storage, new AvatarFileValidator(), mock(UserAuditLogger.class));
         advice = new TopbarUserAdvice(users, provider(profiles));
         when(users.findByUsernameIgnoreCase("hr_lan")).thenReturn(Optional.of(hr));
     }

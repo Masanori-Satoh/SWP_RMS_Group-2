@@ -41,6 +41,24 @@ public final class ApplicationStatusLabels {
         };
     }
 
+    /**
+     * Nhãn trạng thái thư mời nhận việc ({@code OfferProposal.OfferStatus}) cho phía nhân viên; trạng thái lạ giữ nguyên.
+     */
+    // dunglt bổ sung: dòng hành trình "Thư mời: ..." trước đây hiện thẳng mã trạng thái (vd "Offer: Sent_Candidate").
+    public static String offerLabel(String offerStatus) {
+        return switch (offerStatus) {
+            case "Draft" -> "Đang soạn";
+            case "Pending_Director" -> "Chờ giám đốc duyệt";
+            case "Director_Approved" -> "Giám đốc đã duyệt";
+            case "Director_Rejected" -> "Giám đốc trả lại";
+            case "Sent_Candidate" -> "Đã gửi, chờ ứng viên trả lời";
+            case "Accepted" -> "Ứng viên đã nhận lời";
+            case "Declined" -> "Ứng viên đã từ chối";
+            case "Expired" -> "Đã quá hạn";
+            default -> offerStatus;
+        };
+    }
+
     public static String decisionLabel(String decision) {
         return switch (decision) {
             case "Pass" -> "Đạt";

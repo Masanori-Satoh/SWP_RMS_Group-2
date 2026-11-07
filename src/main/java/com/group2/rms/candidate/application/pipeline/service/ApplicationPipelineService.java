@@ -244,7 +244,7 @@ public class ApplicationPipelineService {
                 new ApplicationProgressFacts(applicationId, status, null, null, null, 0, 0, null, null));
     }
 
-    /** Hành trình của đơn, mới nhất trước: nộp, các lượt duyệt, lịch và kết quả phỏng vấn, offer. */
+    /** Hành trình của đơn, mới nhất trước: nộp, các lượt duyệt, lịch và kết quả phỏng vấn, thư mời. */
     private List<TimelineItem> timeline(Application application, User account) {
         Integer id = application.getApplicationId();
         List<TimelineItem> items = new ArrayList<>();
@@ -287,7 +287,7 @@ public class ApplicationPipelineService {
                 event.getAt(), "Kết quả phỏng vấn: " + ApplicationStatusLabels.interviewResultLabel(event.getStatus()),
                 null, null, ApplicationStatusLabels.interviewResultTone(event.getStatus()))));
         pipelineQueries.findOfferEvents(id).forEach(event -> items.add(new TimelineItem(
-                event.getAt(), "Offer: " + event.getStatus(), null, null, "success")));
+                event.getAt(), "Thư mời: " + ApplicationStatusLabels.offerLabel(event.getStatus()), null, null, "success")));
         if (ApplicationStatusService.CANCELLED.equals(application.getApplicationStatus())) {
             items.add(new TimelineItem(application.getUpdatedAt(), "Đóng đợt tuyển dụng", "Hệ thống",
                     "Đợt tuyển dụng đã kết thúc, hồ sơ dừng xử lý", "neutral"));

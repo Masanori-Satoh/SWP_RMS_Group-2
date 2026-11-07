@@ -5,6 +5,7 @@ import com.group2.rms.interview.entity.InterviewStatus;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.Future;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -39,6 +40,7 @@ public record InterviewScheduleRequest(
         @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
         LocalDateTime endTime,
 
+        @NotBlank(message = "Địa điểm hoặc liên kết phòng họp không được để trống.")
         @Size(max = 500, message = "Địa điểm hoặc liên kết phòng họp tối đa 500 ký tự.")
         String locationOrLink,
 
@@ -99,6 +101,22 @@ public record InterviewScheduleRequest(
             return true;
         }
         return endTime.isAfter(startTime);
+    }
+
+    /**
+     * ducnm bổ sung: hình thức trực tuyến phải nhập liên kết http(s), hình thức tại văn phòng chỉ cần
+     * không để trống (đã có @NotBlank riêng). Nhường lỗi cho @NotNull/@NotBlank khi còn thiếu dữ liệu.
+     */
+    @AssertTrue(message = "Hình thức trực tuyến phải nhập liên kết dạng http:// hoặc https://.")
+    public boolean isLocationValidForFormat() {
+        if (interviewFormat == null || locationOrLink == null || locationOrLink.isBlank()) {
+            return true;
+        }
+        if (interviewFormat != InterviewFormat.Online_GoogleMeet) {
+            return true;
+        }
+        String trimmed = locationOrLink.trim();
+        return trimmed.startsWith("http://") || trimmed.startsWith("https://");
     }
 
     // ==========================================

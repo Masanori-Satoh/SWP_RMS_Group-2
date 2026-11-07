@@ -27,7 +27,7 @@
         </a>
         </div>
     </div>
-    <th:block th:replace="~{fragments/ui/flash-toast :: flashToast(${successMessage}, null)}"></th:block>
+    <th:block th:replace="~{fragments/ui/flash-toast :: flashToast(${successMessage}, ${errorMessage})}"></th:block>
     <div class="aim-layout"><div class="aim-master">
     <form class="card mft-toolbar adw-surface" th:action="@{/admin/departments}" method="get" aria-label="Bộ lọc phòng ban">
         <input type="hidden" name="status" th:value="${selectedStatus ?: ''}">

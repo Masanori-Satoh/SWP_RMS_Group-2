@@ -322,6 +322,23 @@ public class NotificationServiceImpl implements NotificationService {
                 .eventId("APP_HM_PASS_" + application.getApplicationId()));
     }
 
+    // dunglt bổ sung: báo ứng viên khi hồ sơ bị loại; actor null để không lộ người duyệt (GBR-02)
+    @Override
+    @Transactional
+    public void notifyApplicationRejected(Application application) {
+        if (application == null || application.getCandidate() == null) {
+            log.warn("Cannot send rejection notification: Application or Candidate is null");
+            return;
+        }
+        notifyEach(Collections.singletonList(application.getCandidate().getAccount()), null, Notification.builder()
+                .title("Cập nhật hồ sơ ứng tuyển: " + application.getJobPosting().getPostingTitle())
+                .content(NotificationMessages.applicationRejectedContent(application))
+                .eventType("APPLICATION_REJECTED")
+                .referenceId(String.valueOf(application.getApplicationId()))
+                .linkUrl("/portal/applications/" + application.getApplicationId())
+                .eventId("APP_REJECTED_" + application.getApplicationId()));
+    }
+
     @Override
     @Transactional
     public void notifyInterviewScheduled(InterviewSchedule schedule, User actor) {
@@ -337,15 +354,23 @@ public class NotificationServiceImpl implements NotificationService {
                 "INT_RESCHED_" + interviewId(schedule) + "_" + timeKey, "");
     }
 
+    // ducnm bổ sung: hủy lịch chỉ báo ứng viên; hội đồng là người trong công ty, HR tự báo trực tiếp cho họ
     @Override
     @Transactional
     public void notifyInterviewCancelled(InterviewSchedule schedule, User actor, String reason) {
-        String reasonText = "";
-        if (reason != null && !reason.isBlank()) {
-            reasonText = " Lý do: " + reason.trim() + ".";
+        Application application = schedule == null ? null : schedule.getApplication();
+        if (NotificationMessages.requisitionOf(application) == null) {
+            log.warn("Cannot send INTERVIEW_CANCELLED notification: Schedule or Application is null");
+            return;
         }
-        notifyInterviewChange(schedule, actor, "INTERVIEW_CANCELLED", "Lịch phỏng vấn đã bị hủy",
-                "INT_CANCEL_" + interviewId(schedule), reasonText);
+        User candidateAccount = application.getCandidate() != null ? application.getCandidate().getAccount() : null;
+        notifyEach(Collections.singletonList(candidateAccount), actor, Notification.builder()
+                .title("Lịch phỏng vấn đã bị hủy: " + application.getJobPosting().getPostingTitle())
+                .content(NotificationMessages.interviewCancelledCandidateContent(schedule, reason))
+                .eventType("INTERVIEW_CANCELLED")
+                .referenceId(String.valueOf(schedule.getInterviewId()))
+                .linkUrl("/portal/interviews")
+                .eventId("INT_CANCEL_" + interviewId(schedule)));
     }
 
     @Override
@@ -388,7 +413,7 @@ public class NotificationServiceImpl implements NotificationService {
         if (sender == null) {
             sender = offer.getProposedBy();
         }
-        String title = "Yêu cầu phê duyệt Đề xuất nhận việc: " + NotificationMessages.positionTitle(offer);
+        String title = "Yêu cầu phê duyệt Thư mời nhận việc: " + NotificationMessages.positionTitle(offer);
         String content = NotificationMessages.offerPendingContent(offer,
                 NotificationMessages.nameOr(sender, "Chuyên viên tuyển dụng"));
         String timeKey = offerTimeKey(offer);
@@ -443,12 +468,12 @@ public class NotificationServiceImpl implements NotificationService {
         String eventType;
         String eventPrefix;
         if (approved) {
-            title = "Đề xuất nhận việc đã được Giám đốc phê duyệt: " + positionTitle;
+            title = "Thư mời nhận việc đã được Giám đốc phê duyệt: " + positionTitle;
             content = NotificationMessages.offerApprovedContent(offer, directorName, comments);
             eventType = "OFFER_DIRECTOR_APPROVED";
             eventPrefix = "OFFER_DEC_APPV_";
         } else {
-            title = "Đề xuất nhận việc bị Giám đốc từ chối: " + positionTitle;
+            title = "Thư mời nhận việc bị Giám đốc từ chối: " + positionTitle;
             content = NotificationMessages.offerRejectedContent(offer, directorName, comments);
             eventType = "OFFER_DIRECTOR_REJECTED";
             eventPrefix = "OFFER_DEC_REJ_";

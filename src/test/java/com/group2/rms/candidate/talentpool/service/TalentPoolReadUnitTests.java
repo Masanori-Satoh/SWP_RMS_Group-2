@@ -56,7 +56,7 @@ class TalentPoolReadUnitTests {
     private final User hm = User.builder().userId(6).fullName("HM An")
             .role(Role.builder().roleName("Hiring Manager").build()).build();
     private final Candidate candidate = Candidate.builder().candidateId(8).isPotential(true)
-            .account(User.builder().fullName("Candidate A").email("a@example.test").phoneNumber("0900000000").build()).build();
+            .account(User.builder().fullName("Candidate A").email("a@example.test").phoneNumber("0900000000").accountStatus("Active").build()).build();
     private final JobPosting job = JobPosting.builder().jobPostingId(20).postingTitle("Java Developer")
             .postingStatus("Published").requisition(JobRequisition.builder().hiringManager(hm).build()).build();
     private final LocalDateTime at = LocalDateTime.of(2026, 10, 19, 9, 0);

@@ -1,6 +1,11 @@
 
 package com.group2.rms.user.controller;
 
+import com.group2.rms.core.exception.ModuleErrorResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.web.servlet.HandlerMapping;
+import com.group2.rms.user.exception.AccountOperationException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -45,5 +50,14 @@ public class CandidateAccountController {
         accounts.activateCandidate(userId);
         redirectAttributes.addFlashAttribute("successMessage", "Đã kích hoạt lại tài khoản ứng viên.");
         return "redirect:/admin/candidate-accounts";
+    }
+
+    @ExceptionHandler(AccountOperationException.class)
+    public Object handleAccountOperationFailure(
+            AccountOperationException exception, HttpServletRequest request,
+            HttpServletResponse response) {
+        return ModuleErrorResponse.reject(request, response,
+                request.getAttribute(HandlerMapping.BEST_MATCHING_HANDLER_ATTRIBUTE),
+                ("ACCOUNT_STATUS_INVALID".equals(exception.getErrorCode()) ? 409 : 404), exception.getMessage(), "/admin/candidate-accounts");
     }
 }

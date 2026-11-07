@@ -12,9 +12,14 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import jakarta.servlet.http.HttpSession;
+
 import java.io.IOException;
 
 public class AccountSessionGuardFilter extends OncePerRequestFilter {
+
+    /** Session attribute holding the password hash this session was authenticated with. */
+    public static final String PASSWORD_HASH = AccountSessionGuardFilter.class.getName() + ".PASSWORD_HASH";
 
     private final UserRepository userRepository;
     private final SecurityContextLogoutHandler logoutHandler = new SecurityContextLogoutHandler();
@@ -47,7 +52,15 @@ public class AccountSessionGuardFilter extends OncePerRequestFilter {
                     && authentication.getAuthorities().stream()
                     .anyMatch(granted -> expectedAuthority.equals(granted.getAuthority()));
             // check if account is active and role is unchanged
-            if (account == null || !"Active".equals(account.getAccountStatus()) || !roleUnchanged) {
+            boolean passwordUnchanged = account == null || passwordUnchanged(request, account);
+            if (account == null || !"Active".equals(account.getAccountStatus()) || !roleUnchanged
+                    || !passwordUnchanged) {
+                // Background calls (notification polling) must not end the session silently:
+                // the next page click then gets the redirect that shows the "session expired" notice.
+                if (request.getRequestURI().startsWith(request.getContextPath() + "/api/")) {
+                    response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+                    return;
+                }
                 logoutHandler.logout(request, response, authentication);
                 response.sendRedirect(request.getContextPath() + "/login?session-expired");
                 return;
@@ -55,5 +68,19 @@ public class AccountSessionGuardFilter extends OncePerRequestFilter {
         }
 
         chain.doFilter(request, response);
+    }
+
+    /** First request of a session remembers the password hash; if it changes later, the session ends. */
+    private static boolean passwordUnchanged(HttpServletRequest request, User account) {
+        HttpSession session = request.getSession(false);
+        if (session == null) {
+            return true;
+        }
+        Object remembered = session.getAttribute(PASSWORD_HASH);
+        if (remembered == null) {
+            session.setAttribute(PASSWORD_HASH, account.getPasswordHash());
+            return true;
+        }
+        return remembered.equals(account.getPasswordHash());
     }
 }

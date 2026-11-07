@@ -28,13 +28,16 @@ public class UserProfileService {
     private final PasswordEncoder passwordEncoder;
     private final LocalAvatarStorage avatarStorage;
     private final AvatarFileValidator avatarValidator;
+    private final UserAuditLogger audit;
 
     public UserProfileService(UserRepository users, PasswordEncoder passwordEncoder,
-                              LocalAvatarStorage avatarStorage, AvatarFileValidator avatarValidator) {
+                              LocalAvatarStorage avatarStorage, AvatarFileValidator avatarValidator,
+                              UserAuditLogger audit) {
         this.users = users;
         this.passwordEncoder = passwordEncoder;
         this.avatarStorage = avatarStorage;
         this.avatarValidator = avatarValidator;
+        this.audit = audit;
     }
 
     @Transactional(readOnly = true)
@@ -55,9 +58,11 @@ public class UserProfileService {
     @Transactional
     public void updateProfile(String username, UpdateProfileRequest request) {
         User user = findByUsername(username);
+        var before = UserAuditLogger.userSnapshot(user);
         user.setFullName(request.fullName().trim());
         user.setPhoneNumber(blankToNull(request.phoneNumber()));
         users.save(user);
+        audit.changes("User", user.getUserId(), before, UserAuditLogger.userSnapshot(user));
     }
 
     /**
@@ -120,6 +125,7 @@ public class UserProfileService {
         }
         user.setPasswordHash(passwordEncoder.encode(request.newPassword()));
         users.save(user);
+        audit.record(user, "UPDATE", "User", user.getUserId(), null, "Đổi mật khẩu thành công");
         return true;
     }
 

@@ -54,9 +54,10 @@ public class InterviewResultServiceImpl implements InterviewResultService {
     private final Clock clock;
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public InterviewResultDetailResponse getResult(Long interviewId, User viewer) {
         LocalDateTime now = LocalDateTime.now(clock);
+        interviewScheduleRepository.completeEndedSchedules(now);
         Integer viewerId = viewer != null ? viewer.getUserId() : null;
         String viewerRoleName = viewer != null && viewer.getRole() != null ? viewer.getRole().getRoleName() : null;
         InterviewSchedule schedule = interviewScheduleRepository.findByIdWithDetails(interviewId)

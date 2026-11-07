@@ -6,6 +6,11 @@ Tài liệu này là lịch sử tóm tắt các thay đổi quan trọng và b�
 
 | Ngày | Tên công việc / Yêu cầu chính | Người thực hiện | Chi tiết thay đổi |
 | --- | --- | --- | --- |
+| **2026-11-07** | Lịch phỏng vấn: gửi email ngầm, tự chuyển "Đã hoàn thành" khi hết giờ, tạo lịch mới thì thay thế lịch chưa bắt đầu của hồ sơ | Đức | [Quyết định, thay đổi và kiểm chứng](work_logs/2026-11-07-interview-async-email-auto-complete-replace.md) |
+| **2026-11-06** | Business rule, Notification, Validate & Phân quyền UI của Lịch phỏng vấn: tự suy trạng thái (bỏ ô chọn), chặn sửa lịch Hoàn thành/Hủy, thời lượng 15p–4h, trùng lịch theo ứng viên, email đổi/hủy lịch, hủy chỉ báo ứng viên, banner "không có quyền" thay 403 toàn trang | Đức | [Yêu cầu, thay đổi và kiểm chứng](work_logs/2026-11-06-interview-business-rules-notification-permission-ui.md) |
+| **2026-11-06** | Sửa lỗi Auth, Tài khoản, Phòng ban, Kho ứng viên tiềm năng: 1 trưởng phòng Active/phòng, đăng xuất phiên cũ khi đổi mật khẩu, ẩn ứng viên bị khóa, lọc người đánh dấu, SĐT 10 số, audit đổi mật khẩu/hồ sơ | LinhDN | [Lỗi đã sửa, cách tái hiện và kiểm chứng](work_logs/2026-11-06-auth-account-talent-pool-bugfix.md) |
+| **2026-11-05** | Hiện thông báo lỗi thao tác trong Auth, Account, Department, Talent Pool và Audit Log; giữ đường lỗi hệ thống qua Global | LinhDN | [Phạm vi, kiến trúc và kiểm chứng](work_logs/2026-11-05-module-error-messages.md) |
+| **2026-11-05** | Đồng bộ validation họ tên/SĐT của Profile với Admin, Đăng ký và SRS | LinhDN | [Quy tắc, phạm vi và kiểm chứng](work_logs/2026-11-05-account-contact-validation-sync.md) |
 | **2026-11-05** | Làm sạch thông tin công cụ hỗ trợ trong docs, metadata sơ đồ và file kiểm tra tạm | LinhDN | [Work log](work_logs/2026-11-05-docs-cleanup.md) · [Báo cáo](../members/linhdn/2026-11-05-docs-cleanup.md) |
 | **2026-11-05** | Sửa Offer quá hạn phản hồi chặn đóng tin Talent Pool; đồng bộ quy tắc ngày và bổ sung test truy vấn | LinhDN | [Work log và kiểm chứng](work_logs/2026-11-05-talent-pool-expired-offer-fix.md) · [Báo cáo](../members/linhdn/2026-11-05-talent-pool-expired-offer-fix.md) |
 | **2026-11-04** | Gỡ conflict merge Work Log và email mời phỏng vấn | LinhDN | [Phạm vi và kiểm chứng](work_logs/2026-11-04-merge-conflicts.md) |

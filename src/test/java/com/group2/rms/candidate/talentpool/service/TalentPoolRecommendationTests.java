@@ -59,7 +59,7 @@ class TalentPoolRecommendationTests {
         target = JobPosting.builder().jobPostingId(8).postingStatus("Published")
                 .requisition(JobRequisition.builder().hiringManager(hm).build()).build();
         draft = Application.builder().applicationId(219).jobPosting(target).applicationStatus("HM_Suggested")
-                .candidate(Candidate.builder().candidateId(11).isPotential(true).build()).appliedCvUrl("local:cv/old.pdf").build();
+                .candidate(Candidate.builder().candidateId(11).isPotential(true).account(User.builder().accountStatus("Active").build()).build()).appliedCvUrl("local:cv/old.pdf").build();
     }
     void targetFor(User actor) {
         when(current.requireUser()).thenReturn(actor);
@@ -72,7 +72,7 @@ class TalentPoolRecommendationTests {
         when(applications.countPendingHrRecommendation(219)).thenReturn(1L);
     }
     Application source(int id, int cid) {
-        var source = Application.builder().applicationId(id).candidate(Candidate.builder().candidateId(cid).isPotential(true).build())
+        var source = Application.builder().applicationId(id).candidate(Candidate.builder().candidateId(cid).isPotential(true).account(User.builder().accountStatus("Active").build()).build())
                 .jobPosting(JobPosting.builder().jobPostingId(3).build()).applicationStatus("Rejected").appliedCvUrl("local:cv/old.pdf").build();
         when(applications.findDetailById(id)).thenReturn(Optional.of(source));
         lenient().when(poolApplications.findPreviousCvByCandidateId(cid)).thenReturn(List.of(source));

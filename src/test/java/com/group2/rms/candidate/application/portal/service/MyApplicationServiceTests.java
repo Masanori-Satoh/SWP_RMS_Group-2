@@ -330,8 +330,13 @@ class MyApplicationServiceTests {
     }
 
     private record OfferRow(Integer getApplicationId, Integer getOfferId, String getStatus,
-                            LocalDateTime getResponseDeadline, LocalDateTime getAt)
+                            LocalDateTime getResponseDeadline, java.time.LocalDate getExpectedStartDate,
+                            LocalDateTime getAt)
             implements MyApplicationRepository.MyOfferRow {
+
+        OfferRow(Integer applicationId, Integer offerId, String status, LocalDateTime deadline, LocalDateTime at) {
+            this(applicationId, offerId, status, deadline, null, at);
+        }
     }
 
     private record MarkRow(Integer getApplicationId, String getKind, String getOldStatus, LocalDateTime getAt)

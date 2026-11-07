@@ -24,7 +24,7 @@ class ApplicationStepperTests {
 
         assertEquals(List.of("APPLIED", "SCREENING", "INTERVIEW", "OFFER", "HIRED"), keys(items));
         assertEquals(List.of("done", "done", "current", "upcoming", "upcoming"), states(items));
-        assertEquals(List.of("Ứng tuyển", "Sàng lọc CV", "Phỏng vấn", "Offer", "Nhận việc"),
+        assertEquals(List.of("Ứng tuyển", "Sàng lọc CV", "Phỏng vấn", "Thư mời", "Nhận việc"),
                 items.stream().map(StageItem::label).toList());
     }
 

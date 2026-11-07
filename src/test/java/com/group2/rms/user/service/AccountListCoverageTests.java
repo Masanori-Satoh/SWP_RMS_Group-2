@@ -5,7 +5,7 @@ import com.group2.rms.user.entity.*;
 import com.group2.rms.user.repository.*;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.web.server.ResponseStatusException;
+import com.group2.rms.user.exception.AccountOperationException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 import java.util.*;
@@ -167,10 +167,10 @@ class AccountListCoverageTests {
         // Repository trả Optional.empty cho user ID 77.
 
         // When: Gọi service với dữ liệu đã chuẩn bị.
-        ResponseStatusException error = assertThrows(ResponseStatusException.class, () -> service.deactivate(77));
+        AccountOperationException error = assertThrows(AccountOperationException.class, () -> service.deactivate(77));
 
         // Then: Kiểm tra dữ liệu thực tế và số lần gọi dependency.
-        assertEquals(404, error.getStatusCode().value());
+        assertEquals("ACCOUNT_OPERATION_REJECTED", error.getErrorCode());
         verify(users, times(0)).save(any(User.class));
     }
 
