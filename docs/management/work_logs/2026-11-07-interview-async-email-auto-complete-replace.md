@@ -39,6 +39,13 @@ Không đổi schema và seed. Khi chạy bản này, các lịch cũ đã qua g
 - Cùng lệnh trên `main` gốc (`0013bcdd`): 2234 test, 19 failure, 42 error. So danh sách theo tên test: 61 test fail giống hệt, không có test mới hỏng. 3 test tăng thêm là 3 test mới và đều đạt.
 - Chưa kiểm tra trên trình duyệt và chưa gửi thử email qua SMTP thật.
 
+## 5b. Sửa lỗi bổ sung: banner "không có quyền" hiện cả với HR / Director
+
+- **Hiện tượng:** Director (và HR) mở `/interviews/new` thấy form nhưng vẫn có banner đỏ "Bạn không có quyền truy cập vào trang này." Trang `/interviews/{id}/result` cũng bị như vậy.
+- **Nguyên nhân:** `th:if` và `th:replace` nằm trên cùng một thẻ. Thymeleaf chạy `th:replace` trước `th:if`, nên banner luôn được chèn và điều kiện `${accessDenied}` không có tác dụng (lỗi từ PR #158).
+- **Sửa:** `interview/form.html` và `interview/result.html` chuyển điều kiện sang `<th:block th:if="${accessDenied}">` bọc ngoài `th:replace`.
+- **Test:** thêm `InterviewScheduleFormWebTests.directorSeesFormWithoutAccessDeniedBanner`; HR không thấy banner ở `formWithoutApplicationIdHasNothingPreselected` và `InterviewResultWebTests.hrSeesAllEvaluationsWithoutEvaluateButton`. `mvn -Dtest='InterviewScheduleFormWebTests,InterviewResultWebTests' test`: đạt.
+
 ## 6. Vấn đề tồn đọng
 
 - Timeline trên trang đơn ứng tuyển của ứng viên có thể vẫn ghi "Hẹn phỏng vấn" với lịch đã qua giờ cho tới khi lịch được chuyển trạng thái, vì trang này đọc DB trực tiếp và không kích hoạt việc tự hoàn thành.

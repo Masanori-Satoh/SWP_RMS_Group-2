@@ -108,6 +108,7 @@ class InterviewResultWebTests {
                 .andExpect(view().name("interview/result"))
                 .andExpect(model().attribute("activeMenu", "interviews"))
                 .andExpect(content().string(containsString("Chi Candidate")))
+                .andExpect(content().string(not(containsString("Bạn không có quyền truy cập vào trang này."))))
                 .andExpect(content().string(containsString("Tổng hợp điểm")))
                 .andExpect(content().string(containsString("Giỏi &lt;b&gt;Java&lt;/b&gt;<br/>Chủ động")))
                 .andExpect(content().string(containsString("25.000.000 ₫")))

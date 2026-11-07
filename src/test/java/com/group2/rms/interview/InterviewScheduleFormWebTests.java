@@ -237,6 +237,20 @@ class InterviewScheduleFormWebTests {
         mvc.perform(get("/interviews/new").with(user("hr_lan").authorities(() -> "ROLE_HR")))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("-- Chọn hồ sơ ứng viên cần phỏng vấn --")))
-                .andExpect(content().string(not(matchesPattern("(?s).*<option value=\"\\d+\"[^>]*selected=\"selected\".*"))));
+                .andExpect(content().string(not(matchesPattern("(?s).*<option value=\"\\d+\"[^>]*selected=\"selected\".*"))))
+                .andExpect(content().string(not(containsString("Bạn không có quyền truy cập vào trang này."))));
+    }
+
+    // ducnm bổ sung: người có quyền (Director) thấy form, không thấy banner "không có quyền"
+    @Test
+    void directorSeesFormWithoutAccessDeniedBanner() throws Exception {
+        when(users.findByUsernameIgnoreCase("director")).thenReturn(Optional.of(User.builder().userId(13)
+                .username("director").fullName("Hoang Director").accountStatus("Active")
+                .role(Role.builder().roleName("Director").build()).build()));
+
+        mvc.perform(get("/interviews/new").with(user("director").authorities(() -> "ROLE_DIRECTOR")))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("id=\"applicationId\"")))
+                .andExpect(content().string(not(containsString("Bạn không có quyền truy cập vào trang này."))));
     }
 }
