@@ -14,12 +14,14 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.http.MediaType;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -36,6 +38,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.request;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -63,6 +66,40 @@ class OfferIntegrationTests {
         mvc.perform(post("/offers/1/" + action).with(user("hr_specialist").authorities(() -> "ROLE_HR"))
                         .with(csrf()).contentType(MediaType.APPLICATION_JSON).content("{\"comments\":\"Denied\"}"))
                 .andExpect(status().isForbidden());
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "GET, /offers/create",
+            "GET, /offers/1/edit",
+            "POST, /offers/create",
+            "POST, /offers/1/edit",
+            "PUT, /offers/1",
+            "DELETE, /offers/1",
+            "POST, /offers/1/delete",
+            "POST, /offers/1/send"
+    })
+    void directorCannotManageHrOffers(String method, String path) throws Exception {
+        for (MediaType contentType : List.of(MediaType.APPLICATION_JSON, MediaType.APPLICATION_FORM_URLENCODED)) {
+            mvc.perform(request(HttpMethod.valueOf(method), path)
+                            .with(user("director_user").roles("DIRECTOR")).with(csrf()).contentType(contentType))
+                    .andExpect(status().isForbidden());
+        }
+    }
+
+    @ParameterizedTest
+    @CsvSource({"hr_specialist,HR,Draft,true,false", "director_user,DIRECTOR,Draft,false,false",
+            "hr_specialist,HR,Director_Approved,false,true", "director_user,DIRECTOR,Director_Approved,false,false"})
+    void detailOnlyShowsManagementActionsToHr(String username, String role, String offerStatus,
+                                               boolean deleteVisible, boolean sendVisible) throws Exception {
+        when(offerService.getOfferDetailForHr(1)).thenReturn(OfferDetailResponse.builder()
+                .offerId(1).offerStatus(offerStatus).candidateName("Test candidate")
+                .proposedSalary(new BigDecimal("20000000")).probationSalary(new BigDecimal("18000000"))
+                .expectedStartDate(LocalDate.now().plusDays(14)).build());
+        String html = mvc.perform(get("/offers/1").with(user(username).roles(role)))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        org.junit.jupiter.api.Assertions.assertEquals(deleteVisible, html.contains("action=\"/offers/1/delete\""));
+        org.junit.jupiter.api.Assertions.assertEquals(sendVisible, html.contains("onclick=\"confirmSendOffer(1)\""));
     }
 
     @Autowired

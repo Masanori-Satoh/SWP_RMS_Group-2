@@ -66,6 +66,9 @@ class OfferServiceTests {
     private UserRepository userRepository;
 
     @Mock
+    private com.group2.rms.core.security.CurrentUserService currentUserService;
+
+    @Mock
     private InterviewFinalResultRepository interviewFinalResultRepository;
 
     @Mock
@@ -79,6 +82,70 @@ class OfferServiceTests {
 
     @InjectMocks
     private OfferServiceImpl offerService;
+
+    @org.junit.jupiter.api.BeforeEach
+    void useActiveAuthenticatedActor() {
+        lenient().when(currentUserService.requireUser()).thenAnswer(invocation ->
+                new com.group2.rms.core.security.CurrentUserService(userRepository).requireUser());
+    }
+
+    @org.junit.jupiter.api.AfterEach
+    void clearActorContext() {
+        org.springframework.security.core.context.SecurityContextHolder.clearContext();
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"anonymous", "missing", "inactive"})
+    void decisionsRequireAnActiveAuthenticatedActor(String actor) {
+        var offer = OfferProposal.builder().offerId(1).offerStatus("Pending_Director").build();
+        when(offerProposalRepository.findById(1)).thenReturn(Optional.of(offer));
+        if (!"anonymous".equals(actor)) {
+            org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(
+                    new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(actor, "test-only", List.of()));
+            when(userRepository.findByUsernameIgnoreCase(actor)).thenReturn("inactive".equals(actor)
+                    ? Optional.of(User.builder().userId(7).accountStatus("Inactive").build()) : Optional.empty());
+        }
+        assertThrows(org.springframework.security.access.AccessDeniedException.class,
+                () -> offerService.approveOfferByDirector(1, "Approved"));
+        verify(offerProposalRepository, never()).save(any());
+        verify(offerApprovalRepository, never()).save(any());
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void directorCommentLimitIsCheckedInService(boolean approved) {
+        when(offerProposalRepository.findById(1)).thenReturn(Optional.of(
+                OfferProposal.builder().offerId(1).offerStatus("Pending_Director").build()));
+        doReturn(User.builder().userId(7).accountStatus("Active").build()).when(currentUserService).requireUser();
+        assertThrows(OfferValidationException.class, () -> {
+            if (approved) offerService.approveOfferByDirector(1, "x".repeat(2001));
+            else offerService.rejectOfferByDirector(1, "x".repeat(2001));
+        });
+        verify(offerProposalRepository, never()).save(any());
+        verify(offerApprovalRepository, never()).save(any());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"Hired", "Rejected", "Withdrawn", "Cancelled"})
+    void endedApplicationCannotCreateEditPublishOrDecideOffers(String status) {
+        Application application = Application.builder().applicationId(1).applicationStatus(status).build();
+        OfferProposal offer = OfferProposal.builder().offerId(1).application(application).offerStatus("Draft").build();
+        when(offerProposalRepository.findById(1)).thenReturn(Optional.of(offer));
+        when(applicationRepository.findById(1)).thenReturn(Optional.of(application));
+        CreateOfferRequest request = CreateOfferRequest.builder().applicationId(1).offeredPositionTitle("Test position")
+                .proposedSalary(new BigDecimal("20000000")).probationSalary(new BigDecimal("18000000"))
+                .probationDays(60).responsePeriodDays(5).expectedStartDate(LocalDate.now().plusDays(14))
+                .workLocation("Test office").build();
+        List<Runnable> actions = List.of(() -> offerService.createOfferByHr(request),
+                () -> offerService.updateOfferByHr(1, new UpdateOfferRequest()),
+                () -> offerService.sendOfferToCandidate(1), () -> offerService.approveOfferByDirector(1, "Approve"),
+                () -> offerService.rejectOfferByDirector(1, "Reject"));
+        for (Runnable action : actions) {
+            assertEquals("APPLICATION_TERMINATED", assertThrows(OfferValidationException.class, action::run).getErrorCode());
+        }
+        verify(offerProposalRepository, never()).save(any());
+        verify(offerApprovalRepository, never()).save(any());
+    }
 
     @Test
     @DisplayName("Nghiệp vụ: Lương thử việc < 85% lương chính thức phải ném OfferValidationException")
@@ -108,7 +175,7 @@ class OfferServiceTests {
         User proposedBy = User.builder().userId(10).fullName("Hiring Manager").build();
 
         when(applicationRepository.findById(1)).thenReturn(Optional.of(application));
-        when(userRepository.findById(10)).thenReturn(Optional.of(proposedBy));
+        doReturn(proposedBy).when(currentUserService).requireUser();
         when(offerProposalRepository.findByApplication_ApplicationIdAndOfferStatusNotIn(eq(1), any()))
                 .thenReturn(List.of());
         when(offerProposalRepository.save(any(OfferProposal.class))).thenAnswer(i -> {
@@ -241,21 +308,22 @@ class OfferServiceTests {
         assertTrue(ex.getMessage().contains("Địa điểm làm việc không được để trống"));
     }
 
-    @Test
-    @DisplayName("Validation: Ngày mai, lương > 0, thời gian thử việc > 0 và gói phúc lợi để trống vẫn tạo thành công")
-    void testCreateOfferByHr_allValidExceptBenefits_passes() {
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    @DisplayName("Tạo Offer không có phúc lợi chỉ thành công nếu hồ sơ đã đạt phỏng vấn")
+    void testCreateOfferByHr_requiresPassedInterview(boolean passedInterview) {
         Application application = Application.builder().applicationId(1).build();
 
         when(applicationRepository.findById(1)).thenReturn(Optional.of(application));
         when(offerProposalRepository.findByApplication_ApplicationId(1)).thenReturn(Optional.empty());
-        when(offerProposalRepository.save(any(OfferProposal.class))).thenAnswer(i -> {
-            OfferProposal op = i.getArgument(0);
-            op.setOfferId(555);
-            return op;
-        });
+        when(interviewFinalResultRepository.findByApplicationIdOrderByApprovedAtDesc(1))
+                .thenReturn(List.of(InterviewFinalResult.builder()
+                        .finalDecision(passedInterview ? InterviewFinalResult.PASSED : "Failed")
+                        .build()));
 
         CreateOfferRequest request = CreateOfferRequest.builder()
                 .applicationId(1)
+                .proposedById(999)
                 .offeredPositionTitle("Senior Java Engineer")
                 .proposedSalary(new BigDecimal("25000000"))
                 .probationSalary(new BigDecimal("21250000")) // 85%
@@ -266,7 +334,33 @@ class OfferServiceTests {
                 .isDraft(false)
                 .build();
 
-        OfferResponse response = offerService.createOfferByHr(request);
+        if (!passedInterview) {
+            assertThrows(OfferValidationException.class, () -> offerService.createOfferByHr(request));
+            verify(offerProposalRepository, never()).save(any(OfferProposal.class));
+            return;
+        }
+
+        when(offerProposalRepository.save(any(OfferProposal.class))).thenAnswer(i -> {
+            OfferProposal op = i.getArgument(0);
+            op.setOfferId(555);
+            return op;
+        });
+        User currentHr = User.builder().userId(17).username("current_hr").build();
+        currentHr.setAccountStatus("Active");
+
+        when(userRepository.findByUsernameIgnoreCase("current_hr")).thenReturn(Optional.of(currentHr));
+        var context = org.springframework.security.core.context.SecurityContextHolder.getContext();
+        var previousAuth = context.getAuthentication();
+        context.setAuthentication(new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+                "current_hr", "password", Collections.emptyList()));
+        OfferResponse response;
+        try {
+            response = offerService.createOfferByHr(request);
+        } finally {
+            context.setAuthentication(previousAuth);
+        }
+        assertEquals(17, response.getProposedById());
+        verify(userRepository, never()).findById(999);
 
         assertNotNull(response);
         assertEquals(555, response.getOfferId());
@@ -965,6 +1059,23 @@ class OfferServiceTests {
     }
 
     @Test
+    void deletedOfferIsUnavailableByDirectId() {
+        OfferProposal deleted = OfferProposal.builder().isDeleted(true).offerStatus("Draft").build();
+        when(offerProposalRepository.findById(1)).thenReturn(Optional.of(deleted));
+
+        assertAll(
+                () -> assertThrows(ResourceNotFoundException.class, () -> offerService.getOfferById(1)),
+                () -> assertThrows(ResourceNotFoundException.class, () -> offerService.getOfferDetailForHr(1)),
+                () -> assertThrows(ResourceNotFoundException.class, () -> offerService.getUpdateOfferRequestById(1)),
+                () -> assertThrows(ResourceNotFoundException.class, () -> offerService.updateOfferByHr(1, null)),
+                () -> assertThrows(ResourceNotFoundException.class, () -> offerService.deleteDraftOfferByHr(1)),
+                () -> assertThrows(ResourceNotFoundException.class, () -> offerService.sendOfferToCandidate(1)),
+                () -> assertThrows(ResourceNotFoundException.class, () -> offerService.approveOfferByDirector(1, null)),
+                () -> assertThrows(ResourceNotFoundException.class, () -> offerService.rejectOfferByDirector(1, null)));
+        verify(offerProposalRepository, never()).save(any());
+    }
+
+    @Test
     @DisplayName("deleteDraftOfferByHr: Xóa bản thảo Offer khi ở trạng thái Draft thành công (Soft delete)")
     void testDeleteDraftOfferByHr_draftStatus_softDeletesSuccessfully() {
         OfferProposal offer = OfferProposal.builder()
@@ -1093,6 +1204,8 @@ class OfferServiceTests {
 
         Role role = Role.builder().roleId(1).roleName("Director").build();
         User mockUser = User.builder().userId(5).username("director1").role(role).build();
+        mockUser.setAccountStatus("Active");
+
         when(userRepository.findByUsernameIgnoreCase(any())).thenReturn(Optional.of(mockUser));
         
         org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(
@@ -1119,6 +1232,8 @@ class OfferServiceTests {
 
         Role role = Role.builder().roleId(1).roleName("Director").build();
         User mockUser = User.builder().userId(5).username("director1").role(role).build();
+        mockUser.setAccountStatus("Active");
+
         when(userRepository.findByUsernameIgnoreCase(any())).thenReturn(Optional.of(mockUser));
         
         org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(
@@ -1179,6 +1294,8 @@ class OfferServiceTests {
     void testGetDirectorOfferHistory_preservesRealtimeStatus() {
         Role role = Role.builder().roleId(1).roleName("Director").build();
         User mockDirector = User.builder().userId(5).username("director1").role(role).build();
+        mockDirector.setAccountStatus("Active");
+
         when(userRepository.findByUsernameIgnoreCase(any())).thenReturn(Optional.of(mockDirector));
         org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(
                 new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
@@ -1215,55 +1332,55 @@ class OfferServiceTests {
 
     @ParameterizedTest
     @ValueSource(strings = {"", "   "})
-    @DisplayName("rejectOfferByDirector: Accepts blank or whitespace comments and sets status to Director_Rejected")
-    void rejectOfferByDirector_blankComments_succeeds(String comments) {
+    @DisplayName("rejectOfferByDirector: Rejects blank or whitespace comments before writing a decision")
+    void rejectOfferByDirector_blankComments_isRejected(String comments) {
         OfferProposal offer = OfferProposal.builder()
                 .offerId(1)
                 .offerStatus("Pending_Director")
                 .build();
 
         when(offerProposalRepository.findById(1)).thenReturn(Optional.of(offer));
-        when(offerProposalRepository.save(any(OfferProposal.class))).thenAnswer(i -> i.getArgument(0));
 
         Role role = Role.builder().roleId(1).roleName("Director").build();
         User mockUser = User.builder().userId(5).username("director1").role(role).build();
+        mockUser.setAccountStatus("Active");
+
         when(userRepository.findByUsernameIgnoreCase(any())).thenReturn(Optional.of(mockUser));
 
         org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(
                 new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
                         "director1", "password", Collections.emptyList()));
 
-        OfferResponse response = offerService.rejectOfferByDirector(1, comments);
-
-        assertNotNull(response);
-        assertEquals("Director_Rejected", response.getOfferStatus());
-        verify(offerApprovalRepository).save(any(OfferApproval.class));
+        var error = assertThrows(OfferValidationException.class, () -> offerService.rejectOfferByDirector(1, comments));
+        assertEquals("DIRECTOR_REASON_REQUIRED", error.getErrorCode());
+        verify(offerProposalRepository, never()).save(any());
+        verify(offerApprovalRepository, never()).save(any());
     }
 
     @Test
-    @DisplayName("rejectOfferByDirector: Accepts null comments and sets status to Director_Rejected")
-    void rejectOfferByDirector_nullComments_succeeds() {
+    @DisplayName("rejectOfferByDirector: Rejects null comments before writing a decision")
+    void rejectOfferByDirector_nullComments_isRejected() {
         OfferProposal offer = OfferProposal.builder()
                 .offerId(1)
                 .offerStatus("Pending_Director")
                 .build();
 
         when(offerProposalRepository.findById(1)).thenReturn(Optional.of(offer));
-        when(offerProposalRepository.save(any(OfferProposal.class))).thenAnswer(i -> i.getArgument(0));
 
         Role role = Role.builder().roleId(1).roleName("Director").build();
         User mockUser = User.builder().userId(5).username("director1").role(role).build();
+        mockUser.setAccountStatus("Active");
+
         when(userRepository.findByUsernameIgnoreCase(any())).thenReturn(Optional.of(mockUser));
 
         org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(
                 new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
                         "director1", "password", Collections.emptyList()));
 
-        OfferResponse response = offerService.rejectOfferByDirector(1, null);
-
-        assertNotNull(response);
-        assertEquals("Director_Rejected", response.getOfferStatus());
-        verify(offerApprovalRepository).save(any(OfferApproval.class));
+        var error = assertThrows(OfferValidationException.class, () -> offerService.rejectOfferByDirector(1, null));
+        assertEquals("DIRECTOR_REASON_REQUIRED", error.getErrorCode());
+        verify(offerProposalRepository, never()).save(any());
+        verify(offerApprovalRepository, never()).save(any());
     }
 
     @ParameterizedTest
@@ -1492,6 +1609,8 @@ class OfferServiceTests {
 
         Role role = Role.builder().roleId(1).roleName("Director").build();
         User mockDirector = User.builder().userId(5).username("director1").role(role).build();
+        mockDirector.setAccountStatus("Active");
+
         when(userRepository.findByUsernameIgnoreCase(any())).thenReturn(Optional.of(mockDirector));
 
         org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(
@@ -1521,6 +1640,8 @@ class OfferServiceTests {
 
         Role role = Role.builder().roleId(1).roleName("Director").build();
         User mockDirector = User.builder().userId(5).username("director1").role(role).build();
+        mockDirector.setAccountStatus("Active");
+
         when(userRepository.findByUsernameIgnoreCase(any())).thenReturn(Optional.of(mockDirector));
 
         org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(
@@ -1570,6 +1691,8 @@ class OfferServiceTests {
 
         Role role = Role.builder().roleId(1).roleName("Director").build();
         User mockDirector = User.builder().userId(5).username("director1").role(role).build();
+        mockDirector.setAccountStatus("Active");
+
         when(userRepository.findByUsernameIgnoreCase(any())).thenReturn(Optional.of(mockDirector));
 
         org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(
