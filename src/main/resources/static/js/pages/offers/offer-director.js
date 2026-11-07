@@ -46,7 +46,7 @@ function openDirectorDecisionModal(offerId, actionType) {
 
     if (actionType === 'APPROVE') {
         if (titleEl) {
-            titleEl.innerHTML = '<span class="ofw-modal-title-icon ofw-modal-title-icon--success"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg></span> Phê duyệt đề xuất thư mời?';
+            titleEl.innerHTML = '<span class="ofw-modal-title-icon ofw-modal-title-icon--success"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg></span> Phê duyệt thư mời nhận việc?';
         }
         if (btnSubmit) {
             btnSubmit.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="ofw-btn-icon-inline"><polyline points="20 6 9 17 4 12"/></svg> Xác nhận phê duyệt';
@@ -64,7 +64,7 @@ function openDirectorDecisionModal(offerId, actionType) {
         }
     } else {
         if (titleEl) {
-            titleEl.innerHTML = '<span class="ofw-modal-title-icon ofw-modal-title-icon--danger"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></span> Từ chối đề xuất thư mời?';
+            titleEl.innerHTML = '<span class="ofw-modal-title-icon ofw-modal-title-icon--danger"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></span> Từ chối thư mời nhận việc?';
         }
         if (btnSubmit) {
             btnSubmit.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="ofw-btn-icon-inline"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Xác nhận từ chối';
@@ -74,7 +74,7 @@ function openDirectorDecisionModal(offerId, actionType) {
             labelEl.innerHTML = 'Lý do từ chối của Giám đốc <span class="ofw-required-mark">*</span>';
         }
         if (commentsEl) {
-            commentsEl.placeholder = 'Vui lòng nhập lý do từ chối đề xuất thư mời (bắt buộc)...';
+            commentsEl.placeholder = 'Vui lòng nhập lý do từ chối thư mời nhận việc (bắt buộc)...';
             commentsEl.setAttribute('required', 'required');
         }
         if (subnoteEl) {
@@ -241,7 +241,7 @@ function submitDirectorDecisionFromScreen(offerId, action) {
         const rejectDialog = document.getElementById('directorRejectConfirmDialog');
         if (rejectDialog && typeof rejectDialog.showModal === 'function') {
             const descEl = document.getElementById('directorRejectDialogDesc');
-            if (descEl) descEl.innerText = `Bạn có chắc chắn muốn từ chối đề xuất #${offerId}?`;
+            if (descEl) descEl.innerText = `Bạn có chắc chắn muốn từ chối thư mời #${offerId}?`;
             rejectDialog.showModal();
         } else {
             executeDirectorDecisionApi(`/offers/${offerId}/reject`, comments);

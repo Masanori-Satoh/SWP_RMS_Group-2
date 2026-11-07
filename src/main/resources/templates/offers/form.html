@@ -4,7 +4,7 @@
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout/internal}">
 <head>
-  <title th:text="${isEdit ? 'Chỉnh sửa đề xuất thư mời #' + offerId : 'Tạo đề xuất thư mời'}">Tạo đề xuất thư mời</title>
+  <title th:text="${isEdit ? 'Chỉnh sửa thư mời nhận việc #' + offerId : 'Tạo thư mời nhận việc'}">Tạo thư mời nhận việc</title>
   <link rel="stylesheet" th:href="@{/css/pages/offers/offer-common.css}">
   <link rel="stylesheet" th:href="@{/css/pages/offers/offer-hr.css}">
   <link rel="stylesheet" th:href="@{/css/pages/flash-toast.css}">
@@ -18,7 +18,7 @@
 
     <!-- PAGE HEADING -->
     <div class="adw-heading ofw-heading">
-      <h1 class="adw-title ofw-title" th:text="${isEdit ? 'Chỉnh sửa đề xuất thư mời #' + offerId : 'Tạo đề xuất thư mời'}">Tạo đề xuất thư mời</h1>
+      <h1 class="adw-title ofw-title" th:text="${isEdit ? 'Chỉnh sửa thư mời nhận việc #' + offerId : 'Tạo thư mời nhận việc'}">Tạo thư mời nhận việc</h1>
     </div>
 
     <!-- MAIN FORM -->
@@ -52,7 +52,7 @@
           <!-- Trường hợp 1: TẠO MỚI THEO NGỮ CẢNH CỤ THỂ (Cố định ứng viên, không cho chọn ứng viên khác) -->
           <div th:if="${!isEdit and isLockedCandidate and fixedCandidate != null}">
             <div class="form-group">
-              <label class="form-label" for="fixedCandidateBar">Ứng viên chờ tạo đề xuất thư mời</label>
+              <label class="form-label" for="fixedCandidateBar">Ứng viên chờ tạo thư mời nhận việc</label>
               <div id="fixedCandidateBar" class="ofw-fixed-candidate-bar">
                 <span class="ofw-candidate-badge">
                   <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
@@ -116,7 +116,7 @@
           <!-- Trường hợp 2: TẠO MỚI TỰ DO (HR vào từ trang Quản lý Offer, chọn từ danh sách) -->
           <div th:if="${!isEdit and (!isLockedCandidate or fixedCandidate == null)}">
             <div class="form-group">
-              <label class="form-label form-label--required" for="createAppSelect">Chọn ứng viên chờ tạo đề xuất thư mời</label>
+              <label class="form-label form-label--required" for="createAppSelect">Chọn ứng viên chờ tạo thư mời nhận việc</label>
               <select id="createAppSelect" th:field="*{applicationId}" class="form-select" onchange="handleSelectPassedCandidate(this.value)" required>
                 <option value="">-- Chọn ứng viên đã đỗ phỏng vấn --</option>
                 <option th:each="c : ${passedCandidates}"

@@ -5,10 +5,10 @@
         th:attr="aria-labelledby=${titleId}">
     <div class="dialog-content">
         <div class="dialog-header">
-            <h3 th:id="${titleId}" class="dialog-title">Phát hành Thư mời nhận việc?</h3>
+            <h3 th:id="${titleId}" class="dialog-title">Gửi thư mời nhận việc?</h3>
         </div>
         <div class="dialog-body">
-            <p>Bạn có chắc chắn muốn phát hành Thư mời nhận việc tới ứng viên? Ứng viên sẽ thấy thư mời và thời hạn phản hồi trên cổng ứng viên.</p>
+            <p>Bạn có chắc chắn muốn gửi thư mời nhận việc tới ứng viên? Ứng viên sẽ thấy thư mời và thời hạn phản hồi trên cổng ứng viên.</p>
         </div>
         <div class="dialog-actions">
             <button type="button" class="btn btn--secondary" onclick="this.closest('dialog').close()">Hủy</button>
@@ -22,7 +22,7 @@
 <dialog th:fragment="delete(formId)" id="deleteOfferDialog" class="confirm-dialog" aria-labelledby="deleteOfferTitle">
     <div class="dialog-content">
         <div class="dialog-header"><h3 id="deleteOfferTitle" class="dialog-title">Xóa bản nháp?</h3></div>
-        <div class="dialog-body"><p>Bạn có chắc chắn muốn xóa bản nháp đề xuất thư mời này?</p></div>
+        <div class="dialog-body"><p>Bạn có chắc chắn muốn xóa bản nháp thư mời nhận việc này?</p></div>
         <div class="dialog-actions">
             <button type="button" class="btn btn--secondary" autofocus onclick="this.closest('dialog').close()">Hủy</button>
             <button th:type="${formId == null ? 'button' : 'submit'}" th:attr="form=${formId},onclick=${formId == null ? 'executeDeleteOffer(this)' : null}"

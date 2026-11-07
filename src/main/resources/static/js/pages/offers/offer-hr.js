@@ -32,7 +32,7 @@ function executeDeleteOffer(button) {
 
     offerRequest(`/offers/${offerId}`, { method: 'DELETE' })
         .then(res => {
-            queueOfferToast(res.message || 'Đã xóa bản nháp đề xuất thành công.');
+            queueOfferToast(res.message || 'Đã xóa bản nháp thư mời thành công.');
             window.location.reload();
         })
         .catch(err => {
@@ -218,7 +218,7 @@ function executeOfferExport() {
 
     const selectedIds = getSelectedOfferIds();
     if (scope === 'SELECTED' && selectedIds.length === 0) {
-        showErr('Bạn chưa chọn đề xuất nào trong bảng danh sách để xuất.');
+        showErr('Bạn chưa chọn thư mời nào trong bảng danh sách để xuất.');
         return;
     }
 
@@ -293,7 +293,7 @@ function executeOfferExport() {
 
             closeExportModal();
             if (typeof showFlashToast === 'function') {
-                showFlashToast('Xuất danh sách đề xuất thành công!', 'success');
+                showFlashToast('Xuất danh sách thư mời thành công!', 'success');
             }
         })
         .catch((err) => {

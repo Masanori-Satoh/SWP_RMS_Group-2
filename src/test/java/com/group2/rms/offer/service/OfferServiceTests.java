@@ -725,7 +725,7 @@ class OfferServiceTests {
         });
 
         assertEquals("OFFER_LOCKED_STATE", ex.getErrorCode());
-        assertTrue(ex.getMessage().contains("không thể tạo mới đề xuất thư mời"));
+        assertTrue(ex.getMessage().contains("không thể tạo mới thư mời nhận việc"));
         verify(offerProposalRepository, never()).save(any());
     }
 
@@ -1142,7 +1142,7 @@ class OfferServiceTests {
         });
 
         assertEquals("OFFER_NOT_APPROVED", ex.getErrorCode());
-        assertTrue(ex.getMessage().contains("Chỉ được gửi thư mời nhận việc khi đề xuất đã được Giám đốc phê duyệt"));
+        assertTrue(ex.getMessage().contains("Chỉ được gửi thư mời nhận việc khi thư mời đã được Giám đốc phê duyệt"));
     }
 
     @Test

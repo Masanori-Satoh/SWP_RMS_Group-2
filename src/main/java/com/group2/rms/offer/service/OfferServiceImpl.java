@@ -105,7 +105,7 @@ public class OfferServiceImpl implements OfferService {
     private OfferProposal findActiveOffer(Integer id) {
         return offerProposalRepository.findById(id)
                 .filter(offer -> !Boolean.TRUE.equals(offer.getIsDeleted()))
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đề xuất thư mời với ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy thư mời nhận việc với ID: " + id));
     }
 
     /**
@@ -114,7 +114,7 @@ public class OfferServiceImpl implements OfferService {
      */
     private OfferProposal findActiveOfferForUpdate(Integer id) {
         return offerProposalRepository.findActiveForUpdate(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đề xuất thư mời với ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy thư mời nhận việc với ID: " + id));
     }
 
     @Override
@@ -248,8 +248,8 @@ public class OfferServiceImpl implements OfferService {
         if (existingOfferOpt.isPresent() && !Boolean.TRUE.equals(existingOfferOpt.get().getIsDeleted())) {
             String currentStatus = existingOfferOpt.get().getOfferStatus();
             throw new OfferValidationException(
-                    "Theo quy tắc GBR-07, không thể tạo mới đề xuất thư mời vì đơn ứng tuyển đang có gói đề xuất ở trạng thái ["
-                            + OfferExportServiceImpl.mapOfferStatusLabel(currentStatus) + "]. Vui lòng chỉnh sửa trực tiếp trên danh sách đề xuất thay vì tạo mới.",
+                    "Theo quy tắc GBR-07, không thể tạo mới thư mời nhận việc vì đơn ứng tuyển đang có thư mời ở trạng thái ["
+                            + OfferExportServiceImpl.mapOfferStatusLabel(currentStatus) + "]. Vui lòng chỉnh sửa trực tiếp trên danh sách thư mời thay vì tạo mới.",
                     "OFFER_LOCKED_STATE");
         }
 
@@ -257,7 +257,7 @@ public class OfferServiceImpl implements OfferService {
                 .findByApplicationIdOrderByApprovedAtDesc(application.getApplicationId()).stream()
                 .anyMatch(result -> InterviewFinalResult.PASSED.equalsIgnoreCase(result.getFinalDecision()));
         if (!passedInterview) {
-            throw new OfferValidationException("Chỉ được tạo đề xuất thư mời cho hồ sơ đã đạt phỏng vấn.");
+            throw new OfferValidationException("Chỉ được tạo thư mời nhận việc cho hồ sơ đã đạt phỏng vấn.");
         }
 
         User proposedBy = currentUserService.requireUser();
@@ -476,7 +476,7 @@ public class OfferServiceImpl implements OfferService {
 
         if (!canEdit) {
             throw new OfferValidationException(
-                    "Theo quy tắc GBR-07, chỉ được phép cập nhật đề xuất khi ở trạng thái Bản nháp (Draft). Trạng thái hiện tại: "
+                    "Theo quy tắc GBR-07, chỉ được phép cập nhật thư mời khi ở trạng thái Bản nháp (Draft). Trạng thái hiện tại: "
                             + OfferExportServiceImpl.mapOfferStatusLabel(currentStatus),
                     "OFFER_STATUS_INVALID");
         }
@@ -533,7 +533,7 @@ public class OfferServiceImpl implements OfferService {
         String currentStatus = offer.getOfferStatus();
         if (!"Draft".equalsIgnoreCase(currentStatus)) {
             throw new OfferValidationException(
-                    "Theo quy tắc GBR-07, chỉ được phép chỉnh sửa đề xuất khi ở trạng thái Bản nháp (Draft). Trạng thái hiện tại: "
+                    "Theo quy tắc GBR-07, chỉ được phép chỉnh sửa thư mời khi ở trạng thái Bản nháp (Draft). Trạng thái hiện tại: "
                             + OfferExportServiceImpl.mapOfferStatusLabel(currentStatus),
                     "OFFER_STATUS_INVALID");
         }
@@ -561,7 +561,7 @@ public class OfferServiceImpl implements OfferService {
 
         if (!"Draft".equalsIgnoreCase(offer.getOfferStatus())) {
             throw new OfferValidationException(
-                    "Chỉ được phép xóa bản nháp đề xuất thư mời. Trạng thái hiện tại: " + OfferExportServiceImpl.mapOfferStatusLabel(offer.getOfferStatus()),
+                    "Chỉ được phép xóa bản nháp thư mời nhận việc. Trạng thái hiện tại: " + OfferExportServiceImpl.mapOfferStatusLabel(offer.getOfferStatus()),
                     "OFFER_NOT_DRAFT");
         }
 
@@ -588,7 +588,7 @@ public class OfferServiceImpl implements OfferService {
 
         if (!isApproved) {
             throw new OfferValidationException(
-                    "Chỉ được gửi thư mời nhận việc khi đề xuất đã được Giám đốc phê duyệt. Trạng thái hiện tại: "
+                    "Chỉ được gửi thư mời nhận việc khi thư mời đã được Giám đốc phê duyệt. Trạng thái hiện tại: "
                             + OfferExportServiceImpl.mapOfferStatusLabel(currentStatus),
                     "OFFER_NOT_APPROVED");
         }
@@ -652,7 +652,7 @@ public class OfferServiceImpl implements OfferService {
 
     private void requireActiveApplication(Application application) {
         if (isApplicationEnded(application)) {
-            throw new OfferValidationException("Hồ sơ đã kết thúc nên không thể xử lý đề xuất thư mời.",
+            throw new OfferValidationException("Hồ sơ đã kết thúc nên không thể xử lý thư mời nhận việc.",
                     "APPLICATION_TERMINATED");
         }
     }
@@ -830,7 +830,7 @@ public class OfferServiceImpl implements OfferService {
     }
 
     private OfferValidationException decisionConflict() {
-        return new OfferValidationException("Đề xuất thư mời đã được cập nhật. Vui lòng tải lại trang.",
+        return new OfferValidationException("Thư mời nhận việc đã được cập nhật. Vui lòng tải lại trang.",
                 "OFFER_STATUS_INVALID");
     }
 

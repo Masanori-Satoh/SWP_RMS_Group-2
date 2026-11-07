@@ -110,7 +110,7 @@
             <th:block th:if="${userRole == 'HR' and (detail.offerStatus == 'Director_Approved' or detail.offerStatus == 'Approved')}">
                 <button type="button" class="btn btn--primary" th:onclick="'confirmSendOffer(' + ${detail.offerId} + ')'">
                     <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-                    <span>Phát hành Thư mời nhận việc</span>
+                    <span>Gửi thư mời nhận việc</span>
                 </button>
             </th:block>
 
@@ -324,7 +324,7 @@
             <div class="ofw-detail-audit-footer">
                 <div class="ofw-detail-audit-item">
                     <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/><path d="M17 11l2 2 4-4"/></svg>
-                    <span>Người lập đề xuất: </span>
+                    <span>Người lập thư mời: </span>
                     <strong th:text="${detail.proposedByName != null ? detail.proposedByName : 'Bộ phận Tuyển dụng'}">Phạm Quang Huy</strong>
                 </div>
                 <div class="ofw-detail-audit-item">
@@ -367,7 +367,7 @@
 
             <!-- Subnote -->
             <div class="director-decision-subnote">
-                * Nếu từ chối đề xuất, vui lòng nêu rõ lý do để Bộ phận Tuyển dụng tiếp tục hỗ trợ xử lý.
+                * Nếu từ chối thư mời, vui lòng nêu rõ lý do để Bộ phận Tuyển dụng tiếp tục hỗ trợ xử lý.
             </div>
             <!-- Thông báo lỗi khi thiếu lý do từ chối -->
             <div id="directorCommentsError" class="director-comment-error-msg" hidden>
@@ -380,12 +380,12 @@
                 <button type="button" class="btn btn--danger"
                         th:onclick="'submitDirectorDecisionFromScreen(' + ${detail.offerId} + ', \'REJECT\')'">
                     <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                    <span>Từ chối đề xuất</span>
+                    <span>Từ chối thư mời</span>
                 </button>
                 <button type="button" class="btn btn--primary"
                         th:onclick="'submitDirectorDecisionFromScreen(' + ${detail.offerId} + ', \'APPROVE\')'">
                     <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-                    <span>Phê duyệt đề xuất</span>
+                    <span>Phê duyệt thư mời</span>
                 </button>
             </div>
         </div>
@@ -422,10 +422,10 @@
     <dialog id="directorApproveConfirmDialog" class="confirm-dialog" aria-labelledby="directorApproveTitle">
         <div class="dialog-content">
             <div class="dialog-header">
-                <h3 id="directorApproveTitle" class="dialog-title">Phê duyệt đề xuất thư mời?</h3>
+                <h3 id="directorApproveTitle" class="dialog-title">Phê duyệt thư mời nhận việc?</h3>
             </div>
             <div class="dialog-body">
-                <p>Sau khi phê duyệt, Bộ phận Tuyển dụng sẽ được thông báo để tiếp tục phát hành Thư mời nhận việc cho ứng viên.</p>
+                <p>Sau khi phê duyệt, Bộ phận Tuyển dụng sẽ được thông báo để tiếp tục gửi thư mời nhận việc cho ứng viên.</p>
             </div>
             <div class="dialog-actions">
                 <button type="button" class="btn btn--secondary" onclick="document.getElementById('directorApproveConfirmDialog').close()">Hủy</button>
@@ -440,10 +440,10 @@
     <dialog id="directorRejectConfirmDialog" class="confirm-dialog" aria-labelledby="directorRejectTitle">
         <div class="dialog-content">
             <div class="dialog-header">
-                <h3 id="directorRejectTitle" class="dialog-title">Từ chối đề xuất thư mời?</h3>
+                <h3 id="directorRejectTitle" class="dialog-title">Từ chối thư mời nhận việc?</h3>
             </div>
             <div class="dialog-body">
-                <p id="directorRejectDialogDesc">Bạn có chắc chắn muốn từ chối đề xuất thư mời này?</p>
+                <p id="directorRejectDialogDesc">Bạn có chắc chắn muốn từ chối thư mời nhận việc này?</p>
                 <div class="ofw-dialog-subnote">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
                     <span>Lý do từ chối sẽ được gửi lại để Bộ phận Tuyển dụng xử lý tiếp.</span>

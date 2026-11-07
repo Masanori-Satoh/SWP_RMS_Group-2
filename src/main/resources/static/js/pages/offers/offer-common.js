@@ -158,7 +158,7 @@ function confirmSendOffer(offerId) {
     const dialog = document.getElementById('sendOfferConfirmDialog');
     if (dialog && typeof dialog.showModal === 'function') {
         dialog.showModal();
-    } else if (confirm('Bạn có chắc chắn muốn phát hành Thư mời nhận việc tới ứng viên?')) {
+    } else if (confirm('Bạn có chắc chắn muốn gửi thư mời nhận việc tới ứng viên?')) {
         executeSendOfferAction();
     }
 }

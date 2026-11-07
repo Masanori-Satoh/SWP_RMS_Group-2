@@ -42,7 +42,7 @@ public class OfferExportServiceImpl implements OfferExportService {
 
     static {
         // Nhóm Mặc định (Default Group)
-        COLUMN_WHITELIST.put("offerId", "Mã đề xuất");
+        COLUMN_WHITELIST.put("offerId", "Mã thư mời");
         COLUMN_WHITELIST.put("candidateName", "Ứng viên");
         COLUMN_WHITELIST.put("candidateEmail", "Email");
         COLUMN_WHITELIST.put("offeredPositionTitle", "Vị trí đề xuất");
@@ -63,7 +63,7 @@ public class OfferExportServiceImpl implements OfferExportService {
         COLUMN_WHITELIST.put("jobPostingId", "Mã tin tuyển dụng");
         COLUMN_WHITELIST.put("probationDays", "Thời gian thử việc (ngày)");
         COLUMN_WHITELIST.put("benefitsPackage", "Gói phúc lợi");
-        COLUMN_WHITELIST.put("proposedByName", "Người tạo đề xuất");
+        COLUMN_WHITELIST.put("proposedByName", "Người tạo thư mời");
         COLUMN_WHITELIST.put("directorName", "Giám đốc xử lý");
         COLUMN_WHITELIST.put("directorDecision", "Quyết định của Giám đốc");
         COLUMN_WHITELIST.put("directorComments", "Ý kiến của Giám đốc");
@@ -141,7 +141,7 @@ public class OfferExportServiceImpl implements OfferExportService {
 
         if (request.scope() == OfferExportScope.SELECTED) {
             if (request.offerIds() == null || request.offerIds().isEmpty()) {
-                throw new OfferValidationException("Vui lòng chọn ít nhất một đề xuất để xuất dữ liệu.", "EMPTY_SELECTED_OFFERS");
+                throw new OfferValidationException("Vui lòng chọn ít nhất một thư mời để xuất dữ liệu.", "EMPTY_SELECTED_OFFERS");
             }
         }
 
@@ -647,8 +647,8 @@ public class OfferExportServiceImpl implements OfferExportService {
         c4_0.setCellStyle(labelStyle);
         String scopeDesc = switch (request.scope()) {
             case FILTERED -> "Danh sách đang lọc";
-            case SELECTED -> "Các đề xuất được chọn (" + rows.size() + ")";
-            case ALL -> "Toàn bộ đề xuất";
+            case SELECTED -> "Các thư mời được chọn (" + rows.size() + ")";
+            case ALL -> "Toàn bộ thư mời";
         };
         r4.createCell(1).setCellValue(scopeDesc);
 
@@ -675,7 +675,7 @@ public class OfferExportServiceImpl implements OfferExportService {
         // Row 6: Tổng số Offer trong file
         Row r6 = sheet.createRow(6);
         Cell c6_0 = r6.createCell(0);
-        c6_0.setCellValue("Tổng số đề xuất được xuất:");
+        c6_0.setCellValue("Tổng số thư mời được xuất:");
         c6_0.setCellStyle(labelStyle);
         Cell c6_1 = r6.createCell(1);
         c6_1.setCellValue(rows.size());
@@ -683,7 +683,7 @@ public class OfferExportServiceImpl implements OfferExportService {
         // Row 8: Bảng Thống Kê Trạng Thái
         Row r8 = sheet.createRow(8);
         Cell c8_0 = r8.createCell(0);
-        c8_0.setCellValue("Trạng thái đề xuất");
+        c8_0.setCellValue("Trạng thái thư mời");
         c8_0.setCellStyle(borderHeaderStyle);
         Cell c8_1 = r8.createCell(1);
         c8_1.setCellValue("Số lượng");

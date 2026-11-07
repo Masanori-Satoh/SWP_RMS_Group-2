@@ -134,7 +134,7 @@ class OfferExportServiceTests {
             assertThat(offersSheet.getLastRowNum()).isEqualTo(2); // Header (0) + 2 data rows (1, 2)
 
             Row headerRow = offersSheet.getRow(0);
-            assertThat(headerRow.getCell(0).getStringCellValue()).isEqualTo("Mã đề xuất");
+            assertThat(headerRow.getCell(0).getStringCellValue()).isEqualTo("Mã thư mời");
             assertThat(headerRow.getCell(1).getStringCellValue()).isEqualTo("Ứng viên");
             assertThat(headerRow.getCell(2).getStringCellValue()).isEqualTo("Lương chính thức (VNĐ)");
             assertThat(headerRow.getCell(4).getStringCellValue()).isEqualTo("Tỷ lệ thử việc");
@@ -178,7 +178,7 @@ class OfferExportServiceTests {
 
         assertThatThrownBy(() -> exportService.exportOffersToExcel(request, "hr"))
                 .isInstanceOf(BaseBusinessException.class)
-                .hasMessageContaining("Vui lòng chọn ít nhất một đề xuất");
+                .hasMessageContaining("Vui lòng chọn ít nhất một thư mời");
     }
 
     @Test
