@@ -13,7 +13,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.xssf.streaming.SXSSFWorkbook;
+import org.apache.poi.xssf.streaming.SXSSFSheet;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -97,8 +98,10 @@ public class OfferExportServiceImpl implements OfferExportService {
                 .toList();
 
         // 3. Xây dựng Apache POI Workbook với 2 sheet: Offers & Summary
-        try (Workbook workbook = new XSSFWorkbook();
+        // Chỉ giữ 100 hàng mỗi sheet trong bộ nhớ; close() của POI 5.3 cũng dọn file tạm.
+        try (SXSSFWorkbook workbook = new SXSSFWorkbook(100);
              ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            workbook.setCompressTempFiles(true);
 
             buildOffersSheet(workbook, rows, request.columns());
             buildSummarySheet(workbook, rows, request, exportedBy);
@@ -312,7 +315,7 @@ public class OfferExportServiceImpl implements OfferExportService {
     // =========================================================================
 
     private void buildOffersSheet(Workbook workbook, List<OfferExportRow> rows, List<String> columns) {
-        Sheet sheet = workbook.createSheet("Offers");
+        Sheet sheet = createExportSheet(workbook, "Offers");
 
         DataFormat df = workbook.createDataFormat();
 
@@ -584,7 +587,7 @@ public class OfferExportServiceImpl implements OfferExportService {
     // =========================================================================
 
     private void buildSummarySheet(Workbook workbook, List<OfferExportRow> rows, OfferExportRequest request, String exportedBy) {
-        Sheet sheet = workbook.createSheet("Summary");
+        Sheet sheet = createExportSheet(workbook, "Summary");
 
         Font titleFont = workbook.createFont();
         titleFont.setBold(true);
@@ -691,26 +694,12 @@ public class OfferExportServiceImpl implements OfferExportService {
 
         // Đếm theo từng trạng thái trên TẬP DỮ LIỆU ĐƯỢC XUẤT
         Map<String, Long> statusCounts = new LinkedHashMap<>();
-        statusCounts.put("Bản nháp", 0L);
-        statusCounts.put("Chờ Giám đốc duyệt", 0L);
-        statusCounts.put("Giám đốc đã duyệt", 0L);
-        statusCounts.put("Giám đốc từ chối", 0L);
-        statusCounts.put("Đã gửi thư mời", 0L);
-        statusCounts.put("Ứng viên đã nhận việc", 0L);
-        statusCounts.put("Ứng viên từ chối", 0L);
-
+        for (String status : List.of("Draft", "Pending_Director", "Director_Approved", "Director_Rejected",
+                "Sent_Candidate", "Expired", "Accepted", "Declined")) {
+            statusCounts.put(mapOfferStatusLabel(status), 0L);
+        }
         for (OfferExportRow row : rows) {
-            String s = row.rawOfferStatus();
-            if (s == null) continue;
-            switch (s.trim().toLowerCase(Locale.ROOT)) {
-                case "draft" -> statusCounts.put("Bản nháp", statusCounts.get("Bản nháp") + 1);
-                case "pending_director" -> statusCounts.put("Chờ Giám đốc duyệt", statusCounts.get("Chờ Giám đốc duyệt") + 1);
-                case "director_approved", "approved" -> statusCounts.put("Giám đốc đã duyệt", statusCounts.get("Giám đốc đã duyệt") + 1);
-                case "director_rejected", "rejected" -> statusCounts.put("Giám đốc từ chối", statusCounts.get("Giám đốc từ chối") + 1);
-                case "sent_candidate" -> statusCounts.put("Đã gửi thư mời", statusCounts.get("Đã gửi thư mời") + 1);
-                case "accepted" -> statusCounts.put("Ứng viên đã nhận việc", statusCounts.get("Ứng viên đã nhận việc") + 1);
-                case "declined" -> statusCounts.put("Ứng viên từ chối", statusCounts.get("Ứng viên từ chối") + 1);
-            }
+            statusCounts.merge(mapOfferStatusLabel(row.rawOfferStatus()), 1L, Long::sum);
         }
 
         int currRow = 9;
@@ -729,5 +718,12 @@ public class OfferExportServiceImpl implements OfferExportService {
         sheet.autoSizeColumn(1);
         sheet.setColumnWidth(0, Math.max(sheet.getColumnWidth(0), 10000));
         sheet.setColumnWidth(1, Math.max(sheet.getColumnWidth(1), 4000));
+    }
+
+    /** Theo dõi độ rộng trước khi các hàng cũ được đẩy ra file tạm, giữ nguyên auto-size Excel. */
+    private Sheet createExportSheet(Workbook workbook, String name) {
+        Sheet sheet = workbook.createSheet(name);
+        if (sheet instanceof SXSSFSheet streaming) streaming.trackAllColumnsForAutoSizing();
+        return sheet;
     }
 }

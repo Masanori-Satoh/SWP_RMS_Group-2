@@ -110,6 +110,38 @@ class OfferExportServiceTests {
     }
 
     @Test
+    void largeExportPreservesRowsAndCountsExpiredOffers() throws Exception {
+        List<OfferProposal> offers = java.util.stream.IntStream.rangeClosed(1, 1001)
+                .mapToObj(id -> OfferProposal.builder().offerId(id).application(mockOffer1.getApplication())
+                        .proposedBy(mockOffer1.getProposedBy()).offeredPositionTitle("Position " + id)
+                        .proposedSalary(new BigDecimal("20000000")).probationSalary(new BigDecimal("18000000"))
+                        .offerStatus(id % 2 == 0 ? "Expired" : "Accepted").isDeleted(false).build())
+                .toList();
+        when(offerProposalRepository.findAll(any(Specification.class), any(Sort.class))).thenReturn(offers);
+        OfferExportRequest request = new OfferExportRequest(OfferExportScope.ALL, null, null,
+                List.of("offerId", "offerStatus", "proposedSalary"));
+        try (Workbook workbook = new XSSFWorkbook(new ByteArrayInputStream(exportService.exportOffersToExcel(request, "HR")))) {
+            Sheet sheet = workbook.getSheet("Offers");
+            assertThat(sheet.getLastRowNum()).isEqualTo(1001);
+            assertThat(sheet.getRow(1).getCell(0).getNumericCellValue()).isEqualTo(1);
+            assertThat(sheet.getRow(1001).getCell(0).getNumericCellValue()).isEqualTo(1001);
+            assertThat(sheet.getRow(2).getCell(1).getStringCellValue()).isEqualTo("Đã quá hạn phản hồi");
+            assertThat(sheet.getPaneInformation().isFreezePane()).isTrue();
+            assertThat(sheet.getColumnWidth(0)).isGreaterThan(0);
+            Sheet summary = workbook.getSheet("Summary");
+            assertThat(summary.getRow(6).getCell(1).getNumericCellValue()).isEqualTo(1001);
+            java.util.Map<String, Double> counts = new java.util.HashMap<>();
+            for (int row = 9; row <= summary.getLastRowNum(); row++) {
+                counts.put(summary.getRow(row).getCell(0).getStringCellValue(),
+                        summary.getRow(row).getCell(1).getNumericCellValue());
+            }
+            assertThat(counts.get("Đã quá hạn phản hồi")).isEqualTo(500);
+            assertThat(counts.get("Ứng viên đã nhận việc")).isEqualTo(501);
+            assertThat(counts.values().stream().mapToDouble(Double::doubleValue).sum()).isEqualTo(1001);
+        }
+    }
+
+    @Test
     @DisplayName("Export SELECTED scope: Thành công tạo workbook đúng số bản ghi và đúng kiểu dữ liệu cell")
     void testExportSelectedScope_Success() throws Exception {
         when(offerProposalRepository.findAll(any(Specification.class), any(Sort.class)))

@@ -35,3 +35,31 @@ Log không commit: scratch/offer-risk-notification-before-20261107.log, scratch/
 - Bổ sung ba ca MockMvc cho lỗi validation/nghiệp vụ/kỹ thuật khi tạo theo hồ sơ cố định. Test cuối đạt 56 OfferIntegrationTests và 132 OfferServiceTests; CandidateOfferWebTests 19, CandidateOfferServiceTests 43 và OfferExportServiceTests 11 cũng đạt trong lần chạy phase này.
 
 Log không commit: scratch/offer-risk-phase3-20261107.log và scratch/offer-risk-phase3-20261107-v2.log. Lần đầu test mới thiếu Content-Type form; đã sửa fixture và chạy lại các nhóm bị ảnh hưởng thành công.
+
+## Phase 4: export chính xác và giảm bộ nhớ workbook
+
+- Sửa lỗi Summary không đếm Expired. Tái sử dụng mapOfferStatusLabel thay vì duy trì switch dịch trạng thái thứ hai; đếm được cả alias cũ và trạng thái khác nếu dữ liệu có.
+- Chuyển phần dựng workbook sang SXSSFWorkbook với cửa sổ 100 hàng mỗi sheet và nén file tạm. Theo dõi độ rộng trước khi flush hàng để giữ auto-size, freeze header và định dạng Excel.
+- Kiểm tra API POI 5.3.0 đang cài: close() gọi dispose() và đóng workbook gốc; dùng try-with-resources để dọn file tạm kể cả khi lỗi.
+- Không thay đổi scope, bộ lọc, khóa cột, tên sheet, quyền export hoặc hợp đồng byte[] của controller. Danh sách entity/DTO và byte[] kết quả vẫn ở RAM; chưa phải streaming toàn bộ từ database đến HTTP.
+- 12/12 test export đạt, gồm file 1.001 dòng: dữ liệu đầu/cuối còn nguyên, Expired 500, Accepted 501, tổng 1.001; header đóng băng và độ rộng cột được giữ.
+- Kiểm tra cuối: 399/399 service/MockMvc (Offer và hợp đồng Application), cộng 40/40 SQL ở phase 2 và 20/20 Node ở phase 1; không lỗi hoặc bỏ qua trong các lần chạy xác minh cuối. git diff --check đạt.
+
+Log không commit: scratch/offer-risk-export-20261107.log và scratch/offer-risk-final-20261107.log.
+
+## Tổng thay đổi production so với 64f44a8c
+
+8 file production, +109/-269 dòng, giảm ròng **160 dòng**. Không thêm file production hoặc tách thêm package.
+
+| File | Trước | Sau |
+|---|---:|---:|
+| OfferController.java | 513 | 486 |
+| OfferServiceImpl.java | 957 | 912 |
+| OfferExportServiceImpl.java | 733 | 729 |
+| CandidateOfferServiceImpl.java | 308 | 318 |
+| offer-director.css | 324 | 250 |
+| offer-hr.css | 804 | 787 |
+
+CandidateOfferDetailResponse.java và offers/list.html là hai file production còn lại. Phần tăng ở candidate service là điều kiện an toàn và helper dùng chung cho danh sách/chi tiết. Test và tài liệu tăng riêng để giữ bằng chứng; không tính chúng vào mức giảm production.
+
+Không sửa JavaScript vì các request dùng chung đã được gom trước đó; không thêm abstraction hoặc file mới chỉ để giảm số dòng. Chưa đổi gửi email sang async vì đang giữ nguyên phản hồi kết quả email. Notification sau commit vẫn là best-effort có log, chưa có outbox/retry bền vững. Chưa kiểm tra trực quan browser hoặc benchmark bộ nhớ bằng MB. Không tự bật job hết hạn.
