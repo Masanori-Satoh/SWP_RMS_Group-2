@@ -159,6 +159,13 @@ public final class NotificationMessages {
                 reviewerName, candidateName(application), application.getJobPosting().getPostingTitle());
     }
 
+    // dunglt bổ sung: chữ cho ứng viên, không nêu vòng, người loại hay lý do (GBR-02)
+    public static String applicationRejectedContent(Application application) {
+        return String.format(
+                "Cảm ơn bạn đã ứng tuyển vị trí \"%s\". Rất tiếc, hồ sơ của bạn chưa phù hợp để tiếp tục trong đợt tuyển dụng này. Bạn có thể xem chi tiết ở Đơn của tôi.",
+                application.getJobPosting().getPostingTitle());
+    }
+
     // "dd/MM/yyyy HH:mm – HH:mm"; chưa có giờ kết thúc thì chỉ hiện giờ bắt đầu
     public static String interviewTime(InterviewSchedule schedule) {
         String when = displayTime(schedule.getStartTime());
@@ -190,6 +197,13 @@ public final class NotificationMessages {
         return String.format("Lịch phỏng vấn vị trí \"%s\" của bạn: lúc %s, hình thức %s.",
                 schedule.getApplication().getJobPosting().getPostingTitle(),
                 interviewTime(schedule), interviewPlace(schedule));
+    }
+
+    // ducnm bổ sung: chỉ báo ứng viên khi hủy lịch (nội bộ tự báo nhau); lý do hiển thị cho ứng viên biết
+    public static String interviewCancelledCandidateContent(InterviewSchedule schedule, String reason) {
+        return String.format("Lịch phỏng vấn vị trí \"%s\" của bạn lúc %s đã bị hủy.%s",
+                schedule.getApplication().getJobPosting().getPostingTitle(),
+                interviewTime(schedule), declineReasonText(reason));
     }
 
     public static String interviewResultContent(Application application, String hmName, String result) {

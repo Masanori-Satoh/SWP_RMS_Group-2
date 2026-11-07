@@ -108,6 +108,15 @@ public class GlobalExceptionHandler {
         return ErrorPages.view(HttpStatus.NOT_FOUND, "Tài nguyên được yêu cầu không tồn tại.", request);
     }
 
+    // ducnm bổ sung: một số service (ví dụ InterviewSchedulingServiceImpl) vẫn ném jakarta.persistence.EntityNotFoundException
+    // thay vì ResourceNotFoundException; không bắt riêng thì rơi vào handler 500 ở cuối, sai mã lỗi với người dùng.
+    @ExceptionHandler(jakarta.persistence.EntityNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ModelAndView handleEntityNotFoundException(jakarta.persistence.EntityNotFoundException ex, HttpServletRequest request) {
+        log.warn("Entity not found at [{}]: {}", request.getRequestURL(), ex.getMessage());
+        return ErrorPages.view(HttpStatus.NOT_FOUND, request);
+    }
+
     // 403 forbidden
     @ExceptionHandler(AccessDeniedException.class)
     @ResponseStatus(HttpStatus.FORBIDDEN)

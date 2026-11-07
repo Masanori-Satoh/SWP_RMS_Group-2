@@ -962,6 +962,23 @@ class NotificationServiceImplTests {
         }
 
         @Test
+        @DisplayName("notifyApplicationRejected: hồ sơ bị loại -> Chỉ ứng viên nhận, không lộ người duyệt, link về đơn của tôi")
+        void notifyApplicationRejected_shouldNotifyCandidateOnly_withoutActor() {
+            // Act
+            notificationService.notifyApplicationRejected(application());
+
+            // Assert
+            Notification saved = savedNotifications(1).get(0);
+            assertEquals(candidateUser, saved.getRecipient());
+            assertNull(saved.getActor());
+            assertEquals("APPLICATION_REJECTED", saved.getEventType());
+            assertEquals("APP_REJECTED_88", saved.getEventId());
+            assertEquals("/portal/applications/88", saved.getLinkUrl());
+            assertEquals("danger", NotificationLabels.eventTone(saved.getEventType()));
+            assertNotNull(NotificationLabels.eventLabel(saved.getEventType()));
+        }
+
+        @Test
         @DisplayName("notifyInterviewScheduled: HR tạo lịch -> Hội đồng (trừ HR tạo) và ứng viên nhận, link đúng phía")
         void notifyInterviewScheduled_shouldNotifyPanelAndCandidate_exceptActor() {
             // Act
@@ -981,17 +998,21 @@ class NotificationServiceImplTests {
             assertEquals("INT_SCHED_9", candidate.getEventId());
         }
 
+        // ducnm sửa: hủy lịch chỉ báo ứng viên (kèm lý do); hội đồng là người trong công ty, HR tự báo trực
+        // tiếp cho họ nên không cần thêm thông báo in-app riêng.
         @Test
-        @DisplayName("notifyInterviewCancelled: có lý do -> Lý do chỉ ghi cho hội đồng, ứng viên không thấy")
-        void notifyInterviewCancelled_shouldShowReasonOnlyToPanel() {
+        @DisplayName("notifyInterviewCancelled: chỉ ứng viên nhận, nội dung có lý do")
+        void notifyInterviewCancelled_shouldNotifyCandidateOnlyWithReason() {
             // Act
             notificationService.notifyInterviewCancelled(schedule(), hr, "Ứng viên xin dời");
 
             // Assert
-            List<Notification> saved = savedNotifications(2);
-            assertTrue(saved.get(0).getContent().contains("Ứng viên xin dời"));
-            assertFalse(saved.get(1).getContent().contains("Ứng viên xin dời"));
-            assertEquals("INTERVIEW_CANCELLED", saved.get(1).getEventType());
+            Notification saved = savedNotifications(1).get(0);
+            assertEquals(candidateUser, saved.getRecipient());
+            assertEquals(hr, saved.getActor());
+            assertEquals("/portal/interviews", saved.getLinkUrl());
+            assertEquals("INTERVIEW_CANCELLED", saved.getEventType());
+            assertTrue(saved.getContent().contains("Ứng viên xin dời"));
         }
 
         @Test

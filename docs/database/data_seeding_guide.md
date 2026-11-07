@@ -161,7 +161,7 @@ Sau khi cột đã là `NVARCHAR`, toàn bộ mảng dữ liệu mẫu trong `Sm
      - Ứng viên trạng thái `Applied`: Hồ sơ mới nộp, đang chờ phân loại.
      - Ứng viên trạng thái `Screening`: Có đầy đủ nhận xét sơ loại của HR (`hrReviewNotes`), liên kết đúng ID của HR phụ trách (`reviewedBy`).
      - Ứng viên trạng thái `Interviewing`: Đã qua sàng lọc, có nhận xét chuyên môn của Hiring Manager (`hmReviewNotes`), có lịch phỏng vấn chi tiết (`InterviewSchedule`) với phòng họp, hình thức Online/Offline và link meeting.
-     - Ứng viên trạng thái `Offered` / `Hired`: Có điểm đánh giá cao (`overallScore` từ 80.00 đến 98.00), có đề xuất lương (`OfferProposal`) với mức lương, vị trí và thời hạn phản hồi rõ ràng.
+     - Ứng viên trạng thái `Offered` / `Hired`: Có điểm đánh giá cao (`overallScore` từ 80.00 đến 98.00 <đã bỏ>), có đề xuất lương (`OfferProposal`) với mức lương, vị trí và thời hạn phản hồi rõ ràng.
      - Ứng viên trạng thái `Rejected`: Có ghi chú lý do từ chối lịch sự, phù hợp thực tế tuyển dụng.
   3. **Làm giàu thông tin học vấn & công việc**: Bổ sung tên các trường đại học hàng đầu Việt Nam (ĐH Bách Khoa, ĐH FPT, ĐH Quốc Gia, Học viện Bưu chính Viễn thông) và các chế độ đãi ngộ chi tiết (MacBook Pro M3, bảo hiểm sức khỏe Bảo Việt, thưởng hiệu suất hàng quý...).
 

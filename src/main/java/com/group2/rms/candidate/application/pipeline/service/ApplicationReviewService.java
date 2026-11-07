@@ -83,6 +83,8 @@ public class ApplicationReviewService {
             } else {
                 notificationService.notifyApplicationReadyForInterview(application, actor);
             }
+        } else if ("Fail".equals(decision)) {
+            notificationService.notifyApplicationRejected(application);
         }
         return switch (decision) {
             case "Pass" -> hrStep ? "Đã chuyển hồ sơ cho trưởng bộ phận."

@@ -3,7 +3,6 @@ package com.group2.rms.interview.controller;
 import com.group2.rms.candidate.domain.entity.Application;
 import com.group2.rms.candidate.domain.repository.ApplicationRepository;
 import com.group2.rms.candidate.talentpool.service.RecruitmentEmailService;
-import com.group2.rms.candidate.talentpool.exception.RecruitmentEmailException;
 import com.group2.rms.candidate.domain.rule.ApplicationStatusException;
 import com.group2.rms.core.security.RoleAuthorities;
 import com.group2.rms.interview.dto.InterviewScheduleRequest;
@@ -124,10 +123,15 @@ public class InterviewSchedulingController {
             Model model,
             RedirectAttributes redirectAttributes) {
         User currentUser = resolveEffectiveUser(authentication);
+        // ducnm sửa: vai trò xem được danh sách lịch (HM, Interviewer) mà không có quyền tạo thì vẫn vào được
+        // trang (còn sidebar/topbar/tiêu đề) nhưng ẩn form, thay bằng banner "Bạn không có quyền truy cập".
         if (!canManageSchedules(currentUser, authentication)) {
             log.warn("Từ chối truy cập tạo lịch phỏng vấn: Người dùng không có vai trò HR hoặc Director.");
-            redirectAttributes.addFlashAttribute("errorMessage", "Chỉ có nhân sự (HR) và Giám đốc (Director) mới có quyền tạo lịch phỏng vấn.");
-            return "redirect:/interviews";
+            model.addAttribute("accessDenied", true);
+            model.addAttribute("currentUser", currentUser);
+            model.addAttribute("activeMenu", "interviews");
+            model.addAttribute("isEdit", false);
+            return "interview/form";
         }
 
         // Gợi ý mặc định: 09:00 sáng ngày mai
@@ -135,7 +139,6 @@ public class InterviewSchedulingController {
         // Mở từ trang hồ sơ (/applications/{id}): chọn sẵn hồ sơ trong dropdown
         InterviewScheduleRequest request = InterviewScheduleRequest.builder()
                 .applicationId(applicationId)
-                .interviewStatus(InterviewStatus.Scheduled)
                 .interviewFormat(InterviewFormat.Online_GoogleMeet)
                 .startTime(defaultStartTime)
                 .endTime(defaultStartTime.plusHours(1))
@@ -183,12 +186,8 @@ public class InterviewSchedulingController {
             Integer creatorUserId = currentUser != null ? currentUser.getUserId() : 1;
             InterviewScheduleResponse saved = interviewSchedulingService.createSchedule(request, creatorUserId);
             redirectAttributes.addFlashAttribute("successMessage", "Tạo lịch phỏng vấn thành công!");
-            if (saved != null && saved.interviewStatus() == InterviewStatus.Scheduled) {
-                try { recruitmentEmail.sendInterview(saved.interviewId()); }
-                catch (RecruitmentEmailException e) {
-                    redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
-                }
-            }
+            // ducnm sửa: gửi ngầm sau khi đã lưu; lịch mới luôn còn hoạt động nên luôn có thư mời
+            recruitmentEmail.sendInterview(saved.interviewId());
             return "redirect:/interviews";
         } catch (InterviewStatusException | IllegalArgumentException | ApplicationStatusException ex) {
             // dunglt bổ sung: requireScheduleable ném ApplicationStatusException (trước là TalentPoolException)
@@ -211,9 +210,15 @@ public class InterviewSchedulingController {
             RedirectAttributes redirectAttributes) {
 
         User currentUser = resolveEffectiveUser(authentication);
+        // ducnm sửa: vai trò xem được danh sách (HM, Interviewer) mà không có quyền sửa thì vẫn vào được trang
+        // (còn sidebar/topbar/tiêu đề) nhưng ẩn form, thay bằng banner "Bạn không có quyền truy cập".
         if (!canManageSchedules(currentUser, authentication)) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Chỉ có nhân sự (HR) và Giám đốc (Director) mới có quyền chỉnh sửa lịch phỏng vấn.");
-            return "redirect:/interviews";
+            model.addAttribute("accessDenied", true);
+            model.addAttribute("currentUser", currentUser);
+            model.addAttribute("activeMenu", "interviews");
+            model.addAttribute("isEdit", true);
+            model.addAttribute("interviewId", id);
+            return "interview/form";
         }
 
         InterviewScheduleResponse detail = interviewSchedulingService.getScheduleDetail(id);
@@ -234,7 +239,6 @@ public class InterviewSchedulingController {
                 .startTime(detail.startTime())
                 .endTime(detail.endTime())
                 .locationOrLink(detail.locationOrLink())
-                .interviewStatus(detail.interviewStatus())
                 .interviewerIds(interviewerIds)
                 .build();
 
@@ -269,9 +273,10 @@ public class InterviewSchedulingController {
         }
 
         try {
-            Integer updaterUserId = currentUser != null ? currentUser.getUserId() : 1;
-            interviewSchedulingService.updateSchedule(id, request, updaterUserId);
+            InterviewScheduleResponse updated = interviewSchedulingService.updateSchedule(id, request, currentUser != null ? currentUser.getUserId() : 1);
             redirectAttributes.addFlashAttribute("successMessage", "Cập nhật lịch phỏng vấn thành công!");
+            // ducnm bổ sung: gửi ngầm cho ứng viên, không ảnh hưởng tới việc đã lưu lịch
+            recruitmentEmail.sendInterviewRescheduled(updated.interviewId());
             return "redirect:/interviews";
         } catch (InterviewStatusException | IllegalArgumentException ex) {
             log.warn("Ngoại lệ nghiệp vụ khi cập nhật lịch #{}: {}", id, ex.getMessage());
@@ -301,6 +306,8 @@ public class InterviewSchedulingController {
             Integer updaterUserId = currentUser != null ? currentUser.getUserId() : 1;
             interviewSchedulingService.cancelSchedule(id, cancelReason, updaterUserId);
             redirectAttributes.addFlashAttribute("successMessage", "Hủy lịch phỏng vấn thành công!");
+            // ducnm bổ sung: gửi ngầm cho ứng viên, không ảnh hưởng tới việc đã hủy lịch
+            recruitmentEmail.sendInterviewCancelled(id, cancelReason);
         } catch (InterviewStatusException | IllegalArgumentException ex) {
             log.warn("Lỗi khi hủy lịch #{}: {}", id, ex.getMessage());
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
@@ -344,14 +351,7 @@ public class InterviewSchedulingController {
         model.addAttribute("availableInterviewers", availableInterviewers);
 
         model.addAttribute("interviewFormats", InterviewFormat.values());
-
-        // Nếu tạo mới: chỉ cho phép Scheduled ("Đã lên lịch") hoặc Completed ("Đã hoàn thành")
-        // Nếu chỉnh sửa: hiển thị tất cả các trạng thái
-        if (!isEdit) {
-            model.addAttribute("interviewStatuses", List.of(InterviewStatus.Scheduled, InterviewStatus.Completed));
-        } else {
-            model.addAttribute("interviewStatuses", InterviewStatus.values());
-        }
+        // ducnm bổ sung: không còn ô chọn trạng thái trên form — hệ thống tự suy (Scheduled/Rescheduled khi lưu).
     }
 
     /**
