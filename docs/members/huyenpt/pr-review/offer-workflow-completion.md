@@ -1,7 +1,7 @@
 # Hoàn thiện giao diện, nghiệp vụ và giao dịch Offer
 
 **Nhánh:** `feat/huyenpt/offer-workflow-completion`.
-**Base:** `main`, commit `206c3fb1`, đã merge hai PR #160 và #161.
+**Base:** `main`, commit `3e870c04`, đã merge PR #160, #161 và cập nhật Interview #162.
 
 ## Phạm vi gộp theo yêu cầu
 
@@ -28,6 +28,7 @@ Code production và migration được đối chiếu với snapshot Offer hoàn
 - Chưa bật app.offer.expiration.enabled; chỉ bật sau khi hai bên xác nhận tích hợp. Không thêm trạng thái mới cho Application.
 - Luồng tạo/sửa dùng form hiện hữu; các mutation JSON legacy không còn frontend gọi được retire có kiểm soát (415/405). Route view, khóa cột export và quyền của PR #161 được giữ.
 - PR chứa đúng phần notification Offer đã được người dùng duyệt; không sửa nghiệp vụ notification khác, SecurityConfig hoặc shared layout.
+- Link notification mới dùng trang đích theo người nhận. Script sửa hai ID 19/20 của database local không đưa vào migration dùng chung; dữ liệu thông báo cũ ở môi trường khác cần kiểm tra riêng.
 
 ## Kiểm thử trên worktree của PR
 
@@ -51,6 +52,8 @@ Các lần xác minh cuối không lỗi hoặc bỏ qua. Bộ SQL bao gồm que
 Worktree không có cấu hình bí mật local nên lần SQL đầu bị lỗi đăng nhập; lần sau dùng lại cấu hình sẵn có chỉ trong môi trường tiến trình Maven. Không thay thông tin đăng nhập, không copy cấu hình vào Git, không chạy migration hoặc test trên database ứng dụng. Database tạm đã dọn; giữ nguyên các file scratch/target.
 
 Git diff check và merge với origin/main được kiểm tra trước push. Không chạy browser A/B hoặc SpringBootTest phụ thuộc database ứng dụng trong lượt tách PR này. Chưa benchmark RAM theo MB; entity/DTO đầu vào và byte[] Excel vẫn ở RAM. Notification là best-effort có log, chưa có outbox/retry bền vững.
+
+Trước push, main có thêm #162 của Interview. Đã merge sạch, xác minh code/schema Offer không đổi, rồi chạy lại 116 test web đạt: InterviewResultWebTests 25, InterviewScheduleFormWebTests 12, OfferIntegrationTests 60 và CandidateOfferWebTests 19. Không ghi đè thay đổi thành viên khác. Log: scratch/offer-workflow-completion-main-refresh.log.
 
 Log cục bộ không commit: scratch/offer-workflow-completion-tests.log, scratch/offer-workflow-completion-sql-v2.log, scratch/offer-workflow-completion-js.log, scratch/offer-workflow-migration-proof.log.
 
