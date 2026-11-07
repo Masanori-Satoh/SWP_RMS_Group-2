@@ -98,15 +98,20 @@
         confirmButton.disabled = true;
 
         // Nếu là từ chối và có lý do, chèn tham số declineReason vào form
-        if (pendingForm.dataset.offerForm === 'decline' && reasonInput && reasonInput.value.trim()) {
+        if (pendingForm.dataset.offerForm === 'decline' && reasonInput) {
+          var reason = reasonInput.value.trim();
           var hiddenInput = pendingForm.querySelector('input[name="declineReason"]');
-          if (!hiddenInput) {
-            hiddenInput = document.createElement('input');
-            hiddenInput.type = 'hidden';
-            hiddenInput.name = 'declineReason';
-            pendingForm.appendChild(hiddenInput);
+          if (!reason) {
+            if (hiddenInput) hiddenInput.remove();
+          } else {
+            if (!hiddenInput) {
+              hiddenInput = document.createElement('input');
+              hiddenInput.type = 'hidden';
+              hiddenInput.name = 'declineReason';
+              pendingForm.appendChild(hiddenInput);
+            }
+            hiddenInput.value = reason;
           }
-          hiddenInput.value = reasonInput.value.trim();
         }
 
         pendingForm.submit();
@@ -158,12 +163,6 @@
       }
     });
   });
-
-  // 4. Logic trang Từ chối riêng (/portal/offers/{id}/decline) - tương thích ngược
-  var declinePageContainer = document.querySelector('.cof-decline-form');
-  if (declinePageContainer) {
-    initReasonChips(declinePageContainer);
-  }
 
   // Mở modal từ nút kích hoạt trên thanh tác vụ trang chi tiết
   document.querySelectorAll('[data-detail-trigger]').forEach(function (btn) {
@@ -223,6 +222,10 @@
   });
 
   // 5. Đồng hồ đếm ngược hạn phản hồi thư mời
+  /**
+   * Đếm ngược để cập nhật chữ trên UI mỗi giây; không tự đổi trạng thái Offer hoặc hồ sơ trong database.
+   * Dù giao diện chưa reload lúc hết hạn, service vẫn kiểm tra hạn trước mỗi lần nhận/từ chối.
+   */
   function initCountdowns() {
     var countdownEls = document.querySelectorAll('.cof-countdown[data-deadline]');
     if (!countdownEls.length) return;

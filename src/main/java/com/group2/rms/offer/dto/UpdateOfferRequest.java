@@ -18,8 +18,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 /**
- * Request chỉnh sửa Offer Proposal (Chỉ áp dụng khi Offer ở trạng thái Draft
- * hoặc Rejected).
+ * Request chỉnh sửa đề xuất thư mời; service chỉ cho phép khi Offer đang Draft.
  */
 @Data
 @Builder

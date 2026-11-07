@@ -171,10 +171,11 @@ ApplicationId;NOT NULL, UNIQUE, FOREIGN KEY -> Application.ApplicationId;1-1 wit
 OfferedPositionTitle;NOT NULL;Proposed job title
 ProposedSalary;NOT NULL;Proposed official salary
 ProbationSalary;NOT NULL, CHECK >= 85% of ProposedSalary;Probation-period salary
+ProbationDays;NOT NULL, DEFAULT 60, CHECK BETWEEN 1 AND 365;Probation duration in days
 ExpectedStartDate;NULL;Expected start date
 WorkLocation;NULL;Work location
 BenefitsPackage;NULL;Benefits/bonus package attached to the offer
-OfferStatus;NOT NULL;Draft, Pending_Director, Director_Approved, Director_Rejected, Sent_Candidate, Accepted, Declined
+OfferStatus;NOT NULL;Draft, Pending_Director, Director_Approved, Director_Rejected, Sent_Candidate, Expired, Accepted, Declined
 ProposedBy;NOT NULL, FOREIGN KEY -> User.UserId;HR who created the offer
 CreatedAt;NOT NULL, DEFAULT GETDATE();Creation date
 UpdatedAt;NULL;Last update date

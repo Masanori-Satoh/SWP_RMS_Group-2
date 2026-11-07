@@ -1,0 +1,787 @@
+/* =============================================================================
+   OFFER MANAGEMENT — HR ROLE STYLESHEET (offer-hr.css)
+   Project: SWP391 - Mộc RMS Group 2
+   Module: Offer Management (Developer: HuyenPT)
+   Architecture: Compact Role-Based (offer-common.css -> offers.css -> offer-workspace.css -> offer-hr.css)
+
+   SECTIONS:
+   - SECTION A — HR LIST & WORKSPACE (Heading, 4 KPI cards, selection toolbar, table cells)
+   - SECTION B — CREATE / EDIT OFFER FORM (Validation, step badge, candidate preview, probation calc, form actions)
+   - SECTION C — EXCEL EXPORT (Export modal dialog, scope radios, 25-column checkboxes grid)
+   - SECTION D — RESPONSIVE RULES (Breakpoints for HR List, Form, and Export modal)
+   ============================================================================= */
+
+/* =============================================================================
+   SECTION A — HR LIST & WORKSPACE
+   ============================================================================= */
+
+/* A.1 Page Header & Action Controls */
+/* Header & Intro Section */
+.offers-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: var(--s6);
+    flex-wrap: wrap;
+    gap: var(--s4);
+}
+
+.offers-title-group h1 {
+    font-family: var(--serif);
+    font-size: clamp(24px, 2.5vw, 30px);
+    font-weight: 600;
+    color: var(--ink);
+    letter-spacing: -0.015em;
+    margin: 0;
+}
+
+.offers-subtitle {
+    font-size: 15px;
+    color: var(--muted);
+    margin-top: var(--s2);
+    max-width: 75ch;
+    line-height: 1.5;
+}
+
+
+.ofw-header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+}
+
+.ofw-header-actions .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s2);
+  height: var(--btn-h);
+  border-radius: var(--radius-md);
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.export-btn-icon {
+    flex-shrink: 0;
+}
+
+/* A.2 HR 4 KPI Summary Cards */
+/* Stat Overview Cards */
+.offers-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: var(--s4);
+    margin-bottom: var(--s6);
+}
+
+button.offer-stat-card {
+    font-family: inherit;
+    font-size: inherit;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+    width: 100%;
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+.offer-stat-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: var(--s4) var(--s4);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--s3);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    cursor: pointer;
+}
+
+.offer-stat-card:hover {
+    border-color: var(--control-line);
+    box-shadow: 0 4px 12px color-mix(in srgb, var(--ink) 5%, transparent);
+}
+
+.offer-stat-card--active,
+.offer-stat-card--active:hover {
+    border-color: var(--brand);
+    background: color-mix(in srgb, var(--brand-soft) 40%, var(--surface));
+    box-shadow: 0 0 0 1px var(--brand), var(--shadow-sm);
+}
+
+.offer-stat-card .stat-label {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    text-align: center;
+    width: 100%;
+    min-height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1.3;
+}
+
+.offer-stat-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    width: 100%;
+    max-width: 180px;
+    margin-inline: auto;
+}
+
+.offer-stat-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 19px;
+    flex-shrink: 0;
+}
+
+.stat-icon-brand {
+    background: var(--brand-soft);
+    color: var(--brand-dark);
+}
+
+.stat-icon-blue {
+    background: var(--neutral-soft);
+    color: var(--neutral);
+    border: 1px solid var(--line);
+}
+
+.stat-icon-emerald {
+    background: var(--brand-soft);
+    color: var(--brand-hover);
+    border: 1px solid var(--brand-caption);
+}
+
+.offer-stat-card .stat-value {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+}
+
+.ofw-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: var(--s4);
+  margin-bottom: var(--s6);
+}
+
+/* A.3 HR Bulk Selection Toolbar */
+.offer-checkbox {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    accent-color: var(--brand-dark);
+}
+
+.selection-toolbar {
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    margin-bottom: 12px;
+    background: var(--brand-soft);
+    border: 1px solid var(--brand-caption);
+    border-radius: 6px;
+    animation: toolbarFadeIn 0.2s ease;
+}
+
+.selection-toolbar.active {
+    display: flex;
+}
+
+@keyframes toolbarFadeIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.selection-toolbar-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13.5px;
+    color: var(--brand-dark);
+    font-weight: 500;
+}
+
+.selection-toolbar-left i {
+    color: var(--brand);
+    font-size: 15px;
+}
+
+.selection-toolbar-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Modal Export Dialog */
+
+.ofw-selection-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--s3);
+  padding: var(--s3) var(--s5);
+  margin-bottom: var(--s4);
+  background: var(--brand-soft);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  color: var(--brand-dark);
+}
+
+.ofw-selection-toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  font-size: 14px;
+}
+
+.ofw-selection-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+}
+
+/* A.4 HR Table Helper Columns & Cells */
+.offer-search-clear-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--muted);
+    padding: 0 4px;
+    display: inline-flex;
+    align-items: center;
+}
+
+.offer-col-w-44 {
+    width: 44px;
+}
+
+.offer-col-w-70 {
+    width: 70px;
+}
+
+.offer-col-w-90 {
+    width: 90px;
+}
+
+.offer-col-w-150 {
+    width: 150px;
+}
+
+.offer-error-list {
+    margin: 4px 0 0 16px;
+    padding: 0;
+}
+
+.offer-hint-inline {
+    color: var(--muted);
+    font-weight: normal;
+}
+
+.offer-mt-1 {
+    margin-top: 4px;
+}
+
+.offer-mt-2 {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--line);
+}
+
+.offer-font-bold {
+    font-weight: 700;
+}
+
+.offer-font-italic-muted {
+    font-style: italic;
+    color: var(--muted);
+    margin-top: 2px;
+}
+
+.offer-row-link {
+    text-decoration: none;
+    color: inherit;
+}
+
+.offer-date-cell {
+    color: var(--muted);
+    font-size: 13.5px;
+}
+
+.offer-export-icon-box {
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+    border-radius: 6px;
+}
+
+.offer-export-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--ink);
+}
+
+.offer-export-desc {
+    font-size: 12.5px;
+    color: var(--muted);
+    font-family: var(--sans);
+    font-weight: normal;
+    margin-top: 2px;
+}
+
+
+.ofw-empty-state-icon {
+  margin-right: var(--s2);
+  vertical-align: middle;
+}
+
+/* =============================================================================
+   SECTION B — CREATE / EDIT OFFER FORM
+   ============================================================================= */
+
+/* B.1 Form Validation Summary Alert */
+.ofw-validation-summary {
+  margin-bottom: var(--s6);
+  padding: var(--s4) var(--s5);
+  border: 1px solid var(--error);
+  border-radius: var(--radius-md);
+  background: var(--error-soft);
+  color: var(--error);
+}
+
+.ofw-validation-header {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  margin-bottom: var(--s2);
+}
+
+.ofw-validation-header svg {
+  flex-shrink: 0;
+}
+
+.ofw-validation-header h2 {
+  margin: 0;
+  font: 600 16px/1.4 var(--sans);
+  color: var(--error);
+}
+
+.ofw-error-list {
+  margin: 0;
+  padding-left: var(--s5);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* B.2 Step Badges & Panel Title */
+.ofw-panel-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+}
+
+.ofw-step-badge {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-full);
+  background: var(--brand-soft);
+  color: var(--brand-dark);
+  font: 700 14px/1 var(--sans);
+}
+
+/* B.3 Candidate Preview Box & Fixed Contextual Bar */
+.ofw-fixed-candidate-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  min-height: 44px;
+  padding: var(--s2) var(--s4);
+  background: var(--surface-subtle);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+}
+
+.ofw-candidate-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  background: var(--brand-soft);
+  color: var(--brand-dark);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.ofw-fixed-candidate-text {
+  font-weight: 600;
+  color: var(--ink);
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
+.ofw-candidate-preview-box {
+  background: var(--surface-subtle);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: var(--s4) var(--s5);
+  margin-top: var(--s4);
+}
+
+.ofw-info-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--s4) var(--s6);
+}
+
+.ofw-info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.ofw-info-label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: var(--muted);
+}
+
+.ofw-info-value {
+  font-size: 14px;
+  color: var(--ink);
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.ofw-info-value--strong {
+  font-weight: 650;
+  color: var(--brand-dark);
+}
+
+.ofw-salary-badge {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 4px 10px;
+  background: color-mix(in srgb, var(--brand-soft) 80%, var(--surface));
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  color: var(--brand-dark);
+  font-weight: 700;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+.ofw-comments-box {
+  margin-top: var(--s4);
+  padding-top: var(--s3);
+  border-top: 1px dashed var(--line);
+}
+
+.ofw-info-comments {
+  margin: 4px 0 0;
+  color: var(--ink);
+  font-size: 14px;
+  font-style: italic;
+  line-height: 1.5;
+}
+
+/* B.4 Salary, Probation & 85% Rule Feedback */
+.ofw-field-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s2);
+}
+
+.ofw-btn-calc {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 var(--s3);
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+
+.ofw-rule-notice {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: var(--s2);
+  padding: 6px var(--s3);
+  background: var(--brand-soft);
+  border-radius: var(--radius-sm);
+  color: var(--brand-dark);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.ofw-rule-notice svg {
+  flex-shrink: 0;
+}
+
+.ofw-rule-notice--invalid {
+  background: var(--error-soft);
+  color: var(--error);
+}
+
+.ofw-hint-inline {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: normal;
+}
+
+/* B.5 Form Action Footer */
+.ofw-form-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--s3);
+  padding-top: var(--s4);
+  margin-top: var(--s6);
+}
+
+.ofw-form-actions .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s2);
+  height: var(--btn-h);
+  border-radius: var(--radius-md);
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+/* =============================================================================
+   SECTION C — EXCEL EXPORT
+   ============================================================================= */
+
+.ofw-modal-stat-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.ofw-export-section--spaced {
+  margin-top: var(--s4);
+}
+
+.ofw-export-title--no-mb {
+  margin-bottom: 0;
+}
+
+.ofw-column-group-label--spaced {
+  margin-top: var(--s3);
+}
+
+.ofw-modal-alert--spaced {
+  margin-top: var(--s3);
+}
+
+.offer-export-icon-box {
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+    border-radius: 6px;
+}
+
+.offer-export-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--ink);
+}
+
+.offer-export-desc {
+    font-size: 12.5px;
+    color: var(--muted);
+    font-family: var(--sans);
+    font-weight: normal;
+    margin-top: 2px;
+}
+
+/* C.2 Export Sections & Scope Selection */
+.export-section {
+    margin-bottom: 16px;
+}
+
+.export-section-title {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 8px;
+}
+
+.export-scope-options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.scope-radio-label {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 14px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    cursor: pointer;
+    background: var(--surface);
+    transition: all 0.15s ease;
+}
+
+.scope-radio-label:hover {
+    border-color: var(--control-line);
+    background: var(--page);
+}
+
+.scope-radio-label.selected,
+.scope-radio-label:has(input[type="radio"]:checked) {
+    border-color: var(--brand-dark);
+    background: var(--surface-subtle);
+}
+
+.scope-radio-label input[type="radio"] {
+    margin-top: 3px;
+    accent-color: var(--brand-dark);
+    cursor: pointer;
+}
+
+.scope-radio-content {
+    flex: 1;
+}
+
+.scope-name {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.scope-desc {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 2px;
+}
+
+.scope-radio-label.disabled,
+.scope-radio-label:has(input[type="radio"]:disabled) {
+    opacity: 0.55;
+    cursor: not-allowed;
+    background: var(--page);
+}
+
+/* C.3 25-Column Selection Grid & Quick Action Controls */
+.export-columns-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--s2);
+    margin-bottom: 10px;
+}
+
+.ofw-columns-quick-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--s2);
+}
+
+.column-group-label {
+    font-size: 11.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--muted);
+    margin-bottom: 6px;
+}
+
+.columns-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: 8px 12px;
+    background: var(--page);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 12px 14px;
+}
+
+.column-checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--ink);
+    cursor: pointer;
+    user-select: none;
+}
+
+.column-checkbox-label input[type="checkbox"] {
+    accent-color: var(--brand-dark);
+    cursor: pointer;
+}
+
+/* =============================================================================
+   SECTION D — RESPONSIVE RULES
+   ============================================================================= */
+
+@media (max-width: 1024px) {
+  .ofw-stats-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .ofw-info-grid {
+    grid-template-columns: 1fr;
+    gap: var(--s3);
+  }
+
+  .ofw-form-actions {
+    flex-direction: column-reverse;
+    width: 100%;
+  }
+
+  .ofw-form-actions .btn {
+    width: 100%;
+  }
+
+  .ofw-stats-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+    .columns-grid {
+        grid-template-columns: 1fr;
+    }
+}

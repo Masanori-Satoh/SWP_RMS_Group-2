@@ -110,7 +110,6 @@ public record CandidateOfferDetailResponse(
     }
 
     public boolean isExpired() {
-        return "Đã quá hạn phản hồi".equals(statusLabel)
-                || (!canRespond && "Sent_Candidate".equals(offerStatus));
+        return "Expired".equals(offerStatus) || "Đã quá hạn phản hồi".equals(statusLabel);
     }
 }

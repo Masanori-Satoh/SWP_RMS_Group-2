@@ -45,6 +45,11 @@ class CandidateOfferQueryTests {
     private void setStatus(String status) {
         entityManager.createQuery("update OfferProposal o set o.offerStatus = :s where o.offerId = :id")
                 .setParameter("s", status).setParameter("id", offerId).executeUpdate();
+        entityManager.createQuery("update OfferProposal o set o.responseDeadline=:deadline, o.expectedStartDate=:start where o.offerId=:id")
+                .setParameter("deadline", java.time.LocalDateTime.now().plusDays(5))
+                .setParameter("start", java.time.LocalDate.now().plusDays(10)).setParameter("id", offerId).executeUpdate();
+        entityManager.createQuery("update Application a set a.applicationStatus='Offered' where a.applicationId=(select o.application.applicationId from OfferProposal o where o.offerId=:id)")
+                .setParameter("id", offerId).executeUpdate();
         entityManager.clear();
     }
 
@@ -74,8 +79,8 @@ class CandidateOfferQueryTests {
     void answerIfSentChangesOnlyOffersStillWaitingForTheCandidate() {
         setStatus("Sent_Candidate");
 
-        assertEquals(1, offers.answerIfSent(offerId, "Accepted"));
-        assertEquals(0, offers.answerIfSent(offerId, "Declined"));
+        assertEquals(1, offers.answerIfEligible(offerId, ownerUserId, "Accepted", null, java.time.LocalDateTime.now(), java.time.LocalDate.now()));
+        assertEquals(0, offers.answerIfEligible(offerId, ownerUserId, "Declined", null, java.time.LocalDateTime.now(), java.time.LocalDate.now()));
 
         entityManager.clear();
         assertEquals("Accepted", entityManager.find(OfferProposal.class, offerId).getOfferStatus());
@@ -85,7 +90,7 @@ class CandidateOfferQueryTests {
     void answerIfSentLeavesInternalOffersAlone() {
         setStatus("Pending_Director");
 
-        assertEquals(0, offers.answerIfSent(offerId, "Accepted"));
+        assertEquals(0, offers.answerIfEligible(offerId, ownerUserId, "Accepted", null, java.time.LocalDateTime.now(), java.time.LocalDate.now()));
     }
 
     @Autowired com.group2.rms.notification.service.NotificationService notifService;
