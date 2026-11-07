@@ -7,6 +7,13 @@
    Tiền tố class: cof-
    ============================================================================= */
 
+/* Modal & Dialog Backdrop Support */
+dialog::backdrop,
+.confirm-dialog::backdrop {
+  background: rgba(37, 41, 35, 0.55);
+  backdrop-filter: blur(4px);
+}
+
 /* Danh sách - Trạng thái rỗng */
 .cof-empty {
   text-align: center;
@@ -21,20 +28,8 @@
   margin: 0;
 }
 
-.cof-sub {
-  display: block;
-  font-size: var(--font-sm);
-}
 
-.cof-link {
-  color: var(--brand-dark);
-  font-weight: 600;
-  text-decoration: none;
-}
 
-.cof-link:hover {
-  text-decoration: underline;
-}
 
 .cof-benefits {
   margin-top: var(--s2);
@@ -363,91 +358,24 @@
   text-overflow: ellipsis;
 }
 
-.cof-back-link {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--s2);
-  color: var(--muted);
-  font-size: var(--font-sm);
-  text-decoration: none;
-  font-weight: 500;
-  transition: color 0.15s ease;
-}
 
-.cof-back-link:hover {
-  color: var(--brand);
-}
 
-.cof-header-badge-row {
-  display: flex;
-  align-items: center;
-  gap: var(--s3);
-  margin-bottom: var(--s2);
-}
 
-.cof-id-tag {
-  font-size: var(--font-sm);
-}
 
-.cof-header-actions {
-  display: flex;
-  gap: var(--s3);
-  align-items: center;
-}
 
 /* Lưới bố cục chi tiết 2 cột */
-.cof-detail-grid {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: var(--s6);
-  align-items: start;
-}
 
-@media (max-width: 991px) {
-  .cof-detail-grid {
-    grid-template-columns: 1fr;
-  }
-}
 
 .cof-detail-main,
-.cof-detail-sidebar {
-  display: flex;
-  flex-direction: column;
-  gap: var(--s6);
-}
 
 /* Thư mời trang trọng (Letterhead Card) */
 .cof-letter {
   border-top: 4px solid var(--brand);
 }
 
-.cof-letter-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  padding-bottom: var(--s4);
-  border-bottom: 1px solid var(--line);
-  margin-bottom: var(--s4);
-}
 
-.cof-letter-company {
-  font-size: var(--font-md);
-  font-weight: 700;
-  color: var(--brand-dark);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
 
-.cof-letter-brand-sub {
-  font-size: var(--font-xs);
-  color: var(--muted);
-  display: block;
-}
 
-.cof-letter-date {
-  font-size: var(--font-sm);
-  color: var(--muted);
-}
 
 .cof-letter-salutation {
   margin-bottom: var(--s4);
@@ -458,52 +386,13 @@
   font-size: var(--font-lg);
 }
 
-.cof-letter-body {
-  font-size: var(--font-base);
-  line-height: 1.6;
-  color: var(--ink);
-}
 
-.cof-letter-closing {
-  margin-top: var(--s6);
-  padding-top: var(--s4);
-  border-top: 1px dashed var(--line);
-  font-size: var(--font-base);
-  line-height: 1.6;
-}
 
 /* Lưới thông tin Metadata */
-.cof-meta-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--s4);
-}
 
-@media (max-width: 600px) {
-  .cof-meta-grid {
-    grid-template-columns: 1fr;
-  }
-}
 
-.cof-meta-item {
-  display: flex;
-  flex-direction: column;
-  gap: var(--s1);
-}
 
-.cof-meta-label {
-  font-size: var(--font-xs);
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  font-weight: 600;
-}
 
-.cof-meta-val {
-  font-size: var(--font-base);
-  color: var(--ink);
-  font-weight: 500;
-}
 
 .cof-meta-val--deadline {
   color: var(--warning);
@@ -551,37 +440,14 @@
 }
 
 /* Chế độ đãi ngộ & Lương */
-.cof-salary-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--s4);
-  margin-bottom: var(--s4);
-}
 
-@media (max-width: 600px) {
-  .cof-salary-grid {
-    grid-template-columns: 1fr;
-  }
-}
 
-.cof-salary-item {
-  background: var(--surface-subtle);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-md);
-  padding: var(--s4);
-}
 
 .cof-salary-item--highlight {
   border-color: var(--brand);
   background: var(--brand-soft);
 }
 
-.cof-salary-figure {
-  font-size: var(--font-xl);
-  font-weight: 700;
-  color: var(--brand-dark);
-  margin: var(--s1) 0;
-}
 
 .cof-salary-figure--probation {
   font-size: var(--font-lg);
@@ -590,23 +456,7 @@
   margin: var(--s1) 0;
 }
 
-.cof-salary-rate {
-  display: inline-block;
-  font-size: var(--font-xs);
-  font-weight: 600;
-  color: var(--brand-dark);
-  background: var(--surface);
-  border: 1px solid var(--brand);
-  border-radius: var(--radius-full);
-  padding: 2px var(--s2);
-}
 
-.cof-benefits-box {
-  background: var(--surface-subtle);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-md);
-  padding: var(--s4);
-}
 
 .cof-benefits-text {
   font-size: var(--font-base);
@@ -616,17 +466,7 @@
 }
 
 /* Thẻ liên hệ HR */
-.cof-contact-row {
-  display: flex;
-  flex-direction: column;
-  gap: var(--s3);
-}
 
-.cof-contact-item {
-  display: flex;
-  flex-direction: column;
-  gap: var(--s1);
-}
 
 /* Hộp thoại từ chối & Chips lý do */
 .cof-dialog-reason {
@@ -671,79 +511,6 @@
 }
 
 /* =============================================================================
-   Màn hình riêng xác nhận từ chối Thư mời nhận việc (/portal/offers/{id}/decline)
-   ============================================================================= */
-.cof-decline-card {
-  max-width: 820px;
-  margin: 0 auto;
-  border-top: 4px solid var(--danger);
-  border-radius: 16px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
-}
-
-.cof-decline-warning {
-  background: var(--surface-subtle);
-  border: 1px solid var(--line);
-  border-left: 4px solid var(--danger);
-  border-radius: var(--radius-md);
-  padding: var(--s4);
-  margin-bottom: var(--s6);
-}
-
-.cof-decline-warning__title {
-  color: var(--danger);
-  font-size: var(--font-base);
-  margin-bottom: var(--s2);
-}
-
-.cof-decline-warning__desc {
-  margin: 0;
-  color: var(--ink);
-  font-size: var(--font-sm);
-  line-height: 1.6;
-}
-
-.cof-decline-summary {
-  background: var(--surface-subtle);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-md);
-  padding: var(--s5);
-  margin-bottom: var(--s6);
-}
-
-.cof-decline-summary__title {
-  font-size: var(--font-base);
-  font-weight: 700;
-  color: var(--ink);
-  margin: 0 0 var(--s4);
-  padding-bottom: var(--s2);
-  border-bottom: 1px solid var(--line);
-}
-
-.cof-decline-label {
-  font-weight: 600;
-  font-size: var(--font-base);
-  color: var(--ink);
-  margin-bottom: var(--s1);
-}
-
-.cof-decline-hint {
-  font-size: var(--font-sm);
-  margin-bottom: var(--s3);
-}
-
-.cof-decline-actions {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: var(--s3);
-  margin-top: var(--s6);
-  padding-top: var(--s4);
-  border-top: 1px solid var(--line);
-}
-
-
-/* =============================================================================
    MÀN HÌNH THƯ MỜI NHẬN VIỆC (OFFER LETTER DOCUMENT REDESIGN THEO MOCKUP)
    ============================================================================= */
 
@@ -762,38 +529,14 @@
   box-shadow: 0 4px 18px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.02);
 }
 
-.cof-top-bar__status-group {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  flex-wrap: wrap;
-  min-width: 0;
-}
 
-.cof-meta-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 14px;
-  border-radius: 10px;
-  border: 1px solid var(--line);
-  background: var(--surface-subtle);
-  transition: all 0.15s ease;
-}
 
-.cof-meta-badge--deadline {
-  border-color: var(--line);
-}
 
 .cof-meta-badge--countdown {
   background: var(--warning-soft);
   border-color: rgba(217, 119, 6, 0.3);
 }
 
-.cof-meta-badge--countdown .cof-meta-badge__icon {
-  color: var(--warning);
-  background: var(--surface);
-}
 
 .cof-meta-badge--countdown .cof-meta-badge__val {
   color: var(--warning);
@@ -804,33 +547,8 @@
   background: var(--surface-subtle);
 }
 
-.cof-meta-badge__icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  background: var(--surface);
-  color: var(--muted);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-}
 
-.cof-meta-badge__content {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
 
-.cof-meta-badge__label {
-  font-size: 11px;
-  color: var(--muted);
-  text-transform: uppercase;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  line-height: 1.2;
-}
 
 .cof-meta-badge__val {
   font-size: 14px;
@@ -847,86 +565,15 @@
 }
 
 /* Nút bấm chuẩn Button DNA: cao 48px, bo 8px, font 15.5px */
-.cof-action-btn {
-  height: 48px;
-  min-height: 48px;
-  padding: 0 22px;
-  border-radius: var(--radius-md, 8px);
-  font-size: 15px;
-  font-weight: 600;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  box-sizing: border-box;
-  text-decoration: none;
-  transition: all 0.15s ease;
-}
 
-.cof-action-btn--accept {
-  background: var(--brand);
-  color: var(--on-brand);
-  border: 1px solid var(--brand);
-  box-shadow: 0 2px 6px rgba(46, 90, 69, 0.25);
-}
 
-.cof-action-btn--accept:hover {
-  background: var(--brand-dark);
-  border-color: var(--brand-dark);
-  box-shadow: 0 4px 14px rgba(46, 90, 69, 0.35);
-  transform: translateY(-1px);
-}
 
-.cof-action-btn--decline {
-  background: var(--surface);
-  color: var(--error);
-  border: 1.5px solid var(--line);
-}
 
-.cof-action-btn--decline:hover {
-  background: var(--error-soft);
-  border-color: var(--error);
-  color: var(--error);
-  transform: translateY(-1px);
-}
 
 /* 2. Tờ thư mời trang trọng (Letterhead Paper Document) */
-.cof-letter-paper {
-  position: relative;
-  max-width: 960px;
-  margin: 0 auto var(--s6);
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 16px;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.02);
-  padding: 44px 48px 36px;
-  overflow: hidden;
-}
 
-.cof-watermark {
-  position: absolute;
-  top: var(--s4);
-  right: var(--s4);
-  opacity: 0.85;
-  pointer-events: none;
-  z-index: 0;
-}
 
-.cof-paper-header {
-  text-align: center;
-  position: relative;
-  z-index: 1;
-  margin-bottom: var(--s6);
-}
 
-.cof-letterhead-brand {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  margin-bottom: 6px;
-  color: var(--brand);
-}
 
 .cof-letterhead-leaf {
   display: inline-flex;
@@ -968,54 +615,12 @@
   color: var(--line);
 }
 
-.cof-paper-rule {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--s4);
-  margin-bottom: var(--s3);
-}
 
-.cof-paper-rule__line {
-  flex: 1;
-  max-width: 140px;
-  height: 1.5px;
-  background: linear-gradient(90deg, transparent, var(--brand), transparent);
-}
 
-.cof-paper-rule__title {
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--brand);
-}
 
-.cof-paper-title {
-  font-family: inherit;
-  font-size: 28px;
-  font-weight: 700;
-  color: var(--ink);
-  margin: 0 0 20px;
-  line-height: 1.35;
-}
 
 /* 3. Lời mở đầu thư ngỏ dạng Khung đón mừng trang trọng */
-.cof-paper-greeting-box {
-  background: var(--surface-subtle);
-  border-left: 4px solid var(--brand);
-  border-radius: 8px;
-  padding: 22px 28px;
-  margin-bottom: var(--s8);
-  position: relative;
-  z-index: 1;
-}
 
-.cof-paper-greeting {
-  color: var(--ink);
-  font-size: 14.5px;
-  line-height: 1.7;
-}
 
 .cof-salutation {
   font-size: 16px;
@@ -1029,124 +634,23 @@
   font-size: 16.5px;
 }
 
-.cof-paper-greeting p {
-  margin: 0 0 var(--s2);
-}
 
-.cof-paper-signoff {
-  margin-top: 16px;
-  padding-top: 12px;
-  border-top: 1px dashed var(--line);
-}
 
-.cof-paper-signoff p {
-  margin: 0 0 2px;
-  font-style: italic;
-  font-size: 13.5px;
-  color: var(--muted);
-}
 
-.cof-signature-brand {
-  color: var(--brand-dark);
-  font-size: 14.5px;
-  font-weight: 700;
-}
 
 
 /* 4. Khối Tải xuống Thư mời & Liên hệ HR đặt dưới khối các bước tiếp theo */
-.cof-download-section {
-  max-width: 960px;
-  margin: 0 auto var(--s12);
-}
 
-.cof-download-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 24px;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
-  position: relative;
-  z-index: 1;
-}
 
-.cof-download-bar__file {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
 
-.cof-download-bar__icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 8px;
-  background: var(--brand-soft);
-  color: var(--brand);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
 
-.cof-download-bar__text {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
 
-.cof-download-bar__filename {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--ink);
-  font-family: inherit;
-}
 
-.cof-download-bar__desc {
-  font-size: 12.5px;
-  color: var(--muted);
-  font-weight: 400;
-}
 
-.cof-download-bar__actions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
 
-.cof-download-bar__btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  font-size: 13px;
-  font-weight: 600;
-  padding: 8px 16px;
-  border-radius: 6px;
-  text-decoration: none;
-  cursor: pointer;
-  background: var(--surface);
-  transition: all var(--transition);
-}
 
-.cof-download-bar__btn--primary {
-  color: var(--brand);
-  border: 1px solid var(--brand);
-}
 
-.cof-download-bar__btn--primary:hover {
-  background: rgba(62, 113, 87, 0.08);
-  border-color: var(--brand-hover);
-  color: var(--brand-hover);
-}
 
-.cof-download-bar__note {
-  font-size: 12.5px;
-  color: var(--muted);
-  margin: 12px 0 0;
-  line-height: 1.5;
-  padding-left: 2px;
-}
 
 /* 5. Lưới bố cục 3 cột nội dung (3 Columns Panel Grid) */
 .cof-paper-grid--3cols {
@@ -1418,16 +922,6 @@
 }
 
 /* 6. Khối Các bước tiếp theo (Stepper bên dưới Tờ thư mời) */
-.cof-stepper-panel {
-  max-width: 960px;
-  margin: 0 auto var(--s6);
-  margin-inline: auto;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 16px;
-  padding: 22px 28px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
-}
 
 .cof-stepper-panel__title {
   font-size: 16px;
@@ -1436,56 +930,16 @@
   margin: 0 0 16px;
 }
 
-.cof-steps-row {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
-}
 
-.cof-step-box {
-  display: flex;
-  gap: 12px;
-  align-items: flex-start;
-}
 
-.cof-step-circle {
-  width: 28px;
-  height: 28px;
-  border-radius: var(--radius-full);
-  background: var(--brand);
-  color: var(--on-brand);
-  font-weight: 700;
-  font-size: 13px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  margin-top: 2px;
-}
 
 .cof-step-circle--active {
   background: var(--brand);
   color: var(--on-brand);
 }
 
-.cof-step-meta {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
 
-.cof-step-title {
-  font-size: 13.5px;
-  font-weight: 700;
-  color: var(--ink);
-}
 
-.cof-step-desc {
-  font-size: 12px;
-  color: var(--muted);
-  line-height: 1.45;
-  margin: 0;
-}
 
 /* 7. Thiết kế đáp ứng trên thiết bị di động (Responsive Breakpoints) */
 @media (max-width: 991px) {
@@ -1494,72 +948,27 @@
     align-items: stretch;
     padding: var(--s4);
   }
-
   .cof-top-bar__deadline {
     flex-direction: column;
     align-items: flex-start;
     gap: 10px;
   }
-
   .cof-top-bar__divider {
     display: none;
   }
-
   .cof-top-bar__actions {
     width: 100%;
     justify-content: stretch;
   }
-
   .cof-top-bar__actions button,
   .cof-top-bar__actions a {
     flex: 1;
     text-align: center;
     justify-content: center;
   }
-
-  .cof-letter-paper {
-    padding: 28px 20px;
-    margin-bottom: var(--s4);
-  }
-
-  .cof-watermark {
-    display: none;
-  }
-
   .cof-paper-grid--3cols {
     grid-template-columns: 1fr;
     gap: 16px;
-  }
-
-  .cof-steps-row {
-    grid-template-columns: 1fr;
-    gap: 14px;
-  }
-
-  .cof-stepper-panel {
-    padding: 20px;
-  }
-
-  .cof-download-section {
-    margin-bottom: var(--s8);
-  }
-
-  .cof-download-bar {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 14px;
-    padding: 16px;
-  }
-
-  .cof-download-bar__actions {
-    flex-direction: column;
-    gap: 8px;
-    width: 100%;
-  }
-
-  .cof-download-bar__btn {
-    width: 100%;
-    justify-content: center;
   }
 }
 
@@ -1620,62 +1029,14 @@
    ============================================================================= */
 
 /* 1. Thanh điều hướng kết hợp Back link & Breadcrumb */
-.cof-nav-bar {
-  display: flex;
-  align-items: center;
-  gap: var(--s3);
-  margin-bottom: var(--s4);
-  font-size: 13.5px;
-}
 
-.cof-back-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--muted);
-  text-decoration: none;
-  font-weight: 500;
-  transition: color var(--transition);
-}
 
-.cof-back-link:hover {
-  color: var(--brand);
-  text-decoration: underline;
-}
 
-.cof-nav-separator {
-  color: var(--line);
-  font-size: 16px;
-  user-select: none;
-}
 
-.cof-breadcrumb-trail {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--muted);
-}
 
-.cof-breadcrumb-trail a {
-  color: var(--muted);
-  text-decoration: none;
-  transition: color var(--transition);
-}
 
-.cof-breadcrumb-trail a:hover {
-  color: var(--brand);
-  text-decoration: underline;
-}
 
-.cof-breadcrumb-sep {
-  color: var(--line);
-  font-size: 12px;
-}
 
-.cof-breadcrumb-curr {
-  color: var(--ink);
-  font-weight: 600;
-}
 
 /* 2. Thẻ 1: Khung trên dạng Hero Card Căn Giữa Chuẩn Mockup */
 .cof-hero-card.card {
@@ -1887,15 +1248,6 @@
   min-width: 0;
 }
 
-.cof-overview__title {
-  margin: 0 0 var(--s2);
-  font-family: var(--sans);
-  font-size: 20px;
-  font-weight: 700;
-  line-height: 1.35;
-  color: var(--ink);
-  overflow-wrap: anywhere;
-}
 
 .cof-overview__meta {
   display: flex;
@@ -1907,12 +1259,6 @@
   font-size: 13.5px;
 }
 
-.cof-overview__meta-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  white-space: nowrap;
-}
 
 .cof-overview__meta-sep {
   color: var(--line);
@@ -1927,15 +1273,6 @@
 }
 
 /* Stepper 4 bước với ngày tháng phía dưới */
-.cof-stepper {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  position: relative;
-  max-width: 32rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
 
 .cof-stepper__step {
   position: relative;
@@ -1959,58 +1296,12 @@
   background-color: var(--line);
 }
 
-.cof-stepper__dot {
-  position: relative;
-  z-index: 1;
-  width: 24px;
-  height: 24px;
-  border-radius: var(--radius-full);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background-color: var(--surface);
-  border: 2px solid var(--line);
-  color: var(--surface);
-  margin-bottom: 6px;
-  transition: var(--transition);
-}
 
-.cof-stepper__step[data-state="done"] .cof-stepper__dot {
-  background-color: var(--brand);
-  border-color: var(--brand);
-}
 
-.cof-stepper__step[data-state="current"] .cof-stepper__dot {
-  border-color: var(--brand);
-  background-color: var(--surface);
-}
 
-.cof-stepper__step[data-state="current"] .cof-stepper__dot::after {
-  content: "";
-  width: 10px;
-  height: 10px;
-  border-radius: var(--radius-full);
-  background-color: var(--brand);
-}
 
-.cof-stepper__name {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--ink);
-  line-height: 1.25;
-}
 
-.cof-stepper__step[data-state="upcoming"] .cof-stepper__name {
-  color: var(--muted);
-  font-weight: 500;
-}
 
-.cof-stepper__date {
-  font-size: 11.5px;
-  color: var(--muted);
-  margin-top: 3px;
-  font-variant-numeric: tabular-nums;
-}
 
 /* Cột phải của Thẻ 1: Trạng thái, Hạn chót & Nút bấm */
 .cof-overview__side {
@@ -2021,22 +1312,7 @@
   text-align: right;
 }
 
-.cof-status-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 5px 14px;
-  border-radius: var(--radius-full);
-  font-size: 13px;
-  font-weight: 600;
-  white-space: nowrap;
-}
 
-.cof-status-pill--offer {
-  background-color: var(--warning-soft);
-  color: var(--warning);
-  border: 1px solid rgba(160, 99, 37, 0.2);
-}
 
 .cof-overview__side .cof-deadline-box {
   display: flex;
@@ -2045,33 +1321,9 @@
   gap: 3px;
 }
 
-.cof-deadline-row {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 13px;
-  color: var(--ink);
-  font-weight: 500;
-}
 
-.cof-deadline-row strong {
-  font-weight: 700;
-  color: var(--ink);
-}
 
-.cof-countdown-row {
-  font-size: 12.5px;
-  color: var(--muted);
-}
 
-.cof-overview__actions {
-  display: flex;
-  flex-direction: column;
-  gap: var(--s2);
-  width: 100%;
-  max-width: 220px;
-  margin-top: 4px;
-}
 
 .cof-btn-accept {
   width: 100%;
@@ -2168,16 +1420,7 @@
   color: var(--ink);
 }
 
-.cof-letter-card__meta {
-  margin: 2px 0 0;
-  font-size: 13px;
-  color: var(--muted);
-}
 
-.cof-letter-card__sep {
-  margin: 0 var(--s1);
-  color: var(--line);
-}
 
 .cof-pdf-btn {
   display: inline-flex;
@@ -2320,21 +1563,13 @@
     grid-template-columns: 1fr;
     gap: var(--s5);
   }
-
   .cof-overview__side {
     align-items: flex-start;
     text-align: left;
   }
-
   .cof-deadline-box {
     align-items: flex-start;
   }
-
-  .cof-overview__actions {
-    max-width: 100%;
-    flex-direction: row;
-  }
-
   .cof-letter-card__head,
   .cof-letter-card__body,
   .cof-accordion__summary,
@@ -2345,14 +1580,6 @@
 }
 
 @media (max-width: 600px) {
-  .cof-overview__actions {
-    flex-direction: column;
-  }
-
-  .cof-stepper {
-    max-width: 100%;
-  }
-
   .cof-letter-card__head {
     flex-direction: column;
     align-items: flex-start;
@@ -2365,14 +1592,12 @@
     align-items: center;
     gap: 12px;
   }
-
   .cof-hero-buttons {
     flex-direction: column;
     width: 100%;
     align-items: center;
     gap: 12px;
   }
-
   .cof-hero-actions-bar .cof-deadline-box,
   .cof-hero-buttons .cof-btn-accept,
   .cof-hero-buttons .cof-btn-decline {
@@ -2387,11 +1612,9 @@
   .cof-hero-card.card {
     padding: var(--s5) var(--s4);
   }
-
   .cof-hero-title {
     font-size: 20px;
   }
-
   .cof-hero-meta {
     flex-direction: column;
     gap: var(--s2);
