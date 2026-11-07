@@ -16,7 +16,7 @@ import com.group2.rms.offer.repository.OfferProposalRepository;
 import com.group2.rms.interview.repository.InterviewFinalResultRepository;
 import com.group2.rms.offer.exception.OfferValidationException;
 import com.group2.rms.user.entity.User;
-import com.group2.rms.user.repository.UserRepository;
+import com.group2.rms.core.security.CurrentUserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.group2.rms.candidate.domain.entity.Candidate;
@@ -28,9 +28,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.security.authentication.AnonymousAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -56,7 +53,7 @@ public class OfferServiceImpl implements OfferService {
 
     private final OfferProposalRepository offerProposalRepository;
     private final ApplicationRepository applicationRepository;
-    private final UserRepository userRepository;
+    private final CurrentUserService currentUserService;
     private final InterviewFinalResultRepository interviewFinalResultRepository;
     private final OfferApprovalRepository offerApprovalRepository;
     private final OfferMailSender offerMailSender;
@@ -101,8 +98,9 @@ public class OfferServiceImpl implements OfferService {
         Application application = applicationRepository.findById(request.getApplicationId())
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Không tìm thấy đơn ứng tuyển với ID: " + request.getApplicationId()));
+        requireActiveApplication(application);
 
-        User proposedBy = resolveProposedBy(request.getProposedById());
+        User proposedBy = currentUserService.requireUser();
 
         deactivateExistingActiveOffers(application.getApplicationId());
 
@@ -158,11 +156,38 @@ public class OfferServiceImpl implements OfferService {
         return mapToResponse(savedOffer);
     }
 
+    /** Không xử lý tiếp hồ sơ đã kết thúc; không tự thay đổi trạng thái Application. */
+    private void requireActiveApplication(Application application) {
+        if (isApplicationEnded(application)) {
+            throw new OfferValidationException("Hồ sơ đã kết thúc nên không thể xử lý đề xuất thư mời.", "APPLICATION_TERMINATED");
+        }
+    }
+
+    private boolean isApplicationEnded(Application application) {
+        return application != null && application.getApplicationStatus() != null
+                && Set.of("Hired", "Rejected", "Withdrawn", "Cancelled").contains(application.getApplicationStatus());
+    }
+
+    /** Bắt buộc lý do từ chối tại service, kể cả khi không đi qua controller. */
+    private void validateDirectorComments(String comments, boolean required) {
+        if (required && (comments == null || comments.isBlank())) {
+            throw new OfferValidationException("Vui lòng nhập lý do từ chối vào ô nhận xét trước khi tiếp tục.", "DIRECTOR_REASON_REQUIRED");
+        }
+        if (comments != null && comments.length() > 2000) {
+            throw new OfferValidationException("Phản hồi của Giám đốc không được vượt quá 2000 ký tự.");
+        }
+    }
+
+    private OfferProposal findActiveOffer(Integer id) {
+        return offerProposalRepository.findById(id)
+                .filter(offer -> !Boolean.TRUE.equals(offer.getIsDeleted()))
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đề xuất nhận việc với ID: " + id));
+    }
+
     @Override
     @Transactional(readOnly = true)
     public OfferResponse getOfferById(Integer offerId) {
-        OfferProposal offer = offerProposalRepository.findById(offerId)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đề xuất nhận việc với ID: " + offerId));
+        OfferProposal offer = findActiveOffer(offerId);
         return mapToResponse(offer);
     }
 
@@ -189,7 +214,7 @@ public class OfferServiceImpl implements OfferService {
         for (InterviewFinalResult r : passedResults) {
             var schedule = r.getInterviewSchedule();
             var application = schedule != null ? schedule.getApplication() : null;
-            if (application == null || application.getApplicationId() == null) {
+            if (application == null || application.getApplicationId() == null || isApplicationEnded(application)) {
                 continue;
             }
 
@@ -260,8 +285,7 @@ public class OfferServiceImpl implements OfferService {
         Application application = applicationRepository.findById(dto.getApplicationId())
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Không tìm thấy đơn ứng tuyển với ID: " + dto.getApplicationId()));
-
-        User proposedBy = resolveProposedBy(dto.getProposedById());
+        requireActiveApplication(application);
 
         String status = Boolean.TRUE.equals(dto.getIsDraft()) ? "Draft" : "Pending_Director";
 
@@ -279,6 +303,15 @@ public class OfferServiceImpl implements OfferService {
                             + OfferExportServiceImpl.mapOfferStatusLabel(currentStatus) + "]. Vui lòng chỉnh sửa trực tiếp trên danh sách đề xuất thay vì tạo mới.",
                     "OFFER_LOCKED_STATE");
         }
+
+        boolean passedInterview = interviewFinalResultRepository
+                .findByApplicationIdOrderByApprovedAtDesc(application.getApplicationId()).stream()
+                .anyMatch(result -> InterviewFinalResult.PASSED.equalsIgnoreCase(result.getFinalDecision()));
+        if (!passedInterview) {
+            throw new OfferValidationException("Chỉ được tạo đề xuất nhận việc cho hồ sơ đã đạt phỏng vấn.");
+        }
+
+        User proposedBy = currentUserService.requireUser();
 
         Integer responsePeriodDays = dto.getResponsePeriodDays() != null ? dto.getResponsePeriodDays() : 5;
 
@@ -427,8 +460,7 @@ public class OfferServiceImpl implements OfferService {
     @Override
     @Transactional(readOnly = true)
     public OfferDetailResponse getOfferDetailForHr(Integer id) {
-        OfferProposal offer = offerProposalRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đề xuất nhận việc với ID: " + id));
+        OfferProposal offer = findActiveOffer(id);
 
         var app = offer.getApplication();
         var cand = app != null ? app.getCandidate() : null;
@@ -513,8 +545,8 @@ public class OfferServiceImpl implements OfferService {
 
     @Override
     public OfferResponse updateOfferByHr(Integer id, UpdateOfferRequest dto) {
-        OfferProposal offer = offerProposalRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đề xuất nhận việc với ID: " + id));
+        OfferProposal offer = findActiveOffer(id);
+        requireActiveApplication(offer.getApplication());
 
         String currentStatus = offer.getOfferStatus();
         boolean canEdit = "Draft".equalsIgnoreCase(currentStatus);
@@ -558,7 +590,7 @@ public class OfferServiceImpl implements OfferService {
         if ("Pending_Director".equals(offer.getOfferStatus())) {
             if (systemNotificationService != null) {
                 try {
-                    User currentHr = resolveProposedBy(null);
+                    User currentHr = currentUserService.requireUser();
                     systemNotificationService.notifyOfferPendingDirector(saved, currentHr != null ? currentHr : saved.getProposedBy());
                 } catch (Exception e) {
                     log.warn("Lỗi khi gửi in-app notification Director về Offer cập nhật ID {}: {}", saved.getOfferId(), e.getMessage());
@@ -572,8 +604,7 @@ public class OfferServiceImpl implements OfferService {
     @Override
     @Transactional(readOnly = true)
     public UpdateOfferRequest getUpdateOfferRequestById(Integer id) {
-        OfferProposal offer = offerProposalRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đề xuất nhận việc với ID: " + id));
+        OfferProposal offer = findActiveOffer(id);
 
         String currentStatus = offer.getOfferStatus();
         if (!"Draft".equalsIgnoreCase(currentStatus)) {
@@ -598,8 +629,7 @@ public class OfferServiceImpl implements OfferService {
 
     @Override
     public void deleteDraftOfferByHr(Integer id) {
-        OfferProposal offer = offerProposalRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đề xuất nhận việc với ID: " + id));
+        OfferProposal offer = findActiveOffer(id);
 
         if (!"Draft".equalsIgnoreCase(offer.getOfferStatus())) {
             throw new OfferValidationException(
@@ -615,8 +645,8 @@ public class OfferServiceImpl implements OfferService {
 
     @Override
     public OfferResponse sendOfferToCandidate(Integer id) {
-        OfferProposal offer = offerProposalRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đề xuất nhận việc với ID: " + id));
+        OfferProposal offer = findActiveOffer(id);
+        requireActiveApplication(offer.getApplication());
 
         String currentStatus = offer.getOfferStatus();
         boolean isApproved = "Approved".equalsIgnoreCase(currentStatus)
@@ -759,22 +789,6 @@ public class OfferServiceImpl implements OfferService {
         }
     }
 
-    private User resolveProposedBy(Integer proposedById) {
-        if (proposedById != null) {
-            return userRepository.findById(proposedById).orElse(null);
-        }
-        try {
-            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-            if (auth != null && auth.isAuthenticated() && !(auth instanceof AnonymousAuthenticationToken)) {
-                User user = userRepository.findByUsernameIgnoreCase(auth.getName()).orElse(null);
-                if (user != null) {
-                    return user;
-                }
-            }
-        } catch (Exception ignored) {
-        }
-        return userRepository.findAll().stream().findFirst().orElse(null);
-    }
 
     private OfferResponse mapToResponse(OfferProposal entity) {
         String candidateName = null;
@@ -818,8 +832,8 @@ public class OfferServiceImpl implements OfferService {
 
     @Override
     public OfferResponse approveOfferByDirector(Integer id, String comments) {
-        OfferProposal offer = offerProposalRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đề xuất nhận việc với ID: " + id));
+        OfferProposal offer = findActiveOffer(id);
+        requireActiveApplication(offer.getApplication());
 
         if (!"Pending_Director".equalsIgnoreCase(offer.getOfferStatus())) {
             throw new OfferValidationException(
@@ -828,10 +842,8 @@ public class OfferServiceImpl implements OfferService {
                     "OFFER_STATUS_INVALID");
         }
 
-        User director = resolveProposedBy(null); // Resolve current logged in user (Director)
-        if (director == null) {
-            throw new OfferValidationException("Không xác định được danh tính Giám đốc để thực hiện phê duyệt.", "USER_NOT_FOUND");
-        }
+        User director = currentUserService.requireUser();
+        validateDirectorComments(comments, false);
 
         offer.setOfferStatus("Director_Approved");
         OfferProposal saved = offerProposalRepository.save(offer);
@@ -852,8 +864,8 @@ public class OfferServiceImpl implements OfferService {
 
     @Override
     public OfferResponse rejectOfferByDirector(Integer id, String comments) {
-        OfferProposal offer = offerProposalRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đề xuất nhận việc với ID: " + id));
+        OfferProposal offer = findActiveOffer(id);
+        requireActiveApplication(offer.getApplication());
 
         if (!"Pending_Director".equalsIgnoreCase(offer.getOfferStatus())) {
             throw new OfferValidationException(
@@ -862,10 +874,8 @@ public class OfferServiceImpl implements OfferService {
                     "OFFER_STATUS_INVALID");
         }
 
-        User director = resolveProposedBy(null); // Resolve current logged in user (Director)
-        if (director == null) {
-            throw new OfferValidationException("Không xác định được danh tính Giám đốc để thực hiện từ chối.", "USER_NOT_FOUND");
-        }
+        User director = currentUserService.requireUser();
+        validateDirectorComments(comments, true);
 
         offer.setOfferStatus("Director_Rejected");
         OfferProposal saved = offerProposalRepository.save(offer);
@@ -886,7 +896,7 @@ public class OfferServiceImpl implements OfferService {
     @Override
     @Transactional(readOnly = true)
     public Map<String, Long> getDirectorOfferStats() {
-        User director = resolveProposedBy(null);
+        User director = currentUserService.requireUser();
         Integer directorId = director != null ? director.getUserId() : 0;
         
         Map<String, Long> stats = new HashMap<>();
@@ -994,7 +1004,7 @@ public class OfferServiceImpl implements OfferService {
     @Override
     @Transactional(readOnly = true)
     public Page<OfferResponse> getDirectorOfferHistory(Pageable pageable) {
-        User director = resolveProposedBy(null);
+        User director = currentUserService.requireUser();
         Integer directorId = director != null ? director.getUserId() : 0;
         
         Page<OfferApproval> approvals = offerApprovalRepository.findByDirector_UserIdOrderByApprovedAtDesc(directorId, pageable);
