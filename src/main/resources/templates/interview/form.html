@@ -29,7 +29,10 @@
     </div>
 
     <!-- Vai trò xem được danh sách lịch (HM, Interviewer) nhưng không có quyền tạo/sửa: ẩn form, hiện banner -->
-    <div th:if="${accessDenied}" th:replace="~{fragments/ui/access-denied-banner :: banner('Bạn không có quyền truy cập vào trang này.')}"></div>
+    <!--/* th:replace chạy trước th:if trên cùng một thẻ, nên điều kiện phải đặt ở thẻ bọc ngoài */-->
+    <th:block th:if="${accessDenied}">
+        <div th:replace="~{fragments/ui/access-denied-banner :: banner('Bạn không có quyền truy cập vào trang này.')}"></div>
+    </th:block>
 
     <form th:unless="${accessDenied}" class="card if-form adw-surface" th:action="${isEdit ? '/interviews/' + interviewId + '/edit' : '/interviews/new'}"
           th:object="${scheduleRequest}" method="post">
