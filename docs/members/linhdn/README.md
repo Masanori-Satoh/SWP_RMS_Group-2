@@ -8,6 +8,10 @@ Theo yêu cầu LinhDN ngày 30/10/2026: mỗi lượt hoàn thành công việc
 
 ## Trạng thái mới nhất
 
+06/11 — đối chiếu ảnh Application state machine với code hiện tại; giữ luồng chính và chỉ rõ transition/guard cần bổ sung: [Báo cáo review](2026-11-06-application-state-diagram-code-review.md).
+
+06/11 — rà soát nội bộ bản SRS đầu tiên trong Authentication, Account/Department, Talent Pool, Admin và Core/Audit Log; gồm diagram, màn hình và message, chưa so với code: [12 nhóm lỗi và 14 điểm cần làm rõ](2026-11-06-srs-internal-consistency-review.md).
+
 01/11 — dọn fixture/comment AI screening trong Admin; giữ nguyên 9 file module khác theo lựa chọn của người dùng: [Phạm vi và kiểm chứng](2026-11-01-admin-ai-screening-cleanup.md).
 
 31/10 — bố cục Tạo tài khoản và Tạo phòng ban theo mockup, giữ hai màn sửa và khung điều hướng: [Thống kê, kiểm chứng và ảnh desktop/mobile](2026-10-31-admin-create-forms-ui.md).
