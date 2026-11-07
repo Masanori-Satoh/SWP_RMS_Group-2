@@ -184,22 +184,22 @@
                         Hồ sơ của bạn sẽ dừng lại và bạn không thể đổi lại.</span>
                 </p>
                 <div data-offer-copy="decline" hidden class="cof-dialog-reason">
-                    <label for="cof-dialog-reason-input" class="form-label">Lý do từ chối (tùy chọn):</label>
+                    <label for="cof-dialog-reason-input" class="form-label">Lý do từ chối (không bắt buộc)</label>
                     <div class="cof-chips" role="group" aria-label="Lý do phổ biến">
                         <button type="button" class="cof-chip" data-reason="Mức đãi ngộ chưa đạt kỳ vọng">Mức đãi ngộ chưa đạt kỳ vọng</button>
                         <button type="button" class="cof-chip" data-reason="Đã nhận lời mời từ công ty khác">Đã nhận lời mời từ công ty khác</button>
                         <button type="button" class="cof-chip" data-reason="Địa điểm hoặc thời gian làm việc chưa phù hợp">Địa điểm / thời gian chưa phù hợp</button>
                         <button type="button" class="cof-chip" data-reason="Kế hoạch cá nhân thay đổi">Kế hoạch cá nhân thay đổi</button>
                     </div>
-                    <textarea id="cof-dialog-reason-input" class="form-input cof-textarea" rows="3"
+                    <textarea id="cof-dialog-reason-input" class="form-input cof-textarea" rows="3" maxlength="1000"
                               placeholder="Chia sẻ thêm lý do hoặc nguyện vọng của bạn..."></textarea>
                 </div>
             </div>
             <div class="dialog-actions">
-                <button type="button" class="btn btn--secondary btn--sm" data-offer-cancel>Xem lại</button>
+                <button type="button" class="btn btn--secondary btn--sm" data-offer-cancel>Quay lại</button>
                 <button type="button" class="btn btn--primary btn--sm" data-offer-confirm>
                     <span data-offer-copy="accept">Đồng ý nhận việc</span>
-                    <span data-offer-copy="decline" hidden>Từ chối thư mời</span>
+                    <span data-offer-copy="decline" hidden>Xác nhận từ chối</span>
                 </button>
             </div>
         </div>

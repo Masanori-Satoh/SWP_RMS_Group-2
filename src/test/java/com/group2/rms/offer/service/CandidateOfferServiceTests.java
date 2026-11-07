@@ -1,7 +1,7 @@
 package com.group2.rms.offer.service;
 
 import com.group2.rms.candidate.domain.entity.Application;
-import com.group2.rms.candidate.domain.rule.ApplicationStatusService;
+import com.group2.rms.candidate.domain.repository.ApplicationRepository;
 import com.group2.rms.core.exception.ResourceNotFoundException;
 import com.group2.rms.core.security.CurrentUserService;
 import com.group2.rms.offer.dto.CandidateOfferResponse;
@@ -38,15 +38,103 @@ class CandidateOfferServiceTests {
 
     @Mock CandidateOfferRepository offers;
     @Mock CurrentUserService currentUserService;
-    @Mock ApplicationStatusService applicationStatusService;
+    @Mock ApplicationRepository applications;
     @Mock com.group2.rms.notification.service.NotificationService systemNotificationService;
+    @Mock org.springframework.transaction.PlatformTransactionManager transactionManager;
 
     private CandidateOfferServiceImpl service;
 
+    @Test
+    void persistedExpiredOfferRemainsVisibleButCannotBeAnswered() {
+        OfferProposal expired = offer(OFFER_ID, "Expired");
+        when(offers.findVisibleByUserId(eq(USER_ID), anyCollection())).thenReturn(List.of(expired));
+        when(offers.findVisibleById(eq(OFFER_ID), eq(USER_ID), anyCollection())).thenReturn(Optional.of(expired));
+        assertTrue(service.list().getFirst().isExpired());
+        assertFalse(service.list().getFirst().canRespond());
+        assertTrue(service.getDetail(OFFER_ID).isExpired());
+        assertFalse(service.getDetail(OFFER_ID).canRespond());
+        assertThrows(OfferResponseException.class, () -> service.accept(OFFER_ID));
+        assertThrows(OfferResponseException.class, () -> service.decline(OFFER_ID));
+        verify(offers, never()).answerIfEligible(anyInt(), anyInt(), anyString(), nullable(String.class), any(), any());
+    }
+
+    @Test
+    void applicationConflictAbortsTheAnswerBeforeNotifications() {
+        when(offers.findVisibleById(eq(OFFER_ID), eq(USER_ID), anyCollection()))
+                .thenReturn(Optional.of(offer(OFFER_ID, "Sent_Candidate")));
+        when(offers.answerIfEligible(eq(OFFER_ID), eq(USER_ID), eq("Accepted"), isNull(), any(), any())).thenReturn(1);
+        when(applications.transition(anyInt(), anyCollection(), anyString())).thenReturn(0);
+        assertThrows(OfferResponseException.class, () -> service.accept(OFFER_ID));
+        verifyNoInteractions(systemNotificationService);
+    }
+
     @BeforeEach
     void setUp() {
-        service = new CandidateOfferServiceImpl(offers, currentUserService, applicationStatusService, systemNotificationService);
+        service = new CandidateOfferServiceImpl(offers, currentUserService, applications, systemNotificationService,
+                java.time.Clock.systemDefaultZone(), transactionManager);
+        lenient().when(transactionManager.getTransaction(any())).thenAnswer(invocation ->
+                new org.springframework.transaction.support.SimpleTransactionStatus());
+        lenient().when(applications.transition(anyInt(), anyCollection(), anyString())).thenReturn(1);
         when(currentUserService.requireUser()).thenReturn(User.builder().userId(USER_ID).build());
+    }
+
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.NullSource
+    @org.junit.jupiter.params.provider.ValueSource(strings = {"Cancelled", "Withdrawn", "Rejected", "Hired", "Interviewing"})
+    void closedOrNonOfferedApplicationRemainsViewableWithoutResponseActions(String applicationStatus) {
+        OfferProposal offer = offer(OFFER_ID, "Sent_Candidate");
+        offer.getApplication().setApplicationStatus(applicationStatus);
+        when(offers.findVisibleByUserId(eq(USER_ID), anyCollection())).thenReturn(List.of(offer));
+        when(offers.findVisibleById(eq(OFFER_ID), eq(USER_ID), anyCollection())).thenReturn(Optional.of(offer));
+
+        var row = service.list().getFirst();
+        var detail = service.getDetail(OFFER_ID);
+        assertFalse(row.canRespond());
+        assertFalse(detail.canRespond());
+        assertFalse(row.isExpired());
+        assertFalse(detail.isExpired());
+        assertEquals("Thư mời không còn nhận phản hồi", row.statusLabel());
+        assertEquals(row.statusLabel(), detail.statusLabel());
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void responseNotificationsRunOnlyAfterCommit(boolean committed) {
+        OfferProposal testOffer = offer(OFFER_ID, "Sent_Candidate");
+        when(offers.findVisibleById(eq(OFFER_ID), eq(USER_ID), anyCollection())).thenReturn(Optional.of(testOffer));
+        when(offers.answerIfEligible(eq(OFFER_ID), eq(USER_ID), eq("Accepted"), isNull(), any(), any())).thenReturn(1);
+        org.springframework.transaction.support.TransactionSynchronizationManager.initSynchronization();
+        org.springframework.transaction.support.TransactionSynchronizationManager.setActualTransactionActive(true);
+        try {
+            service.accept(OFFER_ID);
+            verifyNoInteractions(systemNotificationService);
+            for (var callback : org.springframework.transaction.support.TransactionSynchronizationManager.getSynchronizations()) {
+                if (committed) callback.afterCommit();
+                else callback.afterCompletion(org.springframework.transaction.support.TransactionSynchronization.STATUS_ROLLED_BACK);
+            }
+        } finally {
+            org.springframework.transaction.support.TransactionSynchronizationManager.clearSynchronization();
+            org.springframework.transaction.support.TransactionSynchronizationManager.setActualTransactionActive(false);
+        }
+        if (committed) {
+            verify(systemNotificationService).markOfferNotificationRead(USER_ID, OFFER_ID);
+            verify(systemNotificationService).notifyOfferResponseFromCandidate(testOffer, true, null);
+            verify(transactionManager, times(2)).getTransaction(argThat(definition -> definition.getPropagationBehavior()
+                    == org.springframework.transaction.TransactionDefinition.PROPAGATION_REQUIRES_NEW));
+        } else {
+            verifyNoInteractions(systemNotificationService, transactionManager);
+        }
+    }
+
+    @Test
+    void markingNotificationReadFailureDoesNotPreventResponseNotification() {
+        OfferProposal testOffer = offer(OFFER_ID, "Sent_Candidate");
+        when(offers.findVisibleById(eq(OFFER_ID), eq(USER_ID), anyCollection())).thenReturn(Optional.of(testOffer));
+        when(offers.answerIfEligible(eq(OFFER_ID), eq(USER_ID), eq("Accepted"), isNull(), any(), any())).thenReturn(1);
+        doThrow(new IllegalStateException("Synthetic read failure")).when(systemNotificationService)
+                .markOfferNotificationRead(USER_ID, OFFER_ID);
+        assertEquals("Junior Java Developer", service.accept(OFFER_ID));
+        verify(systemNotificationService).notifyOfferResponseFromCandidate(testOffer, true, null);
     }
 
     @Test
@@ -69,30 +157,30 @@ class CandidateOfferServiceTests {
     void listAsksOnlyForOffersAlreadySentToTheCandidate() {
         service.list();
 
-        verify(offers).findVisibleByUserId(USER_ID, java.util.Set.of("Sent_Candidate", "Accepted", "Declined"));
+        verify(offers).findVisibleByUserId(USER_ID, java.util.Set.of("Sent_Candidate", "Accepted", "Declined", "Expired"));
     }
 
     @Test
     void acceptSetsOfferAcceptedAndMovesApplicationToHired() {
         when(offers.findVisibleById(eq(OFFER_ID), eq(USER_ID), anyCollection()))
                 .thenReturn(Optional.of(offer(OFFER_ID, "Sent_Candidate")));
-        when(offers.answerIfSent(OFFER_ID, "Accepted")).thenReturn(1);
+        when(offers.answerIfEligible(eq(OFFER_ID), eq(USER_ID), eq("Accepted"), isNull(), any(), any())).thenReturn(1);
 
         String title = service.accept(OFFER_ID);
 
         assertEquals("Junior Java Developer", title);
-        verify(applicationStatusService).onOfferAnswered(APPLICATION_ID, true);
+        verify(applications).transition(APPLICATION_ID, java.util.Set.of("Offered"), "Hired");
     }
 
     @Test
     void declineSetsOfferDeclinedAndRejectsApplication() {
         when(offers.findVisibleById(eq(OFFER_ID), eq(USER_ID), anyCollection()))
                 .thenReturn(Optional.of(offer(OFFER_ID, "Sent_Candidate")));
-        when(offers.answerIfSent(OFFER_ID, "Declined")).thenReturn(1);
+        when(offers.answerIfEligible(eq(OFFER_ID), eq(USER_ID), eq("Declined"), isNull(), any(), any())).thenReturn(1);
 
         service.decline(OFFER_ID);
 
-        verify(applicationStatusService).onOfferAnswered(APPLICATION_ID, false);
+        verify(applications).transition(APPLICATION_ID, java.util.Set.of("Offered"), "Withdrawn");
     }
 
     @ParameterizedTest
@@ -104,8 +192,8 @@ class CandidateOfferServiceTests {
         assertThrows(OfferResponseException.class, () -> service.accept(OFFER_ID));
         assertThrows(OfferResponseException.class, () -> service.decline(OFFER_ID));
 
-        verify(offers, never()).answerIfSent(anyInt(), anyString());
-        verifyNoInteractions(applicationStatusService);
+        verify(offers, never()).answerIfEligible(anyInt(), anyInt(), anyString(), nullable(String.class), any(), any());
+        verifyNoInteractions(applications);
     }
 
     /** Hai lần bấm gần nhau: lần đọc thấy còn Sent_Candidate nhưng câu cập nhật có điều kiện trả 0. */
@@ -113,12 +201,12 @@ class CandidateOfferServiceTests {
     void failsWhenOfferWasAnsweredBetweenReadAndUpdate() {
         when(offers.findVisibleById(eq(OFFER_ID), eq(USER_ID), anyCollection()))
                 .thenReturn(Optional.of(offer(OFFER_ID, "Sent_Candidate")));
-        when(offers.answerIfSent(OFFER_ID, "Accepted")).thenReturn(0);
+        when(offers.answerIfEligible(eq(OFFER_ID), eq(USER_ID), eq("Accepted"), isNull(), any(), any())).thenReturn(0);
 
         OfferResponseException error = assertThrows(OfferResponseException.class, () -> service.accept(OFFER_ID));
 
-        assertEquals("Thư mời vừa được cập nhật. Vui lòng tải lại trang.", error.getMessage());
-        verifyNoInteractions(applicationStatusService);
+        assertEquals("Thư mời đã cập nhật, đã hết hạn hoặc hồ sơ không còn chờ phản hồi. Vui lòng tải lại trang.", error.getMessage());
+        verifyNoInteractions(applications);
     }
 
     @Test
@@ -128,8 +216,8 @@ class CandidateOfferServiceTests {
         assertThrows(ResourceNotFoundException.class, () -> service.accept(OFFER_ID));
         assertThrows(ResourceNotFoundException.class, () -> service.decline(OFFER_ID));
 
-        verify(offers, never()).answerIfSent(anyInt(), anyString());
-        verifyNoInteractions(applicationStatusService);
+        verify(offers, never()).answerIfEligible(anyInt(), anyInt(), anyString(), nullable(String.class), any(), any());
+        verifyNoInteractions(applications);
     }
 
     @Test
@@ -162,12 +250,12 @@ class CandidateOfferServiceTests {
         OfferProposal testOffer = offer(OFFER_ID, "Sent_Candidate");
         when(offers.findVisibleById(eq(OFFER_ID), eq(USER_ID), anyCollection()))
                 .thenReturn(Optional.of(testOffer));
-        when(offers.answerIfSent(OFFER_ID, "Declined", "Mức đãi ngộ chưa đạt kỳ vọng")).thenReturn(1);
+        when(offers.answerIfEligible(eq(OFFER_ID), eq(USER_ID), eq("Declined"), eq("Mức đãi ngộ chưa đạt kỳ vọng"), any(), any())).thenReturn(1);
 
         String title = service.decline(OFFER_ID, "Mức đãi ngộ chưa đạt kỳ vọng");
 
         assertEquals("Junior Java Developer", title);
-        verify(applicationStatusService).onOfferAnswered(APPLICATION_ID, false);
+        verify(applications).transition(APPLICATION_ID, java.util.Set.of("Offered"), "Withdrawn");
         verify(systemNotificationService).notifyOfferResponseFromCandidate(testOffer, false, "Mức đãi ngộ chưa đạt kỳ vọng");
     }
 
@@ -176,12 +264,12 @@ class CandidateOfferServiceTests {
         OfferProposal testOffer = offer(OFFER_ID, "Sent_Candidate");
         when(offers.findVisibleById(eq(OFFER_ID), eq(USER_ID), anyCollection()))
                 .thenReturn(Optional.of(testOffer));
-        when(offers.answerIfSent(OFFER_ID, "Accepted")).thenReturn(1);
+        when(offers.answerIfEligible(eq(OFFER_ID), eq(USER_ID), eq("Accepted"), isNull(), any(), any())).thenReturn(1);
 
         String title = service.accept(OFFER_ID);
 
         assertEquals("Junior Java Developer", title);
-        verify(applicationStatusService).onOfferAnswered(APPLICATION_ID, true);
+        verify(applications).transition(APPLICATION_ID, java.util.Set.of("Offered"), "Hired");
         verify(systemNotificationService).notifyOfferResponseFromCandidate(testOffer, true, null);
     }
 
@@ -226,7 +314,7 @@ class CandidateOfferServiceTests {
 
         var ex = assertThrows(OfferResponseException.class, () -> service.accept(OFFER_ID));
         assertTrue(ex.getMessage().contains("đã quá ngày bắt đầu"));
-        verify(offers, never()).answerIfSent(anyInt(), anyString());
+        verify(offers, never()).answerIfEligible(anyInt(), anyInt(), anyString(), nullable(String.class), any(), any());
     }
 
     @Test
@@ -239,7 +327,7 @@ class CandidateOfferServiceTests {
 
         var ex = assertThrows(OfferResponseException.class, () -> service.decline(OFFER_ID, "Lý do"));
         assertTrue(ex.getMessage().contains("đã quá ngày bắt đầu"));
-        verify(offers, never()).answerIfSent(anyInt(), anyString(), anyString());
+        verify(offers, never()).answerIfEligible(anyInt(), anyInt(), anyString(), nullable(String.class), any(), any());
     }
 
     @Test
@@ -252,7 +340,7 @@ class CandidateOfferServiceTests {
 
         var ex = assertThrows(OfferResponseException.class, () -> service.accept(OFFER_ID));
         assertTrue(ex.getMessage().contains("đã quá thời hạn phản hồi"));
-        verify(offers, never()).answerIfSent(anyInt(), anyString());
+        verify(offers, never()).answerIfEligible(anyInt(), anyInt(), anyString(), nullable(String.class), any(), any());
     }
 
     @Test
@@ -265,7 +353,7 @@ class CandidateOfferServiceTests {
 
         var ex = assertThrows(OfferResponseException.class, () -> service.decline(OFFER_ID, "Lý do"));
         assertTrue(ex.getMessage().contains("đã quá thời hạn phản hồi"));
-        verify(offers, never()).answerIfSent(anyInt(), anyString(), anyString());
+        verify(offers, never()).answerIfEligible(anyInt(), anyInt(), anyString(), nullable(String.class), any(), any());
     }
 
     @Test
@@ -276,12 +364,12 @@ class CandidateOfferServiceTests {
 
         when(offers.findVisibleById(eq(OFFER_ID), eq(USER_ID), anyCollection()))
                 .thenReturn(Optional.of(validOffer));
-        when(offers.answerIfSent(OFFER_ID, "Accepted")).thenReturn(1);
+        when(offers.answerIfEligible(eq(OFFER_ID), eq(USER_ID), eq("Accepted"), isNull(), any(), any())).thenReturn(1);
 
         String title = service.accept(OFFER_ID);
 
         assertEquals("Junior Java Developer", title);
-        verify(applicationStatusService).onOfferAnswered(APPLICATION_ID, true);
+        verify(applications).transition(APPLICATION_ID, java.util.Set.of("Offered"), "Hired");
     }
 
     @Test
@@ -321,7 +409,7 @@ class CandidateOfferServiceTests {
 
         OfferResponseException ex = assertThrows(OfferResponseException.class, () -> service.accept(OFFER_ID));
         assertTrue(ex.getMessage().contains("quá thời hạn phản hồi"));
-        verify(offers, never()).answerIfSent(anyInt(), anyString());
+        verify(offers, never()).answerIfEligible(anyInt(), anyInt(), anyString(), nullable(String.class), any(), any());
     }
 
     @Test
@@ -333,12 +421,12 @@ class CandidateOfferServiceTests {
 
         when(offers.findVisibleById(eq(OFFER_ID), eq(USER_ID), anyCollection()))
                 .thenReturn(Optional.of(offer));
-        when(offers.answerIfSent(OFFER_ID, "Accepted")).thenReturn(1);
+        when(offers.answerIfEligible(eq(OFFER_ID), eq(USER_ID), eq("Accepted"), isNull(), any(), any())).thenReturn(1);
 
         String title = service.accept(OFFER_ID);
 
         assertEquals("Junior Java Developer", title);
-        verify(applicationStatusService).onOfferAnswered(APPLICATION_ID, true);
+        verify(applications).transition(APPLICATION_ID, java.util.Set.of("Offered"), "Hired");
     }
 
     @Test
@@ -350,12 +438,12 @@ class CandidateOfferServiceTests {
 
         when(offers.findVisibleById(eq(OFFER_ID), eq(USER_ID), anyCollection()))
                 .thenReturn(Optional.of(offer));
-        when(offers.answerIfSent(OFFER_ID, "Accepted")).thenReturn(1);
+        when(offers.answerIfEligible(eq(OFFER_ID), eq(USER_ID), eq("Accepted"), isNull(), any(), any())).thenReturn(1);
 
         String title = service.accept(OFFER_ID);
 
         assertEquals("Junior Java Developer", title);
-        verify(applicationStatusService).onOfferAnswered(APPLICATION_ID, true);
+        verify(applications).transition(APPLICATION_ID, java.util.Set.of("Offered"), "Hired");
     }
 
     @Test
@@ -370,7 +458,7 @@ class CandidateOfferServiceTests {
 
         OfferResponseException ex = assertThrows(OfferResponseException.class, () -> service.accept(OFFER_ID));
         assertTrue(ex.getMessage().contains("quá ngày bắt đầu nhận việc dự kiến"));
-        verify(offers, never()).answerIfSent(anyInt(), anyString());
+        verify(offers, never()).answerIfEligible(anyInt(), anyInt(), anyString(), nullable(String.class), any(), any());
     }
 
     @Test
@@ -385,7 +473,7 @@ class CandidateOfferServiceTests {
 
         OfferResponseException ex = assertThrows(OfferResponseException.class, () -> service.decline(OFFER_ID, "Lý do"));
         assertTrue(ex.getMessage().contains("quá ngày bắt đầu nhận việc dự kiến"));
-        verify(offers, never()).answerIfSent(anyInt(), anyString(), anyString());
+        verify(offers, never()).answerIfEligible(anyInt(), anyInt(), anyString(), nullable(String.class), any(), any());
     }
 
     @ParameterizedTest
@@ -395,13 +483,13 @@ class CandidateOfferServiceTests {
         OfferProposal testOffer = offer(OFFER_ID, "Sent_Candidate");
         when(offers.findVisibleById(eq(OFFER_ID), eq(USER_ID), anyCollection()))
                 .thenReturn(Optional.of(testOffer));
-        when(offers.answerIfSent(OFFER_ID, "Declined")).thenReturn(1);
+        when(offers.answerIfEligible(eq(OFFER_ID), eq(USER_ID), eq("Declined"), isNull(), any(), any())).thenReturn(1);
 
         String title = service.decline(OFFER_ID, blankReason);
 
         assertEquals("Junior Java Developer", title);
-        verify(offers).answerIfSent(OFFER_ID, "Declined");
-        verify(applicationStatusService).onOfferAnswered(APPLICATION_ID, false);
+        verify(offers).answerIfEligible(eq(OFFER_ID), eq(USER_ID), eq("Declined"), isNull(), any(), any());
+        verify(applications).transition(APPLICATION_ID, java.util.Set.of("Offered"), "Withdrawn");
     }
 
     @Test
@@ -410,12 +498,12 @@ class CandidateOfferServiceTests {
         OfferProposal testOffer = offer(OFFER_ID, "Sent_Candidate");
         when(offers.findVisibleById(eq(OFFER_ID), eq(USER_ID), anyCollection()))
                 .thenReturn(Optional.of(testOffer));
-        when(offers.answerIfSent(OFFER_ID, "Declined")).thenReturn(1);
+        when(offers.answerIfEligible(eq(OFFER_ID), eq(USER_ID), eq("Declined"), isNull(), any(), any())).thenReturn(1);
 
         String title = service.decline(OFFER_ID, null);
 
         assertEquals("Junior Java Developer", title);
-        verify(offers).answerIfSent(OFFER_ID, "Declined");
+        verify(offers).answerIfEligible(eq(OFFER_ID), eq(USER_ID), eq("Declined"), isNull(), any(), any());
     }
 
     @Test
@@ -425,12 +513,12 @@ class CandidateOfferServiceTests {
         OfferProposal testOffer = offer(OFFER_ID, "Sent_Candidate");
         when(offers.findVisibleById(eq(OFFER_ID), eq(USER_ID), anyCollection()))
                 .thenReturn(Optional.of(testOffer));
-        when(offers.answerIfSent(OFFER_ID, "Declined", longReason)).thenReturn(1);
+        when(offers.answerIfEligible(eq(OFFER_ID), eq(USER_ID), eq("Declined"), eq(longReason), any(), any())).thenReturn(1);
 
         String title = service.decline(OFFER_ID, longReason);
 
         assertEquals("Junior Java Developer", title);
-        verify(offers).answerIfSent(OFFER_ID, "Declined", longReason);
+        verify(offers).answerIfEligible(eq(OFFER_ID), eq(USER_ID), eq("Declined"), eq(longReason), any(), any());
     }
 
     @Test
@@ -442,8 +530,8 @@ class CandidateOfferServiceTests {
 
         OfferResponseException ex = assertThrows(OfferResponseException.class, () -> service.accept(OFFER_ID));
         assertTrue(ex.getMessage().contains("đã được trả lời"));
-        verify(offers, never()).answerIfSent(anyInt(), anyString());
-        verifyNoInteractions(applicationStatusService);
+        verify(offers, never()).answerIfEligible(anyInt(), anyInt(), anyString(), nullable(String.class), any(), any());
+        verifyNoInteractions(applications);
     }
 
     @Test
@@ -455,8 +543,8 @@ class CandidateOfferServiceTests {
 
         OfferResponseException ex = assertThrows(OfferResponseException.class, () -> service.decline(OFFER_ID, "Change mind"));
         assertTrue(ex.getMessage().contains("đã được trả lời"));
-        verify(offers, never()).answerIfSent(anyInt(), anyString(), anyString());
-        verifyNoInteractions(applicationStatusService);
+        verify(offers, never()).answerIfEligible(anyInt(), anyInt(), anyString(), nullable(String.class), any(), any());
+        verifyNoInteractions(applications);
     }
 
     @Test
@@ -473,14 +561,14 @@ class CandidateOfferServiceTests {
         OfferProposal testOffer = offer(OFFER_ID, "Sent_Candidate");
         when(offers.findVisibleById(eq(OFFER_ID), eq(USER_ID), anyCollection()))
                 .thenReturn(Optional.of(testOffer));
-        when(offers.answerIfSent(OFFER_ID, "Accepted")).thenReturn(1);
+        when(offers.answerIfEligible(eq(OFFER_ID), eq(USER_ID), eq("Accepted"), isNull(), any(), any())).thenReturn(1);
         doThrow(new RuntimeException("Notification service failure"))
                 .when(systemNotificationService).notifyOfferResponseFromCandidate(any(), eq(true), any());
 
         String title = service.accept(OFFER_ID);
 
         assertEquals("Junior Java Developer", title);
-        verify(applicationStatusService).onOfferAnswered(APPLICATION_ID, true);
+        verify(applications).transition(APPLICATION_ID, java.util.Set.of("Offered"), "Hired");
     }
 
     @Test
@@ -489,14 +577,14 @@ class CandidateOfferServiceTests {
         OfferProposal testOffer = offer(OFFER_ID, "Sent_Candidate");
         when(offers.findVisibleById(eq(OFFER_ID), eq(USER_ID), anyCollection()))
                 .thenReturn(Optional.of(testOffer));
-        when(offers.answerIfSent(OFFER_ID, "Declined")).thenReturn(1);
+        when(offers.answerIfEligible(eq(OFFER_ID), eq(USER_ID), eq("Declined"), isNull(), any(), any())).thenReturn(1);
         doThrow(new RuntimeException("Notification service failure"))
                 .when(systemNotificationService).notifyOfferResponseFromCandidate(any(), eq(false), any());
 
         String title = service.decline(OFFER_ID);
 
         assertEquals("Junior Java Developer", title);
-        verify(applicationStatusService).onOfferAnswered(APPLICATION_ID, false);
+        verify(applications).transition(APPLICATION_ID, java.util.Set.of("Offered"), "Withdrawn");
     }
 
     @Test
@@ -505,13 +593,13 @@ class CandidateOfferServiceTests {
         OfferProposal testOffer = offer(OFFER_ID, "Sent_Candidate");
         when(offers.findVisibleById(eq(OFFER_ID), eq(USER_ID), anyCollection()))
                 .thenReturn(Optional.of(testOffer));
-        when(offers.answerIfSent(OFFER_ID, "Declined", "reason")).thenReturn(0);
+        when(offers.answerIfEligible(eq(OFFER_ID), eq(USER_ID), eq("Declined"), eq("reason"), any(), any())).thenReturn(0);
 
         OfferResponseException ex = assertThrows(OfferResponseException.class, () ->
                 service.decline(OFFER_ID, "reason"));
 
-        assertEquals("Thư mời vừa được cập nhật. Vui lòng tải lại trang.", ex.getMessage());
-        verifyNoInteractions(applicationStatusService);
+        assertEquals("Thư mời đã cập nhật, đã hết hạn hoặc hồ sơ không còn chờ phản hồi. Vui lòng tải lại trang.", ex.getMessage());
+        verifyNoInteractions(applications);
     }
 
     private static OfferProposal offer(int id, String status) {
@@ -523,6 +611,7 @@ class CandidateOfferServiceTests {
                 .probationSalary(new BigDecimal("18000000"))
                 .application(Application.builder()
                         .applicationId(APPLICATION_ID)
+                        .applicationStatus("Offered")
                         .jobPosting(JobPosting.builder().jobPostingId(7).postingTitle("Junior Java Developer").build())
                         .build())
                 .build();

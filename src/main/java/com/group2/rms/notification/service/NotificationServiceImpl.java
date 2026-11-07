@@ -536,7 +536,7 @@ public class NotificationServiceImpl implements NotificationService {
                 .recipient(offer.getProposedBy())
                 .actor(candidateAccount)
                 .referenceId(String.valueOf(offer.getOfferId()))
-                .linkUrl("/offers");
+                .linkUrl("/offers/" + offer.getOfferId());
         if (accepted) {
             hrNotification
                     .title(String.format("🎉 Ứng viên đã đồng ý nhận việc: %s (%s)", candidateName, positionTitle))
@@ -566,7 +566,7 @@ public class NotificationServiceImpl implements NotificationService {
                 .recipient(hiringManager)
                 .actor(candidateAccount)
                 .referenceId(String.valueOf(offer.getOfferId()))
-                .linkUrl("/offers");
+                .linkUrl("/applications/" + offer.getApplication().getApplicationId());
         if (accepted) {
             hmNotification
                     .title(String.format("🎉 Ứng viên đã nhận việc: %s (%s)", candidateName, positionTitle))

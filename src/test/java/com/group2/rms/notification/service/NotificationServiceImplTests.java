@@ -373,7 +373,7 @@ class NotificationServiceImplTests {
         Notification saved = captor.getValue();
         assertEquals(hrUser, saved.getRecipient());
         assertEquals("OFFER_ACCEPTED", saved.getEventType());
-        assertEquals("/offers", saved.getLinkUrl());
+        assertEquals("/offers/1", saved.getLinkUrl());
         assertEquals("1", saved.getReferenceId());
         assertFalse(saved.getIsRead());
         assertTrue(saved.getTitle().contains("Huỳnh Hoàng Trung"));
@@ -411,7 +411,7 @@ class NotificationServiceImplTests {
         Notification saved = captor.getValue();
         assertEquals(hrUser, saved.getRecipient());
         assertEquals("OFFER_DECLINED", saved.getEventType());
-        assertEquals("/offers", saved.getLinkUrl());
+        assertEquals("/offers/1", saved.getLinkUrl());
         assertEquals("1", saved.getReferenceId());
         assertFalse(saved.getIsRead());
         assertTrue(saved.getTitle().contains("Huỳnh Hoàng Trung"));
@@ -420,6 +420,29 @@ class NotificationServiceImplTests {
         assertTrue(saved.getContent().contains("Đã rút đơn"));
         assertFalse(saved.getContent().contains("Không tiếp tục"));
         assertEquals("OFFER_RESP_DEC_1", saved.getEventId());
+    }
+
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(booleans = {true, false})
+    void candidateResponseLinksMatchEachRecipientsAccess(boolean accepted) {
+        User hr = User.builder().userId(15).username("synthetic_hr").build();
+        User hm = User.builder().userId(16).username("synthetic_hm").build();
+        User candidateUser = User.builder().userId(22).username("synthetic_candidate").build();
+        Application application = Application.builder().applicationId(58)
+                .candidate(Candidate.builder().account(candidateUser).build())
+                .jobPosting(JobPosting.builder().requisition(JobRequisition.builder().hiringManager(hm).build()).build())
+                .build();
+        var offer = com.group2.rms.offer.entity.OfferProposal.builder().offerId(12).application(application)
+                .offeredPositionTitle("Synthetic position").proposedBy(hr).build();
+
+        notificationService.notifyOfferResponseFromCandidate(offer, accepted, null);
+
+        var captor = ArgumentCaptor.forClass(Notification.class);
+        verify(notificationRepository, times(2)).save(captor.capture());
+        var saved = captor.getAllValues();
+        assertEquals("/offers/12", saved.stream().filter(n -> n.getRecipient().getUserId().equals(15)).findFirst().orElseThrow().getLinkUrl());
+        assertEquals("/applications/58", saved.stream().filter(n -> n.getRecipient().getUserId().equals(16)).findFirst().orElseThrow().getLinkUrl());
+        assertTrue(saved.stream().allMatch(n -> "12".equals(n.getReferenceId())));
     }
 
     @Test

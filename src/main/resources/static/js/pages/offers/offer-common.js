@@ -1,9 +1,9 @@
 /**
  * offer-common.js — Phân hệ Offer Management (SWP391 — Mộc RMS Group 2)
- * Trách nhiệm dùng chung giữa các trang Offer nội bộ (HR List, Form, Detail, Director List):
+ * Trách nhiệm dùng chung giữa các trang Offer nội bộ (HR List, Detail, Director List):
  * - Đọc CSRF Token từ thẻ meta (getCsrfInfo)
  * - Khử ký tự HTML độc hại chống XSS (escapeOfferHtml)
- * - Hiển thị Flash Toast thông báo phản hồi (showFlashToast, showToast)
+ * - Hiển thị Flash Toast thông báo phản hồi (showFlashToast)
  * - Tự động hiển thị toast của Offer từ sessionStorage sau khi reload trang
  * - Điều khiển Modal xác nhận phát hành Thư mời nhận việc (confirmSendOffer, executeSendOfferAction)
  */
@@ -25,6 +25,36 @@ function getCsrfInfo() {
 // 2. ESCAPE HTML HELPER
 // =========================================================================
 
+/**
+ * Gửi thao tác JSON của Offer: tự gắn CSRF, đọc ApiResponse và ném lỗi nếu HTTP hoặc success không hợp lệ.
+ * Ví dụ: offerRequest(url, { body: { comments } }); lỗi được hàm gọi hiển thị bằng toast.
+ * Không dùng cho tải Excel vì phản hồi Excel là Blob, không phải JSON.
+ */
+async function offerRequest(url, { method = 'POST', body } = {}) {
+    const csrf = getCsrfInfo();
+    const headers = { Accept: 'application/json' };
+    if (csrf.token) headers[csrf.header] = csrf.token;
+    if (body !== undefined) headers['Content-Type'] = 'application/json';
+    let response;
+    try {
+        response = await fetch(url, { method, headers,
+            ...(body !== undefined ? { body: JSON.stringify(body) } : {}) });
+    } catch {
+        throw new Error('Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại kết nối mạng.');
+    }
+    let data = null;
+    if (response.headers.get('content-type')?.includes('application/json')) {
+        try { data = await response.json(); } catch { /* Invalid responses are handled below. */ }
+    }
+    if (!response.ok || !data?.success) {
+        const fallback = response.status === 403
+            ? 'Bạn không có quyền thực hiện thao tác này hoặc phiên làm việc đã hết hạn.'
+            : 'Thao tác không thành công. Vui lòng thử lại. (' + response.status + ')';
+        throw new Error(data?.message || fallback);
+    }
+    return data;
+}
+
 function escapeOfferHtml(str) {
     if (str == null) return '';
     return String(str)
@@ -40,6 +70,16 @@ function escapeOfferHtml(str) {
 // =========================================================================
 
 const OFFER_PENDING_TOAST_KEY = 'offer.pendingFlashToast';
+
+/**
+ * Lưu thông báo trong tab trước khi reload/redirect; trang đến đọc rồi xóa để thông báo chỉ hiện một lần.
+ * SessionStorage chỉ phục vụ UI, không phải bằng chứng thao tác đã được lưu ở server.
+ */
+function queueOfferToast(message, type = 'success') {
+    try {
+        sessionStorage.setItem(OFFER_PENDING_TOAST_KEY, JSON.stringify({ message, type }));
+    } catch (e) { }
+}
 
 const TOAST_ICONS = {
     circle: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="flash-toast-icon"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
@@ -83,6 +123,8 @@ function showFlashToast(message, type = 'success') {
 }
 
 function checkOfferPendingFlashToast() {
+    const warning = document.getElementById('main')?.dataset.offerWarning;
+    if (warning) showFlashToast(warning, 'warning');
     try {
         const pending = sessionStorage.getItem(OFFER_PENDING_TOAST_KEY);
         if (pending) {
@@ -103,10 +145,6 @@ if (document.readyState === 'loading') {
     checkOfferPendingFlashToast();
 }
 
-function showToast(message, type = 'info') {
-    showFlashToast(message, type === 'danger' ? 'error' : type);
-}
-
 // =========================================================================
 // 4. THAO TÁC PHÁT HÀNH OFFER (Send Offer Confirmation Dialog & Action)
 // =========================================================================
@@ -120,11 +158,15 @@ function confirmSendOffer(offerId) {
     const dialog = document.getElementById('sendOfferConfirmDialog');
     if (dialog && typeof dialog.showModal === 'function') {
         dialog.showModal();
-    } else if (confirm('Bạn có chắc chắn muốn phát hành Thư mời nhận việc tới ứng viên?')) {
+    } else if (confirm('Bạn có chắc chắn muốn gửi thư mời nhận việc tới ứng viên?')) {
         executeSendOfferAction();
     }
 }
 
+/**
+ * Sau xác nhận: khóa nút → gọi POST /offers/{id}/send → lưu toast → tải lại dữ liệu từ server.
+ * Offer đã phát hành nhưng email chưa gửi tới ứng viên thì hiện warning, không báo toàn bộ nghiệp vụ thất bại.
+ */
 function executeSendOfferAction() {
     const offerId = pendingSendOfferId;
     if (!offerId) return;
@@ -133,43 +175,19 @@ function executeSendOfferAction() {
     if (dialog) dialog.close();
 
     const btnModal = document.getElementById('btnConfirmSendOfferModal');
+    const originalButtonHtml = btnModal?.innerHTML;
     if (btnModal) {
         btnModal.disabled = true;
         btnModal.innerHTML = '<span class="ofw-spinner-sm" aria-hidden="true"></span> Đang gửi...';
     }
 
-    showFlashToast('Đang phát hành và gửi email Thư mời nhận việc tới ứng viên...', 'info');
+    showFlashToast('Đang phát hành thư mời nhận việc...', 'info');
 
-    const csrf = getCsrfInfo();
-    const headers = { 'Accept': 'application/json' };
-    if (csrf.token) {
-        headers[csrf.header] = csrf.token;
-    }
-
-    fetch(`/offers/${offerId}/send`, {
-        method: 'POST',
-        headers: headers
-    })
-        .then(async res => {
-            const isJson = res.headers.get('content-type')?.includes('application/json');
-            const data = isJson ? await res.json() : null;
-            if (!res.ok) {
-                throw new Error(data?.message || `Lỗi phát hành thư mời nhận việc (${res.status})`);
-            }
-            return data;
-        })
+    offerRequest(`/offers/${offerId}/send`)
         .then(res => {
-            if (res && res.success) {
-                try {
-                    sessionStorage.setItem(OFFER_PENDING_TOAST_KEY, JSON.stringify({
-                        message: res.message || 'Phát hành Thư mời làm việc thành công!',
-                        type: 'success'
-                    }));
-                } catch (e) { }
-                window.location.reload();
-            } else {
-                showFlashToast(res?.message || 'Lỗi phát hành thư mời nhận việc.', 'error');
-            }
+            queueOfferToast(res.message || 'Đã phát hành thư mời nhận việc.',
+                res.data?.emailStatus === 'SENT' ? 'success' : 'warning');
+            window.location.reload();
         })
         .catch(err => {
             showFlashToast(err.message || 'Không thể phát hành thư mời nhận việc.', 'error');
@@ -177,7 +195,7 @@ function executeSendOfferAction() {
         .finally(() => {
             if (btnModal) {
                 btnModal.disabled = false;
-                btnModal.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="ofw-btn-icon-inline"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Xác nhận phát hành';
+                btnModal.innerHTML = originalButtonHtml;
             }
         });
 }
@@ -188,6 +206,5 @@ function executeSendOfferAction() {
 window.getCsrfInfo = getCsrfInfo;
 window.escapeOfferHtml = escapeOfferHtml;
 window.showFlashToast = showFlashToast;
-window.showToast = showToast;
 window.confirmSendOffer = confirmSendOffer;
 window.executeSendOfferAction = executeSendOfferAction;

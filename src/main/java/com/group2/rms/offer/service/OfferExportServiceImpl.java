@@ -1,7 +1,5 @@
 package com.group2.rms.offer.service;
 
-import com.group2.rms.candidate.domain.entity.Application;
-import com.group2.rms.candidate.domain.entity.Candidate;
 import com.group2.rms.offer.exception.OfferValidationException;
 import com.group2.rms.offer.dto.OfferExportFilterRequest;
 import com.group2.rms.offer.dto.OfferExportRequest;
@@ -11,15 +9,12 @@ import com.group2.rms.offer.entity.OfferApproval;
 import com.group2.rms.offer.entity.OfferProposal;
 import com.group2.rms.offer.repository.OfferApprovalRepository;
 import com.group2.rms.offer.repository.OfferProposalRepository;
-import com.group2.rms.user.entity.User;
-import jakarta.persistence.criteria.Join;
-import jakarta.persistence.criteria.JoinType;
-import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.xssf.streaming.SXSSFWorkbook;
+import org.apache.poi.xssf.streaming.SXSSFSheet;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -48,7 +43,7 @@ public class OfferExportServiceImpl implements OfferExportService {
 
     static {
         // Nhóm Mặc định (Default Group)
-        COLUMN_WHITELIST.put("offerId", "Mã đề xuất");
+        COLUMN_WHITELIST.put("offerId", "Mã thư mời");
         COLUMN_WHITELIST.put("candidateName", "Ứng viên");
         COLUMN_WHITELIST.put("candidateEmail", "Email");
         COLUMN_WHITELIST.put("offeredPositionTitle", "Vị trí đề xuất");
@@ -69,7 +64,7 @@ public class OfferExportServiceImpl implements OfferExportService {
         COLUMN_WHITELIST.put("jobPostingId", "Mã tin tuyển dụng");
         COLUMN_WHITELIST.put("probationDays", "Thời gian thử việc (ngày)");
         COLUMN_WHITELIST.put("benefitsPackage", "Gói phúc lợi");
-        COLUMN_WHITELIST.put("proposedByName", "Người tạo đề xuất");
+        COLUMN_WHITELIST.put("proposedByName", "Người tạo thư mời");
         COLUMN_WHITELIST.put("directorName", "Giám đốc xử lý");
         COLUMN_WHITELIST.put("directorDecision", "Quyết định của Giám đốc");
         COLUMN_WHITELIST.put("directorComments", "Ý kiến của Giám đốc");
@@ -77,6 +72,10 @@ public class OfferExportServiceImpl implements OfferExportService {
         COLUMN_WHITELIST.put("declineReason", "Lý do ứng viên từ chối");
     }
 
+    /**
+     * Xuất Excel: kiểm tra phạm vi/cột → đọc Offer → ghép DTO phẳng → tạo sheet dữ liệu và sheet tổng hợp.
+     * Chỉ đọc lịch sử duyệt khi người dùng chọn cột cần dữ liệu đó; không đổi trạng thái Offer.
+     */
     @Override
     @Transactional(readOnly = true)
     public byte[] exportOffersToExcel(OfferExportRequest request, String exportedBy) {
@@ -85,7 +84,7 @@ public class OfferExportServiceImpl implements OfferExportService {
         // 1. Lấy danh sách entities theo Scope & Filters
         List<OfferProposal> entities = fetchOffersByScope(request);
         if (entities.isEmpty()) {
-            throw new OfferValidationException("Không có dữ liệu đề xuất nhận việc phù hợp để xuất Excel.", "EMPTY_EXPORT_DATA");
+            throw new OfferValidationException("Không có dữ liệu thư mời nhận việc phù hợp để xuất Excel.", "EMPTY_EXPORT_DATA");
         }
 
         // 2. Chuyển đổi entities sang DTO phẳng (OfferExportRow)
@@ -93,13 +92,16 @@ public class OfferExportServiceImpl implements OfferExportService {
                 col.equals("directorName") || col.equals("directorDecision")
                         || col.equals("directorComments") || col.equals("approvedAt"));
 
+        Map<Integer, OfferApproval> latestApprovals = needDirectorDetails ? loadLatestApprovals(entities) : Map.of();
         List<OfferExportRow> rows = entities.stream()
-                .map(entity -> mapToExportRow(entity, needDirectorDetails))
+                .map(entity -> mapToExportRow(entity, latestApprovals.get(entity.getOfferId())))
                 .toList();
 
         // 3. Xây dựng Apache POI Workbook với 2 sheet: Offers & Summary
-        try (Workbook workbook = new XSSFWorkbook();
+        // Chỉ giữ 100 hàng mỗi sheet trong bộ nhớ; close() của POI 5.3 cũng dọn file tạm.
+        try (SXSSFWorkbook workbook = new SXSSFWorkbook(100);
              ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            workbook.setCompressTempFiles(true);
 
             buildOffersSheet(workbook, rows, request.columns());
             buildSummarySheet(workbook, rows, request, exportedBy);
@@ -131,6 +133,10 @@ public class OfferExportServiceImpl implements OfferExportService {
     // VALIDATION
     // =========================================================================
 
+    /**
+     * Chỉ chấp nhận cột trong danh sách cho phép; SELECTED phải có ID, mọi phạm vi phải có ít nhất một cột.
+     * Đây là kiểm tra phía server, không phụ thuộc việc JavaScript đã kiểm tra modal hay chưa.
+     */
     private void validateExportRequest(OfferExportRequest request) {
         if (request == null || request.scope() == null) {
             throw new OfferValidationException("Phạm vi xuất dữ liệu không được để trống.", "INVALID_EXPORT_REQUEST");
@@ -138,7 +144,7 @@ public class OfferExportServiceImpl implements OfferExportService {
 
         if (request.scope() == OfferExportScope.SELECTED) {
             if (request.offerIds() == null || request.offerIds().isEmpty()) {
-                throw new OfferValidationException("Vui lòng chọn ít nhất một đề xuất để xuất dữ liệu.", "EMPTY_SELECTED_OFFERS");
+                throw new OfferValidationException("Vui lòng chọn ít nhất một thư mời để xuất dữ liệu.", "EMPTY_SELECTED_OFFERS");
             }
         }
 
@@ -158,6 +164,10 @@ public class OfferExportServiceImpl implements OfferExportService {
     // DATABASE QUERY / RESOLVE SCOPE
     // =========================================================================
 
+    /**
+     * SELECTED lấy các ID đã chọn; ALL lấy mọi Offer chưa xóa; FILTERED dùng keyword/status/sort trong filters.
+     * Bộ lọc FILTERED dùng cùng matchingFilters với danh sách HR.
+     */
     private List<OfferProposal> fetchOffersByScope(OfferExportRequest request) {
         OfferExportScope scope = request.scope();
         OfferExportFilterRequest filters = request.filters();
@@ -179,50 +189,8 @@ public class OfferExportServiceImpl implements OfferExportService {
             return offerProposalRepository.findAll(baseActiveSpec, sort);
         }
 
-        // Scope: FILTERED
-        String keyword = filters != null ? filters.keyword() : null;
-        String status = filters != null ? filters.status() : null;
-
-        boolean hasSearch = keyword != null && !keyword.trim().isEmpty();
-        boolean hasStatus = status != null && !status.trim().isEmpty() && !"ALL".equalsIgnoreCase(status.trim());
-
-        Specification<OfferProposal> filteredSpec = (root, query, builder) -> {
-            List<Predicate> predicates = new ArrayList<>();
-            predicates.add(baseActiveSpec.toPredicate(root, query, builder));
-
-            if (hasSearch) {
-                String pattern = "%" + keyword.trim().toLowerCase(Locale.ROOT) + "%";
-                Join<OfferProposal, Application> appJoin = root.join("application", JoinType.LEFT);
-                Join<Application, Candidate> candJoin = appJoin.join("candidate", JoinType.LEFT);
-                Join<Candidate, User> userJoin = candJoin.join("account", JoinType.LEFT);
-
-                predicates.add(builder.or(
-                        builder.like(builder.lower(root.get("offeredPositionTitle")), pattern),
-                        builder.like(builder.lower(userJoin.get("fullName")), pattern)
-                ));
-            }
-
-            if (hasStatus) {
-                String s = status.trim();
-                if ("Director_Approved".equalsIgnoreCase(s) || "Approved".equalsIgnoreCase(s)) {
-                    predicates.add(builder.or(
-                            builder.equal(builder.lower(root.get("offerStatus")), "director_approved"),
-                            builder.equal(builder.lower(root.get("offerStatus")), "approved")
-                    ));
-                } else if ("Director_Rejected".equalsIgnoreCase(s) || "Rejected".equalsIgnoreCase(s)) {
-                    predicates.add(builder.or(
-                            builder.equal(builder.lower(root.get("offerStatus")), "director_rejected"),
-                            builder.equal(builder.lower(root.get("offerStatus")), "rejected")
-                    ));
-                } else {
-                    predicates.add(builder.equal(builder.lower(root.get("offerStatus")), s.toLowerCase(Locale.ROOT)));
-                }
-            }
-
-            return builder.and(predicates.toArray(new Predicate[0]));
-        };
-
-        return offerProposalRepository.findAll(filteredSpec, sort);
+        return offerProposalRepository.findAll(OfferProposalRepository.matchingFilters(
+                filters != null ? filters.keyword() : null, filters != null ? filters.status() : null), sort);
     }
 
     private Sort resolveSort(String timeSort) {
@@ -239,7 +207,25 @@ public class OfferExportServiceImpl implements OfferExportService {
     // DTO MAPPING
     // =========================================================================
 
-    private OfferExportRow mapToExportRow(OfferProposal offer, boolean needDirectorDetails) {
+    /**
+     * Đọc lịch sử theo lô 500 Offer để tránh một truy vấn cho mỗi dòng Excel.
+     * Repository sắp thời gian duyệt rồi ID giảm dần; putIfAbsent giữ quyết định đầu tiên, tức mới nhất, cho mỗi Offer.
+     */
+    private Map<Integer, OfferApproval> loadLatestApprovals(List<OfferProposal> offers) {
+        Map<Integer, OfferApproval> latest = new HashMap<>();
+        List<Integer> ids = offers.stream().map(OfferProposal::getOfferId).toList();
+        for (int offset = 0; offset < ids.size(); offset += 500) {
+            offerApprovalRepository.findByOfferProposal_OfferIdInOrderByApprovedAtDescOfferApprovalIdDesc(
+                    ids.subList(offset, Math.min(offset + 500, ids.size())))
+                    .forEach(approval -> latest.putIfAbsent(approval.getOfferProposal().getOfferId(), approval));
+        }
+        return latest;
+    }
+
+    /**
+     * Chuyển quan hệ entity sang một dòng Excel; latest đã được đọc theo lô, không truy vấn thêm ở mỗi dòng.
+     */
+    private OfferExportRow mapToExportRow(OfferProposal offer, OfferApproval latest) {
         var app = offer.getApplication();
         var cand = app != null ? app.getCandidate() : null;
         var user = cand != null ? cand.getAccount() : null;
@@ -261,18 +247,11 @@ public class OfferExportServiceImpl implements OfferExportService {
         String directorComments = null;
         LocalDateTime approvedAt = null;
 
-        if (needDirectorDetails) {
-            List<OfferApproval> approvals = offerApprovalRepository
-                    .findByOfferProposal_OfferIdOrderByApprovedAtDesc(offer.getOfferId());
-            if (!approvals.isEmpty()) {
-                OfferApproval latest = approvals.get(0);
-                if (latest.getDirector() != null) {
-                    directorName = latest.getDirector().getFullName();
-                }
-                directorDecision = mapDirectorStatusLabel(latest.getStatus());
-                directorComments = latest.getDirectorComments();
-                approvedAt = latest.getApprovedAt();
-            }
+        if (latest != null) {
+            if (latest.getDirector() != null) directorName = latest.getDirector().getFullName();
+            directorDecision = mapDirectorStatusLabel(latest.getStatus());
+            directorComments = latest.getDirectorComments();
+            approvedAt = latest.getApprovedAt();
         }
 
         String proposedByName = offer.getProposedBy() != null ? offer.getProposedBy().getFullName() : null;
@@ -296,7 +275,7 @@ public class OfferExportServiceImpl implements OfferExportService {
                 .departmentName(department != null ? department.getDepartmentName() : null)
                 .requisitionId(requisition != null ? requisition.getRequisitionId() : null)
                 .jobPostingId(jobPosting != null ? jobPosting.getJobPostingId() : null)
-                .probationDays(60) // Quy chuẩn mặc định BR-OFF-01
+                .probationDays(offer.getProbationDays())
                 .benefitsPackage(offer.getBenefitsPackage())
                 .proposedByName(proposedByName)
                 .directorName(directorName)
@@ -315,6 +294,7 @@ public class OfferExportServiceImpl implements OfferExportService {
             case "director_approved", "approved" -> "Giám đốc đã duyệt";
             case "director_rejected", "rejected" -> "Giám đốc từ chối";
             case "sent_candidate" -> "Đã gửi thư mời";
+            case "expired" -> "Đã quá hạn phản hồi";
             case "accepted" -> "Ứng viên đã nhận việc";
             case "declined" -> "Ứng viên từ chối";
             case "canceled", "cancelled" -> "Đã hủy";
@@ -335,7 +315,7 @@ public class OfferExportServiceImpl implements OfferExportService {
     // =========================================================================
 
     private void buildOffersSheet(Workbook workbook, List<OfferExportRow> rows, List<String> columns) {
-        Sheet sheet = workbook.createSheet("Offers");
+        Sheet sheet = createExportSheet(workbook, "Offers");
 
         DataFormat df = workbook.createDataFormat();
 
@@ -438,6 +418,9 @@ public class OfferExportServiceImpl implements OfferExportService {
         }
     }
 
+    /**
+     * Ghi giá trị theo mã cột đã được kiểm tra; giữ kiểu số/ngày để Excel còn tính toán và sắp xếp được.
+     */
     private void writeCellValue(Cell cell, String colKey, OfferExportRow r,
                                 CellStyle defaultStyle, CellStyle centerStyle,
                                 CellStyle salaryStyle, CellStyle percentStyle,
@@ -604,7 +587,7 @@ public class OfferExportServiceImpl implements OfferExportService {
     // =========================================================================
 
     private void buildSummarySheet(Workbook workbook, List<OfferExportRow> rows, OfferExportRequest request, String exportedBy) {
-        Sheet sheet = workbook.createSheet("Summary");
+        Sheet sheet = createExportSheet(workbook, "Summary");
 
         Font titleFont = workbook.createFont();
         titleFont.setBold(true);
@@ -643,7 +626,7 @@ public class OfferExportServiceImpl implements OfferExportService {
         // Row 0: Title
         Row r0 = sheet.createRow(0);
         Cell c0 = r0.createCell(0);
-        c0.setCellValue("BÁO CÁO TỔNG HỢP DANH SÁCH ĐỀ XUẤT NHẬN VIỆC");
+        c0.setCellValue("BÁO CÁO TỔNG HỢP DANH SÁCH THƯ MỜI NHẬN VIỆC");
         c0.setCellStyle(titleStyle);
 
         // Row 2: Người xuất
@@ -667,8 +650,8 @@ public class OfferExportServiceImpl implements OfferExportService {
         c4_0.setCellStyle(labelStyle);
         String scopeDesc = switch (request.scope()) {
             case FILTERED -> "Danh sách đang lọc";
-            case SELECTED -> "Các đề xuất được chọn (" + rows.size() + ")";
-            case ALL -> "Toàn bộ đề xuất";
+            case SELECTED -> "Các thư mời được chọn (" + rows.size() + ")";
+            case ALL -> "Toàn bộ thư mời";
         };
         r4.createCell(1).setCellValue(scopeDesc);
 
@@ -695,7 +678,7 @@ public class OfferExportServiceImpl implements OfferExportService {
         // Row 6: Tổng số Offer trong file
         Row r6 = sheet.createRow(6);
         Cell c6_0 = r6.createCell(0);
-        c6_0.setCellValue("Tổng số đề xuất được xuất:");
+        c6_0.setCellValue("Tổng số thư mời được xuất:");
         c6_0.setCellStyle(labelStyle);
         Cell c6_1 = r6.createCell(1);
         c6_1.setCellValue(rows.size());
@@ -703,7 +686,7 @@ public class OfferExportServiceImpl implements OfferExportService {
         // Row 8: Bảng Thống Kê Trạng Thái
         Row r8 = sheet.createRow(8);
         Cell c8_0 = r8.createCell(0);
-        c8_0.setCellValue("Trạng thái đề xuất");
+        c8_0.setCellValue("Trạng thái thư mời");
         c8_0.setCellStyle(borderHeaderStyle);
         Cell c8_1 = r8.createCell(1);
         c8_1.setCellValue("Số lượng");
@@ -711,26 +694,12 @@ public class OfferExportServiceImpl implements OfferExportService {
 
         // Đếm theo từng trạng thái trên TẬP DỮ LIỆU ĐƯỢC XUẤT
         Map<String, Long> statusCounts = new LinkedHashMap<>();
-        statusCounts.put("Bản nháp", 0L);
-        statusCounts.put("Chờ Giám đốc duyệt", 0L);
-        statusCounts.put("Giám đốc đã duyệt", 0L);
-        statusCounts.put("Giám đốc từ chối", 0L);
-        statusCounts.put("Đã gửi thư mời", 0L);
-        statusCounts.put("Ứng viên đã nhận việc", 0L);
-        statusCounts.put("Ứng viên từ chối", 0L);
-
+        for (String status : List.of("Draft", "Pending_Director", "Director_Approved", "Director_Rejected",
+                "Sent_Candidate", "Expired", "Accepted", "Declined")) {
+            statusCounts.put(mapOfferStatusLabel(status), 0L);
+        }
         for (OfferExportRow row : rows) {
-            String s = row.rawOfferStatus();
-            if (s == null) continue;
-            switch (s.trim().toLowerCase(Locale.ROOT)) {
-                case "draft" -> statusCounts.put("Bản nháp", statusCounts.get("Bản nháp") + 1);
-                case "pending_director" -> statusCounts.put("Chờ Giám đốc duyệt", statusCounts.get("Chờ Giám đốc duyệt") + 1);
-                case "director_approved", "approved" -> statusCounts.put("Giám đốc đã duyệt", statusCounts.get("Giám đốc đã duyệt") + 1);
-                case "director_rejected", "rejected" -> statusCounts.put("Giám đốc từ chối", statusCounts.get("Giám đốc từ chối") + 1);
-                case "sent_candidate" -> statusCounts.put("Đã gửi thư mời", statusCounts.get("Đã gửi thư mời") + 1);
-                case "accepted" -> statusCounts.put("Ứng viên đã nhận việc", statusCounts.get("Ứng viên đã nhận việc") + 1);
-                case "declined" -> statusCounts.put("Ứng viên từ chối", statusCounts.get("Ứng viên từ chối") + 1);
-            }
+            statusCounts.merge(mapOfferStatusLabel(row.rawOfferStatus()), 1L, Long::sum);
         }
 
         int currRow = 9;
@@ -749,5 +718,12 @@ public class OfferExportServiceImpl implements OfferExportService {
         sheet.autoSizeColumn(1);
         sheet.setColumnWidth(0, Math.max(sheet.getColumnWidth(0), 10000));
         sheet.setColumnWidth(1, Math.max(sheet.getColumnWidth(1), 4000));
+    }
+
+    /** Theo dõi độ rộng trước khi các hàng cũ được đẩy ra file tạm, giữ nguyên auto-size Excel. */
+    private Sheet createExportSheet(Workbook workbook, String name) {
+        Sheet sheet = workbook.createSheet(name);
+        if (sheet instanceof SXSSFSheet streaming) streaming.trackAllColumnsForAutoSizing();
+        return sheet;
     }
 }
