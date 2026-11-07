@@ -576,6 +576,24 @@ class OfferIntegrationTests {
     // =========================================================================
 
     @Test
+    @WithMockUser(username = "hr_specialist", roles = {"HR"})
+    void unexpectedCreateErrorDoesNotExposeTechnicalDetailsAndPreservesTheForm() throws Exception {
+        when(offerService.createOfferByHr(any())).thenThrow(new IllegalStateException("SQL_INTERNAL_DETAILS"));
+        when(offerService.getPassedCandidatesForOffer()).thenReturn(List.of());
+        mvc.perform(post("/offers/create").with(csrf())
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                        .param("applicationId", "1").param("offeredPositionTitle", "Java Dev")
+                        .param("proposedSalary", "20000000").param("probationSalary", "18000000")
+                        .param("probationDays", "60").param("responsePeriodDays", "5")
+                        .param("workLocation", "Hà Nội")
+                        .param("expectedStartDate", LocalDate.now().plusDays(14).toString()))
+                .andExpect(status().isOk()).andExpect(view().name("offers/form"))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Vui lòng thử lại hoặc liên hệ bộ phận hỗ trợ.")))
+                .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("SQL_INTERNAL_DETAILS"))))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Java Dev")));
+    }
+
+    @Test
     @DisplayName("IT-22 POST /offers/{id}/approve: Candidate role calling director approve endpoint is forbidden (HTTP 403)")
     @WithMockUser(username = "cand_user", roles = {"CANDIDATE"})
     void it22_candidateApproveOffer_isForbidden() throws Exception {

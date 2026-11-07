@@ -74,6 +74,25 @@ class CandidateOfferServiceTests {
         when(currentUserService.requireUser()).thenReturn(User.builder().userId(USER_ID).build());
     }
 
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.NullSource
+    @org.junit.jupiter.params.provider.ValueSource(strings = {"Cancelled", "Withdrawn", "Rejected", "Hired", "Interviewing"})
+    void closedOrNonOfferedApplicationRemainsViewableWithoutResponseActions(String applicationStatus) {
+        OfferProposal offer = offer(OFFER_ID, "Sent_Candidate");
+        offer.getApplication().setApplicationStatus(applicationStatus);
+        when(offers.findVisibleByUserId(eq(USER_ID), anyCollection())).thenReturn(List.of(offer));
+        when(offers.findVisibleById(eq(OFFER_ID), eq(USER_ID), anyCollection())).thenReturn(Optional.of(offer));
+
+        var row = service.list().getFirst();
+        var detail = service.getDetail(OFFER_ID);
+        assertFalse(row.canRespond());
+        assertFalse(detail.canRespond());
+        assertFalse(row.isExpired());
+        assertFalse(detail.isExpired());
+        assertEquals("Thư mời không còn nhận phản hồi", row.statusLabel());
+        assertEquals(row.statusLabel(), detail.statusLabel());
+    }
+
     @Test
     void listMapsStatusToLabelBadgeAndAnswerableFlag() {
         when(offers.findVisibleByUserId(USER_ID, CandidateOfferServiceImpl.CANDIDATE_VISIBLE_STATUSES))
@@ -548,6 +567,7 @@ class CandidateOfferServiceTests {
                 .probationSalary(new BigDecimal("18000000"))
                 .application(Application.builder()
                         .applicationId(APPLICATION_ID)
+                        .applicationStatus("Offered")
                         .jobPosting(JobPosting.builder().jobPostingId(7).postingTitle("Junior Java Developer").build())
                         .build())
                 .build();

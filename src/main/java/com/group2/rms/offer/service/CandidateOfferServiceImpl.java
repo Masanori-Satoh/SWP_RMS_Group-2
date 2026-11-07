@@ -179,15 +179,28 @@ public class CandidateOfferServiceImpl implements CandidateOfferService {
         return offer.isResponseExpiredAt(LocalDateTime.now(clock));
     }
 
+    private record ResponsePresentation(boolean canRespond, String label, String badge) {}
+
+    /** Dùng cùng điều kiện với UPDATE: thư mời còn hạn và hồ sơ vẫn đang Offered. */
+    private ResponsePresentation responsePresentation(OfferProposal offer) {
+        String status = offer.getOfferStatus();
+        if (isExpired(offer)) {
+            return new ResponsePresentation(false, "Đã quá hạn phản hồi", "badge--neutral");
+        }
+        boolean sent = SENT.equals(status);
+        boolean applicationOffered = offer.getApplication() != null
+                && "Offered".equals(offer.getApplication().getApplicationStatus());
+        if (sent && !applicationOffered) {
+            return new ResponsePresentation(false, "Thư mời không còn nhận phản hồi", "badge--neutral");
+        }
+        return new ResponsePresentation(sent && applicationOffered, statusLabel(status), statusBadge(status));
+    }
+
     /**
      * Tạo nhãn và quyền bấm cho UI; hết hạn chỉ đổi nhãn/ẩn thao tác, không ghi OfferStatus=Expired.
      */
     private CandidateOfferResponse toResponse(OfferProposal offer) {
-        String status = offer.getOfferStatus();
-        boolean expired = isExpired(offer);
-        boolean canRespond = SENT.equals(status) && !expired;
-        String label = expired ? "Đã quá hạn phản hồi" : statusLabel(status);
-        String badge = expired ? "badge--neutral" : statusBadge(status);
+        ResponsePresentation presentation = responsePresentation(offer);
 
         return new CandidateOfferResponse(
                 offer.getOfferId(),
@@ -198,9 +211,9 @@ public class CandidateOfferServiceImpl implements CandidateOfferService {
                 offer.getExpectedStartDate(),
                 offer.getWorkLocation(),
                 offer.getBenefitsPackage(),
-                label,
-                badge,
-                canRespond,
+                presentation.label(),
+                presentation.badge(),
+                presentation.canRespond(),
                 offer.getResponsePeriodDays(),
                 offer.getResponseDeadline());
     }
@@ -223,10 +236,7 @@ public class CandidateOfferServiceImpl implements CandidateOfferService {
 
     private CandidateOfferDetailResponse toDetailResponse(OfferProposal offer) {
         String status = offer.getOfferStatus();
-        boolean expired = isExpired(offer);
-        boolean canRespond = SENT.equals(status) && !expired;
-        String label = expired ? "Đã quá hạn phản hồi" : statusLabel(status);
-        String badge = expired ? "badge--neutral" : statusBadge(status);
+        ResponsePresentation presentation = responsePresentation(offer);
 
         var app = offer.getApplication();
         var posting = app != null ? app.getJobPosting() : null;
@@ -291,9 +301,9 @@ public class CandidateOfferServiceImpl implements CandidateOfferService {
                 offer.getWorkLocation(),
                 offer.getBenefitsPackage(),
                 status,
-                label,
-                badge,
-                canRespond,
+                presentation.label(),
+                presentation.badge(),
+                presentation.canRespond(),
                 proposedBy != null ? proposedBy.getFullName() : "Phòng Tuyển dụng Mộc RMS",
                 proposedBy != null ? proposedBy.getEmail() : "tuyendung@mocrms.com.vn",
                 offer.getDeclineReason(),

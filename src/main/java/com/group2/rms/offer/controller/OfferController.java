@@ -250,7 +250,7 @@ public class OfferController {
             return "offers/form";
         } catch (Exception e) {
             log.error("Lỗi không mong muốn khi tạo thư mời nhận việc: {}", e.getMessage(), e);
-            errors.reject("businessError", "Không thể lưu thư mời nhận việc: " + (e.getMessage() != null ? e.getMessage() : "Xung đột dữ liệu hệ thống."));
+            errors.reject("businessError", "Không thể lưu thư mời nhận việc. Vui lòng thử lại hoặc liên hệ bộ phận hỗ trợ.");
             model.addAttribute("activeMenu", "offers");
             List<PassedCandidateResponse> passedCandidates = offerService.getPassedCandidatesForOffer();
             model.addAttribute("passedCandidates", passedCandidates);

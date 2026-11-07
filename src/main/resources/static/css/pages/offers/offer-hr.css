@@ -704,33 +704,16 @@ button.offer-stat-card {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--s2);
     margin-bottom: 10px;
 }
 
-.columns-quick-actions {
+.ofw-columns-quick-actions {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
-    gap: 6px;
-    font-size: 12.5px;
-}
-
-.btn-link-action {
-    background: none;
-    border: none;
-    padding: 0;
-    color: var(--brand-dark);
-    font-size: 12.5px;
-    font-weight: 500;
-    cursor: pointer;
-}
-
-.btn-link-action:hover {
-    text-decoration: underline;
-}
-
-.sep-dot {
-    color: var(--control-line);
-    font-size: 11px;
+    gap: var(--s2);
 }
 
 .column-group-label {
