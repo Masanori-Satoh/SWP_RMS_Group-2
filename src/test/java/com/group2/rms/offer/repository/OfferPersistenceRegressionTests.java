@@ -76,9 +76,68 @@ class OfferPersistenceRegressionTests {
     com.group2.rms.candidate.domain.repository.ApplicationRepository applications;
     @Autowired com.group2.rms.offer.service.OfferExportService exportService;
     @Autowired PlatformTransactionManager transactionManager;
+    @Autowired com.group2.rms.candidate.application.portal.repository.MyApplicationRepository myApplications;
     @MockitoBean OfferMailSender mailSender;
     @MockitoBean com.group2.rms.notification.service.NotificationService notificationService;
     private OfferProposal offer;
+
+    /** Kiểm tra hợp đồng Offer–Application trên SQL thật, cả trước và sau khi chốt hết hạn. */
+    @ParameterizedTest
+    @org.junit.jupiter.params.provider.CsvSource(value = {
+            "-1,1,true", "0,1,false", "1,1,false", "3600,-1,true",
+            "NULL,1,false", "NULL,-1,true"
+    }, nullValues = "NULL")
+    void applicationJourneyMatchesOfferExpiryBeforeAndAfterUpdate(Integer seconds, int startDays, boolean expired) {
+        var now = java.time.LocalDateTime.now().withNano(0);
+        offer.setOfferStatus("Sent_Candidate");
+        offer.setResponseDeadline(seconds == null ? null : now.plusSeconds(seconds));
+        offer.setExpectedStartDate(now.toLocalDate().plusDays(startDays));
+        offer.getApplication().setApplicationStatus("Offered");
+        Integer id = offer.getOfferId();
+        Integer applicationId = offer.getApplication().getApplicationId();
+        Integer owner = offer.getApplication().getCandidate().getAccount().getUserId();
+        entityManager.flush();
+
+        assertTrue(myApplications.findMyVisibleOffers(-1).isEmpty());
+        assertApplicationJourney(id, owner, now, expired, "Sent_Candidate");
+        if (expired) {
+            assertEquals(0, candidateRepository.answerIfEligible(id, owner, "Accepted", null, now, now.toLocalDate()));
+        }
+
+        assertEquals(expired ? 1 : 0, proposalRepository.expireDue(now, now.toLocalDate()));
+        assertApplicationJourney(id, owner, now, expired, expired ? "Expired" : "Sent_Candidate");
+        assertEquals("Offered", entityManager.find(Application.class, applicationId).getApplicationStatus());
+        assertEquals(0, proposalRepository.expireDue(now, now.toLocalDate()));
+
+        var progress = com.group2.rms.candidate.domain.rule.ApplicationProgressResolver.resolve(
+                new com.group2.rms.candidate.domain.rule.ApplicationProgressFacts(
+                        applicationId, "Offered", null, null, null, 0, 0, null,
+                        expired ? "Expired" : "Sent_Candidate"), now);
+        assertEquals(expired ? com.group2.rms.candidate.domain.rule.ApplicationProgressStep.OFFER_EXPIRED
+                : com.group2.rms.candidate.domain.rule.ApplicationProgressStep.OFFER_SENT, progress.step());
+    }
+
+    private void assertApplicationJourney(Integer id, Integer owner, java.time.LocalDateTime now,
+                                          boolean expired, String storedStatus) {
+        var row = myApplications.findMyVisibleOffers(owner).stream()
+                .filter(item -> id.equals(item.getOfferId())).findFirst().orElseThrow();
+        assertEquals(storedStatus, row.getStatus());
+        var visibleOffer = new com.group2.rms.candidate.application.portal.service.MyApplicationJourney.Offer(
+                row.getOfferId(), row.getStatus(), row.getResponseDeadline(), row.getAt(), row.getExpectedStartDate());
+        var facts = new com.group2.rms.candidate.application.portal.service.MyApplicationJourney.Facts(
+                "Offered", now.minusDays(3), java.util.List.of(), visibleOffer, java.util.List.of());
+        var view = com.group2.rms.candidate.application.portal.service.MyApplicationJourney.resolve(facts, now);
+        assertEquals(expired ? "Xem thư mời" : "Trả lời thư mời", view.actionLabel());
+        assertEquals("/portal/offers/" + id, view.actionHref());
+        assertTrue(!view.ended() && !view.stopped());
+        if (expired) {
+            assertEquals(null, view.urgentUntil());
+            assertEquals(null, view.upcomingAt());
+            var expiry = view.journey().stream()
+                    .filter(item -> "Thư mời đã quá hạn phản hồi".equals(item.title())).findFirst().orElseThrow();
+            assertTrue(expiry.at() != null && !expiry.at().isAfter(now));
+        }
+    }
 
     @Test
     void expiredOfferIsStillQueryableByItsOwnerOnly() {
