@@ -29,7 +29,10 @@
     <th:block th:replace="~{fragments/ui/admin-workspace :: scene}"></th:block>
 
     <!-- ducnm bổ sung: không thuộc hội đồng của buổi này (GBR-05) -> ẩn toàn bộ nội dung kết quả, chỉ hiện banner -->
-    <div th:if="${accessDenied}" th:replace="~{fragments/ui/access-denied-banner :: banner('Bạn không có quyền truy cập vào trang này.')}"></div>
+    <!--/* th:replace chạy trước th:if trên cùng một thẻ, nên điều kiện phải đặt ở thẻ bọc ngoài */-->
+    <th:block th:if="${accessDenied}">
+        <div th:replace="~{fragments/ui/access-denied-banner :: banner('Bạn không có quyền truy cập vào trang này.')}"></div>
+    </th:block>
 
     <div th:unless="${accessDenied}">
     <div class="adw-heading ivw-heading">
