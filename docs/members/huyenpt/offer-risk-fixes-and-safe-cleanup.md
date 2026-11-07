@@ -25,3 +25,13 @@ Log không commit: scratch/offer-risk-phase1-20261107.log và scratch/offer-risk
 - Chỉ dùng database tạm OfferRegression_651bda581e3b42d4ad10c199cbaf3235, đã xóa và xác minh không còn. Không đổi database ứng dụng, schema, migration hoặc thông tin đăng nhập.
 
 Log không commit: scratch/offer-risk-notification-before-20261107.log, scratch/offer-risk-notification-after-20261107.log, scratch/offer-risk-notification-unit-20261107.log.
+
+## Phase 3: dọn phần trùng lặp có bằng chứng
+
+- Gom ba nhánh dựng lại form tạo lỗi vào renderCreateForm; giữ tên model, BindingResult, trường đã nhập và hồ sơ cố định. Bỏ biến nhận kết quả tạo không sử dụng.
+- Xóa hai tập trạng thái/hai helper public cũ không có caller trong source/test. Các kiểm tra trạng thái tại service ghi và SQL vẫn giữ nguyên.
+- Xóa 10 rule CSS nút Director không có tham chiếu từ template hoặc JavaScript; không sửa CSS/layout chung.
+- Production giảm 135 dòng: Controller -27, Service -34, CSS Director -74. Không thêm file production hoặc đổi cấu trúc module.
+- Bổ sung ba ca MockMvc cho lỗi validation/nghiệp vụ/kỹ thuật khi tạo theo hồ sơ cố định. Test cuối đạt 56 OfferIntegrationTests và 132 OfferServiceTests; CandidateOfferWebTests 19, CandidateOfferServiceTests 43 và OfferExportServiceTests 11 cũng đạt trong lần chạy phase này.
+
+Log không commit: scratch/offer-risk-phase3-20261107.log và scratch/offer-risk-phase3-20261107-v2.log. Lần đầu test mới thiếu Content-Type form; đã sửa fixture và chạy lại các nhóm bị ảnh hưởng thành công.

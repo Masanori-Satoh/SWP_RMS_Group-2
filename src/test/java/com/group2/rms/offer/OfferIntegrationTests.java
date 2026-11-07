@@ -593,6 +593,36 @@ class OfferIntegrationTests {
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Java Dev")));
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {"validation", "business", "technical"})
+    @WithMockUser(username = "hr_specialist", roles = {"HR"})
+    void createErrorsKeepTheLockedCandidateAndEnteredData(String errorKind) throws Exception {
+        var candidate = com.group2.rms.offer.dto.PassedCandidateResponse.builder()
+                .applicationId(1).candidateName("Nguyễn Văn A").appliedPosition("Java")
+                .departmentName("IT").finalDecision("Passed").build();
+        when(offerService.getPassedCandidatesForOffer()).thenReturn(List.of(candidate));
+        if (!"validation".equals(errorKind)) {
+            RuntimeException error = "business".equals(errorKind)
+                    ? new com.group2.rms.offer.exception.OfferValidationException("Hồ sơ đã được cập nhật.")
+                    : new IllegalStateException("INTERNAL_FAILURE");
+            when(offerService.createOfferByHr(any())).thenThrow(error);
+        }
+        mvc.perform(post("/offers/create").with(csrf())
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                        .param("isLockedCandidate", "true").param("applicationId", "1")
+                        .param("offeredPositionTitle", "Entered title")
+                        .param("proposedSalary", "validation".equals(errorKind) ? "0" : "20000000")
+                        .param("probationSalary", "18000000").param("probationDays", "60")
+                        .param("responsePeriodDays", "5").param("workLocation", "Entered office")
+                        .param("expectedStartDate", LocalDate.now().plusDays(14).toString()))
+                .andExpect(status().isOk()).andExpect(view().name("offers/form"))
+                .andExpect(model().attributeHasErrors("offerDto"))
+                .andExpect(model().attribute("isLockedCandidate", true))
+                .andExpect(model().attribute("fixedCandidate", candidate))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Entered title")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Entered office")));
+    }
+
     @Test
     @DisplayName("IT-22 POST /offers/{id}/approve: Candidate role calling director approve endpoint is forbidden (HTTP 403)")
     @WithMockUser(username = "cand_user", roles = {"CANDIDATE"})

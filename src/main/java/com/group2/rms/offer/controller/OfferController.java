@@ -209,62 +209,35 @@ public class OfferController {
             @RequestParam(required = false, defaultValue = "false") Boolean isLockedCandidate,
             Model model,
             RedirectAttributes flash) {
-
-        if (errors.hasErrors()) {
-            model.addAttribute("activeMenu", "offers");
-        List<PassedCandidateResponse> passedCandidates = offerService.getPassedCandidatesForOffer();
-            model.addAttribute("passedCandidates", passedCandidates);
-            model.addAttribute("isEdit", false);
-            boolean locked = Boolean.TRUE.equals(isLockedCandidate);
-            model.addAttribute("isLockedCandidate", locked);
-            if (locked && createRequest.getApplicationId() != null) {
-                passedCandidates.stream()
-                        .filter(c -> createRequest.getApplicationId().equals(c.getApplicationId()))
-                        .findFirst()
-                        .ifPresent(c -> model.addAttribute("fixedCandidate", c));
-            }
-            return "offers/form";
-        }
-
+        if (errors.hasErrors()) return renderCreateForm(model, createRequest, isLockedCandidate);
         try {
-            OfferResponse created = offerService.createOfferByHr(createRequest);
-            boolean isDraft = Boolean.TRUE.equals(createRequest.getIsDraft());
-            flash.addFlashAttribute("successMessage", isDraft
+            offerService.createOfferByHr(createRequest);
+            flash.addFlashAttribute("successMessage", Boolean.TRUE.equals(createRequest.getIsDraft())
                     ? "Lưu bản nháp thư mời nhận việc thành công!"
                     : "Đã gửi thư mời nhận việc để Giám đốc duyệt.");
             return "redirect:/offers";
-        } catch (BaseBusinessException e) {
-            errors.reject("businessError", e.getMessage());
-            model.addAttribute("activeMenu", "offers");
-            List<PassedCandidateResponse> passedCandidates = offerService.getPassedCandidatesForOffer();
-            model.addAttribute("passedCandidates", passedCandidates);
-            model.addAttribute("isEdit", false);
-            boolean locked = Boolean.TRUE.equals(isLockedCandidate);
-            model.addAttribute("isLockedCandidate", locked);
-            if (locked && createRequest.getApplicationId() != null) {
-                passedCandidates.stream()
-                        .filter(c -> createRequest.getApplicationId().equals(c.getApplicationId()))
-                        .findFirst()
-                        .ifPresent(c -> model.addAttribute("fixedCandidate", c));
-            }
-            return "offers/form";
-        } catch (Exception e) {
-            log.error("Lỗi không mong muốn khi tạo thư mời nhận việc: {}", e.getMessage(), e);
+        } catch (BaseBusinessException error) {
+            errors.reject("businessError", error.getMessage());
+        } catch (Exception error) {
+            log.error("Lỗi không mong muốn khi tạo thư mời nhận việc", error);
             errors.reject("businessError", "Không thể lưu thư mời nhận việc. Vui lòng thử lại hoặc liên hệ bộ phận hỗ trợ.");
-            model.addAttribute("activeMenu", "offers");
-            List<PassedCandidateResponse> passedCandidates = offerService.getPassedCandidatesForOffer();
-            model.addAttribute("passedCandidates", passedCandidates);
-            model.addAttribute("isEdit", false);
-            boolean locked = Boolean.TRUE.equals(isLockedCandidate);
-            model.addAttribute("isLockedCandidate", locked);
-            if (locked && createRequest.getApplicationId() != null) {
-                passedCandidates.stream()
-                        .filter(c -> createRequest.getApplicationId().equals(c.getApplicationId()))
-                        .findFirst()
-                        .ifPresent(c -> model.addAttribute("fixedCandidate", c));
-            }
-            return "offers/form";
         }
+        return renderCreateForm(model, createRequest, isLockedCandidate);
+    }
+
+    /** Dựng lại cùng một form cho lỗi nhập liệu, lỗi nghiệp vụ và lỗi hệ thống; giữ nguyên dữ liệu đã nhập. */
+    private String renderCreateForm(Model model, CreateOfferRequest request, Boolean isLockedCandidate) {
+        List<PassedCandidateResponse> candidates = offerService.getPassedCandidatesForOffer();
+        boolean locked = Boolean.TRUE.equals(isLockedCandidate);
+        model.addAttribute("activeMenu", "offers");
+        model.addAttribute("passedCandidates", candidates);
+        model.addAttribute("isEdit", false);
+        model.addAttribute("isLockedCandidate", locked);
+        if (locked && request.getApplicationId() != null) {
+            candidates.stream().filter(candidate -> request.getApplicationId().equals(candidate.getApplicationId()))
+                    .findFirst().ifPresent(candidate -> model.addAttribute("fixedCandidate", candidate));
+        }
+        return "offers/form";
     }
 
     /**

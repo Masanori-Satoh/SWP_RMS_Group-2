@@ -83,44 +83,6 @@ button.director-stat-card:hover {
   border-color: var(--brand);
 }
 
-/* A.3 Director List Table Actions & Columns */
-.btn-director-quick-action {
-  padding: 6px 12px;
-  font-size: 13px;
-  font-weight: 600;
-  border-radius: 6px;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  transition: all 0.15s ease;
-  text-decoration: none;
-  border: 1px solid transparent;
-}
-
-.btn-director-quick-approve {
-  background: var(--brand-soft);
-  color: var(--brand-dark);
-  border-color: var(--brand-caption);
-}
-
-.btn-director-quick-approve:hover {
-  background: var(--brand-caption);
-  color: var(--brand-dark);
-}
-
-.btn-director-quick-reject {
-  background: var(--error-soft);
-  color: var(--error);
-  border-color: var(--error-soft);
-}
-
-.btn-director-quick-reject:hover {
-  background: var(--error-soft);
-  color: var(--error);
-}
-
-
 /* =============================================================================
    SECTION B — QUICK DECISION MODAL
    #directorDecisionModal popup for fast approve / reject with feedback
@@ -189,42 +151,6 @@ button.director-stat-card:hover {
   font-weight: 600;
   color: var(--ink);
 }
-
-.btn-director-modal-action {
-  padding: 8px 18px;
-  font-size: 13.5px;
-  font-weight: 600;
-  border-radius: 6px;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  transition: all 0.2s;
-  border: 1px solid transparent;
-}
-
-.btn-director-modal-approve {
-  background: var(--brand-dark) !important;
-  border: 1px solid var(--brand-dark) !important;
-  color: var(--surface) !important;
-}
-
-.btn-director-modal-approve:hover {
-  background: var(--brand-hover) !important;
-  border-color: var(--brand-hover) !important;
-}
-
-.btn-director-modal-reject {
-  background: var(--error) !important;
-  border: 1px solid var(--error) !important;
-  color: var(--surface) !important;
-}
-
-.btn-director-modal-reject:hover {
-  background: var(--error) !important;
-  border-color: var(--error) !important;
-}
-
 
 /* =============================================================================
    SECTION C — DIRECTOR DETAIL DECISION

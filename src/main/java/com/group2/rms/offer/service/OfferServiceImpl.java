@@ -69,40 +69,6 @@ public class OfferServiceImpl implements OfferService {
     private final PlatformTransactionManager transactionManager;
     private final com.group2.rms.notification.service.NotificationService systemNotificationService;
 
-    /**
-     * Quy tắc GBR-07:
-     * - Chỉ chấp nhận tạo mới Offer Proposal đối với ứng viên đã đỗ phỏng vấn (Passed) và KHÔNG CÓ Offer chưa xóa mềm.
-     * - Khi hồ sơ đã có Offer chưa xóa mềm (kể cả Draft), không gợi ý trong mục tạo đề xuất mới
-     *   và chặn thao tác tạo mới trực tiếp (bắt buộc HR chỉnh sửa trực tiếp trên danh sách Offer).
-     */
-    public static final Set<String> OVERRIDABLE_STATUSES = Collections.emptySet();
-
-    /**
-     * Quy tắc GBR-07:
-     * Tất cả các trạng thái có Offer đang hoạt động (kể cả Draft) đều bị khóa khỏi luồng tạo mới trực tiếp.
-     */
-    public static final Set<String> LOCKED_STATUSES = Set.of(
-            "Draft", "Pending_Director", "Approved", "Director_Approved", "Sent_Candidate", "Accepted",
-            "Rejected", "Director_Rejected", "Declined", "Expired", "Canceled", "Voided");
-
-    // Hai helper trạng thái tương thích cũ chưa có caller trong production hiện tại; luồng ghi kiểm tra trực tiếp bên dưới.
-    public static boolean isOverridableStatus(String status) {
-        if (status == null) return false;
-        for (String s : OVERRIDABLE_STATUSES) {
-            if (s.equalsIgnoreCase(status)) return true;
-        }
-        return false;
-    }
-
-    public static boolean isLockedStatus(String status) {
-        if (status == null) return false;
-        for (String s : LOCKED_STATUSES) {
-            if (s.equalsIgnoreCase(status)) return true;
-        }
-        return false;
-    }
-
-
     private OfferProposal findActiveOffer(Integer id) {
         return offerProposalRepository.findById(id)
                 .filter(offer -> !Boolean.TRUE.equals(offer.getIsDeleted()))
