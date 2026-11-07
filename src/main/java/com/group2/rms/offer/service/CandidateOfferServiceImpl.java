@@ -1,6 +1,6 @@
 package com.group2.rms.offer.service;
 
-import com.group2.rms.candidate.domain.rule.ApplicationStatusService;
+import com.group2.rms.candidate.domain.repository.ApplicationRepository;
 import com.group2.rms.core.exception.ResourceNotFoundException;
 import com.group2.rms.core.security.CurrentUserService;
 import com.group2.rms.offer.dto.CandidateOfferDetailResponse;
@@ -8,8 +8,15 @@ import com.group2.rms.offer.dto.CandidateOfferResponse;
 import com.group2.rms.offer.entity.OfferProposal;
 import com.group2.rms.offer.exception.OfferResponseException;
 import com.group2.rms.offer.repository.CandidateOfferRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.math.BigDecimal;
 import java.time.Clock;
@@ -19,6 +26,8 @@ import java.util.Set;
 
 @Service
 @Transactional
+@RequiredArgsConstructor
+@Slf4j
 public class CandidateOfferServiceImpl implements CandidateOfferService {
 
     static final String SENT = "Sent_Candidate";
@@ -26,40 +35,19 @@ public class CandidateOfferServiceImpl implements CandidateOfferService {
     static final String DECLINED = "Declined";
 
     /** Offer nội bộ (Draft, Pending_Director, Director_*) không hiện cho ứng viên. */
-    static final Set<String> CANDIDATE_VISIBLE_STATUSES = Set.of(SENT, ACCEPTED, DECLINED);
+    static final Set<String> CANDIDATE_VISIBLE_STATUSES = Set.of(SENT, ACCEPTED, DECLINED, "Expired");
 
     private final CandidateOfferRepository offers;
     private final CurrentUserService currentUserService;
-    private final ApplicationStatusService applicationStatusService;
+    private final ApplicationRepository applications;
     private final com.group2.rms.notification.service.NotificationService systemNotificationService;
     private final Clock clock;
+    private final PlatformTransactionManager transactionManager;
 
-    @org.springframework.beans.factory.annotation.Autowired
-    public CandidateOfferServiceImpl(CandidateOfferRepository offers,
-                                    CurrentUserService currentUserService,
-                                    ApplicationStatusService applicationStatusService,
-                                    com.group2.rms.notification.service.NotificationService systemNotificationService,
-                                    Clock clock) {
-        this.offers = offers;
-        this.currentUserService = currentUserService;
-        this.applicationStatusService = applicationStatusService;
-        this.systemNotificationService = systemNotificationService;
-        this.clock = clock != null ? clock : Clock.systemDefaultZone();
-    }
-
-    public CandidateOfferServiceImpl(CandidateOfferRepository offers,
-                                    CurrentUserService currentUserService,
-                                    ApplicationStatusService applicationStatusService,
-                                    com.group2.rms.notification.service.NotificationService systemNotificationService) {
-        this(offers, currentUserService, applicationStatusService, systemNotificationService, Clock.systemDefaultZone());
-    }
-
-    public CandidateOfferServiceImpl(CandidateOfferRepository offers,
-                                    CurrentUserService currentUserService,
-                                    ApplicationStatusService applicationStatusService) {
-        this(offers, currentUserService, applicationStatusService, null, Clock.systemDefaultZone());
-    }
-
+    /**
+     * Lấy thư mời của chính ứng viên đăng nhập, gồm Sent_Candidate, Accepted, Declined và Expired (chỉ xem, không được trả lời).
+     * Query ràng buộc UserId tại database; không lấy mọi Offer rồi mới lọc quyền ở JavaScript.
+     */
     @Override
     @Transactional(readOnly = true)
     public List<CandidateOfferResponse> list() {
@@ -71,6 +59,10 @@ public class CandidateOfferServiceImpl implements CandidateOfferService {
                 .toList();
     }
 
+    /**
+     * Xem chi tiết đúng chủ sở hữu và đánh dấu thông báo thư mời đã đọc.
+     * Có thao tác ghi thông báo nên phương thức này không chỉ là giao dịch đọc.
+     */
     @Override
     @Transactional
     public CandidateOfferDetailResponse getDetail(Integer offerId) {
@@ -105,6 +97,12 @@ public class CandidateOfferServiceImpl implements CandidateOfferService {
         return answer(offerId, false, declineReason);
     }
 
+    /**
+     * Luồng chung nhận/từ chối: xác định chủ sở hữu → kiểm tra hạn/trạng thái → cập nhật nếu còn Sent_Candidate.
+     * Chỉ một yêu cầu cập nhật được; yêu cầu đến sau nhận lỗi thay vì ghi đè câu trả lời trước đó.
+     * Cập nhật hồ sơ Offered → Hired/Withdrawn bằng query sẵn có; 0 dòng thì rollback cả phản hồi Offer.
+     * Lý do từ chối của ứng viên là tùy chọn, khác với lý do từ chối đề xuất của Giám đốc.
+     */
     private String answer(Integer offerId, boolean accepted, String declineReason) {
         Integer userId = currentUserService.requireUser().getUserId();
         OfferProposal offer = offers.findVisibleById(offerId, userId, CANDIDATE_VISIBLE_STATUSES)
@@ -116,29 +114,60 @@ public class CandidateOfferServiceImpl implements CandidateOfferService {
         if (cleanReason != null && cleanReason.length() > 1000) {
             cleanReason = cleanReason.substring(0, 1000);
         }
-        int updated = (cleanReason != null)
-                ? offers.answerIfSent(offerId, toStatus, cleanReason)
-                : offers.answerIfSent(offerId, toStatus);
+        LocalDateTime responseTime = LocalDateTime.now(clock);
+        int updated = offers.answerIfEligible(offerId, userId, toStatus, cleanReason,
+                responseTime, responseTime.toLocalDate());
         if (updated == 0) {
-            throw new OfferResponseException("Thư mời vừa được cập nhật. Vui lòng tải lại trang.");
+            throw new OfferResponseException("Thư mời đã cập nhật, đã hết hạn hoặc hồ sơ không còn chờ phản hồi. Vui lòng tải lại trang.");
         }
-        applicationStatusService.onOfferAnswered(offer.getApplication().getApplicationId(), accepted);
-        if (systemNotificationService != null) {
-            try {
-                systemNotificationService.markOfferNotificationRead(userId, offerId);
-            } catch (Exception ignored) {}
-            try {
-                systemNotificationService.notifyOfferResponseFromCandidate(offer, accepted, cleanReason);
-            } catch (Exception ignored) {}
+        if (applications.transition(offer.getApplication().getApplicationId(), Set.of("Offered"),
+                accepted ? "Hired" : "Withdrawn") != 1) {
+            throw new OfferResponseException("Hồ sơ vừa thay đổi. Vui lòng tải lại trang để kiểm tra kết quả.");
         }
+        notifyAfterAnswerCommit(offerId, userId, accepted, cleanReason);
         return offer.getApplication().getJobPosting().getPostingTitle();
     }
 
+    /** Chỉ thông báo sau khi phản hồi đã commit; không giữ entity bị tách bởi UPDATE clearAutomatically. */
+    private void notifyAfterAnswerCommit(Integer offerId, Integer userId, boolean accepted, String reason) {
+        Runnable send = () -> {
+            notificationInNewTransaction(offerId, "đánh dấu thông báo đã đọc",
+                    () -> systemNotificationService.markOfferNotificationRead(userId, offerId));
+            notificationInNewTransaction(offerId, "gửi thông báo phản hồi", () -> {
+                OfferProposal current = offers.findVisibleById(offerId, userId, CANDIDATE_VISIBLE_STATUSES)
+                        .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy thư mời nhận việc."));
+                systemNotificationService.notifyOfferResponseFromCandidate(current, accepted, reason);
+            });
+        };
+        if (TransactionSynchronizationManager.isActualTransactionActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override public void afterCommit() { send.run(); }
+            });
+        } else {
+            send.run();
+        }
+    }
+
+    /** Hai thao tác thông báo độc lập: lỗi một thao tác không rollback phản hồi hoặc chặn thao tác còn lại. */
+    private void notificationInNewTransaction(Integer offerId, String operation, Runnable action) {
+        try {
+            TransactionTemplate isolated = new TransactionTemplate(transactionManager);
+            isolated.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+            isolated.executeWithoutResult(status -> action.run());
+        } catch (Exception error) {
+            log.warn("Không thể {} cho thư mời #{}", operation, offerId, error);
+        }
+    }
+
     /**
-     * Nơi bổ sung ràng buộc trả lời offer (huyenpt). Accept và Decline cùng đi qua đây, ví dụ hạn trả lời,
-     * lý do từ chối, chặn theo ngày bắt đầu. Offer phải đang chờ ứng viên trả lời và chưa quá ngày bắt đầu.
+     * Chấp nhận phản hồi khi còn Sent_Candidate, chưa qua hạn trả lời và chưa qua ngày bắt đầu dự kiến.
+     * Đúng thời điểm bằng hạn vẫn hợp lệ vì code dùng isAfter; ngày bắt đầu bằng hôm nay chưa bị chặn bởi điều kiện ngày.
+     * Đây là lỗi giải thích sớm; câu UPDATE còn kiểm tra lại hạn, chủ sở hữu và trạng thái hồ sơ.
      */
     private void requireAnswerable(OfferProposal offer) {
+        if ("Expired".equals(offer.getOfferStatus())) {
+            throw new OfferResponseException("Thư mời này đã quá hạn phản hồi. Vui lòng liên hệ bộ phận Tuyển dụng để được hỗ trợ.");
+        }
         if (!SENT.equals(offer.getOfferStatus())) {
             throw new OfferResponseException("Thư mời này đã được trả lời nên không thể thay đổi.");
         }
@@ -155,23 +184,31 @@ public class CandidateOfferServiceImpl implements CandidateOfferService {
     }
 
     private boolean isExpired(OfferProposal offer) {
-        if (!SENT.equals(offer.getOfferStatus())) {
-            return false;
-        }
-        LocalDateTime now = LocalDateTime.now(clock);
-        boolean deadlinePassed = offer.getResponseDeadline() != null
-                && now.isAfter(offer.getResponseDeadline());
-        boolean startDatePassed = offer.getExpectedStartDate() != null
-                && offer.getExpectedStartDate().isBefore(now.toLocalDate());
-        return deadlinePassed || startDatePassed;
+        return offer.isResponseExpiredAt(LocalDateTime.now(clock));
     }
 
-    private CandidateOfferResponse toResponse(OfferProposal offer) {
+    private record ResponsePresentation(boolean canRespond, String label, String badge) {}
+
+    /** Dùng cùng điều kiện với UPDATE: thư mời còn hạn và hồ sơ vẫn đang Offered. */
+    private ResponsePresentation responsePresentation(OfferProposal offer) {
         String status = offer.getOfferStatus();
-        boolean expired = isExpired(offer);
-        boolean canRespond = SENT.equals(status) && !expired;
-        String label = expired ? "Đã quá hạn phản hồi" : statusLabel(status);
-        String badge = expired ? "badge--neutral" : statusBadge(status);
+        if (isExpired(offer)) {
+            return new ResponsePresentation(false, "Đã quá hạn phản hồi", "badge--neutral");
+        }
+        boolean sent = SENT.equals(status);
+        boolean applicationOffered = offer.getApplication() != null
+                && "Offered".equals(offer.getApplication().getApplicationStatus());
+        if (sent && !applicationOffered) {
+            return new ResponsePresentation(false, "Thư mời không còn nhận phản hồi", "badge--neutral");
+        }
+        return new ResponsePresentation(sent && applicationOffered, statusLabel(status), statusBadge(status));
+    }
+
+    /**
+     * Tạo nhãn và quyền bấm cho UI; hết hạn chỉ đổi nhãn/ẩn thao tác, không ghi OfferStatus=Expired.
+     */
+    private CandidateOfferResponse toResponse(OfferProposal offer) {
+        ResponsePresentation presentation = responsePresentation(offer);
 
         return new CandidateOfferResponse(
                 offer.getOfferId(),
@@ -182,9 +219,9 @@ public class CandidateOfferServiceImpl implements CandidateOfferService {
                 offer.getExpectedStartDate(),
                 offer.getWorkLocation(),
                 offer.getBenefitsPackage(),
-                label,
-                badge,
-                canRespond,
+                presentation.label(),
+                presentation.badge(),
+                presentation.canRespond(),
                 offer.getResponsePeriodDays(),
                 offer.getResponseDeadline());
     }
@@ -207,10 +244,7 @@ public class CandidateOfferServiceImpl implements CandidateOfferService {
 
     private CandidateOfferDetailResponse toDetailResponse(OfferProposal offer) {
         String status = offer.getOfferStatus();
-        boolean expired = isExpired(offer);
-        boolean canRespond = SENT.equals(status) && !expired;
-        String label = expired ? "Đã quá hạn phản hồi" : statusLabel(status);
-        String badge = expired ? "badge--neutral" : statusBadge(status);
+        ResponsePresentation presentation = responsePresentation(offer);
 
         var app = offer.getApplication();
         var posting = app != null ? app.getJobPosting() : null;
@@ -229,10 +263,7 @@ public class CandidateOfferServiceImpl implements CandidateOfferService {
                     .intValue();
         }
 
-        // Thử việc của yêu cầu là chữ tự do ("2 tháng", "60 ngày"...); chưa có thì mặc định 60 ngày
-        String probDuration = (requisition != null && requisition.getProbationPeriod() != null)
-                ? requisition.getProbationPeriod()
-                : "60 ngày";
+        String probDuration = offer.getProbationDays() + " ngày";
 
         String deptName = department != null ? department.getDepartmentName() : "Toàn công ty";
         String reportTo = (department != null && department.getDepartmentName() != null)
@@ -278,9 +309,9 @@ public class CandidateOfferServiceImpl implements CandidateOfferService {
                 offer.getWorkLocation(),
                 offer.getBenefitsPackage(),
                 status,
-                label,
-                badge,
-                canRespond,
+                presentation.label(),
+                presentation.badge(),
+                presentation.canRespond(),
                 proposedBy != null ? proposedBy.getFullName() : "Phòng Tuyển dụng Mộc RMS",
                 proposedBy != null ? proposedBy.getEmail() : "tuyendung@mocrms.com.vn",
                 offer.getDeclineReason(),

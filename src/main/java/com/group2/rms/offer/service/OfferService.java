@@ -13,22 +13,9 @@ import java.util.List;
 public interface OfferService {
 
     /**
-     * Tạo mới OfferProposal áp dụng quy tắc BR-OFF-01 và GBR-14 (GBR-07).
-     *
-     * @param request Dữ liệu đề xuất lương
-     * @return Thông tin OfferProposal đã được tạo
-     */
-    OfferResponse createOfferProposal(CreateOfferRequest request);
-
-    /**
      * Lấy thông tin OfferProposal theo OfferId.
      */
     OfferResponse getOfferById(Integer offerId);
-
-    /**
-     * Lấy OfferProposal theo ApplicationId.
-     */
-    OfferResponse getOfferByApplicationId(Integer applicationId);
 
     /**
      * Lấy danh sách ứng viên đã vượt qua phỏng vấn (Passed) chờ tạo Offer Proposal.
@@ -71,17 +58,12 @@ public interface OfferService {
     Page<OfferResponse> getDirectorOffers(String search, String status, String timeSort, Pageable pageable);
 
     /**
-     * Lấy lịch sử quyết định của Director hiện tại
-     */
-    Page<OfferResponse> getDirectorOfferHistory(Pageable pageable);
-
-    /**
      * Lấy thông tin chi tiết gói Offer (Group A + B + History).
      */
     OfferDetailResponse getOfferDetailForHr(Integer id);
 
     /**
-     * HR cập nhật Offer Proposal (chỉ khi Draft hoặc Rejected).
+     * HR cập nhật Offer Proposal (chỉ khi Draft).
      */
     OfferResponse updateOfferByHr(Integer id, UpdateOfferRequest dto);
 

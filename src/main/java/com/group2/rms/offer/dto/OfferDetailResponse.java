@@ -34,6 +34,7 @@ public class OfferDetailResponse {
     private String benefitsPackage;
     private Integer responsePeriodDays;
     private LocalDateTime responseDeadline;
+    private boolean responseExpired;
     private Integer proposedById;
     private String proposedByName;
     private LocalDateTime createdAt;

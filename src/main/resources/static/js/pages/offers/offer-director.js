@@ -2,7 +2,6 @@
  * offer-director.js — Phân hệ Offer Management (SWP391 — Mộc RMS Group 2)
  * Trách nhiệm luồng nghiệp vụ của Giám đốc (Director Approval Workflows):
  * - SECTION A: Hộp thoại phê duyệt / từ chối nhanh (Quick Decision Modal trên List & Director List)
- * - SECTION B: Bộ lọc, tìm kiếm và phân trang danh sách đề xuất của Giám đốc (Director List)
  * - SECTION C: Các thao tác ra quyết định trên màn hình xem chi tiết (Offer Detail Decision)
  * - SECTION D: Xuất khẩu toàn cục ra window để tương thích thuộc tính inline của Thymeleaf
  */
@@ -12,9 +11,8 @@
 // =========================================================================
 
 /**
- * Mở hộp thoại phê duyệt hoặc từ chối nhanh đề xuất nhận việc
- * @param {number|string} offerId
- * @param {'APPROVE'|'REJECT'} actionType
+ * Mở modal quyết định nhanh trên danh sách; APPROVE cho nhận xét tùy chọn, REJECT bắt buộc lý do.
+ * Mở modal chưa cập nhật database; chỉ khi xác nhận mới gửi request tới controller.
  */
 function openDirectorDecisionModal(offerId, actionType) {
     const modal = document.getElementById('directorDecisionModal');
@@ -29,7 +27,6 @@ function openDirectorDecisionModal(offerId, actionType) {
     if (commentsEl) {
         commentsEl.value = '';
         commentsEl.classList.remove('is-invalid');
-        commentsEl.style.borderColor = '';
     }
 
     const counterEl = document.getElementById('directorDecisionCommentCount');
@@ -39,7 +36,7 @@ function openDirectorDecisionModal(offerId, actionType) {
 
     const errorEl = document.getElementById('directorDecisionCommentsError');
     if (errorEl) {
-        errorEl.style.display = 'none';
+        errorEl.hidden = true;
     }
 
     const subnoteEl = document.getElementById('directorDecisionSubnote');
@@ -49,11 +46,11 @@ function openDirectorDecisionModal(offerId, actionType) {
 
     if (actionType === 'APPROVE') {
         if (titleEl) {
-            titleEl.innerHTML = '<span class="ofw-modal-title-icon ofw-modal-title-icon--success"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg></span> Phê Duyệt Đề Xuất Nhận Việc';
+            titleEl.innerHTML = '<span class="ofw-modal-title-icon ofw-modal-title-icon--success"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg></span> Phê duyệt thư mời nhận việc?';
         }
         if (btnSubmit) {
-            btnSubmit.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="ofw-btn-icon-inline"><polyline points="20 6 9 17 4 12"/></svg> Phê Duyệt';
-            btnSubmit.className = 'btn btn-primary';
+            btnSubmit.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="ofw-btn-icon-inline"><polyline points="20 6 9 17 4 12"/></svg> Xác nhận phê duyệt';
+            btnSubmit.className = 'btn btn--primary';
         }
         if (labelEl) {
             labelEl.innerHTML = 'Phản hồi / Ghi chú của Giám đốc (Không bắt buộc)';
@@ -63,30 +60,29 @@ function openDirectorDecisionModal(offerId, actionType) {
             commentsEl.removeAttribute('required');
         }
         if (subnoteEl) {
-            subnoteEl.style.display = 'none';
+            subnoteEl.hidden = true;
         }
     } else {
         if (titleEl) {
-            titleEl.innerHTML = '<span class="ofw-modal-title-icon ofw-modal-title-icon--danger"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></span> Từ Chối Đề Xuất Nhận Việc';
+            titleEl.innerHTML = '<span class="ofw-modal-title-icon ofw-modal-title-icon--danger"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></span> Từ chối thư mời nhận việc?';
         }
         if (btnSubmit) {
-            btnSubmit.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="ofw-btn-icon-inline"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Từ Chối';
-            btnSubmit.className = 'btn btn-danger';
+            btnSubmit.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="ofw-btn-icon-inline"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Xác nhận từ chối';
+            btnSubmit.className = 'btn btn--danger';
         }
         if (labelEl) {
-            labelEl.innerHTML = 'Lý do từ chối của Giám đốc <span class="text-danger" style="color: #dc2626; font-weight: bold;">*</span>';
+            labelEl.innerHTML = 'Lý do từ chối của Giám đốc <span class="ofw-required-mark">*</span>';
         }
         if (commentsEl) {
-            commentsEl.placeholder = 'Vui lòng nhập lý do từ chối đề xuất nhận việc (bắt buộc)...';
+            commentsEl.placeholder = 'Vui lòng nhập lý do từ chối thư mời nhận việc (bắt buộc)...';
             commentsEl.setAttribute('required', 'required');
         }
         if (subnoteEl) {
-            subnoteEl.style.display = 'block';
+            subnoteEl.hidden = false;
         }
     }
 
-    modal.classList.add('active');
-    modal.style.display = 'flex';
+    if (!modal.open) modal.showModal();
 }
 
 /**
@@ -100,10 +96,9 @@ function handleDirectorDecisionCommentInput(textarea) {
     }
     if (textarea.value.trim().length > 0) {
         textarea.classList.remove('is-invalid');
-        textarea.style.borderColor = '';
         const errorEl = document.getElementById('directorDecisionCommentsError');
         if (errorEl) {
-            errorEl.style.display = 'none';
+            errorEl.hidden = true;
         }
     }
 }
@@ -114,17 +109,15 @@ function handleDirectorDecisionCommentInput(textarea) {
 function closeDirectorDecisionModal() {
     const modal = document.getElementById('directorDecisionModal');
     if (modal) {
-        modal.classList.remove('active');
-        modal.style.display = 'none';
+        modal.close();
     }
     const commentsEl = document.getElementById('directorDecisionComments');
     if (commentsEl) {
         commentsEl.classList.remove('is-invalid');
-        commentsEl.style.borderColor = '';
     }
     const errorEl = document.getElementById('directorDecisionCommentsError');
     if (errorEl) {
-        errorEl.style.display = 'none';
+        errorEl.hidden = true;
     }
 }
 
@@ -145,12 +138,11 @@ function submitDirectorDecision() {
     if (actionType === 'REJECT' && !comments) {
         if (commentsEl) {
             commentsEl.classList.add('is-invalid');
-            commentsEl.style.borderColor = '#dc2626';
             commentsEl.focus();
         }
         const errorEl = document.getElementById('directorDecisionCommentsError');
         if (errorEl) {
-            errorEl.style.display = 'flex';
+            errorEl.hidden = false;
         }
         if (typeof showFlashToast === 'function') {
             showFlashToast('Vui lòng nhập lý do từ chối vào ô nhận xét trước khi tiếp tục.', 'warning');
@@ -159,116 +151,24 @@ function submitDirectorDecision() {
     }
 
     const btn = document.getElementById('btnSubmitDecision');
-    const originalBtnHtml = btn ? btn.innerHTML : 'Xác nhận';
+    if (btn?.disabled) return;
+    const originalBtnHtml = btn?.innerHTML;
     if (btn) {
         btn.disabled = true;
         btn.innerHTML = '<span class="ofw-spinner-sm" aria-hidden="true"></span> Đang xử lý...';
     }
 
-    const csrf = (typeof getCsrfInfo === 'function') ? getCsrfInfo() : { token: '', header: 'X-CSRF-TOKEN' };
     const url = actionType === 'APPROVE' ? `/offers/${offerId}/approve` : `/offers/${offerId}/reject`;
 
-    fetch(url, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': csrf.token || ''
-        },
-        body: JSON.stringify({ comments: comments })
-    })
-        .then(async (res) => {
-            let data;
-            try { data = await res.json(); } catch (e) { }
-            if (!res.ok) {
-                throw new Error(data?.message || 'Có lỗi xảy ra khi xử lý quyết định.');
-            }
-            return data;
-        })
-        .then(data => {
-            closeDirectorDecisionModal();
-            try {
-                sessionStorage.setItem(OFFER_PENDING_TOAST_KEY, JSON.stringify({
-                    message: data.message || 'Xử lý quyết định thành công!',
-                    type: 'success'
-                }));
-            } catch (e) { }
-            window.location.reload();
-        })
-        .catch(err => {
-            if (typeof showFlashToast === 'function') {
-                showFlashToast(err.message, 'error');
-            }
-            if (btn) {
-                btn.disabled = false;
-                btn.innerHTML = originalBtnHtml;
-            }
-        });
-}
-
-// =========================================================================
-// SECTION B — DIRECTOR LIST WORKSPACE (Screen 30D List Filters & Tabs)
-// =========================================================================
-
-/**
- * Áp dụng tiêu chí tìm kiếm và sắp xếp cho danh sách Giám đốc
- */
-function applyDirectorFilters() {
-    const searchEl = document.getElementById('searchInput');
-    const timeSortEl = document.getElementById('timeSortFilter');
-    const statusEl = document.getElementById('statusFilter');
-
-    const search = searchEl ? searchEl.value.trim() : '';
-    const timeSort = timeSortEl ? timeSortEl.value : 'DEFAULT';
-    const statusVal = statusEl ? statusEl.value : '';
-
-    const urlParams = new URLSearchParams(window.location.search);
-    let targetStatus = statusVal;
-    if (!targetStatus || targetStatus === '') {
-        targetStatus = urlParams.get('status') === 'HISTORY' ? 'HISTORY' : 'Pending_Director';
-    }
-
-    let url = '/offers?status=' + encodeURIComponent(targetStatus);
-    if (search !== '') {
-        url += '&search=' + encodeURIComponent(search);
-    }
-    if (timeSort && timeSort !== 'DEFAULT') {
-        url += '&timeSort=' + encodeURIComponent(timeSort);
-    }
-    url += '&page=0';
-
-    window.location.href = url;
-}
-
-/**
- * Chuyển tab trạng thái trên danh sách của Giám đốc (Pending_Director / Approved / Rejected)
- */
-function filterDirectorOffersByStatus(status) {
-    const statusFilter = document.getElementById('statusFilter');
-    if (statusFilter) {
-        statusFilter.value = status;
-    }
-    const searchEl = document.getElementById('searchInput');
-    const timeSortEl = document.getElementById('timeSortFilter');
-
-    const search = searchEl ? searchEl.value.trim() : '';
-    const timeSort = timeSortEl ? timeSortEl.value : 'DEFAULT';
-
-    let url = '/offers?status=' + encodeURIComponent(status);
-    if (search !== '') {
-        url += '&search=' + encodeURIComponent(search);
-    }
-    if (timeSort && timeSort !== 'DEFAULT') {
-        url += '&timeSort=' + encodeURIComponent(timeSort);
-    }
-    url += '&page=0';
-
-    window.location.href = url;
-}
-
-function clearDirectorSearch() {
-    const searchEl = document.getElementById('searchInput');
-    if (searchEl) searchEl.value = '';
-    applyDirectorFilters();
+    executeDirectorDecisionApi(url, comments, () => {
+        closeDirectorDecisionModal();
+        window.location.reload();
+    }).finally(() => {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = originalBtnHtml;
+        }
+    });
 }
 
 // =========================================================================
@@ -286,7 +186,7 @@ function updateDirectorDetailCommentCounter(el) {
     if (el.value.trim().length > 0) {
         el.classList.remove('is-invalid');
         const errorMsg = document.getElementById('directorCommentsError');
-        if (errorMsg) errorMsg.style.display = 'none';
+        if (errorMsg) errorMsg.hidden = true;
     }
 }
 
@@ -302,36 +202,24 @@ function scrollToDirectorDecision() {
     }
 }
 
-function showDirectorRejectReasonRequiredAlert(onCloseCallback) {
+function showDirectorRejectReasonRequiredAlert() {
     const commentsEl = document.getElementById('directorDetailComments') || document.getElementById('rejectReasonInput');
     if (commentsEl) {
         commentsEl.classList.add('is-invalid');
         commentsEl.focus();
         const errorMsg = document.getElementById('directorCommentsError');
-        if (errorMsg) errorMsg.style.display = 'flex';
+        if (errorMsg) errorMsg.hidden = false;
     }
     if (typeof showFlashToast === 'function') {
         showFlashToast('Vui lòng nhập lý do từ chối vào ô nhận xét trước khi tiếp tục.', 'warning');
     }
-    if (typeof onCloseCallback === 'function') onCloseCallback();
 }
 
 let pendingDirectorDecision = null;
 
-function showDirectorRejectConfirmModal(offerId, onConfirmCallback) {
-    const rejectDialog = document.getElementById('directorRejectConfirmDialog');
-    if (rejectDialog && typeof rejectDialog.showModal === 'function') {
-        const descEl = document.getElementById('directorRejectDialogDesc');
-        if (descEl) descEl.innerText = `Bạn có chắc chắn muốn từ chối đề xuất #${offerId}?`;
-        window._tempRejectConfirmCallback = onConfirmCallback;
-        rejectDialog.showModal();
-    } else {
-        if (typeof onConfirmCallback === 'function') onConfirmCallback();
-    }
-}
-
 /**
- * Điều phối khi Giám đốc bấm nút Duyệt hoặc Từ chối trên màn hình chi tiết
+ * Luồng từ trang chi tiết: lấy nhận xét và lưu quyết định đang chờ, sau đó mở hộp thoại xác nhận.
+ * Chưa gọi API ở nhánh có dialog cho đến khi người dùng bấm xác nhận.
  */
 function submitDirectorDecisionFromScreen(offerId, action) {
     if (!offerId) return;
@@ -353,17 +241,17 @@ function submitDirectorDecisionFromScreen(offerId, action) {
         const rejectDialog = document.getElementById('directorRejectConfirmDialog');
         if (rejectDialog && typeof rejectDialog.showModal === 'function') {
             const descEl = document.getElementById('directorRejectDialogDesc');
-            if (descEl) descEl.innerText = `Bạn có chắc chắn muốn từ chối đề xuất #${offerId}?`;
+            if (descEl) descEl.innerText = `Bạn có chắc chắn muốn từ chối thư mời #${offerId}?`;
             rejectDialog.showModal();
         } else {
-            executeDirectorDecisionApi(offerId, `/offers/${offerId}/reject`, comments);
+            executeDirectorDecisionApi(`/offers/${offerId}/reject`, comments);
         }
     } else if (action === 'APPROVE') {
         const approveDialog = document.getElementById('directorApproveConfirmDialog');
         if (approveDialog && typeof approveDialog.showModal === 'function') {
             approveDialog.showModal();
         } else {
-            executeDirectorDecisionApi(offerId, `/offers/${offerId}/approve`, comments || 'Phê duyệt trực tiếp');
+            executeDirectorDecisionApi(`/offers/${offerId}/approve`, comments || 'Phê duyệt trực tiếp');
         }
     }
 }
@@ -374,7 +262,7 @@ function confirmDirectorApproveAction() {
 
     if (pendingDirectorDecision && pendingDirectorDecision.offerId) {
         const { offerId, comments } = pendingDirectorDecision;
-        executeDirectorDecisionApi(offerId, `/offers/${offerId}/approve`, comments || 'Phê duyệt trực tiếp');
+        executeDirectorDecisionApi(`/offers/${offerId}/approve`, comments || 'Phê duyệt trực tiếp');
     }
 }
 
@@ -382,80 +270,24 @@ function confirmDirectorRejectAction() {
     const rejectDialog = document.getElementById('directorRejectConfirmDialog');
     if (rejectDialog) rejectDialog.close();
 
-    if (typeof window._tempRejectConfirmCallback === 'function') {
-        const cb = window._tempRejectConfirmCallback;
-        window._tempRejectConfirmCallback = null;
-        cb();
-        return;
-    }
-
     if (pendingDirectorDecision && pendingDirectorDecision.offerId) {
         const { offerId, comments } = pendingDirectorDecision;
-        executeDirectorDecisionApi(offerId, `/offers/${offerId}/reject`, comments);
+        executeDirectorDecisionApi(`/offers/${offerId}/reject`, comments);
     }
 }
 
 /**
- * Gửi yêu cầu AJAX POST JSON tới /offers/{id}/approve hoặc /offers/{id}/reject
+ * Gọi API duyệt/từ chối dùng helper JSON chung; thành công lưu toast rồi chạy callback điều hướng.
+ * Danh sách truyền callback reload; trang chi tiết mặc định trở về /offers.
  */
-function executeDirectorDecisionApi(offerId, url, comments) {
-    const csrf = (typeof getCsrfInfo === 'function') ? getCsrfInfo() : { token: '', header: 'X-CSRF-TOKEN' };
-    const headers = {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-    };
-    if (csrf.token) {
-        headers[csrf.header] = csrf.token;
+async function executeDirectorDecisionApi(url, comments, onSuccess = () => { window.location.href = '/offers'; }) {
+    try {
+        const data = await offerRequest(url, { body: { comments } });
+        queueOfferToast(data.message || 'Xử lý quyết định thành công!');
+        onSuccess();
+    } catch (error) {
+        showFlashToast(error.message, 'error');
     }
-
-    fetch(url, {
-        method: 'POST',
-        headers: headers,
-        body: JSON.stringify({ comments: comments })
-    })
-        .then(async res => {
-            let data = null;
-            try {
-                const contentType = res.headers.get('content-type');
-                if (contentType && contentType.includes('application/json')) {
-                    data = await res.json();
-                }
-            } catch (e) {
-                console.warn('Cannot parse JSON response from director decision API:', e);
-            }
-
-            if (res.ok && data?.success) {
-                try {
-                    sessionStorage.setItem(OFFER_PENDING_TOAST_KEY, JSON.stringify({
-                        message: data.message || 'Xử lý quyết định thành công!',
-                        type: 'success'
-                    }));
-                } catch (e) { }
-                window.location.href = '/offers';
-            } else if (res.status === 403) {
-                if (typeof showFlashToast === 'function') {
-                    showFlashToast('Bạn không có quyền thực hiện thao tác này hoặc phiên làm việc đã hết hạn.', 'warning');
-                }
-            } else if (data && data.message) {
-                if (typeof showFlashToast === 'function') {
-                    showFlashToast(data.message, 'error');
-                }
-            } else if (res.status >= 500) {
-                if (typeof showFlashToast === 'function') {
-                    showFlashToast(`Máy chủ phản hồi mã lỗi ${res.status}. Vui lòng thử lại sau hoặc liên hệ quản trị viên.`, 'error');
-                }
-            } else {
-                if (typeof showFlashToast === 'function') {
-                    showFlashToast('Thao tác không thành công. Mã trạng thái: ' + res.status, 'error');
-                }
-            }
-        })
-        .catch(err => {
-            console.error('Director decision network error:', err);
-            if (typeof showFlashToast === 'function') {
-                showFlashToast('Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại kết nối mạng.', 'error');
-            }
-        });
 }
 
 // =========================================================================
@@ -466,14 +298,9 @@ window.handleDirectorDecisionCommentInput = handleDirectorDecisionCommentInput;
 window.closeDirectorDecisionModal = closeDirectorDecisionModal;
 window.submitDirectorDecision = submitDirectorDecision;
 
-window.applyDirectorFilters = applyDirectorFilters;
-window.filterDirectorOffersByStatus = filterDirectorOffersByStatus;
-window.clearDirectorSearch = clearDirectorSearch;
 
 window.updateDirectorDetailCommentCounter = updateDirectorDetailCommentCounter;
 window.scrollToDirectorDecision = scrollToDirectorDecision;
-window.showDirectorRejectReasonRequiredAlert = showDirectorRejectReasonRequiredAlert;
-window.showDirectorRejectConfirmModal = showDirectorRejectConfirmModal;
 window.submitDirectorDecisionFromScreen = submitDirectorDecisionFromScreen;
 window.confirmDirectorApproveAction = confirmDirectorApproveAction;
 window.confirmDirectorRejectAction = confirmDirectorRejectAction;

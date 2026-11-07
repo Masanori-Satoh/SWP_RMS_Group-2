@@ -87,21 +87,6 @@ class OfferIntegrationTests {
         }
     }
 
-    @ParameterizedTest
-    @CsvSource({"hr_specialist,HR,Draft,true,false", "director_user,DIRECTOR,Draft,false,false",
-            "hr_specialist,HR,Director_Approved,false,true", "director_user,DIRECTOR,Director_Approved,false,false"})
-    void detailOnlyShowsManagementActionsToHr(String username, String role, String offerStatus,
-                                               boolean deleteVisible, boolean sendVisible) throws Exception {
-        when(offerService.getOfferDetailForHr(1)).thenReturn(OfferDetailResponse.builder()
-                .offerId(1).offerStatus(offerStatus).candidateName("Test candidate")
-                .proposedSalary(new BigDecimal("20000000")).probationSalary(new BigDecimal("18000000"))
-                .expectedStartDate(LocalDate.now().plusDays(14)).build());
-        String html = mvc.perform(get("/offers/1").with(user(username).roles(role)))
-                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
-        org.junit.jupiter.api.Assertions.assertEquals(deleteVisible, html.contains("action=\"/offers/1/delete\""));
-        org.junit.jupiter.api.Assertions.assertEquals(sendVisible, html.contains("onclick=\"confirmSendOffer(1)\""));
-    }
-
     @Autowired
     private MockMvc mvc;
 
@@ -149,6 +134,24 @@ class OfferIntegrationTests {
         User adminUser = User.builder().userId(4).username("admin").accountStatus("Active")
                 .role(Role.builder().roleName("System Admin").build()).build();
         when(userRepository.findByUsernameIgnoreCase("admin")).thenReturn(Optional.of(adminUser));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"HR", "DIRECTOR"})
+    void expiredOffersRenderWithTheirOwnFilterAndLabel(String role) throws Exception {
+        var page = new PageImpl<>(List.of(OfferResponse.builder().offerId(42)
+                .offerStatus("Expired").responseExpired(true).offeredPositionTitle("Test position").build()));
+        when(offerService.getAllOffersForHr(any(), any(), any(), any())).thenReturn(page);
+        when(offerService.getDirectorOffers(any(), any(), any(), any())).thenReturn(page);
+        when(offerService.getOfferStats()).thenReturn(Map.of());
+        when(offerService.getDirectorOfferStats()).thenReturn(Map.of());
+        when(offerService.getDirectorStatusCounts()).thenReturn(Map.of("Expired", 1L));
+        mvc.perform(get("/offers").param("status", "Expired")
+                        .with(user("HR".equals(role) ? "hr_specialist" : "director_user").roles(role)))
+                .andExpect(status().isOk())
+                .andExpect(model().attribute("currentStatus", "Expired"))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("value=\"Expired\"")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Đã quá hạn phản hồi")));
     }
 
     @Test
@@ -231,6 +234,33 @@ class OfferIntegrationTests {
                 .andExpect(model().attributeExists("detail"));
     }
 
+    @ParameterizedTest
+    @CsvSource({
+            "hr_specialist, HR, Draft, true, false",
+            "hr_specialist, HR, Director_Approved, false, true",
+            "hr_specialist, HR, Sent_Candidate, false, false",
+            "director_user, DIRECTOR, Draft, false, false",
+            "director_user, DIRECTOR, Director_Approved, false, false"
+    })
+    void sharedConfirmationsKeepRoleAndStatusVisibility(String username, String role, String offerStatus,
+                                                       boolean deleteVisible, boolean sendVisible) throws Exception {
+        when(offerService.getOfferDetailForHr(1)).thenReturn(OfferDetailResponse.builder()
+                .offerId(1).offerStatus(offerStatus).candidateName("Candidate")
+                .proposedSalary(new BigDecimal("30000000")).probationSalary(new BigDecimal("25500000"))
+                .expectedStartDate(LocalDate.now().plusDays(14)).build());
+
+        String html = mvc.perform(get("/offers/1").with(user(username).roles(role)))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        org.junit.jupiter.api.Assertions.assertEquals(deleteVisible, html.contains("id=\"deleteOfferDialog\""));
+        org.junit.jupiter.api.Assertions.assertEquals(sendVisible, html.contains("id=\"sendOfferConfirmDialog\""));
+        if (deleteVisible) {
+            org.junit.jupiter.api.Assertions.assertTrue(html.contains("form=\"deleteOfferForm\""));
+        }
+        if (sendVisible) {
+            org.junit.jupiter.api.Assertions.assertTrue(html.contains("aria-labelledby=\"sendOfferTitle\""));
+        }
+    }
+
     @Test
     @DisplayName("IT-04 POST /offers/{id}/delete: Xóa bản thảo Offer điều hướng về /offers")
     @WithMockUser(username = "hr_specialist", roles = {"HR"})
@@ -244,9 +274,84 @@ class OfferIntegrationTests {
     @DisplayName("IT-05 POST /offers/{id}/send: Phát hành Offer Letter điều hướng về /offers/{id}")
     @WithMockUser(username = "hr_specialist", roles = {"HR"})
     void it05_sendOffer_redirectsToDetail() throws Exception {
+        when(offerService.sendOfferToCandidate(1)).thenReturn(OfferResponse.builder()
+                .emailStatus(OfferResponse.EmailStatus.NOT_SENT).build());
         mvc.perform(post("/offers/1/send").with(csrf()))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/offers/1"));
+                .andExpect(redirectedUrl("/offers/1"))
+                .andExpect(flash().attribute("offerWarningMessage",
+                        "Đã phát hành thư mời nhận việc trên cổng ứng viên. Chưa gửi được email thông báo."));
+    }
+
+    @Test
+    @WithMockUser(username = "hr_specialist", roles = {"HR"})
+    void hrListDoesNotLoadTheCreateFormCandidateDropdown() throws Exception {
+        when(offerService.getAllOffersForHr(any(), any(), any(), any()))
+                .thenReturn(new PageImpl<>(List.of()));
+        when(offerService.getOfferStats()).thenReturn(Map.of());
+        mvc.perform(get("/offers")).andExpect(status().isOk())
+                .andExpect(view().name("offers/list"));
+        org.mockito.Mockito.verify(offerService, org.mockito.Mockito.never()).getPassedCandidatesForOffer();
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"/offers/create", "/offers/1/edit"})
+    @WithMockUser(username = "hr_specialist", roles = {"HR"})
+    void createAndEditUseOnlyFormSubmissions(String path) throws Exception {
+        mvc.perform(post(path).with(csrf()).contentType(MediaType.APPLICATION_JSON).content("{}"))
+                .andExpect(status().isUnsupportedMediaType());
+        org.mockito.Mockito.verifyNoInteractions(offerService);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"SELECTED", "FILTERED", "ALL"})
+    @WithMockUser(username = "hr_specialist", roles = {"HR"})
+    void exportAcceptsPayloadGeneratedByTheActualFrontend(String scope) throws Exception {
+        String script = """
+                const fs = require('fs'), vm = require('vm');
+                const scope = process.argv[1];
+                const context = {
+                  window: {}, console,
+                  document: {
+                    readyState: 'loading', addEventListener() {},
+                    getElementById(id) {
+                      return {searchInput: {value: 'Java'}, statusFilter: {value: 'Sent_Candidate'},
+                              timeSortFilter: {value: 'LATEST'}}[id] || null;
+                    },
+                    querySelector() { return {value: scope}; },
+                    querySelectorAll(selector) {
+                      if (selector.includes('exportCol')) return [{value: 'offerId'}];
+                      if (selector.includes('offer-row-checkbox')) return [{value: '42'}];
+                      return [];
+                    }
+                  },
+                  fetch(url, options) {
+                    process.stdout.write(options.body);
+                    return Promise.reject(new Error('Dry run: no network request'));
+                  }
+                };
+                vm.createContext(context);
+                vm.runInContext(fs.readFileSync('src/main/resources/static/js/pages/offers/offer-hr.js', 'utf8'), context);
+                context.executeOfferExport();
+                """;
+        Process process = new ProcessBuilder("node", "-e", script, scope).redirectErrorStream(true).start();
+        try {
+            org.junit.jupiter.api.Assertions.assertTrue(process.waitFor(10, java.util.concurrent.TimeUnit.SECONDS));
+            String payload = new String(process.getInputStream().readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+            org.junit.jupiter.api.Assertions.assertEquals(0, process.exitValue(), payload);
+            OfferExportRequest expected = new OfferExportRequest(OfferExportScope.valueOf(scope),
+                    "SELECTED".equals(scope) ? List.of(42) : List.of(),
+                    "FILTERED".equals(scope) ? new OfferExportFilterRequest("Java", "Sent_Candidate", "LATEST") : null,
+                    List.of("offerId"));
+            org.junit.jupiter.api.Assertions.assertEquals(expected, objectMapper.readValue(payload, OfferExportRequest.class));
+            when(offerExportService.exportOffersToExcel(any(), any())).thenReturn(new byte[]{1});
+            when(offerExportService.generateExportFilename(any())).thenReturn("offers.xlsx");
+            mvc.perform(post("/offers/export").with(csrf()).contentType(MediaType.APPLICATION_JSON).content(payload))
+                    .andExpect(status().isOk());
+            org.mockito.Mockito.verify(offerExportService).exportOffersToExcel(eq(expected), eq("hr_specialist"));
+        } finally {
+            process.destroyForcibly();
+        }
     }
 
     @Test
@@ -311,61 +416,7 @@ class OfferIntegrationTests {
                 .andExpect(status().is3xxRedirection());
     }
 
-    @Test
-    @DisplayName("IT-10 POST /offers/create (JSON): Modal tạo Offer thành công trả về HTTP 201 Created")
-    @WithMockUser(username = "hr_specialist", roles = {"HR"})
-    void it10_createOfferJson_success() throws Exception {
-        CreateOfferRequest req = new CreateOfferRequest();
-        req.setApplicationId(10);
-        req.setOfferedPositionTitle("Senior Java Dev");
-        req.setProposedSalary(new BigDecimal("25000000"));
-        req.setProbationSalary(new BigDecimal("21250000"));
-        req.setProbationDays(60);
-        req.setExpectedStartDate(LocalDate.now().plusDays(7));
-        req.setWorkLocation("Trụ sở Mộc RMS");
-        req.setIsDraft(false);
 
-        OfferResponse mockCreated = OfferResponse.builder()
-                .offerId(99)
-                .candidateName("Trần Văn B")
-                .offerStatus("Pending_Director")
-                .build();
-        when(offerService.createOfferByHr(any())).thenReturn(mockCreated);
-
-        mvc.perform(post("/offers/create")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(req)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.offerId").value(99));
-    }
-
-    @Test
-    @DisplayName("IT-11 POST /offers/create (JSON): Lỗi nghiệp vụ từ chối tạo offer trả về HTTP 400")
-    @WithMockUser(username = "hr_specialist", roles = {"HR"})
-    void it11_createOfferJson_businessError() throws Exception {
-        CreateOfferRequest req = new CreateOfferRequest();
-        req.setApplicationId(10);
-        req.setOfferedPositionTitle("Senior Java Dev");
-        req.setProposedSalary(new BigDecimal("25000000"));
-        req.setProbationSalary(new BigDecimal("21250000"));
-        req.setProbationDays(60);
-        req.setExpectedStartDate(LocalDate.now().plusDays(7));
-        req.setWorkLocation("Trụ sở Mộc RMS");
-        req.setIsDraft(false);
-
-        when(offerService.createOfferByHr(any()))
-                .thenThrow(new com.group2.rms.core.exception.BaseBusinessException("Ứng viên đã có offer", "ERR_ACTIVE_OFFER"));
-
-        mvc.perform(post("/offers/create")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(req)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.message").value("Ứng viên đã có offer"));
-    }
 
     @Test
     @DisplayName("IT-12 GET /offers/{id} (JSON): Pop-up chi tiết Offer trả về JSON ApiResponse và HTTP 200")
@@ -390,34 +441,6 @@ class OfferIntegrationTests {
                 .andExpect(jsonPath("$.data.candidateName").value("Nguyễn Văn A"));
     }
 
-    @Test
-    @DisplayName("IT-13 PUT /offers/{id} (JSON): Pop-up chỉnh sửa Offer thành công trả về HTTP 200")
-    @WithMockUser(username = "hr_specialist", roles = {"HR"})
-    void it13_updateOfferJson_success() throws Exception {
-        UpdateOfferRequest req = new UpdateOfferRequest();
-        req.setOfferedPositionTitle("Lead Engineer");
-        req.setProposedSalary(new BigDecimal("35000000"));
-        req.setProbationSalary(new BigDecimal("29750000"));
-        req.setProbationDays(60);
-        req.setExpectedStartDate(LocalDate.now().plusDays(10));
-        req.setWorkLocation("Trụ sở Mộc RMS");
-        req.setIsDraft(true);
-
-        OfferResponse mockUpdated = OfferResponse.builder()
-                .offerId(1)
-                .offeredPositionTitle("Lead Engineer")
-                .offerStatus("Draft")
-                .build();
-        when(offerService.updateOfferByHr(any(), any())).thenReturn(mockUpdated);
-
-        mvc.perform(put("/offers/1")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(req)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.offeredPositionTitle").value("Lead Engineer"));
-    }
 
     @Test
     @DisplayName("IT-14 DELETE /offers/{id} (JSON): Pop-up xóa bản thảo Offer thành công trả về HTTP 200")
@@ -433,6 +456,7 @@ class OfferIntegrationTests {
     @WithMockUser(username = "hr_specialist", roles = {"HR"})
     void it15_sendOfferJson_success() throws Exception {
         OfferResponse mockSent = OfferResponse.builder()
+                .emailStatus(OfferResponse.EmailStatus.SENT)
                 .offerId(1)
                 .offerStatus("Sent_Candidate")
                 .build();
@@ -443,7 +467,8 @@ class OfferIntegrationTests {
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.offerStatus").value("Sent_Candidate"));
+                .andExpect(jsonPath("$.data.offerStatus").value("Sent_Candidate"))
+                .andExpect(jsonPath("$.data.emailStatus").value("SENT"));
     }
     @Test
     @DisplayName("IT-16 POST /offers/{id}/approve (JSON): Director phê duyệt Offer thành công trả về HTTP 200")
@@ -530,7 +555,7 @@ class OfferIntegrationTests {
     @DisplayName("IT-21 POST /offers/create: Nhập sai định dạng ngày hoặc năm ngoài phạm vi (như 20165) trả về thông báo lỗi ngắn gọn tiếng Việt, không chứa ngoại lệ kỹ thuật Java")
     @WithMockUser(username = "hr_specialist", roles = {"HR"})
     void it21_createOfferWithInvalidDate_showsShortConciseErrorMessage() throws Exception {
-        mvc.perform(post("/offers/create")
+        mvc.perform(post("/offers/create").contentType(MediaType.APPLICATION_FORM_URLENCODED)
                         .with(csrf())
                         .param("applicationId", "1")
                         .param("offeredPositionTitle", "Java Dev")
@@ -549,6 +574,54 @@ class OfferIntegrationTests {
     // =========================================================================
     // EXTENDED INTEGRATION TESTS (English)
     // =========================================================================
+
+    @Test
+    @WithMockUser(username = "hr_specialist", roles = {"HR"})
+    void unexpectedCreateErrorDoesNotExposeTechnicalDetailsAndPreservesTheForm() throws Exception {
+        when(offerService.createOfferByHr(any())).thenThrow(new IllegalStateException("SQL_INTERNAL_DETAILS"));
+        when(offerService.getPassedCandidatesForOffer()).thenReturn(List.of());
+        mvc.perform(post("/offers/create").with(csrf())
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                        .param("applicationId", "1").param("offeredPositionTitle", "Java Dev")
+                        .param("proposedSalary", "20000000").param("probationSalary", "18000000")
+                        .param("probationDays", "60").param("responsePeriodDays", "5")
+                        .param("workLocation", "Hà Nội")
+                        .param("expectedStartDate", LocalDate.now().plusDays(14).toString()))
+                .andExpect(status().isOk()).andExpect(view().name("offers/form"))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Vui lòng thử lại hoặc liên hệ bộ phận hỗ trợ.")))
+                .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("SQL_INTERNAL_DETAILS"))))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Java Dev")));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"validation", "business", "technical"})
+    @WithMockUser(username = "hr_specialist", roles = {"HR"})
+    void createErrorsKeepTheLockedCandidateAndEnteredData(String errorKind) throws Exception {
+        var candidate = com.group2.rms.offer.dto.PassedCandidateResponse.builder()
+                .applicationId(1).candidateName("Nguyễn Văn A").appliedPosition("Java")
+                .departmentName("IT").finalDecision("Passed").build();
+        when(offerService.getPassedCandidatesForOffer()).thenReturn(List.of(candidate));
+        if (!"validation".equals(errorKind)) {
+            RuntimeException error = "business".equals(errorKind)
+                    ? new com.group2.rms.offer.exception.OfferValidationException("Hồ sơ đã được cập nhật.")
+                    : new IllegalStateException("INTERNAL_FAILURE");
+            when(offerService.createOfferByHr(any())).thenThrow(error);
+        }
+        mvc.perform(post("/offers/create").with(csrf())
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                        .param("isLockedCandidate", "true").param("applicationId", "1")
+                        .param("offeredPositionTitle", "Entered title")
+                        .param("proposedSalary", "validation".equals(errorKind) ? "0" : "20000000")
+                        .param("probationSalary", "18000000").param("probationDays", "60")
+                        .param("responsePeriodDays", "5").param("workLocation", "Entered office")
+                        .param("expectedStartDate", LocalDate.now().plusDays(14).toString()))
+                .andExpect(status().isOk()).andExpect(view().name("offers/form"))
+                .andExpect(model().attributeHasErrors("offerDto"))
+                .andExpect(model().attribute("isLockedCandidate", true))
+                .andExpect(model().attribute("fixedCandidate", candidate))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Entered title")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Entered office")));
+    }
 
     @Test
     @DisplayName("IT-22 POST /offers/{id}/approve: Candidate role calling director approve endpoint is forbidden (HTTP 403)")
@@ -623,4 +696,20 @@ class OfferIntegrationTests {
                 .andExpect(model().attribute("isLockedCandidate", false))
                 .andExpect(model().attributeExists("offerDto", "detail"));
     }
+
+    @ParameterizedTest
+    @CsvSource({"hr_specialist,HR,Draft,true,false", "director_user,DIRECTOR,Draft,false,false",
+            "hr_specialist,HR,Director_Approved,false,true", "director_user,DIRECTOR,Director_Approved,false,false"})
+    void detailOnlyShowsManagementActionsToHr(String username, String role, String offerStatus,
+                                               boolean deleteVisible, boolean sendVisible) throws Exception {
+        when(offerService.getOfferDetailForHr(1)).thenReturn(OfferDetailResponse.builder()
+                .offerId(1).offerStatus(offerStatus).candidateName("Test candidate")
+                .proposedSalary(new BigDecimal("20000000")).probationSalary(new BigDecimal("18000000"))
+                .expectedStartDate(LocalDate.now().plusDays(14)).build());
+        String html = mvc.perform(get("/offers/1").with(user(username).roles(role)))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        org.junit.jupiter.api.Assertions.assertEquals(deleteVisible, html.contains("action=\"/offers/1/delete\""));
+        org.junit.jupiter.api.Assertions.assertEquals(sendVisible, html.contains("onclick=\"confirmSendOffer(1)\""));
+    }
+
 }
