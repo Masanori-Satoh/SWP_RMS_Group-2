@@ -51,6 +51,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
 
 @Slf4j
 @Service
@@ -301,13 +302,7 @@ public class OfferServiceImpl implements OfferService {
         OfferProposal saved = offerProposalRepository.save(offerToSave);
 
         if ("Pending_Director".equals(status)) {
-            if (systemNotificationService != null) {
-                try {
-                    systemNotificationService.notifyOfferPendingDirector(saved, proposedBy);
-                } catch (Exception e) {
-                    log.warn("Lỗi khi gửi in-app notification Director về Offer mới ID {}: {}", saved.getOfferId(), e.getMessage());
-                }
-            }
+            notifyAfterCommit(saved, current -> systemNotificationService.notifyOfferPendingDirector(current, proposedBy));
         }
 
         return mapToResponse(saved);
@@ -512,14 +507,8 @@ public class OfferServiceImpl implements OfferService {
         OfferProposal saved = offerProposalRepository.save(offer);
 
         if ("Pending_Director".equals(offer.getOfferStatus())) {
-            if (systemNotificationService != null) {
-                try {
-                    User currentHr = currentUserService.requireUser();
-                    systemNotificationService.notifyOfferPendingDirector(saved, currentHr != null ? currentHr : saved.getProposedBy());
-                } catch (Exception e) {
-                    log.warn("Lỗi khi gửi in-app notification Director về Offer cập nhật ID {}: {}", saved.getOfferId(), e.getMessage());
-                }
-            }
+            notifyAfterCommit(saved, current -> systemNotificationService.notifyOfferPendingDirector(
+                    current, currentUserService.requireUser()));
         }
 
         return mapToResponse(saved);
@@ -619,13 +608,7 @@ public class OfferServiceImpl implements OfferService {
             }
         }
 
-        if (systemNotificationService != null) {
-            try {
-                systemNotificationService.notifyOfferLetterSent(saved);
-            } catch (Exception e) {
-                log.warn("Lỗi khi gửi in-app notification thư mời nhận việc cho ứng viên Offer ID {}: {}", saved.getOfferId(), e.getMessage());
-            }
-        }
+        notifyAfterCommit(saved, current -> systemNotificationService.notifyOfferLetterSent(current));
 
         OfferResponse response = mapToResponse(saved);
         response.setEmailStatus(EmailStatus.NOT_SENT);
@@ -803,30 +786,36 @@ public class OfferServiceImpl implements OfferService {
         OfferProposal decided = findActiveOffer(id);
         offerApprovalRepository.save(new OfferApproval(decided, director, approved ? "Approved" : "Rejected", comments));
 
-        if (TransactionSynchronizationManager.isActualTransactionActive()) {
-            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-                @Override
-                public void afterCommit() {
-                    try {
-                        // Quyết định đã commit; mở giao dịch mới để ghi thông báo mà không kéo dài giao dịch duyệt.
-                        TransactionTemplate notificationTransaction = new TransactionTemplate(transactionManager);
-                        notificationTransaction.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
-                        notificationTransaction.executeWithoutResult(transaction ->
-                                systemNotificationService.notifyDirectorDecisionOnOffer(
-                                        findActiveOffer(id), director, approved, comments));
-                    } catch (Exception e) {
-                        log.warn("Lỗi khi gửi thông báo quyết định cho Offer ID {}", id, e);
-                    }
+        notifyAfterCommit(decided, current ->
+                systemNotificationService.notifyDirectorDecisionOnOffer(current, director, approved, comments));
+        return mapToResponse(decided);
+    }
+
+    /** Chỉ ghi thông báo sau khi nghiệp vụ đã lưu chắc chắn; lỗi thông báo không rollback Offer. */
+    private void notifyAfterCommit(OfferProposal offer, Consumer<OfferProposal> notification) {
+        if (systemNotificationService == null || notification == null) return;
+        boolean transactional = TransactionSynchronizationManager.isActualTransactionActive();
+        Runnable send = () -> {
+            try {
+                if (transactional) {
+                    TransactionTemplate isolated = new TransactionTemplate(transactionManager);
+                    isolated.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+                    // Đọc lại trong giao dịch mới để các quan hệ LAZY dùng bởi notification còn truy cập được.
+                    isolated.executeWithoutResult(status -> notification.accept(findActiveOffer(offer.getOfferId())));
+                } else {
+                    notification.accept(offer);
                 }
+            } catch (Exception error) {
+                log.warn("Không thể ghi thông báo cho thư mời ID {}", offer.getOfferId(), error);
+            }
+        };
+        if (transactional) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override public void afterCommit() { send.run(); }
             });
         } else {
-            try {
-                systemNotificationService.notifyDirectorDecisionOnOffer(decided, director, approved, comments);
-            } catch (Exception e) {
-                log.warn("Lỗi khi gửi thông báo quyết định cho Offer ID {}", id, e);
-            }
+            send.run();
         }
-        return mapToResponse(decided);
     }
 
     private OfferValidationException decisionConflict() {

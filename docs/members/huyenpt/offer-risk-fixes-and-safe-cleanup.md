@@ -14,3 +14,14 @@ Ngày 07/11/2026. Nền: `64f44a8c`. Chỉ sửa module Offer, không sửa nghi
 Kiểm tra: 258 Maven test, 20 Node test đạt; git diff --check đạt. Chưa kiểm tra trực quan bằng trình duyệt.
 
 Log không commit: scratch/offer-risk-phase1-20261107.log và scratch/offer-risk-phase1-js-20261107.log.
+
+## Phase 2: cách ly lỗi notification
+
+- Đã tái hiện trên SQL Server riêng: participant REQUIRED của notification lỗi và đánh dấu rollback-only; code cũ bắt exception nhưng commit phát hành vẫn ném UnexpectedRollbackException.
+- Gom bốn chỗ tạo thông báo (tạo, sửa, phát hành, quyết định Director) vào notifyAfterCommit. Chỉ gọi sau commit và mở giao dịch REQUIRES_NEW, đọc lại Offer để truy cập LAZY an toàn.
+- Lỗi thông báo được ghi log, không rollback nội dung thư mời hoặc trạng thái hồ sơ đã lưu. Không sửa NotificationService chung và không đổi hợp đồng email/flash.
+- Test SQL chứng minh phát hành và Application Offered còn nguyên khi participant notification rollback. Test unit chứng minh thông báo chưa chạy trước commit và giao dịch riêng được yêu cầu.
+- 40/40 SQL test và 132/132 OfferServiceTests đạt, không bỏ qua. Log trước sửa có một lỗi được chủ ý tái hiện; log sau sửa đã đạt.
+- Chỉ dùng database tạm OfferRegression_651bda581e3b42d4ad10c199cbaf3235, đã xóa và xác minh không còn. Không đổi database ứng dụng, schema, migration hoặc thông tin đăng nhập.
+
+Log không commit: scratch/offer-risk-notification-before-20261107.log, scratch/offer-risk-notification-after-20261107.log, scratch/offer-risk-notification-unit-20261107.log.

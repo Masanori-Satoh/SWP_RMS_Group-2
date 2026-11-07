@@ -91,10 +91,15 @@ class OfferServiceTests {
     private Clock clock;
 
     @Mock
+    private org.springframework.transaction.PlatformTransactionManager transactionManager;
+
+    @Mock
     private com.group2.rms.core.security.CurrentUserService currentUserService;
 
     @org.junit.jupiter.api.BeforeEach
     void useApplicationClock() {
+        lenient().when(transactionManager.getTransaction(any())).thenAnswer(invocation ->
+                new org.springframework.transaction.support.SimpleTransactionStatus());
         lenient().when(currentUserService.requireUser()).thenAnswer(invocation ->
                 new com.group2.rms.core.security.CurrentUserService(userRepository).requireUser());
         lenient().when(offerProposalRepository.findActiveForUpdate(anyInt())).thenAnswer(invocation ->
@@ -1111,12 +1116,16 @@ class OfferServiceTests {
         try {
             response = offerService.sendOfferToCandidate(1);
             verifyNoInteractions(offerMailSender);
+            verifyNoInteractions(systemNotificationService);
             TransactionSynchronizationManager.getSynchronizations().forEach(sync -> sync.afterCommit());
         } finally {
             TransactionSynchronizationManager.clearSynchronization();
             TransactionSynchronizationManager.setActualTransactionActive(false);
         }
         assertEquals(EmailStatus.SENT, response.getEmailStatus());
+        verify(systemNotificationService).notifyOfferLetterSent(offer);
+        verify(transactionManager).getTransaction(org.mockito.ArgumentMatchers.argThat(definition ->
+                definition.getPropagationBehavior() == org.springframework.transaction.TransactionDefinition.PROPAGATION_REQUIRES_NEW));
 
         assertNotNull(response);
         assertEquals("Sent_Candidate", response.getOfferStatus());

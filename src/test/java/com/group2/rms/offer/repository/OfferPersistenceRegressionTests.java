@@ -81,6 +81,33 @@ class OfferPersistenceRegressionTests {
     @MockitoBean com.group2.rms.notification.service.NotificationService notificationService;
     private OfferProposal offer;
 
+    /** Lỗi ghi notification không được rollback thư mời đã phát hành hoặc trạng thái hồ sơ. */
+    @Test
+    void notificationRollbackDoesNotUndoPublication() {
+        offer.setOfferStatus("Director_Approved");
+        Integer id = offer.getOfferId();
+        Integer applicationId = offer.getApplication().getApplicationId();
+        entityManager.flush();
+        org.mockito.Mockito.doAnswer(invocation -> {
+            // Mô phỏng một participant REQUIRED lỗi như service notification thực tế.
+            new TransactionTemplate(transactionManager).executeWithoutResult(status -> {
+                status.setRollbackOnly();
+                throw new IllegalStateException("Synthetic notification persistence failure");
+            });
+            return null;
+        }).when(notificationService).notifyOfferLetterSent(any());
+
+        service.sendOfferToCandidate(id);
+        TestTransaction.flagForCommit();
+        TestTransaction.end();
+
+        new TransactionTemplate(transactionManager).executeWithoutResult(status -> {
+            assertEquals("Sent_Candidate", entityManager.find(OfferProposal.class, id).getOfferStatus());
+            assertEquals("Offered", entityManager.find(Application.class, applicationId).getApplicationStatus());
+        });
+        verify(notificationService).notifyOfferLetterSent(any());
+    }
+
     /** Kiểm tra hợp đồng Offer–Application trên SQL thật, cả trước và sau khi chốt hết hạn. */
     @ParameterizedTest
     @org.junit.jupiter.params.provider.CsvSource(value = {
