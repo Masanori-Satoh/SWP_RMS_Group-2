@@ -186,17 +186,18 @@ class TalentPoolReadUnitTests {
         verify(poolCandidates, times(1)).searchPotential("Java", 5, 20, PageRequest.of(2, 50));
     }
 
-    @Test
-    @DisplayName("POOL-TalentPoolReadUnitTests-06 | Tìm kiếm keyword long và giới hạn 50 dòng")
-    void search_long_normalizesKeywordAndLimitsPage() {
-        // Given: Tìm kiếm keyword long và giới hạn 50 dòng.
+    @ParameterizedTest
+    @CsvSource({"149, 149", "150, 150", "151, 150"})
+    @DisplayName("POOL-TalentPoolReadUnitTests-06 | Tìm kiếm tối đa 150 ký tự và 50 dòng mỗi trang")
+    void search_long_normalizesKeywordAndLimitsPage(int inputLength, int expectedLength) {
         when(currentUser.requireUser()).thenReturn(hr);
-        when(poolCandidates.searchPotential("x".repeat(100), 5, 20, PageRequest.of(2, 50))).thenReturn(Page.empty());
-        // When: Gọi nghiệp vụ cần kiểm tra với dữ liệu đã chuẩn bị.
-        var result = service.search(new TalentPoolSearch("x".repeat(101), 5, 20), PageRequest.of(2, 100));
-        // Then: Kiểm tra kết quả và số lần gọi repository theo đúng ca này.
+        String expectedKeyword = "x".repeat(expectedLength);
+        when(poolCandidates.searchPotential(expectedKeyword, 5, 20, PageRequest.of(2, 50))).thenReturn(Page.empty());
+
+        var result = service.search(new TalentPoolSearch("x".repeat(inputLength), 5, 20), PageRequest.of(2, 100));
+
         assertEquals(0, result.getTotalElements());
-        verify(poolCandidates, times(1)).searchPotential("x".repeat(100), 5, 20, PageRequest.of(2, 50));
+        verify(poolCandidates, times(1)).searchPotential(expectedKeyword, 5, 20, PageRequest.of(2, 50));
     }
 
     @Test
