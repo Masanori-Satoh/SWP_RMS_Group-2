@@ -24,6 +24,8 @@ import com.group2.rms.user.entity.*;
 import com.group2.rms.user.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.data.domain.*;
 import org.springframework.security.access.AccessDeniedException;
@@ -212,6 +214,23 @@ class TalentPoolReadUnitTests {
         assertEquals("a@example.test", row.email());
         assertEquals("0900000000", row.phoneNumber());
         assertEquals(new TalentPoolCvResponse(100, "Java Developer", at), row.cvs().getFirst());
+    }
+
+    @ParameterizedTest
+    @CsvSource({"9999, 9999", "2147483647, 107374182"})
+    void search_outOfRangeLoadsLastPageWithSameFilters(int requestedPage, int safePage) {
+        when(currentUser.requireUser()).thenReturn(hr);
+        PageRequest lastPage = PageRequest.of(2, 20);
+        when(poolCandidates.searchPotential("Java", 5, 20, PageRequest.of(safePage, 20)))
+                .thenReturn(new PageImpl<>(List.of(), PageRequest.of(safePage, 20), 41));
+        when(poolCandidates.searchPotential("Java", 5, 20, lastPage))
+                .thenReturn(new PageImpl<>(List.of(candidate), lastPage, 41));
+
+        var result = service.search(new TalentPoolSearch(" Java ", 5, 20), PageRequest.of(requestedPage, 20));
+
+        assertEquals(2, result.getNumber());
+        assertEquals(3, result.getTotalPages());
+        assertEquals(8, result.getContent().getFirst().candidateId());
     }
 
     @Test

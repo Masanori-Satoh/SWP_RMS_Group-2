@@ -241,6 +241,7 @@ public class JobPostingController {
         model.addAttribute("posting", detail);
         model.addAttribute("bodyClass", "jp-detail-page");
         if (detail.talentPoolVisible()) {
+            model.addAttribute("suggestedCandidateCount", talentPoolService.suggestedCandidateCount(id));
             model.addAttribute("hrRecommendationCount", talentPoolService.pendingRecommendationCount(id));
         }
         return "job-postings/detail";

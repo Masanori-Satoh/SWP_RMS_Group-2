@@ -85,10 +85,16 @@ public class TalentPoolService {
         // check if keyword is exceed max
         if (keyword != null && keyword.length() > 100)
             keyword = keyword.substring(0, 100);
-        // get match potential candidate
-        return poolCandidates.searchPotential(keyword, filter.markedBy(), filter.sourceJobId(),
-                PageRequest.of(Math.max(0, page.getPageNumber()), Math.min(50, page.getPageSize())))
-                .map(this::candidateResponse);
+        int pageSize = Math.min(50, page.getPageSize());
+        // JPA expects an int offset, so even a large page number must fit after multiplication.
+        int pageNumber = Math.min(Math.max(0, page.getPageNumber()), Integer.MAX_VALUE / pageSize);
+        PageRequest request = PageRequest.of(pageNumber, pageSize);
+        Page<Candidate> result = poolCandidates.searchPotential(keyword, filter.markedBy(), filter.sourceJobId(), request);
+        if (result.getTotalPages() > 0 && result.getNumber() >= result.getTotalPages()) {
+            result = poolCandidates.searchPotential(keyword, filter.markedBy(), filter.sourceJobId(),
+                    request.withPage(result.getTotalPages() - 1));
+        }
+        return result.map(this::candidateResponse);
     }
 
     public Map<Integer, String> authors() {
@@ -503,6 +509,11 @@ public class TalentPoolService {
     public long pendingRecommendationCount(Integer jobId) {
         requireTarget(actor(), job(jobId, false));
         return poolApplications.countPendingHrRecommendationsForJob(jobId);
+    }
+
+    public long suggestedCandidateCount(Integer jobId) {
+        requireTarget(actor(), job(jobId, false));
+        return poolApplications.countSuggestedCandidatesForJob(jobId);
     }
 
     public List<TalentPoolRecommendationResponse> recommendations(Integer jobId) {

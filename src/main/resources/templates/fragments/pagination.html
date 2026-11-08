@@ -8,18 +8,20 @@
 </nav>
 
 <nav th:fragment="pager(currPage, totPages, totElements, baseUrl)"
-    th:if="${totPages != null and (totPages > 1 or totElements > 0)}"
+     th:if="${totPages != null and totPages > 0 and (totPages > 1 or totElements > 0)}"
+     th:with="lastPage=${totPages - 1}, windowPage=${T(java.lang.Math).max(0, T(java.lang.Math).min(currPage, lastPage))}"
      class="pagination-wrapper"
      aria-label="Phân trang">
     <div class="pagination-info">
-        <span>Trang <strong th:text="${currPage + 1}">1</strong>/<strong th:text="${totPages}">1</strong></span>
+        <span th:if="${currPage == windowPage}">Trang <strong th:text="${currPage + 1}">1</strong>/<strong th:text="${totPages}">1</strong></span>
+        <span th:unless="${currPage == windowPage}">Trang yêu cầu không tồn tại.</span>
         <span>(<span th:text="${totElements}">0</span> bản ghi)</span>
     </div>
     <div class="pagination-controls">
         <ul class="pagination-list"
-            th:with="startPage=${T(java.lang.Math).max(0, currPage - 2)}, endPage=${T(java.lang.Math).min(totPages - 1, currPage + 2)}">
+            th:with="startPage=${T(java.lang.Math).max(0, windowPage - 2)}, endPage=${windowPage + T(java.lang.Math).min(2, lastPage - windowPage)}, previousPage=${currPage > lastPage ? lastPage : windowPage - 1}">
             <li class="page-item">
-                <a th:if="${currPage > 0}" th:href="@{${baseUrl}(page=${currPage - 1})}" class="page-link">&lsaquo;</a>
+                <a th:if="${currPage > 0}" th:href="@{${baseUrl}(page=${previousPage})}" class="page-link">&lsaquo;</a>
                 <span th:unless="${currPage > 0}" class="page-link disabled">&lsaquo;</span>
             </li>
             <li class="page-item" th:each="i : ${#numbers.sequence(startPage, endPage)}">
@@ -27,8 +29,8 @@
                 <span th:if="${i == currPage}" th:text="${i + 1}" class="page-link active" aria-current="page">1</span>
             </li>
             <li class="page-item">
-                <a th:if="${currPage < totPages - 1}" th:href="@{${baseUrl}(page=${currPage + 1})}" class="page-link">&rsaquo;</a>
-                <span th:unless="${currPage < totPages - 1}" class="page-link disabled">&rsaquo;</span>
+                <a th:if="${currPage < lastPage}" th:href="@{${baseUrl}(page=${currPage < 0 ? 0 : currPage + 1})}" class="page-link">&rsaquo;</a>
+                <span th:unless="${currPage < lastPage}" class="page-link disabled">&rsaquo;</span>
             </li>
         </ul>
     </div>

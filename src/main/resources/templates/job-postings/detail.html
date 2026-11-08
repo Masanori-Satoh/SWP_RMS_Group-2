@@ -197,8 +197,10 @@
             <section class="card jpd-sec adw-surface" th:if="${p.talentPoolVisible}">
                 <h3>Ứng viên tiềm năng</h3>
                 <div class="jpd-links">
-                    <a class="btn btn--secondary btn--sm" th:href="@{/talent-pool/jobs/{id}/suggestions(id=${p.jobPostingId})}"
-                       th:text="${p.suggestionsLinkLabel}">Ứng viên tiềm năng</a>
+                    <a class="btn btn--secondary btn--sm" th:href="@{/talent-pool/jobs/{id}/suggestions(id=${p.jobPostingId})}">
+                        <span th:text="${p.suggestionsLinkLabel}">Ứng viên tiềm năng</span>
+                        <span class="badge badge--neutral" th:text="${suggestedCandidateCount}">0</span>
+                    </a>
                     <a class="btn btn--secondary btn--sm" th:href="@{/talent-pool/jobs/{id}/recommendations(id=${p.jobPostingId})}">
                         <span th:text="${p.recommendationsLinkLabel}">Gợi ý từ HR</span>
                         <span th:if="${hrRecommendationCount != null and hrRecommendationCount > 0}" class="badge badge--warning"
