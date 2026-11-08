@@ -4,6 +4,7 @@ import com.group2.rms.core.exception.ResourceNotFoundException;
 import com.group2.rms.user.dto.*;
 import com.group2.rms.user.entity.*;
 import com.group2.rms.user.repository.UserRepository;
+import com.group2.rms.user.exception.AccountFieldException;
 import com.group2.rms.user.exception.AvatarUploadException;
 import com.group2.rms.user.validator.AvatarFileValidator;
 import org.junit.jupiter.api.AfterEach;
@@ -11,7 +12,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
@@ -102,6 +107,64 @@ class UserProfileServiceTests {
         verify(users, times(1)).save(user);
         verify(encoder, times(0)).encode(any());
         verify(encoder, times(0)).matches(any(), any());
+    }
+
+    @Test
+    void candidateCanUpdateEmailAndKeepsUsernameAndPassword() {
+        user.setRole(Role.builder().roleName("Candidate").build());
+        when(users.findByUsernameIgnoreCase("employee")).thenReturn(Optional.of(user));
+
+        service.updateCandidateProfile("employee", new UpdateProfileRequest("New Name", null), "new@example.test");
+
+        assertEquals("new@example.test", user.getEmail());
+        assertEquals("employee", user.getUsername());
+        assertEquals("old-hash", user.getPasswordHash());
+        verify(users).saveAndFlush(user);
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void candidateCannotUseAnotherAccountsLoginIdentifier(boolean emailCollision) {
+        user.setRole(Role.builder().roleName("Candidate").build());
+        String taken = "taken@example.test";
+        var other = Optional.of(User.builder().userId(8).build());
+        when(users.findByUsernameIgnoreCase("employee")).thenReturn(Optional.of(user));
+        if (emailCollision) {
+            when(users.findByEmailIgnoreCase(taken)).thenReturn(other);
+        } else {
+            when(users.findByUsernameIgnoreCase(taken)).thenReturn(other);
+        }
+
+        var error = assertThrows(AccountFieldException.class, () -> service.updateCandidateProfile(
+                "employee", new UpdateProfileRequest("New Name", null), taken));
+
+        assertEquals("email", error.getField());
+        assertEquals("employee@example.test", user.getEmail());
+        assertEquals("Employee", user.getFullName());
+        verify(users, never()).saveAndFlush(any());
+    }
+
+    @Test
+    void concurrentDuplicateEmailIsReportedAsFieldError() {
+        user.setRole(Role.builder().roleName("Candidate").build());
+        when(users.findByUsernameIgnoreCase("employee")).thenReturn(Optional.of(user));
+        when(users.saveAndFlush(user)).thenThrow(new DataIntegrityViolationException("UQ_User_Email"));
+
+        var error = assertThrows(AccountFieldException.class, () -> service.updateCandidateProfile(
+                "employee", new UpdateProfileRequest("New Name", null), "new@example.test"));
+
+        assertEquals("email", error.getField());
+    }
+
+    @Test
+    void internalAccountCannotUseCandidateEmailUpdate() {
+        when(users.findByUsernameIgnoreCase("employee")).thenReturn(Optional.of(user));
+
+        assertThrows(AccessDeniedException.class, () -> service.updateCandidateProfile(
+                "employee", new UpdateProfileRequest("New Name", null), "new@example.test"));
+
+        assertEquals("employee@example.test", user.getEmail());
+        verify(users, never()).saveAndFlush(any());
     }
 
     @Test

@@ -6,8 +6,11 @@ import com.group2.rms.user.dto.UpdateProfileRequest;
 import com.group2.rms.user.dto.UserAvatarResponse;
 import com.group2.rms.user.dto.UserProfileResponse;
 import com.group2.rms.user.entity.User;
+import com.group2.rms.user.exception.AccountFieldException;
 import com.group2.rms.user.repository.UserRepository;
 import com.group2.rms.user.validator.AvatarFileValidator;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -57,11 +60,40 @@ public class UserProfileService {
 
     @Transactional
     public void updateProfile(String username, UpdateProfileRequest request) {
+        updateProfile(findByUsername(username), request, null);
+    }
+
+    @Transactional
+    public void updateCandidateProfile(String username, UpdateProfileRequest request, String email) {
         User user = findByUsername(username);
+        if (!"Candidate".equals(user.getRole().getRoleName())) {
+            throw new AccessDeniedException("Chỉ ứng viên được đổi email tại Hồ sơ cá nhân.");
+        }
+        updateProfile(user, request, email);
+    }
+
+    private void updateProfile(User user, UpdateProfileRequest request, String email) {
+        boolean emailChanged = email != null && !email.equals(user.getEmail());
+        if (emailChanged) {
+            AccountManagementService.checkEmailAvailable(users, email, user.getUserId());
+        }
         var before = UserAuditLogger.userSnapshot(user);
         user.setFullName(request.fullName().trim());
         user.setPhoneNumber(blankToNull(request.phoneNumber()));
-        users.save(user);
+        if (emailChanged) {
+            user.setEmail(email);
+            try {
+                users.saveAndFlush(user);
+            } catch (DataIntegrityViolationException e) {
+                if (e.getMostSpecificCause().getMessage() != null
+                        && e.getMostSpecificCause().getMessage().contains("UQ_User_Email")) {
+                    throw new AccountFieldException("email", "Email này đã được sử dụng.");
+                }
+                throw e;
+            }
+        } else {
+            users.save(user);
+        }
         audit.changes("User", user.getUserId(), before, UserAuditLogger.userSnapshot(user));
     }
 

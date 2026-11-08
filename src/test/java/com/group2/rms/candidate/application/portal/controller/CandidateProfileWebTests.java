@@ -10,6 +10,7 @@ import com.group2.rms.user.dto.UpdateProfileRequest;
 import com.group2.rms.user.dto.UserProfileResponse;
 import com.group2.rms.user.entity.Role;
 import com.group2.rms.user.entity.User;
+import com.group2.rms.user.exception.AccountFieldException;
 import com.group2.rms.user.exception.AvatarUploadException;
 import com.group2.rms.user.repository.UserRepository;
 import com.group2.rms.user.service.UserProfileService;
@@ -90,6 +91,9 @@ class CandidateProfileWebTests {
                 .andExpect(content().string(containsString("name=\"address\" value=\"Số 1 L")))
                 .andExpect(content().string(containsString("https://linkedin.com/in/an")))
                 .andExpect(content().string(containsString("name=\"avatarFile\"")))
+                .andExpect(content().string(containsString("name=\"email\" value=\"an.vo@example.test\"")))
+                .andExpect(content().string(not(containsString("name=\"username\""))))
+                .andExpect(content().string(not(containsString("Liên hệ Quản trị viên để thay đổi"))))
                 .andExpect(content().string(containsString("action=\"/portal/profile/update\"")))
                 .andExpect(content().string(not(containsString("CandidateSource"))))
                 .andExpect(content().string(not(containsString("Tiềm năng"))))
@@ -113,7 +117,8 @@ class CandidateProfileWebTests {
 
     @Test
     void validSaveUpdatesBothPartsAndRedirects() throws Exception {
-        mvc.perform(save().param("dateOfBirth", "1999-04-12").param("gender", "Nữ"))
+        mvc.perform(save().param("dateOfBirth", "1999-04-12").param("gender", "Nữ")
+                        .param("email", "  new@example.test  ").param("username", "forged"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/portal/profile"))
                 .andExpect(flash().attribute("successMessage", "Đã lưu hồ sơ."));
@@ -122,9 +127,33 @@ class CandidateProfileWebTests {
         ArgumentCaptor<CandidateDetailsRequest> details = ArgumentCaptor.forClass(CandidateDetailsRequest.class);
         verify(candidateProfiles).update(eq("an.vo"), account.capture(), details.capture());
         assertEquals("Võ Thành An", account.getValue().fullName());
+        assertEquals("new@example.test", details.getValue().email());
         assertEquals(LocalDate.of(1999, 4, 12), details.getValue().dateOfBirth());
         assertEquals("Nữ", details.getValue().gender());
         assertEquals("https://linkedin.com/in/an", details.getValue().linkedInUrl());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {" ", "invalid-email"})
+    void blankOrMalformedEmailIsRejected(String email) throws Exception {
+        mvc.perform(save().param("email", email))
+                .andExpect(redirectedUrl("/portal/profile"))
+                .andExpect(flash().attributeExists("org.springframework.validation.BindingResult.detailsRequest"));
+        verifyNoInteractions(candidateProfiles);
+    }
+
+    @Test
+    void duplicateEmailIsShownNextToField() throws Exception {
+        when(candidateProfiles.get("an.vo")).thenReturn(profile());
+        doThrow(new AccountFieldException("email", "Email này đã được sử dụng."))
+                .when(candidateProfiles).update(eq("an.vo"), any(), any());
+
+        var redirect = mvc.perform(save().param("email", "taken@example.test"))
+                .andExpect(redirectedUrl("/portal/profile")).andReturn();
+
+        mvc.perform(get("/portal/profile").with(as("an.vo", "Candidate")).flashAttrs(redirect.getFlashMap()))
+                .andExpect(content().string(containsString("<span id=\"email-error\" class=\"form-error\">Email này đã được sử dụng.</span>")))
+                .andExpect(content().string(containsString("value=\"taken@example.test\"")));
     }
 
     @Test

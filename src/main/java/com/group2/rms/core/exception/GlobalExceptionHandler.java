@@ -11,6 +11,7 @@ import com.group2.rms.auth.dto.VerifyPasswordResetOtpRequest;
 import com.group2.rms.auth.exception.PasswordRecoveryFlowException;
 import com.group2.rms.auth.exception.PasswordRecoveryUnavailableException;
 import com.group2.rms.auth.exception.PasswordResetDeliveryException;
+import com.group2.rms.core.security.PageAccessDeniedHandler;
 import com.group2.rms.user.exception.DepartmentFieldException;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.validation.BeanPropertyBindingResult;
@@ -119,11 +120,14 @@ public class GlobalExceptionHandler {
 
     // 403 forbidden
     @ExceptionHandler(AccessDeniedException.class)
-    @ResponseStatus(HttpStatus.FORBIDDEN)
-    public ModelAndView handleAccessDeniedException(AccessDeniedException ex, HttpServletRequest request) {
+    public ModelAndView handleAccessDeniedException(AccessDeniedException ex, HttpServletRequest request,
+                                                    HttpServletResponse response) {
         log.warn("Access denied for [{}] at [{}]: {}",
                 request.getUserPrincipal() != null ? request.getUserPrincipal().getName() : "Anonymous",
                 request.getRequestURL(), ex.getMessage());
+        if (PageAccessDeniedHandler.redirectIfPage(request, response, ex)) {
+            return new ModelAndView();
+        }
         return ErrorPages.view(HttpStatus.FORBIDDEN, request);
     }
 

@@ -88,7 +88,7 @@ public class AccountManagementService {
         Role role = findRole(command.roleId());
         Department department = findDepartment(command.departmentId(), role, null);
         checkUsernameAvailable(username, null);
-        checkEmailAvailable(email, null);
+        checkEmailAvailable(users, email, null);
         checkSingleHiringManager(role, department, "Active", 0);
         int id = persistAccount(fullName, username, email, phone, role, department,
                 passwordEncoder.encode(command.password()), false);
@@ -118,7 +118,7 @@ public class AccountManagementService {
     @Transactional(readOnly = true)
     public void assertLoginIdentifiersAvailable(String username, String email) {
         checkUsernameAvailable(required(username, "username", "Vui lòng nhập tên đăng nhập."), null);
-        checkEmailAvailable(required(email, "email", "Vui lòng nhập email."), null);
+        checkEmailAvailable(users, required(email, "email", "Vui lòng nhập email."), null);
     }
 
     /**
@@ -131,7 +131,7 @@ public class AccountManagementService {
         Role candidate = roles.findByRoleName("Candidate")
                 .orElseThrow(() -> new IllegalStateException("Candidate role is not configured"));
         checkUsernameAvailable(username, null);
-        checkEmailAvailable(email, null);
+        checkEmailAvailable(users, email, null);
         return persistAccount(fullName, username, email, null, candidate, null, passwordHash, true);
     }
 
@@ -173,7 +173,7 @@ public class AccountManagementService {
         if (command.accountStatus() == null || !STATUSES.contains(command.accountStatus())) {
             throw new AccountFieldException("accountStatus", "Trạng thái tài khoản không hợp lệ.");
         }
-        checkEmailAvailable(email, userId);
+        checkEmailAvailable(users, email, userId);
         checkSingleHiringManager(role, department, command.accountStatus(), userId);
 
         // Keep Department.ManagerId consistent when this account stops being the manager.
@@ -247,7 +247,7 @@ public class AccountManagementService {
         }
     }
 
-    private void checkEmailAvailable(String email, Integer currentId) {
+    static void checkEmailAvailable(UserRepository users, String email, Integer currentId) {
         // check if email or username hasexist
         if (belongsToAnother(users.findByEmailIgnoreCase(email), currentId)
                 || belongsToAnother(users.findByUsernameIgnoreCase(email), currentId)) {
