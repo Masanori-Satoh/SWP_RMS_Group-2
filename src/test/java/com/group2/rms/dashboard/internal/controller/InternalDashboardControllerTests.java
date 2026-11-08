@@ -21,6 +21,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
@@ -80,6 +81,33 @@ class InternalDashboardControllerTests {
                 .andExpect(view().name("error/403"));
 
         // Assert
+        verifyNoRoleDashboardBuilt();
+    }
+
+    @Test
+    void hrOpeningAdminPageRedirectsButApiAndIframeRequestsStayForbidden() throws Exception {
+        when(users.findByUsernameIgnoreCase(USERNAME)).thenReturn(Optional.of(account("HR", "Active")));
+
+        mvc.perform(get("/rms/admin/candidate-accounts").contextPath("/rms")
+                        .with(loginAs("HR")).accept(MediaType.TEXT_HTML))
+                .andExpect(status().isSeeOther())
+                .andExpect(redirectedUrl("/rms/dashboard/internal"));
+        mvc.perform(get("/admin/api-monitoring/internal/health")
+                        .with(loginAs("HR")).accept(MediaType.TEXT_HTML))
+                .andExpect(status().isForbidden());
+        mvc.perform(get("/admin/candidate-accounts").with(loginAs("HR")).accept(MediaType.TEXT_HTML)
+                        .header("Sec-Fetch-Mode", "navigate").header("Sec-Fetch-Dest", "iframe"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void candidateOpeningInternalDashboardIsRedirectedToTheirOwnApplications() throws Exception {
+        when(users.findByUsernameIgnoreCase(USERNAME)).thenReturn(Optional.of(account("Candidate", "Active")));
+
+        mvc.perform(get(DashboardAccess.INTERNAL_DASHBOARD_URL).with(loginAs("Candidate"))
+                        .accept(MediaType.TEXT_HTML))
+                .andExpect(status().isSeeOther())
+                .andExpect(redirectedUrl(DashboardAccess.CANDIDATE_HOME_URL));
         verifyNoRoleDashboardBuilt();
     }
 

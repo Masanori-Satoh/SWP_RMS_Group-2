@@ -7,8 +7,8 @@
     CANDIDATE/MY-PROFILE.HTML — Hồ sơ cá nhân của ứng viên (/portal/profile, chỉ ứng viên; Q7.1)
     Khung ứng viên của layout/internal (topbar riêng, không sidebar, có footer). Người nội bộ dùng /profile (user/profile.html).
     - Ảnh: form tải file riêng (POST /portal/profile/avatar), JPEG/PNG/WebP ≤ 2 MB; chưa có ảnh thì chữ cái đầu (--avatar-bg).
-    - Thông tin: MỘT form (POST /portal/profile/update) gồm 2 khối th:object: updateRequest (bảng User: họ tên, SĐT)
-      và detailsRequest (bảng Candidate: ngày sinh, giới tính, địa chỉ, LinkedIn, Portfolio).
+    - Thông tin: MỘT form (POST /portal/profile/update) gồm 2 khối th:object: updateRequest (họ tên, SĐT)
+      và detailsRequest (email, ngày sinh, giới tính, địa chỉ, LinkedIn, Portfolio).
       Không hiện CandidateSource, IsPotential (nội bộ). Email, Username chỉ đọc (nhờ Admin sửa).
     - Mật khẩu: hộp thoại gửi JSON tới POST /profile/change-password (dùng chung với người nội bộ).
     JS: js/profile.js (dùng chung với /profile: ô có data-profile-field được theo dõi thay đổi, hỏi lại trước khi lưu).
@@ -86,20 +86,22 @@
             <form id="profileForm" th:action="@{/portal/profile/update}" method="post">
                 <h3 class="profile-section-title">Tài khoản</h3>
                 <div class="profile-grid">
-                    <div class="form-group">
-                        <label class="form-label" for="email">Email</label>
-                        <input class="form-control profile-readonly" id="email" type="email" th:value="${account.email}" disabled>
+                    <div class="form-group" th:object="${detailsRequest}">
+                        <label class="form-label" for="email">Email <span aria-hidden="true">*</span></label>
+                        <input class="form-control" id="email" type="email" th:field="*{email}" data-profile-field
+                               maxlength="150" autocomplete="email" required
+                               th:attr="aria-invalid=${#fields.hasErrors('email')}" aria-describedby="email-error">
+                        <span id="email-error" class="form-error" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></span>
                     </div>
                     <div class="form-group">
                         <label class="form-label" for="username">Tên đăng nhập</label>
-                        <input class="form-control profile-readonly" id="username" type="text" th:value="${account.username}" disabled>
+                        <input class="form-control profile-readonly" id="username" type="text" th:value="${account.username}" readonly>
                     </div>
-                    <p class="form-hint profile-field-full">Liên hệ Quản trị viên để thay đổi Email hoặc Tên đăng nhập.</p>
                 </div>
 
                 <hr class="profile-divider">
 
-                <!-- Hai khối th:object (updateRequest: bảng User; detailsRequest: bảng Candidate) đặt trên từng ô để xếp chung một lưới -->
+                <!-- Hai khối th:object đặt trên từng ô để xếp chung một lưới -->
                 <h3 class="profile-section-title">Thông tin cá nhân</h3>
                 <div class="profile-grid">
                     <div class="form-group profile-field-full" th:object="${updateRequest}">

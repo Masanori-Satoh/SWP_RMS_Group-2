@@ -3,6 +3,7 @@ package com.group2.rms.core.config;
 import com.group2.rms.user.repository.UserRepository;
 import com.group2.rms.core.security.AccountSessionGuardFilter;
 import com.group2.rms.core.security.DatabaseUserDetailsService;
+import com.group2.rms.core.security.PageAccessDeniedHandler;
 import com.group2.rms.core.security.RoleAuthorities;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
@@ -65,6 +66,8 @@ public class SecurityConfig {
                                 .authenticationProvider(provider)
                                 .csrf(csrf -> csrf
                                                 .ignoringRequestMatchers("/api/**"))
+                                .exceptionHandling(exceptions -> exceptions.accessDeniedHandler(
+                                                new PageAccessDeniedHandler()))
                                 // CV viewer: only CV paths may be framed (same origin); every other page keeps
                                 // DENY
                                 .headers(headers -> headers

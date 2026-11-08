@@ -13,9 +13,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Ứng viên tự xem, sửa hồ sơ của mình ({@code /portal/profile}). Phần chung (họ tên, SĐT) đi qua
- * {@link UserProfileService} để chỉ có một nguồn cho mọi vai trò; ở đây chỉ ghi 5 trường của bảng {@code Candidate}.
- * Sửa tự do kể cả khi đang có đơn; không ghi log cũ → mới, chỉ {@code UpdatedAt}.
+ * Ứng viên tự xem, sửa hồ sơ của mình ({@code /portal/profile}). Thay đổi tài khoản đi qua
+ * {@link UserProfileService}; các trường trên bảng {@code Candidate} được lưu trong cùng giao dịch.
  */
 @Service
 @RequiredArgsConstructor
@@ -39,7 +38,7 @@ public class CandidateProfileService {
         if (gender != null && !CandidateDetailsRequest.genderOptions(candidate.getGender()).contains(gender)) {
             throw new CandidateProfileException("gender", "Giới tính không hợp lệ.");
         }
-        userProfiles.updateProfile(username, account);
+        userProfiles.updateCandidateProfile(username, account, details.email());
         candidate.setDateOfBirth(details.dateOfBirth());
         candidate.setGender(gender);
         candidate.setAddress(blankToNull(details.address()));
