@@ -6,6 +6,8 @@ Tài liệu này là lịch sử tóm tắt các thay đổi quan trọng và b�
 
 | Ngày | Tên công việc / Yêu cầu chính | Người thực hiện | Chi tiết thay đổi |
 | --- | --- | --- | --- |
+| **2026-11-08** | Hiện số ứng viên do HM đề xuất trực tiếp hoặc đã duyệt từ HR trên chi tiết từng tin tuyển dụng | LinhDN | [Work log](work_logs/2026-11-08-job-posting-suggested-candidate-count.md) · [Báo cáo](../members/linhdn/2026-11-08-job-posting-suggested-candidate-count.md) |
+| **2026-11-08** | Sửa lỗi tạo hàng loạt nút khi yêu cầu vượt trang cuối và tải trang cuối có dữ liệu trong Talent Pool | LinhDN | [Work log](work_logs/2026-11-08-pagination-out-of-range.md) · [Báo cáo](../members/linhdn/2026-11-08-pagination-out-of-range.md) |
 | **2026-11-07** | Lịch phỏng vấn: gửi email ngầm, tự chuyển "Đã hoàn thành" khi hết giờ, tạo lịch mới thì thay thế lịch chưa bắt đầu của hồ sơ; sửa banner "không có quyền" hiện cả với HR/Director | Đức | [Quyết định, thay đổi và kiểm chứng](work_logs/2026-11-07-interview-async-email-auto-complete-replace.md) |
 | **2026-11-06** | Đối chiếu Application state diagram với code hiện tại: luồng chính khớp; bổ sung nhánh draft bị kết thúc, guard đóng tin/consent/Offer và ngoại lệ kỹ thuật | LinhDN | [Work log](work_logs/2026-11-06-application-state-diagram-code-review.md) · [Báo cáo đối chiếu](../members/linhdn/2026-11-06-application-state-diagram-code-review.md) |
 | **2026-11-06** | Rà soát mâu thuẫn nội bộ SRS trong Authentication, Account/Department, Talent Pool, Admin và Core/Audit Log; gồm diagram, màn hình và message; chưa so với code | LinhDN | [Work log](work_logs/2026-11-06-srs-internal-consistency-review.md) · [12 nhóm lỗi và 14 điểm cần làm rõ](../members/linhdn/2026-11-06-srs-internal-consistency-review.md) |
