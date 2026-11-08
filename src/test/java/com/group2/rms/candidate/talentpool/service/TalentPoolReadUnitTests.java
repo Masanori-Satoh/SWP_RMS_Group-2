@@ -24,6 +24,8 @@ import com.group2.rms.user.entity.*;
 import com.group2.rms.user.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.data.domain.*;
 import org.springframework.security.access.AccessDeniedException;
@@ -184,17 +186,18 @@ class TalentPoolReadUnitTests {
         verify(poolCandidates, times(1)).searchPotential("Java", 5, 20, PageRequest.of(2, 50));
     }
 
-    @Test
-    @DisplayName("POOL-TalentPoolReadUnitTests-06 | Tìm kiếm keyword long và giới hạn 50 dòng")
-    void search_long_normalizesKeywordAndLimitsPage() {
-        // Given: Tìm kiếm keyword long và giới hạn 50 dòng.
+    @ParameterizedTest
+    @CsvSource({"149, 149", "150, 150", "151, 150"})
+    @DisplayName("POOL-TalentPoolReadUnitTests-06 | Tìm kiếm tối đa 150 ký tự và 50 dòng mỗi trang")
+    void search_long_normalizesKeywordAndLimitsPage(int inputLength, int expectedLength) {
         when(currentUser.requireUser()).thenReturn(hr);
-        when(poolCandidates.searchPotential("x".repeat(100), 5, 20, PageRequest.of(2, 50))).thenReturn(Page.empty());
-        // When: Gọi nghiệp vụ cần kiểm tra với dữ liệu đã chuẩn bị.
-        var result = service.search(new TalentPoolSearch("x".repeat(101), 5, 20), PageRequest.of(2, 100));
-        // Then: Kiểm tra kết quả và số lần gọi repository theo đúng ca này.
+        String expectedKeyword = "x".repeat(expectedLength);
+        when(poolCandidates.searchPotential(expectedKeyword, 5, 20, PageRequest.of(2, 50))).thenReturn(Page.empty());
+
+        var result = service.search(new TalentPoolSearch("x".repeat(inputLength), 5, 20), PageRequest.of(2, 100));
+
         assertEquals(0, result.getTotalElements());
-        verify(poolCandidates, times(1)).searchPotential("x".repeat(100), 5, 20, PageRequest.of(2, 50));
+        verify(poolCandidates, times(1)).searchPotential(expectedKeyword, 5, 20, PageRequest.of(2, 50));
     }
 
     @Test
@@ -212,6 +215,23 @@ class TalentPoolReadUnitTests {
         assertEquals("a@example.test", row.email());
         assertEquals("0900000000", row.phoneNumber());
         assertEquals(new TalentPoolCvResponse(100, "Java Developer", at), row.cvs().getFirst());
+    }
+
+    @ParameterizedTest
+    @CsvSource({"9999, 9999", "2147483647, 107374182"})
+    void search_outOfRangeLoadsLastPageWithSameFilters(int requestedPage, int safePage) {
+        when(currentUser.requireUser()).thenReturn(hr);
+        PageRequest lastPage = PageRequest.of(2, 20);
+        when(poolCandidates.searchPotential("Java", 5, 20, PageRequest.of(safePage, 20)))
+                .thenReturn(new PageImpl<>(List.of(), PageRequest.of(safePage, 20), 41));
+        when(poolCandidates.searchPotential("Java", 5, 20, lastPage))
+                .thenReturn(new PageImpl<>(List.of(candidate), lastPage, 41));
+
+        var result = service.search(new TalentPoolSearch(" Java ", 5, 20), PageRequest.of(requestedPage, 20));
+
+        assertEquals(2, result.getNumber());
+        assertEquals(3, result.getTotalPages());
+        assertEquals(8, result.getContent().getFirst().candidateId());
     }
 
     @Test
