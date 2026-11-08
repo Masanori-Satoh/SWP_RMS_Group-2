@@ -9,7 +9,13 @@ import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.access.AccessDeniedHandler;
+import org.springframework.security.web.access.AccessDeniedHandlerImpl;
+import org.springframework.security.web.csrf.CsrfException;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -215,11 +221,35 @@ public class SecurityConfig {
                                                 .logoutUrl("/logout")
                                                 .logoutSuccessUrl("/login?logout")
                                                 .permitAll())
+                                // ducnm bổ sung: phiên đã hết hạn mà người dùng vẫn bấm gửi form -> token CSRF gắn phiên cũ
+                                // không còn hợp lệ. Chưa đăng nhập thì đưa về trang đăng nhập (như AccountSessionGuardFilter)
+                                // thay vì trang 403; đã đăng nhập mà sai token thì giữ nguyên 403.
+                                .exceptionHandling(ex -> ex.accessDeniedHandler(sessionExpiredAwareAccessDeniedHandler()))
                                 .httpBasic(basic -> basic.disable())
                                 // add filter before authorization filter
                                 .addFilterBefore(new AccountSessionGuardFilter(userRepository),
                                                 AuthorizationFilter.class);
 
                 return http.build();
+        }
+
+        static AccessDeniedHandler sessionExpiredAwareAccessDeniedHandler() {
+                AccessDeniedHandlerImpl fallback = new AccessDeniedHandlerImpl();
+                return (request, response, exception) -> {
+                        // Chỉ khi trình duyệt còn gửi mã phiên cũ nhưng phiên đó đã hết hạn trên server; khách chưa
+                        // từng có phiên (form đăng ký, đăng nhập...) thiếu CSRF vẫn nhận 403 như trước.
+                        boolean sessionExpired = request.getRequestedSessionId() != null
+                                        && !request.isRequestedSessionIdValid();
+                        if (exception instanceof CsrfException && sessionExpired) {
+                                Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+                                boolean anonymous = auth == null || !auth.isAuthenticated()
+                                                || auth instanceof AnonymousAuthenticationToken;
+                                if (anonymous) {
+                                        response.sendRedirect(request.getContextPath() + "/login?session-expired");
+                                        return;
+                                }
+                        }
+                        fallback.handle(request, response, exception);
+                };
         }
 }

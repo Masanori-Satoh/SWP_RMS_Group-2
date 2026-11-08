@@ -149,6 +149,12 @@ playwright/
 
 integration-test/
 system-test/
+# Bộ công cụ, seed và tài liệu phục vụ Integration/System Test (chạy cục bộ)
+testkit/
+database/seeds/integration_test_seed.sql
+database/seeds/system_test_seed.sql
+TESTING_EXPERIENCE_AND_BEST_PRACTICES.md
+__pycache__/
 
 # Visual Paradigm auto-backups
 *.vpp.bak_*
