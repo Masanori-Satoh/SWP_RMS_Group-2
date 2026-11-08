@@ -111,6 +111,21 @@ class InterviewEvaluationServiceTests {
         verify(interviewScheduleRepository).save(schedule);
     }
 
+    // ducnm sửa lỗi IE3: truy vấn đã thấy luôn phiếu vừa lưu (Hibernate auto-flush) thì không được đếm trùng
+    @Test
+    @DisplayName("Phiếu vừa lưu đã có trong truy vấn, mới 1/2 phiếu và chưa hết giờ: lịch vẫn giữ Scheduled")
+    void justSavedEvaluationVisibleInQueryIsNotCountedTwice() {
+        InterviewSchedule schedule = schedule(InterviewStatus.Scheduled, LocalDateTime.now().minusMinutes(10));
+        InterviewEvaluation justSaved = InterviewEvaluation.builder().interviewer(interviewer).build();
+        when(interviewEvaluationRepository.findByScheduleIdWithInterviewer(INTERVIEW_ID))
+                .thenReturn(java.util.List.of(justSaved));
+
+        service.submit(INTERVIEW_ID, request(), interviewer.getUserId());
+
+        assertEquals(InterviewStatus.Scheduled, schedule.getInterviewStatus());
+        verify(interviewScheduleRepository, never()).save(any());
+    }
+
     @Test
     @DisplayName("Lịch đã Completed: vẫn nộp được, không chuyển trạng thái lần nữa")
     void evaluationOnCompletedScheduleKeepsStatus() {
