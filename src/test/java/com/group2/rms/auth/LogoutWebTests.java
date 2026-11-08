@@ -54,6 +54,26 @@ class LogoutWebTests {
                 .andExpect(content().string(not(containsString("Bạn đã đăng xuất."))));
     }
 
+    // ducnm sửa lỗi SA6: phiên hết hạn (không còn đăng nhập) mà bấm gửi form -> token CSRF cũ không hợp lệ,
+    // phải về trang đăng nhập với thông báo hết phiên thay vì trang 403
+    @Test
+    void expiredSessionFormSubmitRedirectsToLoginWithSessionExpiredMessage() throws Exception {
+        mvc.perform(post("/interviews/new").param("_csrf", "token-cua-phien-cu").with(request -> {
+                    request.setRequestedSessionId("phien-da-het-han");
+                    request.setRequestedSessionIdValid(false);
+                    return request;
+                }))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login?session-expired"));
+        // Khách chưa từng có phiên mà thiếu CSRF: vẫn 403 như cũ
+        mvc.perform(post("/interviews/new"))
+                .andExpect(status().isForbidden());
+        mvc.perform(get("/login").param("session-expired", ""))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Phiên")))
+                .andExpect(content().string(containsString("làm việc đã hết hạn. Vui lòng đăng nhập lại.")));
+    }
+
     @Test
     void missingCsrfRejectsLogoutBeforeClearingAuthentication() throws Exception {
         mvc.perform(post("/logout").with(user("candidate").roles("CANDIDATE")))

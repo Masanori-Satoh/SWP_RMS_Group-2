@@ -77,13 +77,16 @@ public class InterviewEvaluationServiceImpl implements InterviewEvaluationServic
                     .filter(panel -> panel.getInterviewer() != null)
                     .map(panel -> panel.getInterviewer().getUserId())
                     .collect(java.util.stream.Collectors.toSet());
-            // +1: phiếu vừa nộp chưa chắc đã thấy lại được qua truy vấn ngay trong cùng giao dịch
-            int priorSubmitted = (int) interviewEvaluationRepository.findByScheduleIdWithInterviewer(interviewId).stream()
+            // Gom theo tập người đã nộp rồi thêm người vừa nộp: truy vấn có thể đã thấy phiếu vừa lưu (Hibernate
+            // auto-flush) hoặc chưa, dùng tập thì không bị đếm trùng như cách cộng +1 trước đây.
+            java.util.Set<Integer> submittedIds = interviewEvaluationRepository.findByScheduleIdWithInterviewer(interviewId).stream()
                     .map(e -> e.getInterviewer().getUserId())
                     .filter(panelIds::contains)
-                    .distinct()
-                    .count();
-            boolean allSubmitted = priorSubmitted + 1 >= panelIds.size();
+                    .collect(java.util.stream.Collectors.toSet());
+            if (panelIds.contains(evaluatorId)) {
+                submittedIds.add(evaluatorId);
+            }
+            boolean allSubmitted = !panelIds.isEmpty() && submittedIds.containsAll(panelIds);
             boolean pastEnd = schedule.getEndTime() != null && !LocalDateTime.now().isBefore(schedule.getEndTime());
             if (allSubmitted || pastEnd) {
                 if (!current.canTransitionTo(InterviewStatus.Completed)) {
