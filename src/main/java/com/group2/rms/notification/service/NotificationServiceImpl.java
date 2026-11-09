@@ -335,6 +335,22 @@ public class NotificationServiceImpl implements NotificationService {
                 "INT_RESCHED_" + interviewId(schedule) + "_" + timeKey, "");
     }
 
+    @Override
+    @Transactional
+    public void notifyInterviewersRemoved(InterviewSchedule schedule, Collection<User> removed, User actor) {
+        Application application = schedule == null ? null : schedule.getApplication();
+        if (removed == null || removed.isEmpty() || NotificationMessages.requisitionOf(application) == null) {
+            return;
+        }
+        String timeKey = NotificationMessages.eventTime(LocalDateTime.now(clock));
+        notifyEach(removed, actor, Notification.builder()
+                .title("Bạn đã được gỡ khỏi hội đồng phỏng vấn: " + NotificationMessages.candidateName(application))
+                .content(NotificationMessages.interviewPanelRemovedContent(schedule))
+                .eventType("INTERVIEW_PANEL_REMOVED")
+                .referenceId(String.valueOf(schedule.getInterviewId()))
+                .eventId("INT_REMOVED_" + interviewId(schedule) + "_" + timeKey));
+    }
+
     // ducnm bổ sung: hủy lịch chỉ báo ứng viên; hội đồng là người trong công ty, HR tự báo trực tiếp cho họ
     @Override
     @Transactional

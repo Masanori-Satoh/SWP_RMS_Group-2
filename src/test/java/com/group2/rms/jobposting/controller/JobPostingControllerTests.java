@@ -251,6 +251,28 @@ class JobPostingControllerTests {
     }
 
     @Test
+    @WithMockUser(username = "hm_user", roles = "HIRING_MANAGER")
+    @DisplayName("TC-JP-CREATE-26: HM mở form tạo tin -> Về danh sách tin, flash lỗi chỉ HR được quản lý tin")
+    void showCreateForm_shouldRedirectToListWithError_whenViewerIsHiringManager() throws Exception {
+        String message = "Chỉ HR mới có quyền quản lý tin tuyển dụng.";
+        when(service.prepareCreateForm(eq(101), any(User.class))).thenThrow(new AccessDeniedException(message));
+
+        mvc.perform(get(BASE + "/create").param("requisitionId", "101"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl(BASE))
+                .andExpect(flash().attribute("errorMessage", message));
+    }
+
+    @Test
+    @WithMockUser(username = "hm_user", roles = "HIRING_MANAGER")
+    @DisplayName("HM gửi POST tạo tin -> 403 theo SecurityConfig, không gọi service")
+    void createJobPosting_shouldReturnForbidden_whenViewerIsHiringManager() throws Exception {
+        mvc.perform(post(BASE + "/create").with(csrf())).andExpect(status().isForbidden());
+
+        verifyNoInteractions(service);
+    }
+
+    @Test
     @WithMockUser(username = "hr_officer", roles = "HR")
     @DisplayName("GET form tạo thiếu requisitionId -> Về danh sách, flash lỗi")
     void showCreateForm_shouldRedirectWithError_whenRequisitionIsMissing() throws Exception {

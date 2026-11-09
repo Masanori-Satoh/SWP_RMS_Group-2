@@ -181,12 +181,28 @@ public class RequisitionMapper {
         for (AuditLog log : activityLogs) {
             responses.add(ActivityLogResponse.builder()
                     .auditLogId(log.getAuditLogId())
-                    .action(log.getAction())
+                    .action(displayAction(log))
                     .performedBy(log.getUser().getFullName())
                     .description(log.getNewValue())
                     .timestamp(log.getTimestamp())
                     .build());
         }
         return responses;
+    }
+
+    // Quyết định của Giám đốc được lưu là UPDATE (CHECK của AuditLog chỉ nhận CREATE/UPDATE/DELETE/LOGIN);
+    // nhận ra qua nội dung "Status: Pending_Director → Approved/Rejected" để lịch sử hiện Duyệt / Từ chối.
+    static String displayAction(AuditLog log) {
+        String change = log.getNewValue();
+        String decided = "Status: " + RequisitionAccess.STATUS_PENDING_DIRECTOR + " → ";
+        if (RequisitionAuditLogger.ACTION_UPDATE.equals(log.getAction()) && change != null && change.startsWith(decided)) {
+            if (change.startsWith(decided + RequisitionAccess.STATUS_APPROVED)) {
+                return "APPROVE";
+            }
+            if (change.startsWith(decided + RequisitionAccess.STATUS_REJECTED)) {
+                return "REJECT";
+            }
+        }
+        return log.getAction();
     }
 }

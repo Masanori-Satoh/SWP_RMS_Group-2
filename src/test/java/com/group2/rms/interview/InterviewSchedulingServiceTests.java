@@ -168,6 +168,37 @@ class InterviewSchedulingServiceTests {
     }
 
     @Test
+    @DisplayName("TC-NOTIF-INT-01: đổi lịch gỡ Giám đốc khỏi hội đồng -> Giám đốc nhận thông báo bị gỡ")
+    void updateSchedule_shouldNotifyRemovedInterviewers() {
+        LocalDateTime now = LocalDateTime.now().plusDays(1);
+        InterviewSchedule existing = InterviewSchedule.builder()
+                .interviewId(104L)
+                .application(application)
+                .interviewFormat(InterviewFormat.Online_GoogleMeet)
+                .interviewStatus(InterviewStatus.Scheduled)
+                .startTime(now)
+                .endTime(now.plusHours(1))
+                .build();
+        existing.addPanelMember(hrUser, RoleInPanel.HR);
+        existing.addPanelMember(directorUser, RoleInPanel.HM);
+        when(interviewScheduleRepository.findByIdWithDetails(104L)).thenReturn(Optional.of(existing));
+        when(interviewScheduleRepository.save(any(InterviewSchedule.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        InterviewScheduleRequest request = InterviewScheduleRequest.builder()
+                .applicationId(10)
+                .interviewFormat(InterviewFormat.Online_GoogleMeet)
+                .startTime(now)
+                .endTime(now.plusHours(1))
+                .interviewerIds(java.util.Set.of(1, 3))
+                .build();
+
+        service.updateSchedule(104L, request, 1);
+
+        verify(notificationService).notifyInterviewRescheduled(existing, hrUser);
+        verify(notificationService).notifyInterviewersRemoved(existing, List.of(directorUser), hrUser);
+    }
+
+    @Test
     @DisplayName("HR sửa lịch mà HR khác đã xếp mình vào hội đồng: vẫn giữ được chỗ của mình")
     void hrAlreadyInPanelCanKeepSelfWhenEditing() {
         LocalDateTime now = LocalDateTime.now().plusDays(1);

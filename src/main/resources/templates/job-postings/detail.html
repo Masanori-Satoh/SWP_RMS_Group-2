@@ -43,8 +43,7 @@
                     data-heading="Mở lại nhận hồ sơ?" data-message="Tin sẽ hiện lại trên trang tuyển dụng."
                     data-confirm="Mở lại">Mở lại</button>
             <a th:if="${p.repostable}" class="btn btn--primary"
-               th:href="@{/internal/job-postings/create(fromPostingId=${p.jobPostingId})}"
-               th:text="|Đăng lại (tạo tin lần ${p.rounds[#lists.size(p.rounds) - 1].postingNo + 1})|">Đăng lại (tạo tin lần 3)</a>
+               th:href="@{/internal/job-postings/create(fromPostingId=${p.jobPostingId})}">Đăng lại tin</a>
             <a th:if="${p.editable}" class="btn btn--secondary" th:href="@{/internal/job-postings/{id}/edit(id=${p.jobPostingId})}">Chỉnh sửa</a>
             <button th:if="${p.pausable}" class="btn btn--secondary" type="button" data-jp-action
                     th:data-url="@{/internal/job-postings/{id}/pause(id=${p.jobPostingId})}" th:data-title="${p.postingTitle}"

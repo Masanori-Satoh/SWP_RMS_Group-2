@@ -48,6 +48,18 @@ class ErrorPagesTests {
     }
 
     @Test
+    @DisplayName("TC-DETAIL-19: nhân sự nội bộ -> trang lỗi dùng khung nội bộ; ứng viên, khách giữ khung công khai")
+    void view_internalUser_usesInternalLayout() {
+        loginAs("hr_lan", "ROLE_HR");
+        ModelAndView internal = ErrorPages.view(HttpStatus.NOT_FOUND, request);
+        assertThat(internal.getModel()).containsEntry("errorLayout", "layout/internal")
+                .containsEntry("role", "HR").containsEntry("fullName", "hr_lan");
+
+        loginAs("an.vo", "ROLE_CANDIDATE");
+        assertThat(ErrorPages.view(HttpStatus.NOT_FOUND, request).getModel()).doesNotContainKey("errorLayout");
+    }
+
+    @Test
     @DisplayName("Chưa đăng nhập -> nút về trang chủ")
     void view_anonymous_homeIsRoot() {
         SecurityContextHolder.getContext().setAuthentication(new AnonymousAuthenticationToken("key", "anonymousUser",

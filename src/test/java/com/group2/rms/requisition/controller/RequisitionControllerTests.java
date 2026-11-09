@@ -604,6 +604,16 @@ class RequisitionControllerTests {
 
         @Test
         @WithMockUser(username = "hm", roles = "HIRING_MANAGER")
+        @DisplayName("TC-DETAIL-19: URL không tồn tại khi đăng nhập nội bộ -> 404 trong khung nội bộ (có sidebar)")
+        void unknownUrl_shouldRender404InsideInternalLayout() throws Exception {
+                mvc.perform(get("/requisitions/khong/ton/tai"))
+                                .andExpect(status().isNotFound())
+                                .andExpect(content().string(containsString("Không tìm thấy trang")))
+                                .andExpect(content().string(containsString("workspace-sidebar")));
+        }
+
+        @Test
+        @WithMockUser(username = "hm", roles = "HIRING_MANAGER")
         @DisplayName("POST /requisitions/{id}/withdraw không còn endpoint")
         void withdrawnRoute_shouldNotExist() throws Exception {
                 mvc.perform(post("/requisitions/10/withdraw").with(csrf()))

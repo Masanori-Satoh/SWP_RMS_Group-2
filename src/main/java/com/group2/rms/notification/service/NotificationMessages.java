@@ -100,7 +100,11 @@ public final class NotificationMessages {
                                                     LocalDateTime decidedAt, String comments) {
         String reason = "Không có lý do cụ thể";
         if (comments != null && !comments.isBlank()) {
-            reason = shortComment(comments);
+            // Mẫu câu tự thêm dấu chấm; bỏ dấu kết câu sẵn có để không thành ".." hay "!."
+            String trimmed = shortComment(comments).replaceAll("[.!?。]+$", "");
+            if (!trimmed.isBlank()) {
+                reason = trimmed;
+            }
         }
         return String.format(
                 "Yêu cầu tuyển dụng \"%s\" (Mã: %s) đã bị Giám đốc %s từ chối vào lúc %s.\nLý do: %s.\nVui lòng chỉnh sửa lại thông tin và nộp duyệt lại.",
@@ -185,6 +189,13 @@ public final class NotificationMessages {
         return String.format("Phỏng vấn ứng viên %s (Vị trí: %s) lúc %s, hình thức %s.%s",
                 candidateName(application), application.getJobPosting().getPostingTitle(),
                 interviewTime(schedule), interviewPlace(schedule), internalNote);
+    }
+
+    public static String interviewPanelRemovedContent(InterviewSchedule schedule) {
+        Application application = schedule.getApplication();
+        return String.format("Bạn không còn trong hội đồng phỏng vấn ứng viên %s (Vị trí: %s) lúc %s. "
+                        + "Bạn không cần tham gia buổi phỏng vấn này.",
+                candidateName(application), application.getJobPosting().getPostingTitle(), interviewTime(schedule));
     }
 
     public static String interviewCandidateContent(InterviewSchedule schedule) {

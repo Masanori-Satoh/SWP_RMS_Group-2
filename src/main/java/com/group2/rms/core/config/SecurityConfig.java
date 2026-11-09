@@ -195,7 +195,8 @@ public class SecurityConfig {
                                                 .hasAuthority("ROLE_HIRING_MANAGER")
                                                 .requestMatchers("/talent-pool", "/talent-pool/**")
                                                 .hasAnyAuthority("ROLE_HR", "ROLE_HIRING_MANAGER")
-                                                .requestMatchers("/internal/job-postings/create")
+                                                // GET /create để HM, Director tới controller: về danh sách kèm toast lỗi (TC-JP-CREATE-26)
+                                                .requestMatchers(HttpMethod.POST, "/internal/job-postings/create")
                                                 .hasAuthority("ROLE_HR")
                                                 // Xem danh sách / chi tiết tin: thêm Director (chỉ xem, không thao
                                                 // tác); service ẩn tin nháp với HM, Director

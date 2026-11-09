@@ -93,6 +93,8 @@ class DirectorDashboardServiceTests {
             rows.add(requisition(i, 1, i));
         }
         when(lists.pendingRequisitions(USER_ID)).thenReturn(rows);
+        // TC-DASH-DIR-02: KPI đếm cùng phạm vi với /requisitions?status=Pending_Director (gồm 1 yêu cầu của chính Giám đốc)
+        when(lists.countPendingRequisitions()).thenReturn(8L);
 
         // Act
         DirectorDashboardResponse result = service.build(director());
@@ -101,7 +103,7 @@ class DirectorDashboardServiceTests {
         // Assert
         assertEquals(3, result.kpis().size());
         assertEquals("Yêu cầu tuyển dụng chờ duyệt", kpi.title());
-        assertEquals("7", kpi.value());
+        assertEquals("8", kpi.value());
         assertEquals("Đang chờ phê duyệt", kpi.detail());
         assertEquals("warning", kpi.tone());
         assertEquals("Thư mời nhận việc chờ duyệt", result.kpis().get(1).title());

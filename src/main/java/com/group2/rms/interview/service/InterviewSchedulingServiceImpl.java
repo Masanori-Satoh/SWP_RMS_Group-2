@@ -207,6 +207,7 @@ public class InterviewSchedulingServiceImpl implements InterviewSchedulingServic
         }
 
         // 4. Cập nhật Hội đồng phỏng vấn (nếu có danh sách mới)
+        List<User> removedInterviewers = new ArrayList<>();
         if (request.getPanelMembers() != null && !request.getPanelMembers().isEmpty()) {
             // HR đã được HR khác xếp vào hội đồng thì khi sửa lịch vẫn được giữ chỗ của mình
             Set<Integer> currentMemberIds = new HashSet<>();
@@ -252,6 +253,13 @@ public class InterviewSchedulingServiceImpl implements InterviewSchedulingServic
                 newRoles.add(role);
             }
 
+            // Người đang trong hội đồng mà không còn trong danh sách mới -> báo riêng sau khi lưu
+            schedule.getInterviewPanels().forEach(panel -> {
+                if (panel.getInterviewer() != null && !uniqueIds.contains(panel.getInterviewer().getUserId())) {
+                    removedInterviewers.add(panel.getInterviewer());
+                }
+            });
+
             // Làm mới danh sách hội đồng
             schedule.getInterviewPanels().clear();
             interviewScheduleRepository.saveAndFlush(schedule);
@@ -266,6 +274,7 @@ public class InterviewSchedulingServiceImpl implements InterviewSchedulingServic
         InterviewStatus status = updated.getInterviewStatus();
         if (status == InterviewStatus.Scheduled || status == InterviewStatus.Rescheduled) {
             notificationService.notifyInterviewRescheduled(updated, updaterUser);
+            notificationService.notifyInterviewersRemoved(updated, removedInterviewers, updaterUser);
         }
         log.info("Cập nhật lịch phỏng vấn ID {} thành công", interviewId);
 

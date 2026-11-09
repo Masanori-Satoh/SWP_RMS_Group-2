@@ -196,6 +196,42 @@ class JobPostingListServiceTests {
     }
 
     @Test
+    @DisplayName("TC-JP-LIST-12: HR gõ link sai -> mỗi giá trị sai báo một lỗi riêng, bảng trống (giống màn yêu cầu)")
+    void getListPage_shouldReportEachInvalidLinkValue_whenHrTypesUnsupportedValues() {
+        User hr = userWithRole(RequisitionAccess.ROLE_HR);
+
+        // 1. status=Deleted, deadline=abc
+        JobPostingListResponse step1 = service.getListPage(new JobPostingSearchRequest(
+                null, List.of("Deleted"), null, null, "abc", null, null, null, null, null), hr);
+        assertEquals(List.of(
+                "Bộ lọc trạng thái không hợp lệ. Vui lòng chọn bộ lọc hợp lệ.",
+                "Bộ lọc hạn nộp không hợp lệ. Vui lòng chọn bộ lọc hợp lệ."), step1.errors());
+        assertTrue(step1.page().isEmpty());
+
+        // 2. sort=abc' OR 1=1 -> lỗi sắp xếp, filter quay về mặc định
+        JobPostingListResponse step2 = service.getListPage(new JobPostingSearchRequest(
+                null, null, null, null, null, null, null, "abc' OR 1=1", null, null), hr);
+        assertEquals(List.of("Giá trị sắp xếp không hợp lệ. Vui lòng chọn tùy chọn sắp xếp hợp lệ."), step2.errors());
+        assertEquals(JobPostingSort.NEWEST.param(), step2.filter().sort());
+
+        // 3. page=999 khi chỉ có 1 trang (DB trả trang rỗng, tổng 1 tin)
+        when(postings.findAll(any(Specification.class), any(Pageable.class)))
+                .thenAnswer(invocation -> new PageImpl<>(List.of(), invocation.getArgument(1), 1));
+        JobPostingListResponse step3 = service.getListPage(new JobPostingSearchRequest(
+                null, null, null, null, null, null, null, null, 999, null), hr);
+        assertEquals(List.of("Trang bạn yêu cầu không tồn tại."), step3.errors());
+        assertTrue(step3.page().isEmpty());
+
+        // 4. page=-1, size=999 -> hai lỗi riêng
+        JobPostingListResponse step4 = service.getListPage(new JobPostingSearchRequest(
+                null, null, null, null, null, null, null, null, -1, 999), hr);
+        assertEquals(List.of(
+                "Số trang phải lớn hơn hoặc bằng 1.",
+                "Số dòng mỗi trang không được vượt quá " + JobPostingListService.MAX_PAGE_SIZE + "."), step4.errors());
+        assertTrue(step4.page().isEmpty());
+    }
+
+    @Test
     @DisplayName("size = 0 -> Báo lỗi; thiếu size -> DEFAULT_PAGE_SIZE")
     void getListPage_shouldRejectZeroPageSize() {
         User hr = userWithRole(RequisitionAccess.ROLE_HR);

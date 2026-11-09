@@ -238,7 +238,7 @@
                     <ol class="rqd-timeline" th:unless="${#lists.isEmpty(req.activityLog)}">
                         <li th:each="log : ${req.activityLog}">
                             <strong
-                                th:text="${log.action == 'CREATE' ? 'Tạo yêu cầu' : (log.action == 'UPDATE' ? 'Cập nhật' : (log.action == 'DELETE' ? 'Xóa' : log.action))}">Tạo
+                                th:text="${log.action == 'CREATE' ? 'Tạo yêu cầu' : (log.action == 'UPDATE' ? 'Cập nhật' : (log.action == 'DELETE' ? 'Xóa' : (log.action == 'APPROVE' ? 'Duyệt yêu cầu' : (log.action == 'REJECT' ? 'Từ chối yêu cầu' : log.action))))}">Tạo
                                 yêu cầu</strong>
                             <span class="rqd-sub"
                                 th:text="|${log.performedBy} · ${#temporals.format(log.timestamp, 'HH:mm dd/MM/yyyy')}|">Đỗ

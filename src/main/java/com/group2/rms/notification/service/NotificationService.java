@@ -50,6 +50,9 @@ public interface NotificationService {
     /** Lịch đổi giờ / địa điểm / hội đồng: báo hội đồng hiện tại và ứng viên. */
     void notifyInterviewRescheduled(InterviewSchedule schedule, User actor);
 
+    /** Đổi lịch mà gỡ người khỏi hội đồng: báo riêng những người bị gỡ (TC-NOTIF-INT-01). */
+    void notifyInterviewersRemoved(InterviewSchedule schedule, java.util.Collection<User> removed, User actor);
+
     /** Lịch bị hủy: báo hội đồng và ứng viên kèm lý do. */
     void notifyInterviewCancelled(InterviewSchedule schedule, User actor, String reason);
 

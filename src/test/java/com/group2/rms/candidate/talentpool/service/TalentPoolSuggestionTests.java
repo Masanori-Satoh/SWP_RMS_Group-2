@@ -122,7 +122,7 @@ class TalentPoolSuggestionTests {
         // Given: Đã có application chính thức cùng tin.
         allowTarget();
         source(101, 11);
-        when(applications.existsActiveByCandidateAndJobPosting(11, 8)).thenReturn(true);
+        when(applications.existsActiveByCandidateInSameRequisition(11, 8)).thenReturn(true);
         // When: Gọi pool.suggest với dữ liệu đã chuẩn bị.
         assertThrows(TalentPoolException.class, () -> pool.suggest(8, new TalentPoolSuggestRequest(List.of(101))));
         // Then: không tạo đề xuất trùng.

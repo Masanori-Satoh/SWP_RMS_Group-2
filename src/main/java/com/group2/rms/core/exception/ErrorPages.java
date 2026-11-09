@@ -70,5 +70,27 @@ public final class ErrorPages {
                 .anyMatch(authority -> CANDIDATE_AUTHORITY.equals(authority.getAuthority()));
         mav.addObject("homeUrl", candidate ? "/portal/applications" : "/dashboard");
         mav.addObject("homeLabel", candidate ? "Về đơn ứng tuyển của tôi" : "Về bảng điều khiển");
+        // TC-DETAIL-19: nhân sự nội bộ thấy trang lỗi trong khung nội bộ (sidebar + topbar), không phải khung công khai.
+        // Trang lỗi không đi qua TopbarUserAdvice nên tự truyền vai trò (đọc từ authority) và tên đăng nhập.
+        String roleName = internalRoleName(authentication);
+        if (roleName != null) {
+            mav.addObject("errorLayout", "layout/internal");
+            mav.addObject("role", roleName);
+            mav.addObject("fullName", authentication.getName());
+        }
+    }
+
+    static String internalRoleName(Authentication authentication) {
+        for (var authority : authentication.getAuthorities()) {
+            switch (authority.getAuthority()) {
+                case "ROLE_SYSTEM_ADMIN": return "System Admin";
+                case "ROLE_HR": return "HR";
+                case "ROLE_HIRING_MANAGER": return "Hiring Manager";
+                case "ROLE_DIRECTOR": return "Director";
+                case "ROLE_INTERVIEWER": return "Interviewer";
+                default: break;
+            }
+        }
+        return null;
     }
 }
