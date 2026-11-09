@@ -66,7 +66,32 @@
         const field = $(restore.dataset.restore);
         field.value = form.querySelector(`[data-from="${restore.dataset.restore}"]`).dataset.source || '';
         field.dispatchEvent(new Event('input', { bubbles: true }));
+        if (field.id === 'probationPeriod') {
+            syncProbationChoice();
+            (field.hidden ? $('probationChoice') : field).focus();
+            return;
+        }
         field.focus();
+    });
+
+    /* Thời gian thử việc: chọn mẫu thì ghi thẳng vào ô probationPeriod (ẩn); "Khác" thì hiện ô để nhập tay. */
+    const PROBATION_OTHER = '__other__';
+    function syncProbationChoice() {
+        const choice = $('probationChoice');
+        const input = $('probationPeriod');
+        if (!choice || !input) return;
+        const value = input.value.trim();
+        const preset = [...choice.options].some(o => o.value === value && o.value !== PROBATION_OTHER);
+        choice.value = preset ? value : PROBATION_OTHER;
+        input.hidden = choice.value !== PROBATION_OTHER;
+    }
+    $('probationChoice')?.addEventListener('change', event => {
+        const input = $('probationPeriod');
+        const isOther = event.target.value === PROBATION_OTHER;
+        input.hidden = !isOther;
+        input.value = isOther ? '' : event.target.value;
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        if (isOther) input.focus();
     });
 
     /* ---------------------------------------------------------------------
@@ -322,6 +347,7 @@
     form.addEventListener('change', refresh);
 
     form.dataset.tab = 'edit';
+    syncProbationChoice();
     syncPositions();
     renderMap();
     refresh();

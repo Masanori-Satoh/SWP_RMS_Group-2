@@ -187,12 +187,20 @@
                             <small id="salary-help" class="rqf-hint rqf-full">Để trống nếu lương thỏa thuận.</small>
 
                             <div class="rqf-field">
-                                <label class="form-label" for="probationPeriod">Thời gian thử việc</label>
+                                <label class="form-label" for="probationChoice">Thời gian thử việc</label>
+                                <!-- Dropdown chỉ để chọn nhanh; giá trị gửi lên server vẫn là ô probationPeriod (chuỗi tự do). -->
+                                <select class="form-select" id="probationChoice"
+                                    th:with="p=*{probationPeriod}, presets=${ {'6 ngày làm việc','15 ngày','30 ngày'} },
+                                             other=${p != null and !#strings.isEmpty(p) and !#lists.contains(presets, p)}">
+                                    <option value="" th:selected="${p == null or #strings.isEmpty(p)}">Không thử việc</option>
+                                    <option th:each="preset : ${presets}" th:value="${preset}" th:text="${preset}"
+                                        th:selected="${preset == p}">15 ngày</option>
+                                    <option value="__other__" th:selected="${other}">Khác</option>
+                                </select>
                                 <input class="form-input" type="text" th:field="*{probationPeriod}" th:maxlength="${probationLimit}"
-                                    placeholder="Nhập thời gian thử việc"
-                                    aria-describedby="probationPeriod-help probationPeriod-error"
+                                    placeholder="Nhập thời gian thử việc (VD: 2 tháng)" aria-label="Thời gian thử việc khác"
+                                    aria-describedby="probationPeriod-error"
                                     th:attr="aria-invalid=${#fields.hasErrors('probationPeriod')}">
-                                <small id="probationPeriod-help" class="rqf-hint">Để trống nếu không thử việc.</small>
                                 <small id="probationPeriod-error" class="field-error"
                                     th:text="${#fields.hasErrors('probationPeriod')} ? ${#strings.listJoin(#fields.errors('probationPeriod'), '; ')} : ''"></small>
                             </div>
@@ -269,7 +277,7 @@
                         hidden>
                         <th:block th:unless="${directApprove}">
                             <p id="rqf-confirm-title"><strong>Gửi cho Giám đốc duyệt?</strong></p>
-                            <p>Sau khi gửi, bạn không sửa được nữa trừ khi rút lại yêu cầu hoặc bị Giám đốc trả lại.</p>
+                            <p>Sau khi gửi, bạn chỉ có thể chỉnh sửa nếu Giám đốc trả lại yêu cầu.</p>
                         </th:block>
                         <th:block th:if="${directApprove}">
                             <p id="rqf-confirm-title"><strong>Phê duyệt yêu cầu này?</strong></p>

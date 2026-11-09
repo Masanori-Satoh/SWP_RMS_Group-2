@@ -86,3 +86,6 @@
   .req-form-page .rqf-grid { grid-template-columns:minmax(0,1fr); }
   .req-form-page .rqf-section { padding:var(--s4); }
 }
+
+/* Ô "Khác" của thời gian thử việc: .form-input đặt display:block nên cần ép [hidden] */
+.req-form-page .rqf-field .form-input[hidden] { display:none; }

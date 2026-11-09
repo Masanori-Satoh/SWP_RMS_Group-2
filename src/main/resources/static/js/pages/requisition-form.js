@@ -305,6 +305,24 @@
         form.querySelectorAll('button[type=submit]').forEach(button => { button.disabled = false; });
     });
 
+    // Thời gian thử việc: chọn mẫu thì ghi thẳng vào ô probationPeriod (ẩn); "Khác" thì hiện ô để nhập tay.
+    const probationChoice = document.getElementById('probationChoice');
+    const probationInput = document.getElementById('probationPeriod');
+    if (probationChoice && probationInput) {
+        const syncProbation = userChanged => {
+            const isOther = probationChoice.value === '__other__';
+            probationInput.hidden = !isOther;
+            if (!isOther) {
+                probationInput.value = probationChoice.value;
+            } else if (userChanged) {
+                probationInput.value = '';
+                probationInput.focus();
+            }
+        };
+        probationChoice.addEventListener('change', () => syncProbation(true));
+        syncProbation(false);
+    }
+
     syncWorkLocation();
     document.getElementById('validation-summary')?.focus();
 })();
