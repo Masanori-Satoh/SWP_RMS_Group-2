@@ -13,10 +13,6 @@ import org.springframework.stereotype.Component;
 import java.util.Objects;
 import java.util.Set;
 
-/**
- * Phân quyền và kiểm tra phạm vi truy cập cho Job Requisition.
- * Tuân thủ quy định tại docs/members/hoangnh/CLAUDE.md §11
- */
 @Component
 @RequiredArgsConstructor
 public class RequisitionAccess {
@@ -34,14 +30,12 @@ public class RequisitionAccess {
     private static final Set<String> ALLOWED_ROLES = Set.of(
             ROLE_HIRING_MANAGER,
             ROLE_DIRECTOR,
-            ROLE_HR
-    );
+            ROLE_HR);
 
     private final UserRepository userRepository;
 
-    /**
-     * Lấy thông tin người dùng đang đăng nhập từ SecurityContext.
-     */
+
+    // Returns the authenticated user.
     public User actor() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
@@ -60,6 +54,7 @@ public class RequisitionAccess {
         return currentUser;
     }
 
+    // Returns the user's role.
     public String role(User user) {
         if (user == null || user.getRole() == null) {
             return "";
@@ -67,37 +62,33 @@ public class RequisitionAccess {
         return user.getRole().getRoleName();
     }
 
+    // Checks whether the user owns the requisition.
     public boolean owns(User user, JobRequisition requisition) {
         if (user == null || requisition == null || requisition.getHiringManager() == null) {
             return false;
         }
         return Objects.equals(user.getUserId(), requisition.getHiringManager().getUserId());
     }
-
-    // Giám đốc tạo yêu cầu thì tự chọn phòng ban và gửi là phê duyệt luôn (không cần ai duyệt nữa)
+    // Checks whether the user is a Director.
     public boolean isDirector(User user) {
         return ROLE_DIRECTOR.equals(role(user));
     }
-
-    // Security: Hiring Manager và Director có quyền tạo Requisition
+    // Checks whether the user can create a requisition.
     public boolean canCreate(User user) {
         String userRole = role(user);
         return Set.of(ROLE_HIRING_MANAGER, ROLE_DIRECTOR).contains(userRole);
     }
-
-    // Security: Tạo tin tuyển dụng chỉ dành cho HR
+    // Checks whether the user can create a job posting.
     public boolean canCreatePosting(User user) {
         String userRole = role(user);
         return ROLE_HR.equals(userRole);
     }
-
-    // Security: Xem tin tuyển dụng nội bộ dành cho HR, HM và Director
+    // Checks whether the user can view job postings.
     public boolean canViewPosting(User user) {
         String userRole = role(user);
         return ROLE_HR.equals(userRole) || ROLE_HIRING_MANAGER.equals(userRole) || ROLE_DIRECTOR.equals(userRole);
     }
-
-    // Security: Chỉ người tạo mới được sửa Requisition khi ở trạng thái Draft hoặc Rejected
+    // Checks whether the user can edit the requisition.
     public boolean canEdit(User user, JobRequisition requisition) {
         if (requisition == null) {
             return false;
@@ -107,28 +98,19 @@ public class RequisitionAccess {
         return isOwner && isEditableStatus;
     }
 
-    // Rule: Chỉ người tạo được rút lại yêu cầu đang chờ Giám đốc duyệt
-    public boolean canWithdraw(User user, JobRequisition requisition) {
-        if (requisition == null) {
-            return false;
-        }
-        return owns(user, requisition) && STATUS_PENDING_DIRECTOR.equals(requisition.getApprovalStatus());
-    }
 
-    /** Rule: xóa được khi sửa được, chưa có tin và chưa có đợt sau (2 điều kiện cuối do service tra). */
+    // Checks whether the requisition can be deleted.
     public boolean canDelete(User user, JobRequisition requisition, boolean hasPosting, boolean hasLaterRound) {
         return canEdit(user, requisition) && !hasPosting && !hasLaterRound;
     }
-
-    // Rule: sao chép được khi có quyền tạo yêu cầu và yêu cầu đã được duyệt
+    // Checks whether the requisition can be copied.
     public boolean canCopy(User user, JobRequisition requisition) {
         if (requisition == null) {
             return false;
         }
         return canCreate(user) && STATUS_APPROVED.equals(requisition.getApprovalStatus());
     }
-
-    // Rule: Tin tuyển dụng chỉ tạo từ yêu cầu Đã duyệt, chưa có tin, và người tạo là HR
+    // Checks whether a posting can be created from the requisition.
     public boolean canCreatePostingFrom(User user, JobRequisition requisition, boolean hasPosting) {
         if (requisition == null || hasPosting) {
             return false;
@@ -136,7 +118,8 @@ public class RequisitionAccess {
         return STATUS_APPROVED.equals(requisition.getApprovalStatus()) && canCreatePosting(user);
     }
 
-    /** Rule: link tới tin mới nhất; tin nháp chỉ HR mở được (HM, Director bị 403). */
+
+    // Checks whether the user can open the posting.
     public boolean canOpenPosting(User user, String latestPostingStatus) {
         if (latestPostingStatus == null || !canViewPosting(user)) {
             return false;
@@ -146,8 +129,7 @@ public class RequisitionAccess {
         }
         return true;
     }
-
-    // Security: Chỉ Director mới được phê duyệt/từ chối khi trạng thái Pending_Director
+    // Checks whether the user can decide on the requisition.
     public boolean canDecide(User user, JobRequisition requisition) {
         if (requisition == null) {
             return false;
@@ -158,22 +140,22 @@ public class RequisitionAccess {
         return isDirector && isNotOwner && isPending;
     }
 
-    // Security: Yêu cầu quyền tạo Requisition, ném ngoại lệ nếu không đủ thẩm quyền
+
+    // Requires permission to create a requisition.
     public void requireCreate(User user) {
         if (!canCreate(user)) {
             throw new AccessDeniedException("Chỉ Hiring Manager và Director mới có quyền tạo yêu cầu tuyển dụng.");
         }
     }
-
-    // Security: Kiểm tra requisition có thuộc phòng ban mà HM phụ trách hay không
+    // Checks whether the requisition belongs to a managed department.
     public boolean inManagedDepartment(User user, JobRequisition requisition) {
         if (requisition == null || requisition.getDepartment() == null) {
             return false;
         }
-        return canManageDepartment(user, requisition.getDepartment().getDepartmentId(), requisition.getDepartment().getManager());
+        return canManageDepartment(user, requisition.getDepartment().getDepartmentId(),
+                requisition.getDepartment().getManager());
     }
-
-    // Security: HM chỉ quản lý phòng ban mình làm trưởng phòng (managerId) hoặc trực thuộc
+    // Checks whether the user manages the department.
     public boolean canManageDepartment(User user, Integer departmentId, User departmentManager) {
         if (departmentId == null || user == null) {
             return false;
@@ -192,14 +174,12 @@ public class RequisitionAccess {
         }
         return false;
     }
-
-    // Security: Phân quyền xem chi tiết requisition theo phạm vi vai trò
+    // Requires permission to view the requisition.
     public void requireView(User user, JobRequisition requisition) {
         if (requisition == null) {
             throw new AccessDeniedException("Yêu cầu tuyển dụng không tồn tại.");
         }
         String userRole = role(user);
-        // Security: HR chỉ có quyền xem các yêu cầu tuyển dụng đã được phê duyệt (Approved)
         if (ROLE_HR.equals(userRole)) {
             if (STATUS_APPROVED.equals(requisition.getApprovalStatus())) {
                 return;
@@ -217,8 +197,7 @@ public class RequisitionAccess {
         }
         throw new AccessDeniedException("Bạn không có quyền truy cập yêu cầu tuyển dụng này.");
     }
-
-    // Sửa / xóa: không phải người tạo → 403; đúng người nhưng không còn Nháp / Từ chối → báo lỗi ở trang chi tiết
+    // Requires permission to edit the requisition.
     public void requireEdit(User user, JobRequisition requisition) {
         requireView(user, requisition);
         boolean isOwner = owns(user, requisition) && canCreate(user);
@@ -229,8 +208,7 @@ public class RequisitionAccess {
             throw new RequisitionStateException();
         }
     }
-
-    // Duyệt / trả lại: không phải Giám đốc hoặc tự duyệt → 403; yêu cầu không còn chờ duyệt → báo lỗi ở trang chi tiết
+    // Requires permission to decide on the requisition.
     public void requireDecide(User user, JobRequisition requisition) {
         requireView(user, requisition);
         if (!isDirector(user) || owns(user, requisition)) {
@@ -240,19 +218,7 @@ public class RequisitionAccess {
             throw new RequisitionStateException();
         }
     }
-
-    // Rút lại: không phải người tạo → 403; yêu cầu không còn chờ duyệt → báo lỗi ở trang chi tiết
-    public void requireWithdraw(User user, JobRequisition requisition) {
-        requireView(user, requisition);
-        if (!owns(user, requisition)) {
-            throw new AccessDeniedException("Chỉ người tạo yêu cầu mới có quyền rút lại yêu cầu đang chờ duyệt.");
-        }
-        if (!canWithdraw(user, requisition)) {
-            throw new RequisitionStateException();
-        }
-    }
-
-    // Sao chép: không có quyền tạo / không xem được → 403; yêu cầu chưa duyệt → báo lỗi ở trang chi tiết
+    // Requires permission to copy the requisition.
     public void requireCopy(User user, JobRequisition requisition) {
         requireCreate(user);
         requireView(user, requisition);

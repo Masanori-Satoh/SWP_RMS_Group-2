@@ -2,17 +2,13 @@ package com.group2.rms.requisition.service;
 
 import org.springframework.data.domain.Sort;
 
-/*
- * SORT: whitelist cách sắp xếp màn danh sách yêu cầu; giá trị lạ trên URL quay về NEWEST.
- */
+
 public enum RequisitionSort {
 
     NEWEST("newest", "Mới nhất trước",
             Sort.by(Sort.Order.desc("createdAt"), Sort.Order.desc("requisitionId"))),
     OLDEST("oldest", "Cũ nhất trước",
-            Sort.by(Sort.Order.asc("createdAt"), Sort.Order.asc("requisitionId"))),
-    TITLE("title", "Tên vị trí A–Z",
-            Sort.by(Sort.Order.asc("title"), Sort.Order.desc("requisitionId")));
+            Sort.by(Sort.Order.asc("createdAt"), Sort.Order.asc("requisitionId")));
 
     private final String param;
     private final String label;
@@ -24,21 +20,25 @@ public enum RequisitionSort {
         this.sort = sort;
     }
 
-    /** Giá trị xuất hiện trên URL, ví dụ ?sort=oldest */
+
+    // Returns the URL parameter for this sort option.
     public String param() {
         return param;
     }
 
-    /** Chữ hiển thị trong ô "Sắp xếp theo" */
+
+    // Returns the display label for this sort option.
     public String label() {
         return label;
     }
 
+    // Returns the database sort for this option.
     public Sort toSort() {
         return sort;
     }
 
-    /** Đổi giá trị trên URL thành enum; giá trị lạ hoặc trống thì dùng NEWEST. */
+
+    // Resolves a URL parameter to a sort option.
     public static RequisitionSort fromParam(String value) {
         for (RequisitionSort option : values()) {
             if (option.param.equalsIgnoreCase(value)) {

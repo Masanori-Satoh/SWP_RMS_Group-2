@@ -92,8 +92,10 @@ public class JobRequisition extends BaseEntity {
     @Column(name = "ApprovalStatus", nullable = false, length = 30)
     private String approvalStatus;
 
+    // Mặc định "Any" (Không yêu cầu) như form; cột NOT NULL nên builder không set thì vẫn lưu được.
     @Column(name = "RequiredGender", nullable = false, length = 20)
-    private String gender;
+    @Builder.Default
+    private String gender = "Any";
 
     @Column(name = "WorkLocation", length = 255)
     private String workLocation;

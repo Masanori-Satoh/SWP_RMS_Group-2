@@ -171,7 +171,6 @@ class RequisitionMapperTests {
 
         // Assert
         assertEquals(3L, detail.waitingDays());
-        assertTrue(detail.withdrawable());
     }
 
     @Test

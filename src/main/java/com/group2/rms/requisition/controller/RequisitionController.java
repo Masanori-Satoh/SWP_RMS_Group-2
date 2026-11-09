@@ -20,6 +20,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -35,9 +36,6 @@ import java.beans.PropertyEditorSupport;
 import java.math.BigDecimal;
 import java.util.Locale;
 
-/*
- * CONTROLLER: màn /requisitions (danh sách, form tạo / sửa / sao chép, chi tiết, gửi duyệt, duyệt, rút, xóa); nghiệp vụ ở RequisitionService.
- */
 @Controller
 @RequestMapping("/requisitions")
 @RequiredArgsConstructor
@@ -58,13 +56,11 @@ public class RequisitionController {
 
     @InitBinder("form")
     void binder(WebDataBinder binder) {
-        // departmentId chỉ có tác dụng với Giám đốc; originalTitle chỉ để form hiện số đợt
         binder.setAllowedFields("action", "title", "departmentId", "originalTitle", "numberOfPositions", "employmentType", "minSalary",
                 "maxSalary",
                 "gender", "workLocation", "workModel", "probationPeriod", "reasonForHiring", "recruitmentRound", "originalRequisitionId",
                 "jobDescription", "requirementDetails");
 
-        // Ô lương hiển thị kiểu Việt Nam "20.000.000"
         PropertyEditorSupport salaryEditor = new PropertyEditorSupport() {
             @Override
             public void setAsText(String text) {
@@ -107,37 +103,31 @@ public class RequisitionController {
         model.addAttribute("canCreate", access.canCreate(actor));
     }
 
-    //màn danh sách
     @GetMapping
     public String list(@ModelAttribute("searchRequest") RequisitionSearchRequest searchRequest,
             BindingResult invalidParams, HttpServletRequest request, Model model) {
-        model.addAttribute("list", listService.getListPage(searchRequest));
+        model.addAttribute("list", listService.getListPage(searchRequest,
+                invalidParams.getFieldErrors().stream().map(FieldError::getField).distinct().toList()));
         rememberPage(request, request.getRequestURI()
                 + (request.getQueryString() == null ? "" : "?" + request.getQueryString()));
-        // Tạo link "bỏ một bộ lọc" cho các chip, giữ nguyên các tham số khác đang có trên URL
         model.addAttribute("filterLinks", new FilterLinks(request.getRequestURI(), request.getQueryString()));
-        // activeMenu làm sáng menu sidebar, bodyClass giữ CSS cũ của trang
         model.addAttribute("activeMenu", "requisitions");
         model.addAttribute("bodyClass", "req-app req-list-page");
         return "requisitions/list";
     }
 
-    // tạo requisition
     @GetMapping("/create")
     public String createForm(Model model) {
         var currentUser = access.actor();
-        // Rule: Chỉ Hiring Manager / Director mới được tạo yêu cầu
         access.requireCreate(currentUser);
 
         RequisitionRequest form = new RequisitionRequest();
 
-        // các trường bắt buộc trong db
         form.setNumberOfPositions(1);
         form.setRecruitmentRound(1);
         form.setEmploymentType("Full-time");
         form.setWorkModel("On-site");
         form.setGender(RequisitionValidator.GENDER_ANY);
-        // Giám đốc tự chọn phòng ban trên form nên không điền sẵn
         if (currentUser.getDepartment() != null && !access.isDirector(currentUser)) {
             form.setDepartmentId(currentUser.getDepartment().getDepartmentId());
         }
@@ -146,7 +136,6 @@ public class RequisitionController {
         return renderForm(model, false, null);
     }
 
-    // id nhận dạng chuỗi để URL gõ tay như "{2796}" vẫn hiểu là 2796 (không ra lỗi 500)
     @GetMapping("/copy/{id}")
     public String copy(@PathVariable("id") String idParam, Model model, RedirectAttributes flash,
             HttpServletRequest request) {
@@ -186,7 +175,6 @@ public class RequisitionController {
     @PostMapping("/create")
     public String create(@Valid @ModelAttribute("form") RequisitionRequest form, BindingResult errors, Model model,
             RedirectAttributes flash) {
-        // Rule: Xác thực quyền tạo trước khi xử lý nghiệp vụ
         access.requireCreate(access.actor());
         if (!errors.hasErrors()) {
             try {
@@ -240,7 +228,6 @@ public class RequisitionController {
     @PostMapping("/{id}/decision")
     public String decide(@PathVariable Integer id, @RequestParam String decision,
             @RequestParam(defaultValue = "") String comment, RedirectAttributes flash, HttpServletRequest request) {
-        // Rule: Hai nút trên trang chi tiết gửi decision=approve hoặc decision=reject, giá trị khác thì bỏ qua
         boolean isApprove = DECISION_APPROVE.equals(decision);
         boolean isReject = DECISION_REJECT.equals(decision);
         if (!isApprove && !isReject) {
@@ -249,40 +236,27 @@ public class RequisitionController {
         }
         try {
             service.decide(id, isApprove, comment);
-            flash.addFlashAttribute("successMessage", "Đã lưu quyết định thành công.");
+            flash.addFlashAttribute("successMessage", isReject
+                    ? "Đã từ chối yêu cầu tuyển dụng."
+                    : "Đã lưu quyết định thành công.");
+            if (isReject) {
+                flash.addFlashAttribute("decisionRejectedToast", true);
+            }
         } catch (RequisitionStateException e) {
             return backToPreviousPage(id, e, flash, request);
         } catch (RequisitionValidationException e) {
             flash.addFlashAttribute("failureMessage", e.getMessage());
-            // Giữ lại ý kiến đã gõ để người dùng không phải gõ lại
             flash.addFlashAttribute("decisionComment", comment);
         }
         return "redirect:/requisitions/" + id;
     }
 
-    @PostMapping("/{id}/withdraw")
-    public String withdraw(@PathVariable Integer id, RedirectAttributes flash, HttpServletRequest request) {
-        try {
-            service.withdraw(id);
-            flash.addFlashAttribute("successMessage", "Đã rút lại yêu cầu thành công. Bạn có thể chỉnh sửa lại bản nháp.");
-            // Rút lại là để sửa → mở thẳng form sửa
-            return "redirect:/requisitions/edit/" + id;
-        } catch (RequisitionStateException e) {
-            return backToPreviousPage(id, e, flash, request);
-        } catch (RequisitionValidationException e) {
-            flash.addFlashAttribute("failureMessage", e.getMessage());
-        }
-        return "redirect:/requisitions/" + id;
-    }
-
-    // Chỉ nhớ trang danh sách/chi tiết đã render thành công cho đúng tài khoản trong phiên.
     private void rememberPage(HttpServletRequest request, String path) {
         var session = request.getSession();
         session.setAttribute(LAST_PAGE_PATH, path);
         session.setAttribute(LAST_PAGE_USER, access.actor().getUserId());
     }
 
-    // Trang danh sách / chi tiết đã xem gần nhất của đúng tài khoản này; chưa có thì trả null.
     private String rememberedPage(HttpServletRequest request) {
         var session = request.getSession(false);
         if (session == null || !access.actor().getUserId().equals(session.getAttribute(LAST_PAGE_USER))) {
@@ -299,7 +273,6 @@ public class RequisitionController {
         return path.equals("/requisitions") || path.startsWith("/requisitions?");
     }
 
-    // Gõ URL sai trạng thái hoặc gửi form cũ: trở lại trang đã xem, kèm toast lỗi.
     private String backToPreviousPage(Integer id, RequisitionStateException e, RedirectAttributes flash,
             HttpServletRequest request) {
         flash.addFlashAttribute("failureMessage", e.getMessage());
@@ -310,18 +283,15 @@ public class RequisitionController {
         return "redirect:/requisitions/" + id;
     }
 
-    // Gõ URL không đủ quyền (HM khác sửa nháp, HR mở yêu cầu chưa duyệt...): toast lỗi thay vì trang 403.
     @ExceptionHandler(AccessDeniedException.class)
     public String whenAccessDenied(AccessDeniedException e, RedirectAttributes flash, HttpServletRequest request) {
         if (isListPage(request.getRequestURI())) {
-            // Chính danh sách bị chặn thì về dashboard, tránh chuyển trang lặp vô hạn
             flash.addFlashAttribute("failureMessage", e.getMessage());
             return "redirect:/dashboard";
         }
         return backWhenNotFound(e.getMessage(), flash, request);
     }
 
-    // Mã sai, không tồn tại hoặc không đủ quyền: trở lại trang đã xem (tránh lặp nếu chính trang đó bị chặn), không thì về danh sách.
     private String backWhenNotFound(String message, RedirectAttributes flash, HttpServletRequest request) {
         flash.addFlashAttribute("failureMessage", message);
         String previous = rememberedPage(request);
@@ -331,7 +301,6 @@ public class RequisitionController {
         return "redirect:/requisitions";
     }
 
-    // Lấy phần số của mã gõ trên URL (vd "{2796}" -> 2796); không có số thì trả null.
     private static Integer parseId(String raw) {
         String digits = raw == null ? "" : raw.replaceAll("\\D", "");
         if (digits.isEmpty() || digits.length() > 9) {
@@ -348,7 +317,6 @@ public class RequisitionController {
             return backWhenNotFound(INVALID_ID_MESSAGE, flash, request);
         }
         try {
-            // getById kiểm tra quyền xem (RequisitionAccess.requireView) và tính sẵn mọi nhãn / cờ quyền
             model.addAttribute("req", service.getById(id));
         } catch (ResourceNotFoundException e) {
             return backWhenNotFound(e.getMessage(), flash, request);
@@ -360,7 +328,6 @@ public class RequisitionController {
         return "requisitions/detail";
     }
 
-    // Rule: Phân biệt thông báo khi lưu bản nháp, gửi duyệt, hoặc Giám đốc phê duyệt trực tiếp
     private String savedMessage(String action) {
         if (!RequisitionValidator.isSubmit(action)) {
             return "Đã lưu bản nháp thành công.";
@@ -370,14 +337,11 @@ public class RequisitionController {
                 : "Yêu cầu đã được gửi lên Giám đốc phê duyệt.";
     }
 
-    /** Mọi đường hiển thị form (tạo, sửa, sao chép, render lại khi có lỗi) đều đi qua hàm này. */
     private String renderForm(Model model, boolean edit, Integer id) {
         model.addAttribute("isEdit", edit);
         model.addAttribute("requisitionId", id);
-        // Giám đốc: tự chọn phòng ban và nút gửi là "Phê duyệt trực tiếp"
         model.addAttribute("directApprove", access.isDirector(access.actor()));
         addFormOptions(model);
-        // Trang dùng layout/internal: làm sáng menu + gắn class để CSS của trang áp dụng
         model.addAttribute("activeMenu", "requisitions");
         model.addAttribute("bodyClass", "req-app req-form-page");
         return "requisitions/form";
@@ -388,7 +352,6 @@ public class RequisitionController {
         model.addAttribute("employmentTypes", RequisitionValidator.EMPLOYMENT_TYPES);
         model.addAttribute("genders", RequisitionValidator.GENDERS);
         model.addAttribute("probationLimit", RequisitionValidator.PROBATION_CHAR_LIMIT);
-        // Giới hạn số lượng cần tuyển, dùng cho min/max của ô số lượng và nút −/+
         model.addAttribute("positionsMin", RequisitionValidator.POSITIONS_MIN);
         model.addAttribute("positionsMax", RequisitionValidator.POSITIONS_MAX);
         model.addAttribute("roundMin", RequisitionValidator.ROUND_MIN);

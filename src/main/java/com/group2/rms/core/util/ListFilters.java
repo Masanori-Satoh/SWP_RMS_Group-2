@@ -10,7 +10,7 @@ import java.util.Locale;
  * Các hàm nhỏ dùng chung khi "làm sạch" bộ lọc lấy từ URL ở màn danh sách.
  *
  * Nguyên tắc: không tin dữ liệu trên URL. Giá trị nào không nằm trong danh sách lựa chọn
- * thì bỏ qua (coi như không lọc) thay vì báo lỗi.
+ * thì báo lỗi và trả danh sách rỗng; giá trị rỗng coi như không lọc.
  */
 public final class ListFilters {
 
@@ -58,6 +58,32 @@ public final class ListFilters {
             }
         }
         return false;
+    }
+
+    /** Giá trị có nhập (khác rỗng) nhưng vai trò không có ô lọc này, hoặc không nằm trong danh sách lựa chọn. */
+    public static boolean isInvalidChoice(Object value, boolean shown, List<FilterOption> allowed) {
+        if (value == null || String.valueOf(value).isBlank()) {
+            return false;
+        }
+        return !shown || !isAllowedValue(value, allowed);
+    }
+
+    /** Có ít nhất một giá trị khác rỗng không hợp lệ (dùng cho tham số lặp như status). */
+    public static boolean hasInvalidChoice(List<String> values, boolean shown, List<FilterOption> allowed) {
+        if (values == null) {
+            return false;
+        }
+        for (String value : values) {
+            if (isInvalidChoice(value, shown, allowed)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** Câu báo lỗi chung cho một bộ lọc sai trên URL, ví dụ label = "phòng ban". */
+    public static String invalidFilterMessage(String label) {
+        return "Bộ lọc " + label + " không hợp lệ. Vui lòng chọn bộ lọc hợp lệ.";
     }
 
     /** Chữ hiển thị của một giá trị; không tìm thấy thì trả về chính giá trị đó. */

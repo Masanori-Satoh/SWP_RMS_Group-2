@@ -5,34 +5,32 @@ import org.springframework.web.util.HtmlUtils;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
-/**
- * Nơi DUY NHẤT dịch các giá trị lưu trong DB (tiếng Anh) sang chữ tiếng Việt cho màn hình Requisition.
- * Muốn đổi cách gọi một trạng thái thì chỉ sửa ở đây, không sửa trong template.
- */
+
 public final class RequisitionLabels {
 
-    /** Giá trị của ô lọc "Tin tuyển dụng" cho yêu cầu chưa có tin nào. */
+
     public static final String POSTING_NONE = "none";
 
-    /** Các trạng thái của tin tuyển dụng (cột JobPosting.PostingStatus). */
+
     public static final String POSTING_DRAFT = "Draft";
     public static final String POSTING_PUBLISHED = "Published";
     public static final String POSTING_PAUSED = "Paused";
     public static final String POSTING_CLOSED = "Closed";
 
-    /** Định dạng mã yêu cầu: REQ-0001, REQ-0025... (không kèm năm, theo quyết định của nhóm). */
+
     private static final String REQUISITION_CODE_FORMAT = "REQ-%04d";
 
     private RequisitionLabels() {
-        // Chỉ chứa hàm static, không tạo đối tượng
     }
 
-    /** Mã yêu cầu dạng REQ-0025: "REQ-" + RequisitionId, đệm cho đủ 4 chữ số. */
+
+    // Returns the display code for the requisition.
     public static String requisitionCode(Integer requisitionId) {
         return String.format(REQUISITION_CODE_FORMAT, requisitionId);
     }
 
-    /** Mã đã lưu; yêu cầu cũ chưa có mã thì sinh lại từ id. */
+
+    // Returns the display code for the requisition.
     public static String requisitionCode(Integer requisitionId, String savedCode) {
         if (savedCode == null || savedCode.isBlank()) {
             return requisitionCode(requisitionId);
@@ -40,7 +38,8 @@ public final class RequisitionLabels {
         return savedCode;
     }
 
-    /** Trạng thái duyệt của yêu cầu (JobRequisition.ApprovalStatus). */
+
+    // Returns the display label for an approval status.
     public static String approvalStatus(String status) {
         if (RequisitionAccess.STATUS_DRAFT.equals(status)) {
             return "Bản nháp";
@@ -57,7 +56,8 @@ public final class RequisitionLabels {
         return status;
     }
 
-    /** Tông badge trạng thái duyệt (success / warning / danger / neutral); template ghép thành "badge--...". */
+
+    // Returns the visual tone for an approval status.
     public static String approvalTone(String status) {
         if (RequisitionAccess.STATUS_APPROVED.equals(status)) {
             return "success";
@@ -71,7 +71,8 @@ public final class RequisitionLabels {
         return "neutral";
     }
 
-    /** Tông màu badge của tin tuyển dụng: đang đăng = xanh, tạm dừng = vàng, còn lại = xám. */
+
+    // Returns the visual tone for a posting status.
     public static String postingTone(String status) {
         if (POSTING_PUBLISHED.equals(status)) {
             return "success";
@@ -82,7 +83,8 @@ public final class RequisitionLabels {
         return "neutral";
     }
 
-    /** Hình thức làm việc (JobRequisition.EmploymentType). */
+
+    // Returns the display label for an employment type.
     public static String employmentType(String type) {
         if ("Full-time".equals(type)) {
             return "Toàn thời gian";
@@ -99,7 +101,8 @@ public final class RequisitionLabels {
         return type == null ? "—" : type;
     }
 
-    /** Mô hình làm việc (JobRequisition.WorkModel). */
+
+    // Returns the display label for a work model.
     public static String workModel(String model) {
         if ("On-site".equals(model)) {
             return "Tại văn phòng";
@@ -113,7 +116,8 @@ public final class RequisitionLabels {
         return model == null ? "—" : model;
     }
 
-    /** Lương theo đơn vị triệu: "20 – 30 triệu VND/tháng"; không nhập thì "Thỏa thuận". */
+
+    // Formats the salary range.
     public static String salary(BigDecimal min, BigDecimal max) {
         if (min == null && max == null) {
             return "Thỏa thuận";
@@ -127,17 +131,20 @@ public final class RequisitionLabels {
         return "Đến " + millions(max) + " triệu VND/tháng";
     }
 
+    // Formats an amount in millions.
     private static String millions(BigDecimal amount) {
         BigDecimal value = amount.divide(BigDecimal.valueOf(1_000_000), 2, RoundingMode.HALF_UP);
         return value.stripTrailingZeros().toPlainString().replace('.', ',');
     }
 
-    /** Thời gian thử việc (JobRequisition.ProbationPeriod); trống = không thử việc. */
+
+    // Returns the display label for a probation period.
     public static String probation(String period) {
         return period == null || period.isBlank() ? "Không thử việc" : period;
     }
 
-    /** Yêu cầu giới tính (JobRequisition.RequiredGender). */
+
+    // Returns the display label for a gender value.
     public static String gender(String gender) {
         if ("Male".equals(gender)) {
             return "Nam";
@@ -148,7 +155,8 @@ public final class RequisitionLabels {
         return "Không yêu cầu";
     }
 
-    /** Văn bản nhiều dòng → HTML: escape trước rồi mới đổi xuống dòng thành <br/> (chống XSS). */
+
+    // Converts plain text to safe multiline HTML.
     public static String multilineHtml(String text) {
         if (text == null || text.isBlank()) {
             return null;
@@ -156,7 +164,8 @@ public final class RequisitionLabels {
         return HtmlUtils.htmlEscape(text).replace("\r\n", "\n").replace("\n", "<br/>");
     }
 
-    /** Trạng thái tin tuyển dụng mới nhất của yêu cầu; null hoặc POSTING_NONE nghĩa là chưa có tin. */
+
+    // Returns the display label for a posting status.
     public static String postingStatus(String status) {
         if (status == null || POSTING_NONE.equals(status)) {
             return "Chưa có tin";

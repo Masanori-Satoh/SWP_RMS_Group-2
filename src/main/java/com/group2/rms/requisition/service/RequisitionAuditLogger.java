@@ -14,9 +14,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/*
- * AUDIT: ghi và đọc audit log của yêu cầu, mô tả thay đổi dạng "tên: cũ → mới".
- */
+
 @Component
 @RequiredArgsConstructor
 public class RequisitionAuditLogger {
@@ -29,7 +27,8 @@ public class RequisitionAuditLogger {
 
     private final AuditLogRepository audit;
 
-    /** Ghi một dòng audit log cho yêu cầu. */
+
+    // Records a requisition audit event.
     public void log(JobRequisition jobRequisition, User currentUser, String action, String oldValue, String newValue) {
         audit.save(AuditLog.builder()
                 .user(currentUser)
@@ -41,7 +40,8 @@ public class RequisitionAuditLogger {
                 .build());
     }
 
-    /** Ghi audit khi sửa: chỉ liệt kê các trường đã đổi ("tên: cũ → mới"). */
+
+    // Records the changed requisition fields.
     public void logChanges(JobRequisition jobRequisition, User currentUser, List<String> changedKeys,
             Map<String, String> before, Map<String, String> after) {
         log(jobRequisition, currentUser, ACTION_UPDATE,
@@ -49,12 +49,14 @@ public class RequisitionAuditLogger {
                 FieldChanges.describeChange(changedKeys, before, after));
     }
 
-    /** Lịch sử hoạt động của một yêu cầu, mới nhất trước (hiện ở màn chi tiết). */
+
+    // Returns the requisition audit history.
     public List<AuditLog> history(Integer requisitionId) {
         return audit.findByEntityNameAndEntityIdOrderByTimestampDesc(ENTITY_NAME, requisitionId.toString());
     }
 
-    /** Giá trị các trường người dùng thấy (key tiếng Việt), để so trước / sau khi sửa. */
+
+    // Returns a snapshot of user-visible requisition fields.
     public Map<String, String> snapshot(JobRequisition jobRequisition) {
         Map<String, String> snapshot = new LinkedHashMap<>();
         snapshot.put("Chức danh công việc", jobRequisition.getTitle());
@@ -79,7 +81,7 @@ public class RequisitionAuditLogger {
         return snapshot;
     }
 
-    /** 20000000.00 → "20000000" (bỏ số 0 thừa để so sánh trước / sau không bị lệch). */
+    // Formats a salary amount.
     private String formatNumber(BigDecimal number) {
         if (number == null) {
             return null;

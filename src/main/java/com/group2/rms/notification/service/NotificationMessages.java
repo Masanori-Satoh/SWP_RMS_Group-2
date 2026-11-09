@@ -107,12 +107,6 @@ public final class NotificationMessages {
                 requisition.getTitle(), requisitionCode(requisition), directorName, displayTime(decidedAt), reason);
     }
 
-    public static String requisitionWithdrawnContent(JobRequisition requisition, String actorName, LocalDateTime now) {
-        return String.format(
-                "%s đã rút lại yêu cầu tuyển dụng \"%s\" (Mã: %s) vào lúc %s. Yêu cầu trở về bản nháp, không cần phê duyệt nữa.",
-                actorName, requisition.getTitle(), requisitionCode(requisition), displayTime(now));
-    }
-
     public static String jobPostingPublishedContent(JobPosting posting, String hrName, LocalDateTime postingDate) {
         String deadline = "Không giới hạn";
         LocalDateTime applicationDeadline = posting.getApplicationDeadline();

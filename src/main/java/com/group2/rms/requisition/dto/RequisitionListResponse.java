@@ -12,5 +12,7 @@ public record RequisitionListResponse(
         Page<RequisitionResponse> page,
         RequisitionSearchRequest filter,
         RequisitionFilterOptions options,
-        List<FilterChip> chips) {
+        List<FilterChip> chips,
+        // Lỗi tham số URL (sắp xếp, phân trang, tin tuyển dụng); có lỗi thì page rỗng
+        List<String> errors) {
 }

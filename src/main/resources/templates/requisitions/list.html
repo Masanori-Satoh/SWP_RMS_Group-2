@@ -79,12 +79,13 @@
                             </select>
                         </div>
 
-                        <div class="mft-field">
-                            <label class="form-label" for="filter-sort">Sắp xếp theo</label>
-                            <select class="form-select" id="filter-sort" name="sort">
-                                <option th:each="option : ${list.options.sorts}" th:value="${option.value}"
-                                    th:text="${option.label}" th:selected="${option.value == list.filter.sort}">Mới nhất
-                                    trước</option>
+                        <div class="mft-field" th:if="${list.options.showEmploymentType}">
+                            <label class="form-label" for="filter-employment-type">Hình thức</label>
+                            <select class="form-select" id="filter-employment-type" name="employmentType">
+                                <option value="">Tất cả hình thức</option>
+                                <option th:each="option : ${list.options.employmentTypes}" th:value="${option.value}"
+                                    th:text="${option.label}"
+                                    th:selected="${option.value == list.filter.employmentType}">Toàn thời gian</option>
                             </select>
                         </div>
 
@@ -128,7 +129,10 @@
                     </svg>
                 </button>
                 <input class="form-control mft-search-input" id="requisition-search" type="search" name="q"
-                    th:value="${list.filter.q}" maxlength="120" placeholder="Tìm theo tên vị trí hoặc phòng ban">
+                    th:value="${list.filter.q}" maxlength="120" aria-describedby="requisition-search-error"
+                    placeholder="Tìm theo tên vị trí hoặc phòng ban">
+                <p class="field-error mft-search-error" id="requisition-search-error" role="alert" aria-live="polite"
+                    th:style="${#lists.contains(list.errors, 'Từ khóa tìm kiếm không được vượt quá 120 ký tự.')} ? null : 'display:none'">Từ khóa tìm kiếm không được vượt quá 120 ký tự.</p>
             </div>
         </form>
 
@@ -152,6 +156,7 @@
                 </span>
                 <h2 id="requisition-list-title" class="adw-panel-title">Danh sách yêu cầu tuyển dụng</h2>
 
+                <!-- 1. click on button create -->
                 <div class="requisition-page-actions" th:if="${canCreate}">
                     <a th:href="@{/requisitions/create}" class="btn btn--primary btn-create">+ Tạo yêu cầu mới</a>
                 </div>
@@ -189,7 +194,6 @@
                         </thead>
                         <tbody>
                             <tr th:each="req,row : ${list.page.content}">
-                                <!-- STT nối tiếp giữa các trang: trang 2 (number = 1), 10 dòng/trang → bắt đầu từ 11 -->
                                 <td th:text="${list.page.number * list.page.size + row.count}"></td>
                                 <td><a class="position-title" th:href="@{/requisitions/{id}(id=${req.requisitionId})}"
                                         th:text="${req.title}"></a></td>
@@ -247,12 +251,16 @@
                                     </details>
                                 </td>
                             </tr>
-                            <tr th:if="${list.page.empty}">
+                            <tr th:if="${list.page.empty and #lists.isEmpty(list.errors)}">
                                 <td colspan="10" class="empty-state">Không tìm thấy yêu cầu tuyển dụng nào. Hãy
                                     thử thay đổi hoặc đặt lại bộ lọc.</td>
                             </tr>
                         </tbody>
                     </table>
+                    <!-- Tham số URL sai (sắp xếp, phân trang, tin tuyển dụng): bảng trống, lỗi hiện ngay dưới bảng -->
+                    <div th:unless="${#lists.isEmpty(list.errors)}" role="alert">
+                        <p class="field-error" th:each="error : ${list.errors}" th:text="${error}"></p>
+                    </div>
                 </div>
             </div>
         </section>
