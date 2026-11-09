@@ -18,6 +18,11 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class OfferResponse {
 
+    public enum EmailStatus { SENT, TEST_RECIPIENT, NOT_SENT }
+
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+    private EmailStatus emailStatus;
+
     private Integer offerId;
     private Integer applicationId;
     private String candidateName;
@@ -25,11 +30,13 @@ public class OfferResponse {
     private String offeredPositionTitle;
     private BigDecimal proposedSalary;
     private BigDecimal probationSalary;
+    private Integer probationDays;
     private LocalDate expectedStartDate;
     private String workLocation;
     private String benefitsPackage;
     private Integer responsePeriodDays;
     private LocalDateTime responseDeadline;
+    private boolean responseExpired;
     private Integer proposedById;
     private String proposedByName;
     private String offerStatus;

@@ -11,6 +11,7 @@ import com.group2.rms.auth.dto.VerifyPasswordResetOtpRequest;
 import com.group2.rms.auth.exception.PasswordRecoveryFlowException;
 import com.group2.rms.auth.exception.PasswordRecoveryUnavailableException;
 import com.group2.rms.auth.exception.PasswordResetDeliveryException;
+import com.group2.rms.core.security.PageAccessDeniedHandler;
 import com.group2.rms.user.exception.DepartmentFieldException;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.validation.BeanPropertyBindingResult;
@@ -108,13 +109,25 @@ public class GlobalExceptionHandler {
         return ErrorPages.view(HttpStatus.NOT_FOUND, "Tài nguyên được yêu cầu không tồn tại.", request);
     }
 
+    // ducnm bổ sung: một số service (ví dụ InterviewSchedulingServiceImpl) vẫn ném jakarta.persistence.EntityNotFoundException
+    // thay vì ResourceNotFoundException; không bắt riêng thì rơi vào handler 500 ở cuối, sai mã lỗi với người dùng.
+    @ExceptionHandler(jakarta.persistence.EntityNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ModelAndView handleEntityNotFoundException(jakarta.persistence.EntityNotFoundException ex, HttpServletRequest request) {
+        log.warn("Entity not found at [{}]: {}", request.getRequestURL(), ex.getMessage());
+        return ErrorPages.view(HttpStatus.NOT_FOUND, request);
+    }
+
     // 403 forbidden
     @ExceptionHandler(AccessDeniedException.class)
-    @ResponseStatus(HttpStatus.FORBIDDEN)
-    public ModelAndView handleAccessDeniedException(AccessDeniedException ex, HttpServletRequest request) {
+    public ModelAndView handleAccessDeniedException(AccessDeniedException ex, HttpServletRequest request,
+                                                    HttpServletResponse response) {
         log.warn("Access denied for [{}] at [{}]: {}",
                 request.getUserPrincipal() != null ? request.getUserPrincipal().getName() : "Anonymous",
                 request.getRequestURL(), ex.getMessage());
+        if (PageAccessDeniedHandler.redirectIfPage(request, response, ex)) {
+            return new ModelAndView();
+        }
         return ErrorPages.view(HttpStatus.FORBIDDEN, request);
     }
 

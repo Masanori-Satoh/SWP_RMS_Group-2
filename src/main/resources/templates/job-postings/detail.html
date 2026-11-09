@@ -53,7 +53,7 @@
             <button th:if="${p.closable}" class="btn btn--danger" type="button" data-jp-action data-danger
                     th:data-url="@{/internal/job-postings/{id}/close(id=${p.jobPostingId})}" th:data-title="${p.postingTitle}"
                     data-heading="Đóng tin tuyển dụng?"
-                    data-message="Hồ sơ đang xử lý sẽ dừng, lịch chưa diễn ra được hủy. Hồ sơ đã nhận việc và Offer đã chấp nhận được giữ lại. Hệ thống chặn đóng nếu còn Offer chưa kết thúc."
+                    data-message="Hồ sơ đang xử lý sẽ dừng, lịch chưa diễn ra được hủy. Hồ sơ đã nhận việc và thư mời đã chấp nhận được giữ lại. Hệ thống chặn đóng nếu còn thư mời chưa kết thúc."
                     data-confirm="Đóng tin">Đóng tin</button>
             <button th:if="${p.deletable}" class="btn btn--danger" type="button" data-jp-action data-danger
                     th:data-url="@{/internal/job-postings/delete/{id}(id=${p.jobPostingId})}" th:data-title="${p.postingTitle}"
@@ -197,8 +197,10 @@
             <section class="card jpd-sec adw-surface" th:if="${p.talentPoolVisible}">
                 <h3>Ứng viên tiềm năng</h3>
                 <div class="jpd-links">
-                    <a class="btn btn--secondary btn--sm" th:href="@{/talent-pool/jobs/{id}/suggestions(id=${p.jobPostingId})}"
-                       th:text="${p.suggestionsLinkLabel}">Ứng viên tiềm năng</a>
+                    <a class="btn btn--secondary btn--sm" th:href="@{/talent-pool/jobs/{id}/suggestions(id=${p.jobPostingId})}">
+                        <span th:text="${p.suggestionsLinkLabel}">Ứng viên tiềm năng</span>
+                        <span class="badge badge--neutral" th:text="${suggestedCandidateCount}">0</span>
+                    </a>
                     <a class="btn btn--secondary btn--sm" th:href="@{/talent-pool/jobs/{id}/recommendations(id=${p.jobPostingId})}">
                         <span th:text="${p.recommendationsLinkLabel}">Gợi ý từ HR</span>
                         <span th:if="${hrRecommendationCount != null and hrRecommendationCount > 0}" class="badge badge--warning"

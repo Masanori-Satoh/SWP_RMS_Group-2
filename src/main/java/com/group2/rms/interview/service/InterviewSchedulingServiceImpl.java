@@ -22,6 +22,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -56,6 +57,7 @@ public class InterviewSchedulingServiceImpl implements InterviewSchedulingServic
     @Transactional
     public InterviewScheduleResponse createSchedule(InterviewScheduleRequest request, Integer creatorUserId) {
         log.info("Người dùng ID {} đang tạo lịch phỏng vấn cho Application ID {}", creatorUserId, request.getApplicationId());
+        completeEndedSchedules();
 
         // 1. Kiểm tra tồn tại của tài khoản tạo lịch (HR hoặc Director)
         User creatorUser = userRepository.findById(creatorUserId)
@@ -70,7 +72,10 @@ public class InterviewSchedulingServiceImpl implements InterviewSchedulingServic
 
         // 3. Kiểm tra ràng buộc thời gian & trạng thái qua InterviewTimeValidationService
         applicationStatusService.requireScheduleable(application.getApplicationId());
-        interviewTimeValidationService.validateForCreate(request);
+        // ducnm bổ sung: hủy lịch cũ trước khi kiểm tra trùng giờ để lịch thay thế được trùng giờ với chính lịch cũ.
+        // Lỗi ở các bước sau sẽ rollback cả việc hủy này.
+        boolean replacesActiveSchedule = cancelActiveSchedulesOf(application.getApplicationId());
+        interviewTimeValidationService.validateForCreate(request, application);
 
         // 4. Validate danh sách Hội đồng phỏng vấn (InterviewPanel)
         List<PanelMemberRequest> panelRequests = request.getPanelMembers();
@@ -122,7 +127,8 @@ public class InterviewSchedulingServiceImpl implements InterviewSchedulingServic
         }
 
         // 5. Khởi tạo và lưu InterviewSchedule
-        InterviewStatus initialStatus = request.getInterviewStatus() != null ? request.getInterviewStatus() : InterviewStatus.Scheduled;
+        // Trạng thái do hệ thống tự suy: thay thế lịch đang hoạt động thì là đổi lịch, ngược lại là lịch lần đầu
+        InterviewStatus initialStatus = replacesActiveSchedule ? InterviewStatus.Rescheduled : InterviewStatus.Scheduled;
         InterviewSchedule schedule = InterviewSchedule.builder()
                 .application(application)
                 .interviewFormat(request.getInterviewFormat())
@@ -144,7 +150,12 @@ public class InterviewSchedulingServiceImpl implements InterviewSchedulingServic
         // dunglt bổ sung: xếp lịch thì hồ sơ HM_Passed → Interviewing (luồng trạng thái hồ sơ)
         applicationStatusService.onInterviewScheduled(application.getApplicationId());
         // hoangnh bổ sung: báo hội đồng và ứng viên
-        notificationService.notifyInterviewScheduled(fullySavedSchedule, creatorUser);
+        // ducnm sửa: hồ sơ đã có lịch trước đó -> lịch mới này là Rescheduled, báo đúng chữ "đã thay đổi"
+        if (initialStatus == InterviewStatus.Rescheduled) {
+            notificationService.notifyInterviewRescheduled(fullySavedSchedule, creatorUser);
+        } else {
+            notificationService.notifyInterviewScheduled(fullySavedSchedule, creatorUser);
+        }
         log.info("Tạo lịch phỏng vấn thành công với Interview ID {}", fullySavedSchedule.getInterviewId());
 
         return InterviewScheduleResponse.fromEntity(fullySavedSchedule);
@@ -154,16 +165,24 @@ public class InterviewSchedulingServiceImpl implements InterviewSchedulingServic
     @Transactional
     public InterviewScheduleResponse updateSchedule(Long interviewId, InterviewScheduleRequest request, Integer updaterUserId) {
         log.info("Người dùng ID {} đang cập nhật lịch phỏng vấn ID {}", updaterUserId, interviewId);
+        completeEndedSchedules();
 
         InterviewSchedule schedule = interviewScheduleRepository.findByIdWithDetails(interviewId)
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy lịch phỏng vấn với ID: " + interviewId));
+
+        // Lịch đã Hoàn thành hoặc Đã hủy là trạng thái cuối, không sửa được nữa (GBR-01)
+        InterviewStatus statusBeforeUpdate = schedule.getInterviewStatus();
+        if (statusBeforeUpdate == InterviewStatus.Completed || statusBeforeUpdate == InterviewStatus.Cancelled) {
+            throw new InterviewStatusException("Lịch phỏng vấn đã " +
+                    (statusBeforeUpdate == InterviewStatus.Completed ? "hoàn thành" : "bị hủy") + ", không thể sửa được nữa.");
+        }
 
         User updaterUser = userRepository.findById(updaterUserId)
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy tài khoản người dùng với ID: " + updaterUserId));
         String updaterRole = updaterUser.getRole() != null ? updaterUser.getRole().getRoleName() : "";
         boolean isHrUpdater = "HR".equalsIgnoreCase(updaterRole);
 
-        // 1. Kiểm tra validation thời gian và trạng thái qua InterviewTimeValidationService
+        // 1. Kiểm tra validation thời gian qua InterviewTimeValidationService
         interviewTimeValidationService.validateForUpdate(interviewId, request, schedule);
 
         // 2. Cập nhật thời gian
@@ -182,9 +201,9 @@ public class InterviewSchedulingServiceImpl implements InterviewSchedulingServic
             schedule.setLocationOrLink(request.getLocationOrLink());
         }
 
-        InterviewStatus targetStatus = request.getInterviewStatus();
-        if (targetStatus != null && targetStatus != schedule.getInterviewStatus()) {
-            schedule.transitionTo(targetStatus);
+        // Mọi lần sửa thành công lịch đang hoạt động đều coi là đổi lịch (không cho người dùng tự chọn trạng thái)
+        if (schedule.getInterviewStatus() == InterviewStatus.Scheduled) {
+            schedule.transitionTo(InterviewStatus.Rescheduled);
         }
 
         // 4. Cập nhật Hội đồng phỏng vấn (nếu có danh sách mới)
@@ -253,6 +272,29 @@ public class InterviewSchedulingServiceImpl implements InterviewSchedulingServic
         return InterviewScheduleResponse.fromEntity(updated);
     }
 
+    private void completeEndedSchedules() {
+        interviewScheduleRepository.completeEndedSchedules(LocalDateTime.now());
+    }
+
+    /**
+     * ducnm bổ sung: mỗi hồ sơ chỉ có một lịch đang hoạt động. Các lịch chưa bắt đầu bị thay thế (Cancelled);
+     * lịch đã bắt đầu và chưa kết thúc thì không được thay vì hội đồng có thể đang phỏng vấn, đang chấm phiếu.
+     *
+     * @return true nếu đã thay thế ít nhất một lịch
+     */
+    private boolean cancelActiveSchedulesOf(Integer applicationId) {
+        List<InterviewSchedule> activeSchedules = interviewScheduleRepository.findActiveByApplicationId(applicationId);
+        LocalDateTime now = LocalDateTime.now();
+        for (InterviewSchedule active : activeSchedules) {
+            if (!active.getStartTime().isAfter(now)) {
+                throw new InterviewStatusException("Hồ sơ này đang có buổi phỏng vấn diễn ra, chưa thể tạo lịch mới.");
+            }
+            active.transitionTo(InterviewStatus.Cancelled);
+            interviewScheduleRepository.save(active);
+        }
+        return !activeSchedules.isEmpty();
+    }
+
     /**
      * Vai trò trong hội đồng suy từ role tài khoản khi form không chỉ định (CK_InterviewPanel_Role: HR, HM, Interviewer, Director).
      */
@@ -274,6 +316,7 @@ public class InterviewSchedulingServiceImpl implements InterviewSchedulingServic
     @Transactional
     public InterviewScheduleResponse cancelSchedule(Long interviewId, String reason, Integer hrUserId) {
         log.info("HR ID {} đang yêu cầu hủy lịch phỏng vấn ID {}. Lý do: {}", hrUserId, interviewId, reason);
+        completeEndedSchedules();
 
         InterviewSchedule schedule = interviewScheduleRepository.findByIdWithDetails(interviewId)
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy lịch phỏng vấn với ID: " + interviewId));
@@ -295,34 +338,44 @@ public class InterviewSchedulingServiceImpl implements InterviewSchedulingServic
     }
 
     @Override
+    @Transactional
     public InterviewScheduleResponse getScheduleDetail(Long interviewId) {
+        completeEndedSchedules();
         InterviewSchedule schedule = interviewScheduleRepository.findByIdWithDetails(interviewId)
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy lịch phỏng vấn với ID: " + interviewId));
         return InterviewScheduleResponse.fromEntity(schedule);
     }
 
     @Override
+    @Transactional
     public List<InterviewScheduleResponse> getAllForHR() {
+        completeEndedSchedules();
         return interviewScheduleRepository.findAllWithDetailsForHr().stream()
                 .map(InterviewScheduleResponse::fromEntity)
                 .toList();
     }
 
     @Override
+    @Transactional
     public Page<InterviewScheduleResponse> getAllForHRPaged(Pageable pageable) {
+        completeEndedSchedules();
         return interviewScheduleRepository.findAllPagedForHr(pageable)
                 .map(InterviewScheduleResponse::fromEntity);
     }
 
     @Override
+    @Transactional
     public List<InterviewScheduleResponse> getSchedulesByApplicationForHR(Integer applicationId) {
+        completeEndedSchedules();
         return interviewScheduleRepository.findByApplicationIdWithDetailsForHr(applicationId).stream()
                 .map(InterviewScheduleResponse::fromEntity)
                 .toList();
     }
 
     @Override
+    @Transactional
     public List<InterviewScheduleResponse> getMySchedulesForInterviewer(Integer interviewerId) {
+        completeEndedSchedules();
         if (interviewerId == null) {
             throw new IllegalArgumentException("Interviewer ID không được để trống.");
         }
@@ -333,7 +386,9 @@ public class InterviewSchedulingServiceImpl implements InterviewSchedulingServic
     }
 
     @Override
+    @Transactional
     public Page<InterviewScheduleResponse> getMySchedulesForInterviewerPaged(Integer interviewerId, Pageable pageable) {
+        completeEndedSchedules();
         if (interviewerId == null) {
             throw new IllegalArgumentException("Interviewer ID không được để trống.");
         }
@@ -343,7 +398,9 @@ public class InterviewSchedulingServiceImpl implements InterviewSchedulingServic
     }
 
     @Override
+    @Transactional
     public InterviewScheduleResponse getMyScheduleDetailForInterviewer(Long interviewId, Integer interviewerId) {
+        completeEndedSchedules();
         if (interviewId == null || interviewerId == null) {
             throw new IllegalArgumentException("Interview ID và Interviewer ID không được để trống.");
         }
@@ -357,7 +414,9 @@ public class InterviewSchedulingServiceImpl implements InterviewSchedulingServic
     }
 
     @Override
+    @Transactional
     public List<InterviewScheduleResponse> getSchedulesForCandidate(Integer candidateUserId) {
+        completeEndedSchedules();
         if (candidateUserId == null) {
             throw new IllegalArgumentException("Candidate User ID không được để trống.");
         }
@@ -367,7 +426,9 @@ public class InterviewSchedulingServiceImpl implements InterviewSchedulingServic
     }
 
     @Override
+    @Transactional
     public List<InterviewScheduleResponse> getSchedulesForDepartment(Integer departmentId) {
+        completeEndedSchedules();
         if (departmentId == null) {
             throw new IllegalArgumentException("Department ID không được để trống.");
         }

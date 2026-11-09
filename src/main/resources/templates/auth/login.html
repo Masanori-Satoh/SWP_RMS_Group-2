@@ -5,19 +5,24 @@
 
 <body class="auth-page auth-botanical auth-login">
   <header th:replace="~{auth/fragments :: header}"></header>
+  <th:block th:if="${param.logout}">
+    <link rel="stylesheet" th:href="@{/css/pages/flash-toast.css}">
+    <div th:replace="~{fragments/ui/flash-toast :: flashToast('Bạn đã đăng xuất.', null)}"></div>
+    <script defer th:src="@{/js/pages/flash-toast.js}"></script>
+  </th:block>
   <div class="auth-stage">
     <div th:replace="~{auth/fragments :: scene}"></div>
     <div class="auth-container auth-shell">
       <aside th:replace="~{auth/fragments :: story(botanical=true)}"></aside>
       <main id="main" class="card auth-card" tabindex="-1">
         <nav th:replace="~{auth/fragments :: tabs('login')}"></nav>
+        <p class="alert alert--danger auth-message" role="alert" th:if="${errorMessage}" th:text="${errorMessage}"></p>
         <h1>Chào mừng bạn trở lại!</h1>
         <p class="auth-intro">Đăng nhập để tiếp tục khám phá cơ hội nghề nghiệp phù hợp tại Mộc.</p>
         <!--error login--->
         <p class="alert alert--danger auth-message auth-error" role="alert" th:if="${param.error}">Thông tin đăng nhập
           không đúng hoặc tài khoản không hoạt động. Vui lòng thử lại hoặc <a th:href="@{/forgot-password}">đặt lại mật
             khẩu</a>.</p>
-        <p class="alert alert--success auth-message" role="status" th:if="${param.logout}">Bạn đã đăng xuất.</p>
         <p class="alert alert--success auth-message" role="status" th:if="${param.registered}"><strong>Tạo tài khoản
             thành công.</strong>Đăng nhập để tiếp tục.</p>
         <p class="alert alert--success auth-message" role="status" th:if="${param.reset}"><strong>Đặt lại mật khẩu thành

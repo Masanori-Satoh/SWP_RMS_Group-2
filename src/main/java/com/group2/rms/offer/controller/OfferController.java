@@ -55,7 +55,7 @@ public class OfferController {
                 userRole = "HR";
             } else {
                 throw new org.springframework.security.access.AccessDeniedException(
-                        "Bạn không có quyền truy cập vào phân hệ Quản lý Đề xuất nhận việc.");
+                        "Bạn không có quyền truy cập vào phân hệ Quản lý thư mời nhận việc.");
             }
         }
         model.addAttribute("currentUser", principal != null ? principal.getName() : "HR");
@@ -64,7 +64,8 @@ public class OfferController {
     }
 
     /**
-     * 1. VIEW LIST: Danh sách Offer có phân trang và lọc (Screen 30)
+     * Điểm vào GET /offers: phân nhánh giao diện HR/Giám đốc, chuẩn hóa tab rồi gọi service đọc dữ liệu.
+     * Controller chuẩn bị model; quyền theo URL do SecurityConfig quản lý, không dựa vào việc nút có hiện trên UI hay không.
      */
     @GetMapping
     public String listOffers(
@@ -124,7 +125,6 @@ public class OfferController {
         Page<OfferResponse> pagedData = offerService.getAllOffersForHr(search, status, timeSort,
                 PageRequest.of(validPage, size));
         model.addAttribute("activeMenu", "offers");
-        List<PassedCandidateResponse> passedCandidates = offerService.getPassedCandidatesForOffer();
 
         Map<String, Long> stats = offerService.getOfferStats();
         model.addAttribute("statTotal", stats.getOrDefault("statTotal", 0L));
@@ -141,7 +141,7 @@ public class OfferController {
         model.addAttribute("search", search != null ? search.trim() : "");
         model.addAttribute("currentStatus", status != null && !status.isBlank() ? status.trim() : "ALL");
         model.addAttribute("currentTimeSort", timeSort != null && !timeSort.isBlank() ? timeSort.trim() : "DEFAULT");
-        model.addAttribute("passedCandidates", passedCandidates);
+        model.addAttribute("passedCandidates", List.of());
 
         return "offers/list";
     }
@@ -186,93 +186,58 @@ public class OfferController {
         return "offers/form";
     }
 
-    /**
-     * 3a. SUBMIT CREATE VIA AJAX (JSON): Tiếp nhận request từ pop-up Modal trên
-     * trang danh sách
-     */
-    @PostMapping(value = "/create", consumes = MediaType.APPLICATION_JSON_VALUE)
-    @ResponseBody
-    public ResponseEntity<ApiResponse<OfferResponse>> createOfferJson(
-            @Valid @RequestBody CreateOfferRequest createRequest) {
-        try {
-            OfferResponse created = offerService.createOfferByHr(createRequest);
-            boolean isDraft = Boolean.TRUE.equals(createRequest.getIsDraft());
-            String msg = isDraft
-                    ? "Lưu bản nháp đề xuất nhận việc thành công!"
-                    : "Đã nộp trình đề xuất nhận việc lên Giám đốc thành công!";
-            return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse<>(true, msg, created));
-        } catch (BaseBusinessException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse<>(false, e.getMessage()));
-        }
-    }
 
     /**
      * 3b. SUBMIT CREATE: Tiếp nhận form tạo mới Offer (Save Draft hoặc Submit
      * Director)
      */
-    @PostMapping("/create")
+    @PostMapping(value = {"/create", "/{id}/edit"}, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public ResponseEntity<ApiResponse<Void>> rejectLegacyJsonForms() {
+        return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
+                .body(new ApiResponse<>(false, "Vui lòng sử dụng biểu mẫu tạo hoặc chỉnh sửa thư mời nhận việc."));
+    }
+
+    /**
+     * Nhận form tạo đề xuất: Bean Validation trước, sau đó service kiểm tra nghiệp vụ và lưu.
+     * Có lỗi thì dựng lại đúng form cùng dữ liệu đã nhập; thành công mới redirect kèm flash message.
+     */
+    @PostMapping(value = "/create", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
     public String createOffer(
             @Valid @ModelAttribute("offerDto") CreateOfferRequest createRequest,
             BindingResult errors,
             @RequestParam(required = false, defaultValue = "false") Boolean isLockedCandidate,
             Model model,
             RedirectAttributes flash) {
-
-        if (errors.hasErrors()) {
-            model.addAttribute("activeMenu", "offers");
-        List<PassedCandidateResponse> passedCandidates = offerService.getPassedCandidatesForOffer();
-            model.addAttribute("passedCandidates", passedCandidates);
-            model.addAttribute("isEdit", false);
-            boolean locked = Boolean.TRUE.equals(isLockedCandidate);
-            model.addAttribute("isLockedCandidate", locked);
-            if (locked && createRequest.getApplicationId() != null) {
-                passedCandidates.stream()
-                        .filter(c -> createRequest.getApplicationId().equals(c.getApplicationId()))
-                        .findFirst()
-                        .ifPresent(c -> model.addAttribute("fixedCandidate", c));
-            }
-            return "offers/form";
-        }
-
+        if (errors.hasErrors()) return renderCreateForm(model, createRequest, isLockedCandidate);
         try {
-            OfferResponse created = offerService.createOfferByHr(createRequest);
-            boolean isDraft = Boolean.TRUE.equals(createRequest.getIsDraft());
-            flash.addFlashAttribute("successMessage", isDraft
-                    ? "Lưu bản nháp đề xuất nhận việc thành công!"
-                    : "Đã nộp trình đề xuất nhận việc lên Giám đốc thành công!");
+            offerService.createOfferByHr(createRequest);
+            flash.addFlashAttribute("successMessage", Boolean.TRUE.equals(createRequest.getIsDraft())
+                    ? "Lưu bản nháp thư mời nhận việc thành công!"
+                    : "Đã gửi thư mời nhận việc để Giám đốc duyệt.");
             return "redirect:/offers";
-        } catch (BaseBusinessException e) {
-            errors.reject("businessError", e.getMessage());
-            model.addAttribute("activeMenu", "offers");
-            List<PassedCandidateResponse> passedCandidates = offerService.getPassedCandidatesForOffer();
-            model.addAttribute("passedCandidates", passedCandidates);
-            model.addAttribute("isEdit", false);
-            boolean locked = Boolean.TRUE.equals(isLockedCandidate);
-            model.addAttribute("isLockedCandidate", locked);
-            if (locked && createRequest.getApplicationId() != null) {
-                passedCandidates.stream()
-                        .filter(c -> createRequest.getApplicationId().equals(c.getApplicationId()))
-                        .findFirst()
-                        .ifPresent(c -> model.addAttribute("fixedCandidate", c));
-            }
-            return "offers/form";
-        } catch (Exception e) {
-            log.error("Lỗi không mong muốn khi tạo đề xuất nhận việc: {}", e.getMessage(), e);
-            errors.reject("businessError", "Không thể lưu đề xuất nhận việc: " + (e.getMessage() != null ? e.getMessage() : "Xung đột dữ liệu hệ thống."));
-            model.addAttribute("activeMenu", "offers");
-            List<PassedCandidateResponse> passedCandidates = offerService.getPassedCandidatesForOffer();
-            model.addAttribute("passedCandidates", passedCandidates);
-            model.addAttribute("isEdit", false);
-            boolean locked = Boolean.TRUE.equals(isLockedCandidate);
-            model.addAttribute("isLockedCandidate", locked);
-            if (locked && createRequest.getApplicationId() != null) {
-                passedCandidates.stream()
-                        .filter(c -> createRequest.getApplicationId().equals(c.getApplicationId()))
-                        .findFirst()
-                        .ifPresent(c -> model.addAttribute("fixedCandidate", c));
-            }
-            return "offers/form";
+        } catch (BaseBusinessException error) {
+            errors.reject("businessError", error.getMessage());
+        } catch (Exception error) {
+            log.error("Lỗi không mong muốn khi tạo thư mời nhận việc", error);
+            errors.reject("businessError", "Không thể lưu thư mời nhận việc. Vui lòng thử lại hoặc liên hệ bộ phận hỗ trợ.");
         }
+        return renderCreateForm(model, createRequest, isLockedCandidate);
+    }
+
+    /** Dựng lại cùng một form cho lỗi nhập liệu, lỗi nghiệp vụ và lỗi hệ thống; giữ nguyên dữ liệu đã nhập. */
+    private String renderCreateForm(Model model, CreateOfferRequest request, Boolean isLockedCandidate) {
+        List<PassedCandidateResponse> candidates = offerService.getPassedCandidatesForOffer();
+        boolean locked = Boolean.TRUE.equals(isLockedCandidate);
+        model.addAttribute("activeMenu", "offers");
+        model.addAttribute("passedCandidates", candidates);
+        model.addAttribute("isEdit", false);
+        model.addAttribute("isLockedCandidate", locked);
+        if (locked && request.getApplicationId() != null) {
+            candidates.stream().filter(candidate -> request.getApplicationId().equals(candidate.getApplicationId()))
+                    .findFirst().ifPresent(candidate -> model.addAttribute("fixedCandidate", candidate));
+        }
+        return "offers/form";
     }
 
     /**
@@ -283,7 +248,7 @@ public class OfferController {
     @ResponseBody
     public ResponseEntity<ApiResponse<OfferDetailResponse>> getOfferDetailJson(@PathVariable Integer id) {
         OfferDetailResponse detail = offerService.getOfferDetailForHr(id);
-        return ResponseEntity.ok(new ApiResponse<>(true, "Lấy chi tiết đề xuất nhận việc thành công.", detail));
+        return ResponseEntity.ok(new ApiResponse<>(true, "Lấy chi tiết thư mời nhận việc thành công.", detail));
     }
 
     /**
@@ -319,37 +284,10 @@ public class OfferController {
     }
 
     /**
-     * 6a. SUBMIT EDIT VIA AJAX (JSON): Cập nhật Offer Proposal từ pop-up Modal
+     * Nhận form chỉnh sửa; service kiểm tra Draft và khóa bản ghi, không tin trạng thái do trình duyệt gửi.
+     * Validation lỗi trả về form; lưu thành công dùng redirect để tránh gửi lại form khi refresh.
      */
-    @PutMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
-    @ResponseBody
-    public ResponseEntity<ApiResponse<OfferResponse>> updateOfferJson(
-            @PathVariable Integer id,
-            @Valid @RequestBody UpdateOfferRequest updateRequest) {
-        try {
-            OfferResponse updated = offerService.updateOfferByHr(id, updateRequest);
-            boolean isDraft = Boolean.TRUE.equals(updateRequest.getIsDraft());
-            String msg = isDraft
-                    ? "Cập nhật bản nháp đề xuất nhận việc thành công!"
-                    : "Đã nộp trình đề xuất nhận việc lên Giám đốc thành công!";
-            return ResponseEntity.ok(new ApiResponse<>(true, msg, updated));
-        } catch (BaseBusinessException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse<>(false, e.getMessage()));
-        }
-    }
-
-    @PostMapping(value = "/{id}/edit", consumes = MediaType.APPLICATION_JSON_VALUE)
-    @ResponseBody
-    public ResponseEntity<ApiResponse<OfferResponse>> updateOfferJsonPost(
-            @PathVariable Integer id,
-            @Valid @RequestBody UpdateOfferRequest updateRequest) {
-        return updateOfferJson(id, updateRequest);
-    }
-
-    /**
-     * 6b. SUBMIT EDIT: Cập nhật Offer Proposal (Form Submit Fallback)
-     */
-    @PostMapping("/{id}/edit")
+    @PostMapping(value = "/{id}/edit", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
     public String updateOffer(
             @PathVariable Integer id,
             @Valid @ModelAttribute("offerDto") UpdateOfferRequest updateRequest,
@@ -371,8 +309,8 @@ public class OfferController {
             offerService.updateOfferByHr(id, updateRequest);
             boolean isDraft = Boolean.TRUE.equals(updateRequest.getIsDraft());
             flash.addFlashAttribute("successMessage", isDraft
-                    ? "Cập nhật bản nháp đề xuất nhận việc thành công!"
-                    : "Đã nộp trình đề xuất nhận việc lên Giám đốc thành công!");
+                    ? "Cập nhật bản nháp thư mời nhận việc thành công!"
+                    : "Đã gửi thư mời nhận việc để Giám đốc duyệt.");
             return "redirect:/offers/" + id;
         } catch (BaseBusinessException e) {
             errors.reject("businessError", e.getMessage());
@@ -394,14 +332,14 @@ public class OfferController {
     public ResponseEntity<ApiResponse<Void>> deleteOfferJson(@PathVariable Integer id) {
         try {
             offerService.deleteDraftOfferByHr(id);
-            return ResponseEntity.ok(new ApiResponse<>(true, "Đã xóa bản nháp đề xuất nhận việc thành công."));
+            return ResponseEntity.ok(new ApiResponse<>(true, "Đã xóa bản nháp thư mời nhận việc thành công."));
         } catch (BaseBusinessException e) {
             HttpStatus status = (e instanceof ResourceNotFoundException) ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST;
             return ResponseEntity.status(status).body(new ApiResponse<>(false, e.getMessage()));
         } catch (Exception e) {
             log.error("Lỗi không mong muốn khi xóa bản nháp Offer ID {}: {}", id, e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ApiResponse<>(false, "Đã xảy ra lỗi hệ thống khi xóa bản nháp đề xuất nhận việc."));
+                    .body(new ApiResponse<>(false, "Đã xảy ra lỗi hệ thống khi xóa bản nháp thư mời nhận việc."));
         }
     }
 
@@ -412,7 +350,7 @@ public class OfferController {
     public String deleteOffer(@PathVariable Integer id, RedirectAttributes flash) {
         try {
             offerService.deleteDraftOfferByHr(id);
-            flash.addFlashAttribute("successMessage", "Đã xóa bản nháp đề xuất nhận việc thành công.");
+            flash.addFlashAttribute("successMessage", "Đã xóa bản nháp thư mời nhận việc thành công.");
         } catch (BaseBusinessException e) {
             flash.addFlashAttribute("errorMessage", e.getMessage());
         }
@@ -429,7 +367,7 @@ public class OfferController {
         try {
             OfferResponse sentOffer = offerService.sendOfferToCandidate(id);
             return ResponseEntity.ok(new ApiResponse<>(true,
-                    "Đã phát hành và gửi thư mời nhận việc tới ứng viên thành công!", sentOffer));
+                    offerPublicationMessage(sentOffer), sentOffer));
         } catch (BaseBusinessException e) {
             HttpStatus status = (e instanceof ResourceNotFoundException) ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST;
             return ResponseEntity.status(status).body(new ApiResponse<>(false, e.getMessage()));
@@ -447,17 +385,30 @@ public class OfferController {
     @PostMapping("/{id}/send")
     public String sendOfferToCandidate(@PathVariable Integer id, RedirectAttributes flash) {
         try {
-            offerService.sendOfferToCandidate(id);
-            flash.addFlashAttribute("successMessage",
-                    "Đã phát hành và gửi thư mời nhận việc tới ứng viên thành công!");
+            OfferResponse sentOffer = offerService.sendOfferToCandidate(id);
+            String flashType = sentOffer.getEmailStatus() == OfferResponse.EmailStatus.SENT
+                    ? "successMessage" : "offerWarningMessage";
+            flash.addFlashAttribute(flashType, offerPublicationMessage(sentOffer));
         } catch (BaseBusinessException e) {
             flash.addFlashAttribute("errorMessage", e.getMessage());
         }
         return "redirect:/offers/" + id;
     }
 
+    private String offerPublicationMessage(OfferResponse offer) {
+        String published = "Đã phát hành thư mời nhận việc trên cổng ứng viên.";
+        if (offer.getEmailStatus() == OfferResponse.EmailStatus.SENT) {
+            return published + " Đã gửi email thông báo.";
+        }
+        if (offer.getEmailStatus() == OfferResponse.EmailStatus.TEST_RECIPIENT) {
+            return published + " Email chỉ được gửi tới địa chỉ kiểm thử.";
+        }
+        return published + " Chưa gửi được email thông báo.";
+    }
+
     /**
-     * 9a. DIRECTOR APPROVE VIA AJAX (JSON): Director duyệt Offer Proposal
+     * Nhận quyết định duyệt của Giám đốc qua JSON; service dùng cập nhật có điều kiện để chặn quyết định cũ.
+     * Xung đột OFFER_STATUS_INVALID được trả HTTP 409 để người dùng tải lại dữ liệu.
      */
     @PostMapping(value = "/{id}/approve", consumes = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
@@ -466,19 +417,21 @@ public class OfferController {
             @Valid @RequestBody DirectorDecisionRequest request) {
         try {
             OfferResponse approved = offerService.approveOfferByDirector(id, request.getComments());
-            return ResponseEntity.ok(new ApiResponse<>(true, "Đã phê duyệt đề xuất nhận việc thành công!", approved));
+            return ResponseEntity.ok(new ApiResponse<>(true, "Đã phê duyệt thư mời nhận việc thành công!", approved));
         } catch (BaseBusinessException e) {
-            HttpStatus status = (e instanceof ResourceNotFoundException) ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST;
+            HttpStatus status = e instanceof ResourceNotFoundException ? HttpStatus.NOT_FOUND
+                    : "OFFER_STATUS_INVALID".equals(e.getErrorCode()) ? HttpStatus.CONFLICT : HttpStatus.BAD_REQUEST;
             return ResponseEntity.status(status).body(new ApiResponse<>(false, e.getMessage()));
         } catch (Exception e) {
-            log.error("Lỗi không mong muốn khi phê duyệt đề xuất nhận việc ID {}: {}", id, e.getMessage(), e);
+            log.error("Lỗi không mong muốn khi phê duyệt thư mời nhận việc ID {}: {}", id, e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ApiResponse<>(false, "Đã xảy ra lỗi hệ thống khi phê duyệt đề xuất nhận việc."));
+                    .body(new ApiResponse<>(false, "Đã xảy ra lỗi hệ thống khi phê duyệt thư mời nhận việc."));
         }
     }
 
     /**
-     * 9b. DIRECTOR REJECT VIA AJAX (JSON): Director từ chối Offer Proposal
+     * Từ chối đề xuất nội bộ: controller bắt buộc lý do trước khi gọi service lưu quyết định.
+     * Không nhầm với việc ứng viên từ chối thư mời đã phát hành ở /portal/offers.
      */
     @PostMapping(value = "/{id}/reject", consumes = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
@@ -491,14 +444,15 @@ public class OfferController {
                         .body(new ApiResponse<>(false, "Vui lòng nhập lý do từ chối vào ô nhận xét trước khi tiếp tục."));
             }
             OfferResponse rejected = offerService.rejectOfferByDirector(id, request.getComments().trim());
-            return ResponseEntity.ok(new ApiResponse<>(true, "Đã từ chối đề xuất nhận việc thành công!", rejected));
+            return ResponseEntity.ok(new ApiResponse<>(true, "Đã từ chối thư mời nhận việc thành công!", rejected));
         } catch (BaseBusinessException e) {
-            HttpStatus status = (e instanceof ResourceNotFoundException) ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST;
+            HttpStatus status = e instanceof ResourceNotFoundException ? HttpStatus.NOT_FOUND
+                    : "OFFER_STATUS_INVALID".equals(e.getErrorCode()) ? HttpStatus.CONFLICT : HttpStatus.BAD_REQUEST;
             return ResponseEntity.status(status).body(new ApiResponse<>(false, e.getMessage()));
         } catch (Exception e) {
-            log.error("Lỗi không mong muốn khi từ chối đề xuất nhận việc ID {}: {}", id, e.getMessage(), e);
+            log.error("Lỗi không mong muốn khi từ chối thư mời nhận việc ID {}: {}", id, e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ApiResponse<>(false, "Đã xảy ra lỗi hệ thống khi từ chối đề xuất nhận việc."));
+                    .body(new ApiResponse<>(false, "Đã xảy ra lỗi hệ thống khi từ chối thư mời nhận việc."));
         }
     }
 

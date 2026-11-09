@@ -1,3 +1,4 @@
+> **Ghi chú 06/11/2026:** Chấm CV bằng AI (`AI_Screened`, `AIScreeningResult`, `OverallScore`) và tiêu chí sàng lọc (`ScreeningCriteria`) đã gỡ khỏi hệ thống (migration `013`, `014`). Phần nhắc tới chúng bên dưới là nội dung tại thời điểm viết, không còn đúng với hệ thống.
 
 Dưới đây là bản tổng hợp toàn bộ **luồng code (End-to-End Code Flow)** và **danh sách các công việc/trách nhiệm (Checklist & Tasks)** của thành viên **Nguyễn Huy Hoàng (hoangnh)** trong dự án RMS, bao gồm 3 phân hệ chính: **Job Requisition**, **Job Posting (nội bộ)** và **Notification**.
 

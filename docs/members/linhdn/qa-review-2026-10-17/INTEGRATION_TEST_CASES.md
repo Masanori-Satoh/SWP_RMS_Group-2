@@ -1,5 +1,7 @@
 # Integration Test cases RMS của Linh
 
+> **Ghi chú 06/11/2026:** Chấm CV bằng AI (`AI_Screened`, `AIScreeningResult`, `OverallScore`) và tiêu chí sàng lọc (`ScreeningCriteria`) đã gỡ khỏi hệ thống (migration `013`, `014`). Phần nhắc tới chúng bên dưới là nội dung tại thời điểm viết, không còn đúng với hệ thống.
+
 Ngày lập: 17/10/2026. **64 ca thiết kế**, chưa thực thi. Actual Result để trống và Status Pending ở từng ca. Code hiện tại là cơ sở Expected Result; SRS cũ chỉ dùng truy vết theo xác nhận của chủ dự án.
 
 Đọc [Test Plan](TEST_PLAN.md) trước khi thực hiện, đặc biệt phần transaction, DB test riêng, mail/file và fixture. Nếu chỉ thao tác website, dùng [System Test thủ công](SYSTEM_TEST_MANUAL.md). Mỗi biến thể cần evidence riêng, có thể thêm hậu tố `.v1`, `.v2`.

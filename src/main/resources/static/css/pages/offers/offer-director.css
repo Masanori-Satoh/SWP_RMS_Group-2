@@ -1,0 +1,250 @@
+/* =============================================================================
+   offer-director.css - Director Role Offer Management Styles
+   Mộc RMS Group 2 — Offer Management Module (Developer: HuyenPT)
+   Architecture: Role-based (Common / HR / Director / Candidate)
+   Scope: Exclusively styles Director Offer List, Quick Decision Modal,
+          and Offer Detail Director Review Card & Actions.
+   ============================================================================= */
+
+/* =============================================================================
+   SECTION A — DIRECTOR LIST WORKSPACE
+   Overview stat cards, status tabs, director table column alignments
+   ============================================================================= */
+
+/* A.1 Director Stats Grid & Compact Stat Cards */
+.ofw-director-stats-grid,
+.director-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--s4, 16px);
+  margin-bottom: var(--s6, 24px);
+}
+
+.director-stat-card.ofw-stat-card,
+.director-stat-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: var(--s4, 16px) var(--s5, 20px);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg, 12px);
+  box-shadow: var(--shadow-sm, 0 1px 2px 0 color-mix(in srgb, var(--ink) 5%, transparent));
+  transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease, background-color .15s ease;
+  cursor: pointer;
+  box-sizing: border-box;
+  text-align: left;
+  width: 100%;
+}
+
+.director-stat-card:hover,
+button.director-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md, 0 4px 6px -1px color-mix(in srgb, var(--ink) 10%, transparent));
+  border-color: var(--brand);
+}
+
+.director-stat-card.ofw-stat-card--active,
+.director-stat-card.ofw-stat-card--active:hover {
+  border-color: var(--brand);
+  background: color-mix(in srgb, var(--brand-soft) 40%, var(--surface));
+}
+
+/* A.2 Director Tabs (All / Pending / Reviewed) */
+.ofw-director-tabs {
+  display: flex;
+  gap: var(--s2, 8px);
+  margin-bottom: var(--s5, 20px);
+}
+
+.ofw-director-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s2, 8px);
+  padding: 8px 18px;
+  border-radius: var(--radius-full, 9999px);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all .15s ease;
+}
+
+.ofw-director-tab:hover {
+  background: var(--surface-subtle);
+  color: var(--brand-dark);
+}
+
+.ofw-director-tab.active {
+  background: var(--brand);
+  color: var(--surface);
+  border-color: var(--brand);
+}
+
+/* =============================================================================
+   SECTION B — QUICK DECISION MODAL
+   #directorDecisionModal popup for fast approve / reject with feedback
+   ============================================================================= */
+
+.director-decision-textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 10px 14px;
+  font-size: 13.5px;
+  font-family: inherit;
+  color: var(--ink);
+  background: var(--surface);
+  resize: vertical;
+  min-height: 80px;
+  box-sizing: border-box;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.director-decision-textarea:focus {
+  border-color: var(--brand-dark);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-dark) 12%, transparent);
+}
+
+.director-decision-textarea.is-invalid {
+  border-color: var(--error) !important;
+  box-shadow: 0 0 0 3px var(--error-soft) !important;
+}
+
+.director-comment-counter {
+  font-size: 12px;
+  color: var(--muted);
+  text-align: right;
+  margin-top: 4px;
+}
+
+.director-modal-candidate-summary {
+  background: var(--surface-subtle);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px 16px;
+  font-size: 13.5px;
+}
+
+.director-modal-summary-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.director-modal-summary-label {
+  font-size: 11.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.director-modal-summary-val {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+/* =============================================================================
+   SECTION C — DIRECTOR DETAIL DECISION
+   Section 3 in offers/detail.html: Decision card, buttons, audit overrides
+   ============================================================================= */
+
+/* C.1 Director Decision Card (Matching Production offers.css line 1409) */
+.director-decision-card {
+  border: 1px solid var(--brand-dark);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--surface);
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--brand-dark) 8%, transparent);
+}
+
+.director-decision-card-header {
+  background: var(--brand-dark);
+  color: var(--surface);
+  padding: 12px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.director-decision-card-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--surface);
+  margin: 0;
+}
+
+.director-badge-final {
+  background: color-mix(in srgb, var(--surface) 15%, transparent);
+  border: 1px solid color-mix(in srgb, var(--surface) 30%, transparent);
+  color: var(--surface);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.director-decision-card-body {
+  padding: 18px 20px;
+}
+
+.director-comment-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 8px;
+}
+
+.director-decision-subnote {
+  font-size: 12.5px;
+  color: var(--muted);
+  margin-top: 8px;
+}
+
+.director-decision-footer-btns {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+  padding-top: 14px;
+}
+
+/* C.2 Director Decision Detail Action Buttons */
+
+/* =============================================================================
+   SECTION D — RESPONSIVE BREAKPOINTS
+   Desktop (1440px), Tablet (768px), Mobile (390px)
+   ============================================================================= */
+
+@media (max-width: 768px) {
+  .ofw-director-stats-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ofw-required-mark {
+  color: var(--error);
+  font-weight: 700;
+}

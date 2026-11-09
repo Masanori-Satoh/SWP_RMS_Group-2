@@ -1,5 +1,7 @@
 # Test Plan và danh sách kiểm thử RMS của Linh
 
+> **Ghi chú 06/11/2026:** Chấm CV bằng AI (`AI_Screened`, `AIScreeningResult`, `OverallScore`) và tiêu chí sàng lọc (`ScreeningCriteria`) đã gỡ khỏi hệ thống (migration `013`, `014`). Phần nhắc tới chúng bên dưới là nội dung tại thời điểm viết, không còn đúng với hệ thống.
+
 Ngày lập: 17/10/2026. Trạng thái: bản thiết kế để người kiểm thử tự thực hiện.
 
 Chưa chạy test trong lượt rà soát này. Actual Result để trống, Status là Pending.

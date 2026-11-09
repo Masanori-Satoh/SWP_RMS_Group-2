@@ -352,6 +352,7 @@ public class RequisitionController {
         model.addAttribute("employmentTypes", RequisitionValidator.EMPLOYMENT_TYPES);
         model.addAttribute("genders", RequisitionValidator.GENDERS);
         model.addAttribute("probationLimit", RequisitionValidator.PROBATION_CHAR_LIMIT);
+        // Giới hạn số lượng cần tuyển, dùng cho min/max của ô số lượng và nút −/+
         model.addAttribute("positionsMin", RequisitionValidator.POSITIONS_MIN);
         model.addAttribute("positionsMax", RequisitionValidator.POSITIONS_MAX);
         model.addAttribute("roundMin", RequisitionValidator.ROUND_MIN);

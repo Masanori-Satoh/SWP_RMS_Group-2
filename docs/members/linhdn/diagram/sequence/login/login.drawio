@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<mxfile host="Electron" agent="Codex - source-grounded UML" version="32.6.1" type="device">
+<mxfile host="Electron" version="32.6.1" type="device">
   <diagram id="rms-login-sequence" name="Login">
     <mxGraphModel dx="2500" dy="3980" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2500" pageHeight="3980" math="0" shadow="0" background="#FFFFFF">
       <root>

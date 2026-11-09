@@ -15,7 +15,7 @@
     + static/css/pages/interview-workspace.css (ivw-).
 -->
 <head>
-    <title th:text="|Kết quả phỏng vấn — ${result.candidateName ?: 'Ứng viên'}|">Kết quả phỏng vấn</title>
+    <title th:text="${result != null ? 'Kết quả phỏng vấn — ' + (result.candidateName ?: 'Ứng viên') : 'Kết quả phỏng vấn'}">Kết quả phỏng vấn</title>
     <th:block layout:fragment="styles">
         <link rel="stylesheet" th:href="@{/css/pages/interview-common.css}">
         <link rel="stylesheet" th:href="@{/css/pages/interview-result.css}">
@@ -28,6 +28,13 @@
 <main id="main" layout:fragment="content" class="page-content container adw-page ivw-page ir-page" tabindex="-1">
     <th:block th:replace="~{fragments/ui/admin-workspace :: scene}"></th:block>
 
+    <!-- ducnm bổ sung: không thuộc hội đồng của buổi này (GBR-05) -> ẩn toàn bộ nội dung kết quả, chỉ hiện banner -->
+    <!--/* th:replace chạy trước th:if trên cùng một thẻ, nên điều kiện phải đặt ở thẻ bọc ngoài */-->
+    <th:block th:if="${accessDenied}">
+        <div th:replace="~{fragments/ui/access-denied-banner :: banner('Bạn không có quyền truy cập vào trang này.')}"></div>
+    </th:block>
+
+    <div th:unless="${accessDenied}">
     <div class="adw-heading ivw-heading">
         <div class="app-candidate-name-row">
             <h1 class="page-title adw-title" th:text="${result.candidateName ?: 'Ứng viên'}">Nguyễn Văn An</h1>
@@ -97,11 +104,11 @@
                     </div>
                     <div class="ir-facts__item">
                         <dt>Địa điểm / Link</dt>
-                        <dd th:if="${result.locationOrLink != null and #strings.startsWith(result.locationOrLink, 'http')}">
+                        <dd th:if="${result.locationOrLink != null and (#strings.startsWith(result.locationOrLink, 'http://') or #strings.startsWith(result.locationOrLink, 'https://'))}">
                             <a th:href="${result.locationOrLink}" target="_blank" rel="noopener"
                                th:text="${result.locationOrLink}">https://meet.google.com/abc</a>
                         </dd>
-                        <dd th:unless="${result.locationOrLink != null and #strings.startsWith(result.locationOrLink, 'http')}"
+                        <dd th:unless="${result.locationOrLink != null and (#strings.startsWith(result.locationOrLink, 'http://') or #strings.startsWith(result.locationOrLink, 'https://'))}"
                             th:text="${result.locationOrLink ?: '—'}">Phòng họp 3</dd>
                     </div>
                     <div class="ir-facts__item" th:if="${result.evaluationDeadline != null}">
@@ -279,12 +286,13 @@
     <th:block th:if="${result.canFinalize}">
         <dialog th:replace="~{interview/final-result-dialog :: dialog(interviewId=${result.interviewId}, submittedCount=${result.submittedCount}, panelSize=${#lists.size(result.panel)}, current=${result.finalResult})}"></dialog>
     </th:block>
+    </div>
 </main>
 <th:block layout:fragment="scripts">
-    <script th:if="${result.canEvaluate or result.canFinalize}" defer th:src="@{/js/pages/interview-result.js}"></script>
+    <script th:if="${result != null and (result.canEvaluate or result.canFinalize)}" defer th:src="@{/js/pages/interview-result.js}"></script>
     <script defer th:src="@{/js/pages/flash-toast.js}"></script>
     <th:block th:replace="~{fragments/ui/admin-workspace :: scripts}"></th:block>
-    <script th:if="${result.applicationId != null and topbarUser != null and (topbarUser.roleName == 'HR' or topbarUser.roleName == 'Hiring Manager')}" defer th:src="@{/js/pages/potential-candidate-toggle.js}"></script>
+    <script th:if="${result != null and result.applicationId != null and topbarUser != null and (topbarUser.roleName == 'HR' or topbarUser.roleName == 'Hiring Manager')}" defer th:src="@{/js/pages/potential-candidate-toggle.js}"></script>
 </th:block>
 </body>
 </html>

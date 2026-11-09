@@ -11,7 +11,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
- * 3.19 OfferProposal - Đề xuất offer lương do Hiring Manager / HR tạo.
+ * 3.19 OfferProposal - Đề xuất thư mời do HR tạo; Giám đốc chỉ duyệt hoặc từ chối.
  * Quan hệ 1-1 với Application (UNIQUE constraint trên ApplicationId).
  * OfferStatus: Draft, Pending_Director, Director_Approved, Director_Rejected, Sent_Candidate,
  * Accepted, Declined
@@ -46,6 +46,10 @@ public class OfferProposal extends BaseEntity {
     @Column(name = "ProbationSalary", nullable = false, precision = 18, scale = 2)
     private BigDecimal probationSalary;
 
+    @Column(name = "ProbationDays", nullable = false)
+    @Builder.Default
+    private Integer probationDays = 60;
+
     @Column(name = "ExpectedStartDate")
     private LocalDate expectedStartDate;
 
@@ -60,7 +64,7 @@ public class OfferProposal extends BaseEntity {
     private User proposedBy;
 
     /**
-     * Draft, Pending_Director, Director_Approved, Director_Rejected, Sent_Candidate, Accepted, Declined
+     * Draft, Pending_Director, Director_Approved, Director_Rejected, Sent_Candidate, Expired, Accepted, Declined
      */
     @Column(name = "OfferStatus", nullable = false, length = 40)
     private String offerStatus;
@@ -77,4 +81,13 @@ public class OfferProposal extends BaseEntity {
     @Column(name = "IsDeleted")
     @Builder.Default
     private Boolean isDeleted = false;
+    /**
+     * Expired là hết hạn đã lưu; Sent_Candidate cũng coi là hết hạn nếu đã qua mốc thời gian, dù job chưa chạy.
+     * Dùng chung cho nhãn quá hạn của HR/ứng viên; chỉ tính toán, không thay đổi dữ liệu database.
+     */
+    public boolean isResponseExpiredAt(LocalDateTime now) {
+        return "Expired".equals(offerStatus) || "Sent_Candidate".equals(offerStatus)
+                && (responseDeadline != null && now.isAfter(responseDeadline)
+                    || expectedStartDate != null && expectedStartDate.isBefore(now.toLocalDate()));
+    }
 }

@@ -336,7 +336,7 @@ class TalentPoolDecisionUnitTests {
         // When: Gọi nghiệp vụ cần kiểm tra với dữ liệu đã chuẩn bị.
         service.closeJob(20);
         // Then: Kiểm tra kết quả và số lần gọi repository theo đúng ca này.
-        verify(applications, times(0)).transition(100, Set.of("Interviewing"), "Rejected");
+        verify(applications, times(0)).transition(100, Set.of("Interviewing"), "Cancelled");
         verify(audit, times(0)).cancelInterviews(100);
         verify(audit, times(0)).record(5, "UPDATE", "Application", 100, null, "InterviewCancelledOnClose");
         verify(audit, times(0)).record(5, "UPDATE", "Application", 100, "Interviewing", "PostingClosed");
@@ -353,7 +353,7 @@ class TalentPoolDecisionUnitTests {
         // When: Gọi nghiệp vụ cần kiểm tra với dữ liệu đã chuẩn bị.
         service.closeJob(20);
         // Then: Kiểm tra kết quả và số lần gọi repository theo đúng ca này.
-        verify(applications, times(1)).transition(100, Set.of("Interviewing"), "Rejected");
+        verify(applications, times(1)).transition(100, Set.of("Interviewing"), "Cancelled");
         verify(audit, times(0)).cancelInterviews(100);
         verify(audit, times(0)).record(5, "UPDATE", "Application", 100, null, "InterviewCancelledOnClose");
         verify(audit, times(0)).record(5, "UPDATE", "Application", 100, "Interviewing", "PostingClosed");
@@ -367,12 +367,12 @@ class TalentPoolDecisionUnitTests {
         when(jobs.findForUpdate(20)).thenReturn(Optional.of(job));
         application.setApplicationStatus("Interviewing");
         when(poolApplications.findPendingApplicationsForClosedJob(20)).thenReturn(List.of(application));
-        when(applications.transition(100, Set.of("Interviewing"), "Rejected")).thenReturn(1);
+        when(applications.transition(100, Set.of("Interviewing"), "Cancelled")).thenReturn(1);
         when(audit.cancelInterviews(100)).thenReturn(2);
         // When: Gọi nghiệp vụ cần kiểm tra với dữ liệu đã chuẩn bị.
         service.closeJob(20);
         // Then: Kiểm tra kết quả và số lần gọi repository theo đúng ca này.
-        verify(applications, times(1)).transition(100, Set.of("Interviewing"), "Rejected");
+        verify(applications, times(1)).transition(100, Set.of("Interviewing"), "Cancelled");
         verify(audit, times(1)).cancelInterviews(100);
         verify(audit, times(1)).record(5, "UPDATE", "Application", 100, null, "InterviewCancelledOnClose");
         verify(audit, times(1)).record(5, "UPDATE", "Application", 100, "Interviewing", "PostingClosed");
@@ -386,11 +386,11 @@ class TalentPoolDecisionUnitTests {
         when(jobs.findForUpdate(20)).thenReturn(Optional.of(job));
         application.setApplicationStatus("Interviewing");
         when(poolApplications.findPendingApplicationsForClosedJob(20)).thenReturn(List.of(application));
-        when(applications.transition(100, Set.of("Interviewing"), "Rejected")).thenReturn(1);
+        when(applications.transition(100, Set.of("Interviewing"), "Cancelled")).thenReturn(1);
         // When: Gọi nghiệp vụ cần kiểm tra với dữ liệu đã chuẩn bị.
         service.closeJob(20);
         // Then: Kiểm tra kết quả và số lần gọi repository theo đúng ca này.
-        verify(applications, times(1)).transition(100, Set.of("Interviewing"), "Rejected");
+        verify(applications, times(1)).transition(100, Set.of("Interviewing"), "Cancelled");
         verify(audit, times(1)).cancelInterviews(100);
         verify(audit, times(0)).record(5, "UPDATE", "Application", 100, null, "InterviewCancelledOnClose");
         verify(audit, times(1)).record(5, "UPDATE", "Application", 100, "Interviewing", "PostingClosed");

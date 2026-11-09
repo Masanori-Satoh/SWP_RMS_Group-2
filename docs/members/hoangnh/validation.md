@@ -2,7 +2,7 @@
 
 - **Phân hệ:** Job Requisition (SRS 5.1.15)
 - **Phụ trách:** Nguyễn Huy Hoàng (hoangnh)
-- **Bảng liên quan:** `JobRequisition`, `ScreeningCriteria`
+- **Bảng liên quan:** `JobRequisition`
 - **Nơi cài đặt:** `RequisitionValidator` (server, quyết định cuối cùng) và `static/js/pages/requisition-form.js` (báo lỗi sớm trên trình duyệt, quy tắc viết giống server).
   Các giới hạn số đều là hằng số trong `RequisitionValidator`; controller truyền xuống form (`min` / `max`), JS đọc lại từ form, nên đổi một chỗ là cả 3 nơi đổi theo.
 
@@ -22,9 +22,6 @@
 | Lương tối đa ≥ tối thiểu | Áp dụng | Áp dụng |
 | Ngày bắt đầu ≥ hôm nay | Bỏ qua | Áp dụng |
 | Ngày bắt đầu ≤ hôm nay + 1 năm | Áp dụng | Áp dụng |
-| Dòng tiêu chí trống hoàn toàn | Bỏ qua (không lưu) | Bỏ qua (không lưu) |
-| Dòng tiêu chí đã nhập một phần | Phải điền đủ 4 ô | Phải điền đủ 4 ô |
-| Có ít nhất 1 tiêu chí, tổng trọng số = 100% | Bỏ qua | Áp dụng |
 
 > Lưu nháp vẫn kiểm tra định dạng và các cột `NOT NULL`, nếu không dữ liệu nháp sẽ gây lỗi ở DB
 > và người dùng chỉ thấy câu "Không thể lưu dữ liệu" (NHH §22: không dựa vào lỗi DB để báo lỗi người dùng).
@@ -44,7 +41,7 @@
 
 ### 1.3 Trải nghiệm khi có lỗi
 
-- Giữ lại toàn bộ dữ liệu đã nhập, kể cả các dòng tiêu chí.
+- Giữ lại toàn bộ dữ liệu đã nhập.
 - Lỗi hiện ngay dưới từng ô và trong khung tổng hợp ở đầu form; cuộn tới lỗi đầu tiên.
 - Rời ô (blur): kiểm tra theo luật **gửi duyệt** để người dùng biết sớm ô nào còn thiếu. Lưu nháp vẫn được, vì nút Lưu bản nháp kiểm tra lại theo luật nháp.
 - Bấm "Gửi Giám đốc duyệt" → hiện hộp xác nhận; chỉ khi bấm "Gửi duyệt" mới gửi form.
@@ -110,42 +107,11 @@ Ngoài ra (service): không được có **2 bản nháp cùng tên vị trí tr
 
 ---
 
-## 5. Section D: Tiêu chí sàng lọc hồ sơ
-
-### 5.1 Từng dòng tiêu chí
-
-| Field | Bắt buộc | Quy tắc | Thông báo lỗi |
-| :--- | :---: | :--- | :--- |
-| Tiêu chí | ✔ | Trim, tối đa 150 ký tự. Không trùng tên trong cùng yêu cầu, so sánh **không phân biệt hoa thường** (khớp collation CI của `UQ_ScreeningCriteria_Requisition_Name`) | "Vui lòng nhập trường này." / "Tên các tiêu chí không được trùng nhau." |
-| Loại | ✔ | `Education` / `Experience` / `Skill` / `Knockout` | "Vui lòng chọn một tùy chọn hợp lệ." |
-| Giá trị yêu cầu | ✔ | Trim, tối đa 255 ký tự | "Vui lòng nhập trường này." |
-| Trọng số (%) | ✔ | 0.01–100, tối đa 2 chữ số thập phân (`DECIMAL(5,2)`), **cả khi lưu nháp** | "Vui lòng nhập trọng số." / "Trọng số phải từ 0.01 đến 100 với tối đa hai chữ số thập phân." |
-| Bắt buộc | — | Có / không | — |
-
-Dòng "trống hoàn toàn" = không có tên, loại, giá trị và không bật Bắt buộc (không xét trọng số). Dòng trống bị bỏ qua, không lưu.
-
-### 5.2 Toàn bộ danh sách
-
-| Quy tắc | Áp dụng | Thông báo lỗi |
-| :--- | :---: | :--- |
-| Tối đa 50 dòng (`MAX_CRITERIA_LIMIT`, cũng là `autoGrowCollectionLimit` của binder) | Luôn luôn | "Chỉ được thêm tối đa 50 tiêu chí." |
-| Có ít nhất 1 tiêu chí và tổng trọng số đúng 100 | Gửi duyệt | "Vui lòng thêm đầy đủ tiêu chí với tổng trọng số đúng bằng 100%." |
-
-**Ghi chú cài đặt:**
-
-- Server cộng tổng bằng `BigDecimal`. JS đổi sang đơn vị 0.01 (`Math.round(x * 100)`) trước khi cộng để tránh sai số số thực.
-- Thanh tổng chỉ cộng các dòng đã nhập: vàng = còn thiếu, xanh = đủ 100%, đỏ = thừa.
-- Nút **Chia đều trọng số**: dòng cuối nhận phần dư, ví dụ 3 dòng → 33.33 / 33.33 / 33.34.
-- Khi sửa: `synchronizeCriteria` cập nhật dòng cũ theo `criteriaId`, xóa dòng bị bỏ, thêm dòng mới; `criteriaId` không thuộc yêu cầu này bị từ chối.
-
----
-
 ## 6. Chống vỡ giao diện khi nhập nhiều dữ liệu
 
 - `maxlength` trên mọi input / textarea khớp giới hạn trong tài liệu này.
 - `overflow-wrap:anywhere` cho vùng hiển thị (chuỗi dài không có khoảng trắng).
 - Input trong grid / flex: `min-width:0`; textarea `resize:vertical`.
-- Bảng tiêu chí: `table-layout:fixed`, bọc trong vùng cuộn ngang khi màn hình hẹp.
 - Danh sách yêu cầu không còn cột Người tạo để bảng không phải cuộn ngang trên laptop.
 
 ---
@@ -160,13 +126,9 @@ Dòng "trống hoàn toàn" = không có tên, loại, giá trị và không b�
 - [ ] Lương: chỉ nhập 1 ô; `0`; tối đa < tối thiểu; `1,000,000,001`; gõ `20tr` (JS bỏ chữ, còn `20`)
 - [ ] Nhập `20000000` → hiển thị `20.000.000`; đặt con trỏ giữa số rồi gõ thêm → không lệch số, trang chi tiết hiện "20 – ... triệu VND/tháng"
 - [ ] Lý do tuyển dụng 2001 ký tự; văn bản nhiều dòng sát 2000 ký tự → lưu được
-- [ ] Tiêu chí trùng tên khác hoa thường (`Java` / `java `)
-- [ ] Dòng tiêu chí chỉ nhập tên khi lưu nháp → báo thiếu loại / giá trị / trọng số
-- [ ] Trọng số `0`, `100.001`, `101`; tổng 99.99 và 100.01
-- [ ] Chia đều với 3 và 7 tiêu chí → tổng đúng 100
 - [ ] Sửa `departmentId` / `recruitmentRound` / option select bằng DevTools → server bỏ qua hoặc từ chối
 - [ ] Bấm "Gửi duyệt" 2 lần thật nhanh → chỉ tạo 1 yêu cầu
-- [ ] Có lỗi khi gửi duyệt → dữ liệu và các dòng tiêu chí được giữ nguyên
+- [ ] Có lỗi khi gửi duyệt → dữ liệu được giữ nguyên
 - [ ] Dán chuỗi 500 ký tự không có khoảng trắng → form, trang danh sách và trang chi tiết không vỡ layout
 - [ ] Tài khoản chưa có phòng ban tạo yêu cầu → báo lỗi dễ hiểu
 - [ ] Giám đốc tạo yêu cầu: chưa chọn phòng ban → báo lỗi; bấm "Phê duyệt trực tiếp" → phiếu `Approved`, HR tạo tin được ngay
@@ -186,7 +148,6 @@ Dòng "trống hoàn toàn" = không có tên, loại, giá trị và không b�
 | Mỗi yêu cầu chỉ có 1 tin đang mở (Draft / Published / Paused) | `JobPostingServiceImpl#requireNoOtherOpenPosting` (dùng `JobPostingAccess.OPEN_STATUSES`) | ✅ Có sẵn |
 | Lương > 0 | `RequisitionValidator#validateMoneyField` | ✅ Có sẵn |
 | Phiếu nào cũng có người tạo (`CreatedBy`) | `RequisitionServiceImpl#createRequisition` luôn gán người đang đăng nhập | ✅ Có sẵn |
-| Trọng số mỗi tiêu chí 0.01–100, tối đa 2 chữ số thập phân | `RequisitionValidator#validate`, áp dụng **cả khi lưu nháp** (trước đây nháp cho tới 999.99) | ✅ Đã sửa |
 | Tin Closed có `ClosedAt`; tin đã đăng có `PostingDate` | `TalentPoolService#closeJob` gán `ClosedAt`; chỉ đóng được tin Published / Paused; `publishJobPosting` gán `PostingDate` | ✅ Có sẵn |
 | Phiếu đã gửi duyệt có `SubmittedAt` | `createRequisition` / `updateRequisition` gán khi `action = submit` | ✅ Có sẵn |
 | Mã phiếu không trùng | Sinh từ `RequisitionId` (khóa chính) nên không bao giờ trùng | ✅ Có sẵn |
@@ -205,10 +166,9 @@ Dòng "trống hoàn toàn" = không có tên, loại, giá trị và không b�
   - đã có tin tuyển dụng: "Yêu cầu này đã được liên kết với tin đăng tuyển và không thể xóa.";
   - **đã có đợt tuyển sau sao chép từ nó**: "Yêu cầu này đã có đợt tuyển sau được sao chép từ nó và không thể xóa." (✅ mới thêm, trước đây gặp lỗi khóa ngoại).
   Nút Xóa trên trang chi tiết cũng ẩn trong 2 trường hợp này (cờ `deletable`).
-- Thứ tự xóa: ghi `AuditLog` → xóa `RequisitionApproval` → xóa phiếu (`ScreeningCriteria` xóa theo cascade).
+- Thứ tự xóa: ghi `AuditLog` → xóa `RequisitionApproval` → xóa phiếu.
 
 ### 8.3 Ghi chú khác
 
-- Default của cột `ScreeningCriteria.Weight` là `1.00`. Form tạo mới hiện `100` ở dòng tiêu chí đầu tiên vì controller (`createForm`) gán sẵn; các dòng thêm sau để trống.
 - Tin đang Paused được đăng lại: `publishJobPosting` ghi đè `PostingDate` bằng thời điểm đăng lại, nhưng trước đó kiểm tra hạn nộp phải sau thời điểm hiện tại, nên không vi phạm `CK_JobPosting_Deadline`.
 - `PostingNo` = lần đăng lớn nhất của yêu cầu + 1, yêu cầu được khóa dòng khi tạo tin nên không bị trùng.

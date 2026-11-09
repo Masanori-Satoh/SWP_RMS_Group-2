@@ -185,9 +185,9 @@
                 <div class="il-meta__row" th:if="${s.locationOrLink != null and !#strings.isEmpty(s.locationOrLink)}">
                     <dt>Địa điểm / Link</dt>
                     <dd class="il-meta__location">
-                        <a th:if="${#strings.startsWith(s.locationOrLink, 'http')}" th:href="${s.locationOrLink}"
+                        <a th:if="${#strings.startsWith(s.locationOrLink, 'http://') or #strings.startsWith(s.locationOrLink, 'https://')}" th:href="${s.locationOrLink}"
                            target="_blank" rel="noopener">Tham gia phòng họp ↗</a>
-                        <span th:unless="${#strings.startsWith(s.locationOrLink, 'http')}"
+                        <span th:unless="${#strings.startsWith(s.locationOrLink, 'http://') or #strings.startsWith(s.locationOrLink, 'https://')}"
                               th:text="${s.locationOrLink}">Phòng họp</span>
                     </dd>
                 </div>

@@ -58,7 +58,6 @@ src/main/java/com/group2/rms/
 | `notification` | Thông báo trong ứng dụng | `/notifications/**` | `notifications/list` |
 | `dashboard` | Bảng điều khiển theo vai trò (nội bộ + ứng viên) | `/dashboard` | `dashboard/index` (+ `dashboard/candidate` là fragment) |
 | `admin` | Giám sát API, health check, audit log, system config | `/admin/api-monitoring/**` | `admin/api-monitoring/index` |
-| `demo` | Controller thử kết nối DB/web. **Không phải nghiệp vụ** (xem mục 8) | `/test-db`, `/test-web` | `hello` |
 
 ### 1.2. Chiều phụ thuộc giữa các module (thực tế)
 
@@ -140,10 +139,18 @@ Không `catch (Exception e)`, không nuốt lỗi rồi trả về như thành c
 | `Exception` (còn lại) | `error/500` + log |
 
 - **Không thêm handler riêng của module vào Global.** Lỗi cần quay lại form thì bắt ở Controller như mẫu trên.
-- Lỗi bị Spring Security chặn ở tầng filter (sai quyền theo URL, thiếu CSRF) hoặc URL không khớp Controller không đi qua Global; Spring Boot chuyển sang `/error` và `RmsErrorViewResolver` render cùng 4 trang trên.
+- Khi người đã đăng nhập mở một trang HTML bằng GET nhưng sai quyền, `PageAccessDeniedHandler` chuyển về màn hình của vai trò đó và dùng toast chung để báo lỗi một lần. Luồng áp dụng cho cả chặn theo URL ở Spring Security và `AccessDeniedException` đi qua Global.
+- Các yêu cầu API, tải tài liệu, thao tác ghi và lỗi CSRF giữ cách trả lỗi hiện tại. Lỗi ở tầng filter không đi qua Global; khi Spring Boot chuyển sang `/error`, `RmsErrorViewResolver` dựng trang lỗi tương ứng.
 - Cả hai đường dựng trang qua **`ErrorPages.view(status, message, request)`**: câu thông báo (thiếu thì dùng câu mặc định theo mã) và nút quay về theo vai (ứng viên → `/portal/applications`, nội bộ → `/dashboard`, khách → `/`). Thêm handler mới vào Global thì cũng gọi hàm này, không tự `new ModelAndView("error/...")`.
 
+#### Phạm vi thông báo lỗi thao tác
+
+> **Phạm vi xử lý lỗi thao tác được xác nhận ngày 05/11/2026:** Auth, Account, Department, Talent Pool và Audit Log trả thông báo tại màn hình thay cho trang lỗi khi yêu cầu không hợp lệ hoặc đối tượng đang thao tác không còn khả dụng. Account dùng `AccountOperationException` của module, Controller xử lý tại chỗ. Controller Department/Talent Pool có `@ExceptionHandler` cục bộ cho dữ liệu không tồn tại/quyền trên bản ghi, trả flash message hoặc JSON lỗi; vẫn chặn thao tác và không thay đổi điều kiện phân quyền. AJAX giữ HTTP 400/403/404/409 phù hợp, không trả thành công giả.
+>
+> `core/exception/ModuleRequestExceptionResolver` chỉ xử lý lỗi định dạng request (binding, tham số, JSON, upload quá lớn, method, media type) trên danh sách URL giới hạn của các module trên. `ModuleErrorResponse` chỉ hỗ trợ trình bày flash/JSON, không đọc DB hoặc quyết định nghiệp vụ và không import module tính năng. Lỗi hệ thống, URL không tồn tại, Security filter/CSRF và các module ngoài phạm vi vẫn qua cơ chế cũ (`GlobalExceptionHandler`, `ErrorPages`, `RmsErrorViewResolver`). Không thêm handler nghiệp vụ vào Global và không bắt mọi `Exception` để chuyển thành message.
+
 ### 2.4. Validation: ba tầng
+
 
 | Tầng | Dùng khi | Đặt ở đâu | Ví dụ |
 |---|---|---|---|
@@ -206,6 +213,8 @@ Phân quyền URL nằm tập trung trong `core/config/SecurityConfig` (chưa d�
 | `/portal/applications/**` | `CANDIDATE` |
 | `/portal/offers/**` | `CANDIDATE` |
 | `POST /offers/*/approve`, `POST /offers/*/reject` | `DIRECTOR` |
+| `GET /offers/create`, `GET /offers/*/edit` | `HR` |
+| `POST /offers/create`, `POST /offers/*/edit`, `POST /offers/*/delete`, `POST /offers/*/send`, `PUT /offers/*`, `DELETE /offers/*` | `HR` |
 | `/offers/**` | `HR`, `DIRECTOR` |
 | `/requisitions/**` | `HIRING_MANAGER`, `DIRECTOR`, `HR` |
 | `/internal/job-postings/*/close` | `HR` |
@@ -276,8 +285,8 @@ Code cũ chạy được, **chưa cần sửa ngay**. Khi viết code mới thì
 | 3 | `offer` có cả endpoint form lẫn JSON cho cùng thao tác tạo/sửa | Giữ một cách (mục 2.1) |
 | 5 | `core/exception/FormErrorViewHelper` (rỗng), `user/exception/AccountConflictException` không ai dùng | Xóa |
 | 6 | Hai `NotificationService` trùng tên (`notification` và `offer.service`) | Gộp về module `notification` |
-| 8 | Package `demo` (`/test-db`, `/test-web`, `hello.html`), `templates/careers/*` không còn dùng | Xóa (xem `UI/UI_LEGACY_CLEANUP.md`) |
-| 9 | Không còn trang nội bộ nào dựng khung cũ (`interfaceHead` đã gỡ 28/10). Còn `fragments/sidebar` (chỉ `hello.html` demo và test dùng), `interface.css`, `design-tokens.css` | Xóa theo `UI/UI_LEGACY_CLEANUP.md` mục 3. Menu đã về **một nguồn**: `fragments/sidebar :: workspace` chuyển tiếp sang `sidebar-shell`, thêm menu chỉ sửa `fragments/layout/sidebars/*.html` |
+| 8 | `templates/careers/*` không còn dùng (package `demo`, `hello.html` đã xóa 04/11) | Xóa (xem `UI/UI_LEGACY_CLEANUP.md`) |
+| 9 | Không còn trang nội bộ nào dựng khung cũ (`interfaceHead` đã gỡ 28/10). Còn `fragments/sidebar` (chỉ test dùng), `interface.css`, `design-tokens.css` | Xóa theo `UI/UI_LEGACY_CLEANUP.md` mục 3. Menu đã về **một nguồn**: `fragments/sidebar :: workspace` chuyển tiếp sang `sidebar-shell`, thêm menu chỉ sửa `fragments/layout/sidebars/*.html` |
 | 10 | Module `candidate` chưa có controller/service; bước ứng tuyển dừng ở `ITERATION_2_PENDING` | Iteration 2 |
 | 11 | Còn 4 chỗ `@Autowired` field; test đặt tên lẫn `*Test`/`*Tests` | Code mới: `@RequiredArgsConstructor` + `private final`; test tên `*Tests` |
 

@@ -5,6 +5,7 @@ import com.group2.rms.candidate.application.portal.dto.CandidateProfileResponse;
 import com.group2.rms.candidate.application.portal.exception.CandidateProfileException;
 import com.group2.rms.candidate.application.portal.service.CandidateProfileService;
 import com.group2.rms.user.dto.UpdateProfileRequest;
+import com.group2.rms.user.exception.AccountFieldException;
 import com.group2.rms.user.exception.AvatarUploadException;
 import com.group2.rms.user.service.UserProfileService;
 import jakarta.validation.Valid;
@@ -26,7 +27,7 @@ import java.time.LocalDate;
 /**
  * Hồ sơ cá nhân của ứng viên (Q7.1). {@code SecurityConfig} giới hạn {@code /portal/profile/**} cho ROLE_CANDIDATE;
  * ứng viên gõ {@code /profile} được chuyển sang đây. Một form lưu cả hai phần: {@code updateRequest} (bảng {@code User})
- * và {@code detailsRequest} (bảng {@code Candidate}). Đổi mật khẩu dùng lại {@code POST /profile/change-password}.
+ * và {@code detailsRequest} (email và các trường ứng viên). Đổi mật khẩu dùng lại {@code POST /profile/change-password}.
  */
 @Controller
 @RequestMapping("/portal/profile")
@@ -48,7 +49,7 @@ public class CandidateProfileController {
         }
         if (!model.containsAttribute("detailsRequest")) {
             model.addAttribute("detailsRequest", new CandidateDetailsRequest(profile.dateOfBirth(), profile.gender(),
-                    profile.address(), profile.linkedInUrl(), profile.portfolioUrl()));
+                    profile.address(), profile.linkedInUrl(), profile.portfolioUrl(), profile.account().email()));
         }
         model.addAttribute("genders", CandidateDetailsRequest.genderOptions(profile.gender()));
         model.addAttribute("maxBirthDate", LocalDate.now().minusDays(1));
@@ -70,6 +71,8 @@ public class CandidateProfileController {
                 return "redirect:/portal/profile";
             } catch (CandidateProfileException e) {
                 detailErrors.rejectValue(e.getField(), "invalid", e.getMessage());
+            } catch (AccountFieldException e) {
+                detailErrors.rejectValue(e.getField(), "account.invalid", e.getMessage());
             }
         }
         redirectAttributes.addFlashAttribute(BINDING_PREFIX + "updateRequest", accountErrors);

@@ -141,7 +141,7 @@ class HiringManagerDashboardServiceTests {
             assertEquals(0, items.get(0).missing());
             assertEquals("Đã tuyển đủ, chờ đóng yêu cầu", items.get(0).pipelineText());
             assertEquals(2, items.get(1).missing());
-            assertEquals("1 đang phỏng vấn · 0 có offer", items.get(1).pipelineText());
+            assertEquals("1 đang phỏng vấn · 0 có thư mời", items.get(1).pipelineText());
             assertEquals(2, items.get(2).hired());
             assertEquals("/requisitions/3", items.get(2).href());
         }

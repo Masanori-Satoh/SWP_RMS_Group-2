@@ -51,6 +51,7 @@ public class JobPostingController {
     private static final Set<String> FORM_FIELDS = Set.of("postingTitle", "jobDescription", "jobRequirements",
             "benefits", "workLocation", "workingHours", "employmentType", "workModel", "gender", "probationPeriod", "salaryMode",
             "salaryCustom", "numberOfPositionsDisplay", "applicationDeadline");
+    /** Gợi ý quyền lợi trên form (nút thêm nhanh), theo mockup. */
     private static final List<String> BENEFIT_SUGGESTIONS = List.of("Lương tháng 13", "Thưởng theo hiệu quả công việc",
             "Đóng BHXH, BHYT, BHTN đầy đủ", "Bảo hiểm sức khỏe", "Review lương 2 lần/năm", "12 ngày phép năm",
             "Cấp laptop làm việc", "Du lịch công ty hằng năm");
@@ -241,6 +242,7 @@ public class JobPostingController {
         model.addAttribute("posting", detail);
         model.addAttribute("bodyClass", "jp-detail-page");
         if (detail.talentPoolVisible()) {
+            model.addAttribute("suggestedCandidateCount", talentPoolService.suggestedCandidateCount(id));
             model.addAttribute("hrRecommendationCount", talentPoolService.pendingRecommendationCount(id));
         }
         return "job-postings/detail";

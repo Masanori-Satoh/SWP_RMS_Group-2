@@ -131,7 +131,7 @@ public class HiringManagerDashboardService {
     /** Dòng phụ trong tooltip của thanh chồng: số đang phỏng vấn / có offer, hoặc đã đủ người. */
     private HiringProgressItem progressItem(ProgressRow row) {
         long needed = row.numberOfPositions();
-        String pipelineText = row.interviewing() + " đang phỏng vấn · " + row.offered() + " có offer";
+        String pipelineText = row.interviewing() + " đang phỏng vấn · " + row.offered() + " có thư mời";
         if (row.hired() >= needed) {
             pipelineText = "Đã tuyển đủ, chờ đóng yêu cầu";
         }

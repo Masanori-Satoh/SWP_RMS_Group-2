@@ -22,16 +22,17 @@ public final class NotificationLabels {
             case "JOB_POSTING_CLOSED" -> "Tin đã đóng";
             case "APPLICATION_HR_PASSED" -> "Hồ sơ chờ duyệt";
             case "APPLICATION_HM_PASSED" -> "Hồ sơ chờ xếp lịch";
+            case "APPLICATION_REJECTED" -> "Hồ sơ không tiếp tục"; // dunglt bổ sung
             case "INTERVIEW_SCHEDULED" -> "Lịch phỏng vấn mới";
             case "INTERVIEW_RESCHEDULED" -> "Đổi lịch phỏng vấn";
             case "INTERVIEW_CANCELLED" -> "Hủy lịch phỏng vấn";
             case "INTERVIEW_RESULT_DECIDED" -> "Kết quả phỏng vấn";
-            case "OFFER_PENDING_DIRECTOR" -> "Offer chờ phê duyệt";
-            case "OFFER_DIRECTOR_APPROVED" -> "Offer đã được duyệt";
-            case "OFFER_DIRECTOR_REJECTED" -> "Offer bị từ chối";
+            case "OFFER_PENDING_DIRECTOR" -> "Thư mời chờ phê duyệt";
+            case "OFFER_DIRECTOR_APPROVED" -> "Thư mời đã được duyệt";
+            case "OFFER_DIRECTOR_REJECTED" -> "Thư mời bị từ chối";
             case "OFFER_LETTER_SENT" -> "Thư mời nhận việc";
             case "OFFER_ACCEPTED" -> "Ứng viên nhận việc";
-            case "OFFER_DECLINED" -> "Ứng viên từ chối offer";
+            case "OFFER_DECLINED" -> "Ứng viên từ chối thư mời";
             default -> null;
         };
     }
@@ -45,7 +46,8 @@ public final class NotificationLabels {
                  "INTERVIEW_SCHEDULED", "OFFER_DIRECTOR_APPROVED", "OFFER_LETTER_SENT", "OFFER_ACCEPTED" -> "success";
             case "REQUISITION_PENDING_DIRECTOR", "APPLICATION_HR_PASSED", "INTERVIEW_RESCHEDULED",
                  "OFFER_PENDING_DIRECTOR", "JOB_POSTING_PAUSED" -> "warning";
-            case "REQUISITION_REJECTED", "INTERVIEW_CANCELLED", "OFFER_DIRECTOR_REJECTED", "OFFER_DECLINED" -> "danger";
+            case "REQUISITION_REJECTED", "APPLICATION_REJECTED", "INTERVIEW_CANCELLED", "OFFER_DIRECTOR_REJECTED",
+                 "OFFER_DECLINED" -> "danger";
             default -> "neutral";
         };
     }

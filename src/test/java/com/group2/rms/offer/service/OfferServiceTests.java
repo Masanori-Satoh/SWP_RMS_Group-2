@@ -4,6 +4,8 @@ import com.group2.rms.candidate.domain.entity.Application;
 import com.group2.rms.candidate.domain.repository.ApplicationRepository;
 import com.group2.rms.offer.dto.CreateOfferRequest;
 import com.group2.rms.offer.dto.OfferResponse;
+import com.group2.rms.offer.dto.OfferResponse.EmailStatus;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import com.group2.rms.offer.dto.UpdateOfferRequest;
 import com.group2.rms.core.exception.BaseBusinessException;
 import com.group2.rms.core.exception.ResourceNotFoundException;
@@ -38,13 +40,21 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 
 import java.math.BigDecimal;
+import java.time.Clock;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
+import java.util.Set;
 import java.util.Map;
 import java.util.Optional;
 
@@ -77,8 +87,56 @@ class OfferServiceTests {
     @Mock
     private com.group2.rms.notification.service.NotificationService systemNotificationService;
 
+    @Mock
+    private Clock clock;
+
+    @Mock
+    private org.springframework.transaction.PlatformTransactionManager transactionManager;
+
+    @Mock
+    private com.group2.rms.core.security.CurrentUserService currentUserService;
+
+    @org.junit.jupiter.api.BeforeEach
+    void useApplicationClock() {
+        lenient().when(transactionManager.getTransaction(any())).thenAnswer(invocation ->
+                new org.springframework.transaction.support.SimpleTransactionStatus());
+        lenient().when(currentUserService.requireUser()).thenAnswer(invocation ->
+                new com.group2.rms.core.security.CurrentUserService(userRepository).requireUser());
+        lenient().when(offerProposalRepository.findActiveForUpdate(anyInt())).thenAnswer(invocation ->
+                offerProposalRepository.findById(invocation.getArgument(0))
+                        .filter(offer -> !Boolean.TRUE.equals(offer.getIsDeleted())));
+        lenient().when(offerProposalRepository.findByApplicationForUpdate(anyInt())).thenAnswer(invocation ->
+                offerProposalRepository.findByApplication_ApplicationId(invocation.getArgument(0)));
+        lenient().when(applicationRepository.transition(anyInt(), anyCollection(), eq("Offered"))).thenReturn(1);
+        lenient().when(clock.getZone()).thenReturn(ZoneId.systemDefault());
+        lenient().when(clock.instant()).thenAnswer(invocation -> Clock.systemUTC().instant());
+    }
+
     @InjectMocks
     private OfferServiceImpl offerService;
+
+    @Mock
+    private ObjectProvider<JavaMailSender> smtpProvider;
+
+    @ParameterizedTest
+    @CsvSource({"'', candidate@example.com", "test@example.com, test@example.com"})
+    void offerMailUsesCandidateUnlessExplicitTestRecipientIsConfigured(String testRecipient, String expectedRecipient) {
+        JavaMailSender smtp = mock(JavaMailSender.class);
+        when(smtpProvider.getIfAvailable()).thenReturn(smtp);
+        var sender = new OfferMailSender(smtpProvider, "hr@example.com", testRecipient, "https://example.com");
+        var candidate = Candidate.builder().account(User.builder().accountStatus("Active")
+                .email("candidate@example.com").fullName("Candidate").build()).build();
+        var offer = OfferProposal.builder().offerId(1)
+                .application(Application.builder().candidate(candidate).build()).build();
+
+        assertEquals(testRecipient.isEmpty() ? EmailStatus.SENT : EmailStatus.TEST_RECIPIENT,
+                sender.sendOfferLetterToCandidate(offer));
+
+        var message = ArgumentCaptor.forClass(SimpleMailMessage.class);
+        verify(smtp).send(message.capture());
+        assertEquals("hr@example.com", message.getValue().getFrom());
+        assertArrayEquals(new String[]{expectedRecipient}, message.getValue().getTo());
+    }
 
     @Test
     @DisplayName("Nghiệp vụ: Lương thử việc < 85% lương chính thức phải ném OfferValidationException")
@@ -102,36 +160,28 @@ class OfferServiceTests {
     }
 
     @Test
-    @DisplayName("Lương thử việc đúng bằng 85% lương chính thức phải hợp lệ")
-    void testProbationSalaryExactly85Percent_passes() {
+    void probationSalaryExactly85PercentUsesSupportedHrCreation() {
         Application application = Application.builder().applicationId(1).build();
-        User proposedBy = User.builder().userId(10).fullName("Hiring Manager").build();
-
         when(applicationRepository.findById(1)).thenReturn(Optional.of(application));
-        when(userRepository.findById(10)).thenReturn(Optional.of(proposedBy));
-        when(offerProposalRepository.findByApplication_ApplicationIdAndOfferStatusNotIn(eq(1), any()))
-                .thenReturn(List.of());
-        when(offerProposalRepository.save(any(OfferProposal.class))).thenAnswer(i -> {
-            OfferProposal op = i.getArgument(0);
-            op.setOfferId(101);
-            return op;
-        });
-
-        CreateOfferRequest request = CreateOfferRequest.builder()
-                .applicationId(1)
-                .offeredPositionTitle("Senior Java Engineer")
-                .proposedSalary(new BigDecimal("20000000"))
-                .probationSalary(new BigDecimal("17000000")) // Đúng 85% của 20M
-                .expectedStartDate(LocalDate.now().plusWeeks(2))
-                .proposedById(10)
-                .build();
-
-        OfferResponse response = offerService.createOfferProposal(request);
-
-        assertNotNull(response);
-        assertEquals(new BigDecimal("20000000"), response.getProposedSalary());
-        assertEquals(new BigDecimal("17000000"), response.getProbationSalary());
-        assertEquals("Pending_Director", response.getOfferStatus());
+        when(interviewFinalResultRepository.findByApplicationIdOrderByApprovedAtDesc(1))
+                .thenReturn(List.of(InterviewFinalResult.builder().finalDecision("Passed").build()));
+        User hr = User.builder().accountStatus("Active").userId(10).username("hr_boundary").build();
+        when(userRepository.findByUsernameIgnoreCase("hr_boundary")).thenReturn(Optional.of(hr));
+        when(offerProposalRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        var context = org.springframework.security.core.context.SecurityContextHolder.getContext();
+        var previous = context.getAuthentication();
+        context.setAuthentication(new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+                "hr_boundary", "test-only", Collections.emptyList()));
+        try {
+            var response = offerService.createOfferByHr(CreateOfferRequest.builder().applicationId(1)
+                    .offeredPositionTitle("Engineer").workLocation("Test office").probationDays(45)
+                    .proposedSalary(new BigDecimal("20000000")).probationSalary(new BigDecimal("17000000"))
+                    .expectedStartDate(LocalDate.now().plusDays(30)).isDraft(true).build());
+            assertEquals("Draft", response.getOfferStatus());
+            assertEquals(new BigDecimal("17000000"), response.getProbationSalary());
+        } finally {
+            context.setAuthentication(previous);
+        }
     }
 
     // Lưu ý: Đã loại bỏ testSingleActiveOfferRule_deactivatesOldOffers() cũ (triết lý Voided offer đang Pending_Director)
@@ -195,7 +245,7 @@ class OfferServiceTests {
             offerService.createOfferByHr(request);
         });
 
-        assertTrue(ex.getMessage().contains("Thời gian thử việc phải lớn hơn 0"));
+        assertTrue(ex.getMessage().contains("Thời gian thử việc phải từ 1 đến 365 ngày"));
         verify(offerProposalRepository, never()).save(any());
     }
 
@@ -241,32 +291,58 @@ class OfferServiceTests {
         assertTrue(ex.getMessage().contains("Địa điểm làm việc không được để trống"));
     }
 
-    @Test
-    @DisplayName("Validation: Ngày mai, lương > 0, thời gian thử việc > 0 và gói phúc lợi để trống vẫn tạo thành công")
-    void testCreateOfferByHr_allValidExceptBenefits_passes() {
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    @DisplayName("Tạo Offer không có phúc lợi chỉ thành công nếu hồ sơ đã đạt phỏng vấn")
+    void testCreateOfferByHr_requiresPassedInterview(boolean passedInterview) {
         Application application = Application.builder().applicationId(1).build();
 
         when(applicationRepository.findById(1)).thenReturn(Optional.of(application));
         when(offerProposalRepository.findByApplication_ApplicationId(1)).thenReturn(Optional.empty());
-        when(offerProposalRepository.save(any(OfferProposal.class))).thenAnswer(i -> {
-            OfferProposal op = i.getArgument(0);
-            op.setOfferId(555);
-            return op;
-        });
+        when(interviewFinalResultRepository.findByApplicationIdOrderByApprovedAtDesc(1))
+                .thenReturn(List.of(InterviewFinalResult.builder()
+                        .finalDecision(passedInterview ? InterviewFinalResult.PASSED : "Failed")
+                        .build()));
 
         CreateOfferRequest request = CreateOfferRequest.builder()
                 .applicationId(1)
+                .proposedById(999)
                 .offeredPositionTitle("Senior Java Engineer")
                 .proposedSalary(new BigDecimal("25000000"))
                 .probationSalary(new BigDecimal("21250000")) // 85%
-                .probationDays(60)
+                .probationDays(45)
                 .expectedStartDate(LocalDate.now().plusDays(10)) // Sau hôm nay + responsePeriodDays (5 ngày)
                 .workLocation("Văn phòng Mộc RMS Hà Nội")
                 .benefitsPackage(null) // Để trống phúc lợi -> vẫn hợp lệ
                 .isDraft(false)
                 .build();
 
-        OfferResponse response = offerService.createOfferByHr(request);
+        if (!passedInterview) {
+            assertThrows(OfferValidationException.class, () -> offerService.createOfferByHr(request));
+            verify(offerProposalRepository, never()).save(any(OfferProposal.class));
+            return;
+        }
+
+        when(offerProposalRepository.save(any(OfferProposal.class))).thenAnswer(i -> {
+            OfferProposal op = i.getArgument(0);
+            op.setOfferId(555);
+            return op;
+        });
+        User currentHr = User.builder().accountStatus("Active").userId(17).username("current_hr").build();
+        when(userRepository.findByUsernameIgnoreCase("current_hr")).thenReturn(Optional.of(currentHr));
+        var context = org.springframework.security.core.context.SecurityContextHolder.getContext();
+        var previousAuth = context.getAuthentication();
+        context.setAuthentication(new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+                "current_hr", "password", Collections.emptyList()));
+        OfferResponse response;
+        try {
+            response = offerService.createOfferByHr(request);
+        } finally {
+            context.setAuthentication(previousAuth);
+        }
+        assertEquals(17, response.getProposedById());
+        assertEquals(45, response.getProbationDays());
+        verify(userRepository, never()).findById(999);
 
         assertNotNull(response);
         assertEquals(555, response.getOfferId());
@@ -415,7 +491,7 @@ class OfferServiceTests {
 
         Candidate cand = Candidate.builder()
                 .candidateId(201)
-                .account(User.builder().userId(301).fullName("Nguyễn Văn A").email("a@test.com").phoneNumber("0987654321").build())
+                .account(User.builder().accountStatus("Active").userId(301).fullName("Nguyễn Văn A").email("a@test.com").phoneNumber("0987654321").build())
                 .address("Cầu Giấy, Hà Nội")
                 .build();
 
@@ -456,7 +532,7 @@ class OfferServiceTests {
 
         Candidate cand = Candidate.builder()
                 .candidateId(202)
-                .account(User.builder().userId(302).fullName("Trần Thị B").email("b@test.com").phoneNumber("0912345678").build())
+                .account(User.builder().accountStatus("Active").userId(302).fullName("Trần Thị B").email("b@test.com").phoneNumber("0912345678").build())
                 .address("Thanh Xuân, Hà Nội") // Có address
                 .build();
 
@@ -497,7 +573,7 @@ class OfferServiceTests {
 
         Candidate cand = Candidate.builder()
                 .candidateId(203)
-                .account(User.builder().userId(303).fullName("Lê Văn C").email("c@test.com").phoneNumber("0900112233").build())
+                .account(User.builder().accountStatus("Active").userId(303).fullName("Lê Văn C").email("c@test.com").phoneNumber("0900112233").build())
                 .address(null) // Trống
                 .build();
 
@@ -595,17 +671,8 @@ class OfferServiceTests {
         InterviewSchedule s5 = InterviewSchedule.builder().application(app5).build();
         InterviewFinalResult r5 = InterviewFinalResult.builder().finalResultId(5).interviewSchedule(s5).finalDecision("Passed").build();
 
-        OfferProposal offer1 = OfferProposal.builder().offerId(101).offerStatus("Pending_Director").build();
-        OfferProposal offer2 = OfferProposal.builder().offerId(102).offerStatus("Accepted").build();
-        OfferProposal offer3 = OfferProposal.builder().offerId(103).offerStatus("Draft").build();
-        OfferProposal offer5 = OfferProposal.builder().offerId(105).offerStatus("Rejected").build();
-
         when(interviewFinalResultRepository.findAllPassedWithDetails()).thenReturn(List.of(r1, r2, r3, r4, r5));
-        when(offerProposalRepository.findByApplication_ApplicationId(1)).thenReturn(Optional.of(offer1));
-        when(offerProposalRepository.findByApplication_ApplicationId(2)).thenReturn(Optional.of(offer2));
-        when(offerProposalRepository.findByApplication_ApplicationId(3)).thenReturn(Optional.of(offer3));
-        when(offerProposalRepository.findByApplication_ApplicationId(4)).thenReturn(Optional.empty());
-        when(offerProposalRepository.findByApplication_ApplicationId(5)).thenReturn(Optional.of(offer5));
+        when(offerProposalRepository.findActiveApplicationIds(List.of(1, 2, 3, 4, 5))).thenReturn(List.of(1, 2, 3, 5));
 
         List<PassedCandidateResponse> list = offerService.getPassedCandidatesForOffer();
 
@@ -613,6 +680,20 @@ class OfferServiceTests {
         assertEquals(1, list.size(), "Chỉ có ứng viên chưa có bất kỳ Offer nào mới được gợi ý tạo mới");
         assertEquals(4, list.get(0).getApplicationId());
         assertNull(list.get(0).getExistingOfferStatus());
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {25, 500, 501})
+    void candidateEligibilityLooksUpExistingOffersInBoundedBatches(int count) {
+        var results = java.util.stream.IntStream.rangeClosed(1, count)
+                .mapToObj(id -> InterviewFinalResult.builder().interviewSchedule(InterviewSchedule.builder()
+                        .application(Application.builder().applicationId(id).applicationStatus("Interviewing").build())
+                        .build()).build()).toList();
+        when(interviewFinalResultRepository.findAllPassedWithDetails()).thenReturn(results);
+        when(offerProposalRepository.findActiveApplicationIds(anyList())).thenReturn(List.of());
+        assertEquals(count, offerService.getPassedCandidatesForOffer().size());
+        verify(offerProposalRepository, times((count + 499) / 500)).findActiveApplicationIds(anyList());
+        verify(offerProposalRepository, never()).findByApplication_ApplicationId(anyInt());
     }
 
     @ParameterizedTest
@@ -649,7 +730,7 @@ class OfferServiceTests {
         });
 
         assertEquals("OFFER_LOCKED_STATE", ex.getErrorCode());
-        assertTrue(ex.getMessage().contains("không thể tạo mới đề xuất nhận việc"));
+        assertTrue(ex.getMessage().contains("không thể tạo mới thư mời nhận việc"));
         verify(offerProposalRepository, never()).save(any());
     }
 
@@ -790,6 +871,27 @@ class OfferServiceTests {
         assertTrue(ex.getMessage().contains("Bản nháp"));
     }
 
+    @ParameterizedTest
+    @CsvSource({
+            "Sent_Candidate, -1, 2, true",
+            "Sent_Candidate, 0, 2, false",
+            "Sent_Candidate, 1, 2, false",
+            "Sent_Candidate, , -1, true",
+            "Sent_Candidate, , 0, false",
+            "Accepted, -1, -1, false"
+    })
+    void internalOfferResponseUsesExpiryRules(String status, Integer deadlineSeconds, int startDays, boolean expired) {
+        LocalDateTime now = LocalDateTime.of(2026, 11, 5, 10, 0);
+        when(clock.instant()).thenReturn(now.atZone(ZoneId.systemDefault()).toInstant());
+        OfferProposal offer = OfferProposal.builder().offerId(1).offerStatus(status)
+                .expectedStartDate(now.toLocalDate().plusDays(startDays))
+                .responseDeadline(deadlineSeconds == null ? null : now.plusSeconds(deadlineSeconds))
+                .build();
+        when(offerProposalRepository.findById(1)).thenReturn(Optional.of(offer));
+
+        assertEquals(expired, offerService.getOfferById(1).isResponseExpired());
+    }
+
     @Test
     @DisplayName("getOfferById: Tìm thấy Offer thành công trả về OfferResponse")
     void testGetOfferById_found_returnsOfferResponse() {
@@ -820,32 +922,7 @@ class OfferServiceTests {
         });
     }
 
-    @Test
-    @DisplayName("getOfferByApplicationId: Tìm thấy Offer theo ApplicationId thành công")
-    void testGetOfferByApplicationId_found_returnsOfferResponse() {
-        OfferProposal offer = OfferProposal.builder()
-                .offerId(5)
-                .offerStatus("Pending_Director")
-                .build();
 
-        when(offerProposalRepository.findByApplication_ApplicationId(10)).thenReturn(Optional.of(offer));
-
-        OfferResponse response = offerService.getOfferByApplicationId(10);
-
-        assertNotNull(response);
-        assertEquals(5, response.getOfferId());
-        assertEquals("Pending_Director", response.getOfferStatus());
-    }
-
-    @Test
-    @DisplayName("getOfferByApplicationId: Không tìm thấy Offer theo ApplicationId ném ResourceNotFoundException")
-    void testGetOfferByApplicationId_notFound_throwsException() {
-        when(offerProposalRepository.findByApplication_ApplicationId(999)).thenReturn(Optional.empty());
-
-        assertThrows(ResourceNotFoundException.class, () -> {
-            offerService.getOfferByApplicationId(999);
-        });
-    }
 
     @Test
     @DisplayName("getAllOffersForHr: Lấy toàn bộ Offer (status = null hoặc ALL)")
@@ -919,7 +996,7 @@ class OfferServiceTests {
         Department dept = Department.builder().departmentId(1).departmentName("Phòng Công Nghệ").build();
         JobRequisition req = JobRequisition.builder().requisitionId(10).department(dept).build();
         JobPosting jp = JobPosting.builder().jobPostingId(20).postingTitle("Backend Engineer").requisition(req).build();
-        User candUser = User.builder().userId(100).fullName("Trần Thị B").email("b@test.com").phoneNumber("0912345678").build();
+        User candUser = User.builder().accountStatus("Active").userId(100).fullName("Trần Thị B").email("b@test.com").phoneNumber("0912345678").build();
         Candidate cand = Candidate.builder().candidateId(200).account(candUser).address("Đà Nẵng").build();
         Application app = Application.builder().applicationId(300).jobPosting(jp).candidate(cand).appliedCvUrl("cv.pdf").build();
 
@@ -932,7 +1009,7 @@ class OfferServiceTests {
                 .offerStatus("Approved")
                 .build();
 
-        User director = User.builder().userId(2).fullName("Nguyễn Giám Đốc").build();
+        User director = User.builder().accountStatus("Active").userId(2).fullName("Nguyễn Giám Đốc").build();
         OfferApproval approval = OfferApproval.builder()
                 .offerApprovalId(1)
                 .director(director)
@@ -962,6 +1039,23 @@ class OfferServiceTests {
         assertEquals("Passed", detail.getFinalDecision());
         assertEquals(1, detail.getApprovalHistory().size());
         assertEquals("Nguyễn Giám Đốc", detail.getApprovalHistory().get(0).getDirectorName());
+    }
+
+    @Test
+    void deletedOfferIsUnavailableByDirectId() {
+        OfferProposal deleted = OfferProposal.builder().isDeleted(true).offerStatus("Draft").build();
+        when(offerProposalRepository.findById(1)).thenReturn(Optional.of(deleted));
+
+        assertAll(
+                () -> assertThrows(ResourceNotFoundException.class, () -> offerService.getOfferById(1)),
+                () -> assertThrows(ResourceNotFoundException.class, () -> offerService.getOfferDetailForHr(1)),
+                () -> assertThrows(ResourceNotFoundException.class, () -> offerService.getUpdateOfferRequestById(1)),
+                () -> assertThrows(ResourceNotFoundException.class, () -> offerService.updateOfferByHr(1, null)),
+                () -> assertThrows(ResourceNotFoundException.class, () -> offerService.deleteDraftOfferByHr(1)),
+                () -> assertThrows(ResourceNotFoundException.class, () -> offerService.sendOfferToCandidate(1)),
+                () -> assertThrows(ResourceNotFoundException.class, () -> offerService.approveOfferByDirector(1, null)),
+                () -> assertThrows(ResourceNotFoundException.class, () -> offerService.rejectOfferByDirector(1, null)));
+        verify(offerProposalRepository, never()).save(any());
     }
 
     @Test
@@ -1015,14 +1109,30 @@ class OfferServiceTests {
         when(offerProposalRepository.findById(1)).thenReturn(Optional.of(offer));
         when(offerProposalRepository.save(any(OfferProposal.class))).thenAnswer(i -> i.getArgument(0));
 
-        OfferResponse response = offerService.sendOfferToCandidate(1);
+        when(offerMailSender.sendOfferLetterToCandidate(offer)).thenReturn(EmailStatus.SENT);
+        OfferResponse response;
+        TransactionSynchronizationManager.initSynchronization();
+        TransactionSynchronizationManager.setActualTransactionActive(true);
+        try {
+            response = offerService.sendOfferToCandidate(1);
+            verifyNoInteractions(offerMailSender);
+            verifyNoInteractions(systemNotificationService);
+            TransactionSynchronizationManager.getSynchronizations().forEach(sync -> sync.afterCommit());
+        } finally {
+            TransactionSynchronizationManager.clearSynchronization();
+            TransactionSynchronizationManager.setActualTransactionActive(false);
+        }
+        assertEquals(EmailStatus.SENT, response.getEmailStatus());
+        verify(systemNotificationService).notifyOfferLetterSent(offer);
+        verify(transactionManager).getTransaction(org.mockito.ArgumentMatchers.argThat(definition ->
+                definition.getPropagationBehavior() == org.springframework.transaction.TransactionDefinition.PROPAGATION_REQUIRES_NEW));
 
         assertNotNull(response);
         assertEquals("Sent_Candidate", response.getOfferStatus());
-        assertEquals("Offered", app.getApplicationStatus());
+        verify(applicationRepository).transition(app.getApplicationId(), Set.of("Interview_Passed"), "Offered");
         assertEquals(5, response.getResponsePeriodDays());
         assertNotNull(response.getResponseDeadline());
-        verify(applicationRepository).save(app);
+        verify(applicationRepository, never()).save(app);
         verify(offerMailSender).sendOfferLetterToCandidate(offer);
     }
 
@@ -1041,7 +1151,7 @@ class OfferServiceTests {
         });
 
         assertEquals("OFFER_NOT_APPROVED", ex.getErrorCode());
-        assertTrue(ex.getMessage().contains("Chỉ được gửi thư mời nhận việc khi đề xuất đã được Giám đốc phê duyệt"));
+        assertTrue(ex.getMessage().contains("Chỉ được gửi thư mời nhận việc khi thư mời đã được Giám đốc phê duyệt"));
     }
 
     @Test
@@ -1089,10 +1199,13 @@ class OfferServiceTests {
                 .build();
         
         when(offerProposalRepository.findById(1)).thenReturn(Optional.of(offer));
-        when(offerProposalRepository.save(any(OfferProposal.class))).thenAnswer(i -> i.getArgument(0));
+        when(offerProposalRepository.decideIfPending(eq(1), anyString())).thenAnswer(invocation -> {
+            offer.setOfferStatus(invocation.getArgument(1));
+            return 1;
+        });
 
         Role role = Role.builder().roleId(1).roleName("Director").build();
-        User mockUser = User.builder().userId(5).username("director1").role(role).build();
+        User mockUser = User.builder().accountStatus("Active").userId(5).username("director1").role(role).build();
         when(userRepository.findByUsernameIgnoreCase(any())).thenReturn(Optional.of(mockUser));
         
         org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(
@@ -1107,6 +1220,21 @@ class OfferServiceTests {
     }
 
     @Test
+    void staleDirectorDecisionSkipsHistoryAndNotification() {
+        OfferProposal offer = OfferProposal.builder().offerId(1).offerStatus("Pending_Director").build();
+        when(offerProposalRepository.findById(1)).thenReturn(Optional.of(offer));
+        when(userRepository.findByUsernameIgnoreCase("director1"))
+                .thenReturn(Optional.of(User.builder().accountStatus("Active").userId(5).username("director1").build()));
+        org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(
+                new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+                        "director1", "password", Collections.emptyList()));
+
+        assertThrows(OfferValidationException.class, () -> offerService.rejectOfferByDirector(1, "Reason"));
+        verify(offerProposalRepository).decideIfPending(1, "Director_Rejected");
+        verifyNoInteractions(offerApprovalRepository, systemNotificationService);
+    }
+
+    @Test
     @DisplayName("rejectOfferByDirector: Director từ chối Offer thành công")
     void testRejectOfferByDirector_success() {
         OfferProposal offer = OfferProposal.builder()
@@ -1115,10 +1243,13 @@ class OfferServiceTests {
                 .build();
         
         when(offerProposalRepository.findById(1)).thenReturn(Optional.of(offer));
-        when(offerProposalRepository.save(any(OfferProposal.class))).thenAnswer(i -> i.getArgument(0));
+        when(offerProposalRepository.decideIfPending(eq(1), anyString())).thenAnswer(invocation -> {
+            offer.setOfferStatus(invocation.getArgument(1));
+            return 1;
+        });
 
         Role role = Role.builder().roleId(1).roleName("Director").build();
-        User mockUser = User.builder().userId(5).username("director1").role(role).build();
+        User mockUser = User.builder().accountStatus("Active").userId(5).username("director1").role(role).build();
         when(userRepository.findByUsernameIgnoreCase(any())).thenReturn(Optional.of(mockUser));
         
         org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(
@@ -1130,6 +1261,37 @@ class OfferServiceTests {
         assertNotNull(response);
         assertEquals("Director_Rejected", response.getOfferStatus());
         verify(offerApprovalRepository).save(any(com.group2.rms.offer.entity.OfferApproval.class));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"Rejected", "Withdrawn", "Cancelled", "Hired"})
+    void endedApplicationCannotReceiveANewOffer(String status) {
+        when(applicationRepository.findById(1)).thenReturn(Optional.of(
+                Application.builder().applicationId(1).applicationStatus(status).build()));
+        CreateOfferRequest request = CreateOfferRequest.builder().applicationId(1)
+                .offeredPositionTitle("Test position").proposedSalary(new BigDecimal("20000000"))
+                .probationSalary(new BigDecimal("17000000")).probationDays(45).responsePeriodDays(5)
+                .expectedStartDate(LocalDate.now().plusDays(30)).workLocation("Test office").build();
+        OfferValidationException error = assertThrows(OfferValidationException.class,
+                () -> offerService.createOfferByHr(request));
+        assertEquals("APPLICATION_TERMINATED", error.getErrorCode());
+        verify(offerProposalRepository, never()).save(any());
+    }
+
+    @Test
+    void sourceStateChangedBeforePublicationDoesNotSendNotifications() {
+        Application app = Application.builder().applicationId(10).applicationStatus("Interviewing").build();
+        OfferProposal offer = OfferProposal.builder().offerId(1).application(app)
+                .offerStatus("Director_Approved").responsePeriodDays(5)
+                .expectedStartDate(LocalDate.now().plusDays(30)).build();
+        when(offerProposalRepository.findById(1)).thenReturn(Optional.of(offer));
+        when(offerProposalRepository.save(offer)).thenReturn(offer);
+        when(applicationRepository.transition(10, Set.of("Interviewing"), "Offered")).thenReturn(0);
+
+        OfferValidationException error = assertThrows(OfferValidationException.class,
+                () -> offerService.sendOfferToCandidate(1));
+        assertEquals("APPLICATION_STATE_CONFLICT", error.getErrorCode());
+        verifyNoInteractions(offerMailSender, systemNotificationService);
     }
 
     @Test
@@ -1174,97 +1336,45 @@ class OfferServiceTests {
         assertEquals("Accepted", result.getContent().get(0).getOfferStatus());
     }
 
-    @Test
-    @DisplayName("getDirectorOfferHistory: Giữ nguyên trạng thái vòng đời thực tế thay vì bị ghi đè")
-    void testGetDirectorOfferHistory_preservesRealtimeStatus() {
-        Role role = Role.builder().roleId(1).roleName("Director").build();
-        User mockDirector = User.builder().userId(5).username("director1").role(role).build();
-        when(userRepository.findByUsernameIgnoreCase(any())).thenReturn(Optional.of(mockDirector));
-        org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(
-                new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
-                        "director1", "password", Collections.emptyList()));
-
-        OfferProposal offer = OfferProposal.builder()
-                .offerId(20)
-                .offerStatus("Accepted") // Trạng thái thực tế: ứng viên đã chấp nhận
-                .offeredPositionTitle("Product Manager")
-                .build();
-
-        OfferApproval approval = OfferApproval.builder()
-                .offerApprovalId(1)
-                .director(mockDirector)
-                .offerProposal(offer)
-                .status("Approved") // Quyết định phê duyệt trong quá khứ của Director
-                .build();
-
-        Page<OfferApproval> approvalPage = new PageImpl<>(List.of(approval));
-        when(offerApprovalRepository.findByDirector_UserIdOrderByApprovedAtDesc(eq(5), any(Pageable.class)))
-                .thenReturn(approvalPage);
-
-        Page<OfferResponse> history = offerService.getDirectorOfferHistory(PageRequest.of(0, 10));
-
-        assertNotNull(history);
-        assertEquals(1, history.getTotalElements());
-        // Trạng thái hiển thị phải là Accepted (trạng thái vòng đời thực tế), KHÔNG bị đè thành "Approved"
-        assertEquals("Accepted", history.getContent().get(0).getOfferStatus());
-    }
 
     // =========================================================================
     // EXTENDED UNIT TESTS (English)
     // =========================================================================
 
     @ParameterizedTest
+    @org.junit.jupiter.params.provider.NullSource
     @ValueSource(strings = {"", "   "})
-    @DisplayName("rejectOfferByDirector: Accepts blank or whitespace comments and sets status to Director_Rejected")
-    void rejectOfferByDirector_blankComments_succeeds(String comments) {
-        OfferProposal offer = OfferProposal.builder()
-                .offerId(1)
-                .offerStatus("Pending_Director")
-                .build();
-
-        when(offerProposalRepository.findById(1)).thenReturn(Optional.of(offer));
-        when(offerProposalRepository.save(any(OfferProposal.class))).thenAnswer(i -> i.getArgument(0));
-
-        Role role = Role.builder().roleId(1).roleName("Director").build();
-        User mockUser = User.builder().userId(5).username("director1").role(role).build();
-        when(userRepository.findByUsernameIgnoreCase(any())).thenReturn(Optional.of(mockUser));
-
-        org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(
-                new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
-                        "director1", "password", Collections.emptyList()));
-
-        OfferResponse response = offerService.rejectOfferByDirector(1, comments);
-
-        assertNotNull(response);
-        assertEquals("Director_Rejected", response.getOfferStatus());
-        verify(offerApprovalRepository).save(any(OfferApproval.class));
+    void rejectOfferByDirector_requiresReasonInService(String comments) {
+        when(offerProposalRepository.findById(1)).thenReturn(Optional.of(
+                OfferProposal.builder().offerId(1).offerStatus("Pending_Director").build()));
+        doReturn(User.builder().userId(5).build()).when(currentUserService).requireUser();
+        assertEquals("DIRECTOR_REASON_REQUIRED", assertThrows(OfferValidationException.class,
+                () -> offerService.rejectOfferByDirector(1, comments)).getErrorCode());
+        verify(offerProposalRepository, never()).decideIfPending(anyInt(), anyString());
+        verifyNoInteractions(offerApprovalRepository, systemNotificationService);
     }
 
-    @Test
-    @DisplayName("rejectOfferByDirector: Accepts null comments and sets status to Director_Rejected")
-    void rejectOfferByDirector_nullComments_succeeds() {
-        OfferProposal offer = OfferProposal.builder()
-                .offerId(1)
-                .offerStatus("Pending_Director")
-                .build();
-
-        when(offerProposalRepository.findById(1)).thenReturn(Optional.of(offer));
-        when(offerProposalRepository.save(any(OfferProposal.class))).thenAnswer(i -> i.getArgument(0));
-
-        Role role = Role.builder().roleId(1).roleName("Director").build();
-        User mockUser = User.builder().userId(5).username("director1").role(role).build();
-        when(userRepository.findByUsernameIgnoreCase(any())).thenReturn(Optional.of(mockUser));
-
-        org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(
-                new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
-                        "director1", "password", Collections.emptyList()));
-
-        OfferResponse response = offerService.rejectOfferByDirector(1, null);
-
-        assertNotNull(response);
-        assertEquals("Director_Rejected", response.getOfferStatus());
-        verify(offerApprovalRepository).save(any(OfferApproval.class));
+    @ParameterizedTest
+    @ValueSource(strings = {"missing", "inactive"})
+    void directorDecisionRequiresAnActiveKnownAccount(String scenario) {
+        when(offerProposalRepository.findById(1)).thenReturn(Optional.of(
+                OfferProposal.builder().offerId(1).offerStatus("Pending_Director").build()));
+        var security = org.springframework.security.core.context.SecurityContextHolder.getContext();
+        var previous = security.getAuthentication();
+        security.setAuthentication(new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+                "director_test", "test-only", Collections.emptyList()));
+        when(userRepository.findByUsernameIgnoreCase("director_test")).thenReturn("missing".equals(scenario)
+                ? Optional.empty() : Optional.of(User.builder().accountStatus("Inactive").userId(5).build()));
+        try {
+            assertThrows(org.springframework.security.access.AccessDeniedException.class,
+                    () -> offerService.approveOfferByDirector(1, "Approved"));
+            verify(userRepository, never()).findAll();
+            verify(offerProposalRepository, never()).decideIfPending(anyInt(), anyString());
+        } finally { security.setAuthentication(previous); }
     }
+
+
+
 
     @ParameterizedTest
     @ValueSource(strings = {"Draft", "Director_Approved", "Director_Rejected", "Sent_Candidate", "Accepted", "Declined"})
@@ -1427,9 +1537,9 @@ class OfferServiceTests {
 
         assertNotNull(response);
         assertEquals("Sent_Candidate", response.getOfferStatus());
-        assertEquals("Offered", app.getApplicationStatus());
+        verify(applicationRepository).transition(app.getApplicationId(), Set.of("Interview_Passed"), "Offered");
         assertNotNull(response.getResponseDeadline());
-        verify(applicationRepository).save(app);
+        verify(applicationRepository, never()).save(app);
     }
 
     @ParameterizedTest
@@ -1472,11 +1582,12 @@ class OfferServiceTests {
                 .when(offerMailSender).sendOfferLetterToCandidate(any(OfferProposal.class));
 
         OfferResponse response = offerService.sendOfferToCandidate(1);
+        assertEquals(EmailStatus.NOT_SENT, response.getEmailStatus());
 
         assertNotNull(response);
         assertEquals("Sent_Candidate", response.getOfferStatus());
-        assertEquals("Offered", app.getApplicationStatus());
-        verify(applicationRepository).save(app);
+        verify(applicationRepository).transition(app.getApplicationId(), Set.of("Interview_Passed"), "Offered");
+        verify(applicationRepository, never()).save(app);
     }
 
     @Test
@@ -1488,10 +1599,13 @@ class OfferServiceTests {
                 .build();
 
         when(offerProposalRepository.findById(1)).thenReturn(Optional.of(offer));
-        when(offerProposalRepository.save(any(OfferProposal.class))).thenAnswer(i -> i.getArgument(0));
+        when(offerProposalRepository.decideIfPending(eq(1), anyString())).thenAnswer(invocation -> {
+            offer.setOfferStatus(invocation.getArgument(1));
+            return 1;
+        });
 
         Role role = Role.builder().roleId(1).roleName("Director").build();
-        User mockDirector = User.builder().userId(5).username("director1").role(role).build();
+        User mockDirector = User.builder().accountStatus("Active").userId(5).username("director1").role(role).build();
         when(userRepository.findByUsernameIgnoreCase(any())).thenReturn(Optional.of(mockDirector));
 
         org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(
@@ -1517,10 +1631,13 @@ class OfferServiceTests {
                 .build();
 
         when(offerProposalRepository.findById(1)).thenReturn(Optional.of(offer));
-        when(offerProposalRepository.save(any(OfferProposal.class))).thenAnswer(i -> i.getArgument(0));
+        when(offerProposalRepository.decideIfPending(eq(1), anyString())).thenAnswer(invocation -> {
+            offer.setOfferStatus(invocation.getArgument(1));
+            return 1;
+        });
 
         Role role = Role.builder().roleId(1).roleName("Director").build();
-        User mockDirector = User.builder().userId(5).username("director1").role(role).build();
+        User mockDirector = User.builder().accountStatus("Active").userId(5).username("director1").role(role).build();
         when(userRepository.findByUsernameIgnoreCase(any())).thenReturn(Optional.of(mockDirector));
 
         org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(
@@ -1566,10 +1683,13 @@ class OfferServiceTests {
                 .build();
 
         when(offerProposalRepository.findById(1)).thenReturn(Optional.of(offer));
-        when(offerProposalRepository.save(any(OfferProposal.class))).thenAnswer(i -> i.getArgument(0));
+        when(offerProposalRepository.decideIfPending(eq(1), anyString())).thenAnswer(invocation -> {
+            offer.setOfferStatus(invocation.getArgument(1));
+            return 1;
+        });
 
         Role role = Role.builder().roleId(1).roleName("Director").build();
-        User mockDirector = User.builder().userId(5).username("director1").role(role).build();
+        User mockDirector = User.builder().accountStatus("Active").userId(5).username("director1").role(role).build();
         when(userRepository.findByUsernameIgnoreCase(any())).thenReturn(Optional.of(mockDirector));
 
         org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(
@@ -1593,5 +1713,64 @@ class OfferServiceTests {
         assertNotNull(result);
         verify(offerProposalRepository).findAllActiveByOrderByOfferIdAsc(any(Pageable.class));
     }
+
+    @org.junit.jupiter.api.AfterEach
+    void clearActorContext() {
+        org.springframework.security.core.context.SecurityContextHolder.clearContext();
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"anonymous", "missing", "inactive"})
+    void decisionsRequireAnActiveAuthenticatedActor(String actor) {
+        var offer = OfferProposal.builder().offerId(1).offerStatus("Pending_Director").build();
+        when(offerProposalRepository.findById(1)).thenReturn(Optional.of(offer));
+        if (!"anonymous".equals(actor)) {
+            org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(
+                    new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(actor, "test-only", List.of()));
+            when(userRepository.findByUsernameIgnoreCase(actor)).thenReturn("inactive".equals(actor)
+                    ? Optional.of(User.builder().userId(7).accountStatus("Inactive").build()) : Optional.empty());
+        }
+        assertThrows(org.springframework.security.access.AccessDeniedException.class,
+                () -> offerService.approveOfferByDirector(1, "Approved"));
+        verify(offerProposalRepository, never()).save(any());
+        verify(offerApprovalRepository, never()).save(any());
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void directorCommentLimitIsCheckedInService(boolean approved) {
+        when(offerProposalRepository.findById(1)).thenReturn(Optional.of(
+                OfferProposal.builder().offerId(1).offerStatus("Pending_Director").build()));
+        doReturn(User.builder().userId(7).accountStatus("Active").build()).when(currentUserService).requireUser();
+        assertThrows(OfferValidationException.class, () -> {
+            if (approved) offerService.approveOfferByDirector(1, "x".repeat(2001));
+            else offerService.rejectOfferByDirector(1, "x".repeat(2001));
+        });
+        verify(offerProposalRepository, never()).save(any());
+        verify(offerApprovalRepository, never()).save(any());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"Hired", "Rejected", "Withdrawn", "Cancelled"})
+    void endedApplicationCannotCreateEditPublishOrDecideOffers(String status) {
+        Application application = Application.builder().applicationId(1).applicationStatus(status).build();
+        OfferProposal offer = OfferProposal.builder().offerId(1).application(application).offerStatus("Draft").build();
+        when(offerProposalRepository.findById(1)).thenReturn(Optional.of(offer));
+        when(applicationRepository.findById(1)).thenReturn(Optional.of(application));
+        CreateOfferRequest request = CreateOfferRequest.builder().applicationId(1).offeredPositionTitle("Test position")
+                .proposedSalary(new BigDecimal("20000000")).probationSalary(new BigDecimal("18000000"))
+                .probationDays(60).responsePeriodDays(5).expectedStartDate(LocalDate.now().plusDays(14))
+                .workLocation("Test office").build();
+        List<Runnable> actions = List.of(() -> offerService.createOfferByHr(request),
+                () -> offerService.updateOfferByHr(1, new UpdateOfferRequest()),
+                () -> offerService.sendOfferToCandidate(1), () -> offerService.approveOfferByDirector(1, "Approve"),
+                () -> offerService.rejectOfferByDirector(1, "Reject"));
+        for (Runnable action : actions) {
+            assertEquals("APPLICATION_TERMINATED", assertThrows(OfferValidationException.class, action::run).getErrorCode());
+        }
+        verify(offerProposalRepository, never()).save(any());
+        verify(offerApprovalRepository, never()).save(any());
+    }
+
 }
 

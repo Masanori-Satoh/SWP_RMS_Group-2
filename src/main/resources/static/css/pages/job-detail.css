@@ -6,23 +6,17 @@
 
 .jd-page {
   --jd-radius: 16px;
-  --jd-shadow: 0 1px 2px color-mix(in srgb, var(--ink) 6%, transparent),
-               0 12px 32px color-mix(in srgb, var(--brand-dark) 9%, transparent);
+  --jd-font: 'Plus Jakarta Sans', var(--sans);
+  /* Chữ nội dung to hơn 1px so với thang chuẩn (dunglt 05/11); tiêu đề tin (.job-detail-title) không đổi */
+  --jd-plus: 1px;
+  --jd-shadow: var(--job-shadow);
   --jd-mint: color-mix(in srgb, var(--brand-soft) 65%, var(--surface));
+  font-family: var(--jd-font);
   position: relative;
   isolation: isolate;
   padding-bottom: var(--s16);
   /* Cắt ảnh nền cố định trong vùng main, không đè lên footer phía dưới */
   clip-path: inset(0);
-}
-
-/* Ảnh nền đứng yên khi cuộn (cùng cách trang /portal), phủ trắng dày hơn để trang sáng, đỡ xám */
-.jd-page > .adw-scene {
-  position: fixed;
-}
-
-.jd-page > .adw-scene::after {
-  background: color-mix(in srgb, var(--surface) 74%, transparent);
 }
 
 .jd-page > .container {
@@ -48,7 +42,7 @@
 .job-section-card,
 .summary-card,
 .support-card {
-  border: 1px solid var(--line);
+  border: 1px solid color-mix(in srgb, var(--brand) 18%, var(--line));
   border-radius: var(--jd-radius);
   background: var(--surface);
   box-shadow: var(--jd-shadow);
@@ -56,7 +50,19 @@
 
 /* ---- Thẻ đầu: tên vị trí ---- */
 .job-header-card {
+  position: relative;
+  overflow: hidden;
   padding: var(--s8);
+}
+
+/* Vạch màu thương hiệu trên đầu thẻ tên vị trí và thẻ tóm tắt */
+.job-header-card::before,
+.summary-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 5px;
+  background: var(--pine);
 }
 
 .job-header-badges {
@@ -73,20 +79,24 @@
   overflow-wrap: anywhere;
 }
 
+.job-header-badges .badge {
+  font-weight: 700;
+}
+
 .job-header-badges .badge--neutral {
   border-color: transparent;
-  background: var(--jd-mint);
-  color: var(--brand-dark);
+  background: var(--job-badge-bg);
+  color: var(--job-badge-ink);
 }
 
 .job-detail-title {
   margin: 0 0 var(--s5);
-  color: var(--ink);
-  font-family: var(--serif);
+  color: var(--brand-hover);
+  font-family: var(--jd-font);
   font-size: clamp(28px, 3.2vw, 40px);
-  font-weight: 600;
-  line-height: 1.25;
-  letter-spacing: -0.01em;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.03em;
 }
 
 .job-meta-row {
@@ -96,7 +106,7 @@
   padding-top: var(--s4);
   border-top: 1px solid var(--line);
   color: var(--muted);
-  font-size: var(--font-sm);
+  font-size: calc(var(--font-sm) + var(--jd-plus));
 }
 
 .job-meta-item {
@@ -116,6 +126,11 @@
 /* ---- Thẻ nội dung: một khối đọc liền mạch ---- */
 .job-section-card {
   padding: var(--s8);
+  transition: box-shadow 200ms ease, border-color 200ms ease;
+}
+
+.job-section-card:hover {
+  border-color: color-mix(in srgb, var(--brand) 40%, var(--line));
 }
 
 .jd-section + .jd-section {
@@ -127,10 +142,17 @@
 .section-title {
   margin: 0 0 var(--s4);
   color: var(--brand-dark);
-  font-family: var(--sans);
-  font-size: var(--font-lg);
-  font-weight: 700;
-  letter-spacing: -0.01em;
+  font-family: var(--jd-font);
+  font-size: calc(var(--font-lg) + var(--jd-plus));
+  font-weight: 800;
+  letter-spacing: -0.015em;
+}
+
+/* Tiêu đề mỗi mục có vạch xanh bên trái */
+.jd-section .section-title {
+  padding-left: var(--s3);
+  border-left: 5px solid var(--brand);
+  color: var(--ink);
 }
 
 /* Tiêu đề mỗi mục có vạch xanh bên trái */
@@ -143,8 +165,8 @@
 .rich-text {
   max-width: 72ch;
   color: var(--ink);
-  font-size: var(--font-base);
-  line-height: 1.75;
+  font-size: calc(var(--font-base) + var(--jd-plus));
+  line-height: 1.8;
 }
 
 .rich-text p {
@@ -168,8 +190,8 @@
 /* Tiêu đề nhỏ trong mục "Địa điểm và thời gian" */
 .jd-subtitle {
   margin: 0 0 var(--s2);
-  font-size: var(--font-base);
-  font-weight: 600;
+  font-size: calc(var(--font-base) + var(--jd-plus));
+  font-weight: 700;
 }
 
 /* ---- Cột phải ---- */
@@ -181,6 +203,8 @@
 }
 
 .summary-card {
+  position: relative;
+  overflow: hidden;
   padding: var(--s6);
 }
 
@@ -188,9 +212,9 @@
 .support-card__title {
   margin: 0 0 var(--s4);
   color: var(--ink);
-  font-family: var(--sans);
-  font-size: var(--font-md);
-  font-weight: 700;
+  font-family: var(--jd-font);
+  font-size: calc(var(--font-md) + var(--jd-plus));
+  font-weight: 800;
 }
 
 .summary-list {
@@ -206,13 +230,13 @@
   display: block;
   margin-bottom: 2px;
   color: var(--muted);
-  font-size: var(--font-sm);
+  font-size: calc(var(--font-sm) + var(--jd-plus));
 }
 
 .summary-value {
   color: var(--ink);
-  font-size: var(--font-base);
-  font-weight: 600;
+  font-size: calc(var(--font-base) + var(--jd-plus));
+  font-weight: 700;
   overflow-wrap: anywhere;
 }
 
@@ -223,14 +247,20 @@
 }
 
 .job-action-wrap .btn--primary {
-  min-height: 48px;
+  min-height: 52px;
   border-radius: var(--radius-full);
-  font-size: var(--font-md);
-  box-shadow: 0 6px 16px color-mix(in srgb, var(--brand-dark) 24%, transparent);
+  background: var(--pine);
+  font-family: var(--jd-font);
+  font-size: calc(var(--font-md) + var(--jd-plus));
+  font-weight: 800;
+  box-shadow: var(--job-shadow-btn);
+  transition: transform 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
 }
 
 .job-action-wrap .btn--primary:hover {
-  transform: translateY(-1px);
+  background: var(--pine-hover);
+  transform: translateY(-2px);
+  box-shadow: var(--job-shadow-btn-hover);
 }
 
 .btn-full-width {
@@ -243,7 +273,7 @@
   border-radius: var(--radius-md);
   background: var(--surface-subtle);
   color: var(--muted);
-  font-size: var(--font-sm);
+  font-size: calc(var(--font-sm) + var(--jd-plus));
   line-height: 1.5;
   text-align: center;
 }
@@ -260,7 +290,7 @@
 
 .support-card {
   padding: var(--s6);
-  background: var(--jd-mint);
+  background: linear-gradient(160deg, var(--brand-soft), var(--jd-mint));
 }
 
 .support-card__title {
@@ -270,9 +300,9 @@
 
 .support-card p {
   margin: 0 0 var(--s4);
-  color: var(--muted);
-  font-size: var(--font-sm);
-  line-height: 1.55;
+  color: var(--ink);
+  font-size: calc(var(--font-sm) + var(--jd-plus));
+  line-height: 1.6;
 }
 
 .support-card .btn {
@@ -314,6 +344,18 @@
   .jd-section + .jd-section {
     margin-top: var(--s6);
     padding-top: var(--s6);
+  }
+}
+
+/* Người dùng bật "giảm chuyển động": bỏ nảy nút và hiệu ứng thẻ */
+@media (prefers-reduced-motion: reduce) {
+  .job-section-card,
+  .job-action-wrap .btn--primary {
+    transition: none;
+  }
+
+  .job-action-wrap .btn--primary:hover {
+    transform: none;
   }
 }
 

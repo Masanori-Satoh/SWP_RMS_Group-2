@@ -8,7 +8,7 @@ import com.group2.rms.user.repository.*;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.server.ResponseStatusException;
+import com.group2.rms.user.exception.AccountOperationException;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -509,10 +509,10 @@ class AccountManagementCoverageTests {
         // Repository mock chưa có account ID 77.
 
         // When: Thực hiện thao tác cần kiểm tra.
-        ResponseStatusException error = assertThrows(ResponseStatusException.class, () -> service.findForEdit(77));
+        AccountOperationException error = assertThrows(AccountOperationException.class, () -> service.findForEdit(77));
 
         // Then: Kiểm tra kết quả nghiệp vụ và số lần gọi dependency.
-        assertEquals(404, error.getStatusCode().value());
+        assertEquals("ACCOUNT_OPERATION_REJECTED", error.getErrorCode());
         verify(users, times(0)).saveAndFlush(any(User.class));
         verify(encoder, times(0)).encode(any());
         verify(candidates, times(0)).save(any(Candidate.class));
@@ -525,10 +525,10 @@ class AccountManagementCoverageTests {
         when(users.findById(8)).thenReturn(Optional.of(User.builder().userId(8).role(candidateRole).build()));
 
         // When: Thực hiện thao tác cần kiểm tra.
-        ResponseStatusException error = assertThrows(ResponseStatusException.class, () -> service.findForEdit(8));
+        AccountOperationException error = assertThrows(AccountOperationException.class, () -> service.findForEdit(8));
 
         // Then: Kiểm tra kết quả nghiệp vụ và số lần gọi dependency.
-        assertEquals(404, error.getStatusCode().value());
+        assertEquals("ACCOUNT_OPERATION_REJECTED", error.getErrorCode());
         verify(users, times(0)).saveAndFlush(any(User.class));
         verify(encoder, times(0)).encode(any());
         verify(candidates, times(0)).save(any(Candidate.class));

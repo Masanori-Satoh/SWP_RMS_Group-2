@@ -9,6 +9,7 @@
   <aside th:replace="~{auth/fragments :: story(botanical=true)}"></aside>
   <main id="main" class="card auth-card" tabindex="-1">
     <nav th:replace="~{auth/fragments :: tabs('register')}"></nav>
+    <p class="alert alert--danger auth-message" role="alert" th:if="${errorMessage}" th:text="${errorMessage}"></p>
     <div class="auth-visually-hidden"><nav th:replace="~{auth/fragments :: registrationSteps(1)}"></nav></div>
     <h1>Tạo tài khoản ứng viên.</h1>
     <p class="auth-intro">Đăng ký tài khoản để theo dõi hồ sơ ứng tuyển tại Mộc. Xác minh email trước khi hoàn tất.</p>

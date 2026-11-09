@@ -1,6 +1,6 @@
 # BÁO CÁO CÔNG VIỆC ITERATION 1 — MODULE JOB REQUISITION
 
-> Các mục có ngày và số test là nhật ký lịch sử. Chức năng rút Requisition đã được gỡ; các kết quả cũ chỉ dùng để truy vết, không mô tả phiên bản hiện tại.
+> **Ghi chú 06/11/2026:** Chấm CV bằng AI (`AI_Screened`, `AIScreeningResult`, `OverallScore`) và tiêu chí sàng lọc (`ScreeningCriteria`) đã gỡ khỏi hệ thống (migration `013`, `014`). Phần nhắc tới chúng bên dưới là nội dung tại thời điểm viết, không còn đúng với hệ thống. Các mục có ngày và số test là nhật ký lịch sử; các kết quả cũ chỉ dùng để truy vết.
 
 - **Thành viên phụ trách:** Nguyễn Huy Hoàng (hoangnh)
 - **Module:** Yêu cầu Tuyển dụng (Job Requisition)

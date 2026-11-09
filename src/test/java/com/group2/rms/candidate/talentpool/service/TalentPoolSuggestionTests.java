@@ -58,7 +58,7 @@ class TalentPoolSuggestionTests {
     }
     private Application source(int id, int cid) {
         Application a = Application.builder().applicationId(id)
-                .candidate(Candidate.builder().candidateId(cid).isPotential(true).build())
+                .candidate(Candidate.builder().candidateId(cid).isPotential(true).account(User.builder().accountStatus("Active").build()).build())
                 .jobPosting(JobPosting.builder().jobPostingId(3).build())
                 .applicationStatus("Rejected").appliedCvUrl("local:cv/" + cid + "/old.pdf").build();
         when(applications.findDetailById(id)).thenReturn(Optional.of(a));

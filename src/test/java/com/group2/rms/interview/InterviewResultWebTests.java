@@ -108,6 +108,7 @@ class InterviewResultWebTests {
                 .andExpect(view().name("interview/result"))
                 .andExpect(model().attribute("activeMenu", "interviews"))
                 .andExpect(content().string(containsString("Chi Candidate")))
+                .andExpect(content().string(not(containsString("Bạn không có quyền truy cập vào trang này."))))
                 .andExpect(content().string(containsString("Tổng hợp điểm")))
                 .andExpect(content().string(containsString("Giỏi &lt;b&gt;Java&lt;/b&gt;<br/>Chủ động")))
                 .andExpect(content().string(containsString("25.000.000 ₫")))
@@ -142,13 +143,16 @@ class InterviewResultWebTests {
                 .andExpect(content().string(not(containsString("id=\"iev-dialog\""))));
     }
 
+    // ducnm sửa: không thuộc hội đồng của buổi này (GBR-05) vẫn vào được trang (còn sidebar/topbar) nhưng
+    // ẩn nội dung kết quả, thay bằng banner "không có quyền" — không còn trả 403 toàn trang như trước.
     @Test
-    void interviewerOutsidePanelGets403() throws Exception {
+    void interviewerOutsidePanelSeesAccessDeniedBanner() throws Exception {
         when(resultService.getResult(anyLong(), any()))
                 .thenThrow(new AccessDeniedException("Bạn không được phân công vào buổi phỏng vấn này."));
 
         mvc.perform(get("/interviews/7/result").with(as(12, "iv_khac", "Interviewer")))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Bạn không có quyền truy cập vào trang này.")));
     }
 
     // ------------------------------------------------------------------ nộp phiếu (AJAX)
@@ -318,16 +322,17 @@ class InterviewResultWebTests {
                 argThat(u -> u.getUserId() == 40));
     }
 
+    // ducnm sửa: SecurityConfig giờ cho cả Director vào POST /interviews/*/final-result (vị trí tuyển Hiring
+    // Manager cần Director chốt — bug cũ chặn nhầm cả trường hợp này). Ai đúng người chốt cho từng lịch cụ thể
+    // (HM phụ trách phòng ban, hay Director khi tuyển vị trí HM) do InterviewFinalResultService tự kiểm tra,
+    // đã có test riêng ở InterviewFinalResultServiceTests. Ở tầng Security chỉ còn loại HR và Interviewer.
     @Test
-    void onlyHiringManagerMayFinalize() throws Exception {
+    void interviewerAndHrMayNotFinalize() throws Exception {
         String body = "{\"finalDecision\":\"Passed\"}";
         mvc.perform(post("/interviews/7/final-result").with(as(11, "iv_minh", "Interviewer")).with(csrf())
                         .contentType(MediaType.APPLICATION_JSON).content(body))
                 .andExpect(status().isForbidden());
         mvc.perform(post("/interviews/7/final-result").with(as(1, "hr_lan", "HR")).with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON).content(body))
-                .andExpect(status().isForbidden());
-        mvc.perform(post("/interviews/7/final-result").with(as(13, "director", "Director")).with(csrf())
                         .contentType(MediaType.APPLICATION_JSON).content(body))
                 .andExpect(status().isForbidden());
         verifyNoInteractions(finalResultService);

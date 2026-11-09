@@ -47,9 +47,9 @@ class AccountListServiceTests {
         when(users.findById(7)).thenReturn(Optional.of(candidate));
         when(users.findById(8)).thenReturn(Optional.of(employee));
         // When: Gọi service.deactivate với dữ liệu đã chuẩn bị.
-        assertThrows(org.springframework.web.server.ResponseStatusException.class, () -> service.deactivate(7));
+        assertThrows(com.group2.rms.user.exception.AccountOperationException.class, () -> service.deactivate(7));
         // Then: Chặn target khác nhóm; giữ account Inactive và cho vô hiệu hóa Candidate đúng nhóm.
-        assertThrows(org.springframework.web.server.ResponseStatusException.class, () -> service.deactivateCandidate(8));
+        assertThrows(com.group2.rms.user.exception.AccountOperationException.class, () -> service.deactivateCandidate(8));
         service.deactivate(8);
         verify(users, times(0)).save(employee);
         assertEquals("Active", candidate.getAccountStatus());

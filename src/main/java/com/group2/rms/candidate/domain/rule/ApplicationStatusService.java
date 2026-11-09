@@ -3,6 +3,7 @@ package com.group2.rms.candidate.domain.rule;
 import com.group2.rms.candidate.domain.repository.ApplicationRepository;
 import com.group2.rms.core.exception.ResourceNotFoundException;
 import com.group2.rms.jobposting.repository.JobPostingRepository;
+import com.group2.rms.notification.service.NotificationService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,8 +26,10 @@ import java.util.Set;
  *   HM_Passed --xếp lịch / chốt Đạt--> Interviewing
  *   HM_Passed, Interviewing --chốt Không đạt--> Rejected
  *   Offered --ứng viên nhận offer--> Hired
- *   Offered --ứng viên từ chối offer--> Rejected
+ *   Offered --ứng viên từ chối offer--> Withdrawn
  * </pre>
+ * Trạng thái kết thúc trả lời "ai kết thúc đơn": {@code Rejected} công ty loại, {@code Withdrawn} ứng viên tự dừng
+ * (rút đơn, từ chối offer), {@code Cancelled} đơn dừng vì tin bị đóng, {@code Hired} nhận việc.
  */
 @Service
 @Transactional
@@ -39,9 +42,16 @@ public class ApplicationStatusService {
     static final Set<String> OFFERED = Set.of("Offered");
 
     public static final String REJECTED = "Rejected";
+    public static final String WITHDRAWN = "Withdrawn";
+    public static final String CANCELLED = "Cancelled";
+    public static final String HIRED = "Hired";
+
+    /** Một nguồn cho "đơn đã kết thúc": mọi danh sách {@code NOT IN} trạng thái kết thúc dùng hằng này. */
+    public static final Set<String> TERMINAL = Set.of(HIRED, REJECTED, WITHDRAWN, CANCELLED);
 
     private final ApplicationRepository applications;
     private final JobPostingRepository jobs;
+    private final NotificationService notificationService;
 
     public void requireScheduleable(Integer id) {
         // check if application is exist
@@ -55,7 +65,7 @@ public class ApplicationStatusService {
         var rows = applications.findProgressFacts(List.of(id));
         //check if cv is not empty  and stage of CV is Interview
         if (!rows.isEmpty() && ApplicationProgressResolver.resolve(ApplicationProgressFacts.from(rows.getFirst()),LocalDateTime.now()).stage() != ApplicationStage.INTERVIEW)
-            throw new ApplicationStatusException("Hồ sơ đã chuyển sang vòng Offer hoặc đã kết thúc.");
+            throw new ApplicationStatusException("Hồ sơ đã chuyển sang vòng Thư mời hoặc đã kết thúc.");
     }
 
     /** HR xếp lịch phỏng vấn. */
@@ -67,23 +77,27 @@ public class ApplicationStatusService {
      * Hiring Manager chốt kết quả phỏng vấn. Đạt: giữ (hoặc đưa về)
      * {@code Interviewing} để HR lập offer;
      * đơn cũ chưa qua {@link #onInterviewScheduled} cũng được đưa sang.
+     * Không đạt: đơn thành {@code Rejected} và báo ứng viên; đơn đã đổi trạng thái trước đó thì không báo.
      */
     public void onInterviewDecided(Integer applicationId, boolean passed) {
         if (passed) {
             move(applicationId, BEFORE_INTERVIEW, "Interviewing");
-        } else {
-            move(applicationId, IN_INTERVIEW, REJECTED);
+        } else if (move(applicationId, IN_INTERVIEW, REJECTED)) {
+            applications.findDetailById(applicationId).ifPresent(notificationService::notifyApplicationRejected);
         }
     }
 
-    /** Ứng viên trả lời offer đã gửi: nhận thì {@code Hired}, từ chối thì {@code Rejected}. */
+    /** Ứng viên trả lời offer đã gửi: nhận thì {@code Hired}, từ chối thì {@code Withdrawn} (ứng viên tự dừng). */
     public void onOfferAnswered(Integer applicationId, boolean accepted) {
-        move(applicationId, OFFERED, accepted ? "Hired" : REJECTED);
+        move(applicationId, OFFERED, accepted ? HIRED : WITHDRAWN);
     }
 
-    private void move(Integer applicationId, Set<String> from, String to) {
+    /** @return {@code true} nếu trạng thái đã đổi */
+    private boolean move(Integer applicationId, Set<String> from, String to) {
         if (applications.transition(applicationId, from, to) == 0) {
             log.debug("Đơn #{} không ở {} nên giữ nguyên trạng thái (không chuyển sang {}).", applicationId, from, to);
+            return false;
         }
+        return true;
     }
 }

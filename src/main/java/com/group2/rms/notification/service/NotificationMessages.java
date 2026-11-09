@@ -153,6 +153,13 @@ public final class NotificationMessages {
                 reviewerName, candidateName(application), application.getJobPosting().getPostingTitle());
     }
 
+    // dunglt bổ sung: chữ cho ứng viên, không nêu vòng, người loại hay lý do (GBR-02)
+    public static String applicationRejectedContent(Application application) {
+        return String.format(
+                "Cảm ơn bạn đã ứng tuyển vị trí \"%s\". Rất tiếc, hồ sơ của bạn chưa phù hợp để tiếp tục trong đợt tuyển dụng này. Bạn có thể xem chi tiết ở Đơn của tôi.",
+                application.getJobPosting().getPostingTitle());
+    }
+
     // "dd/MM/yyyy HH:mm – HH:mm"; chưa có giờ kết thúc thì chỉ hiện giờ bắt đầu
     public static String interviewTime(InterviewSchedule schedule) {
         String when = displayTime(schedule.getStartTime());
@@ -186,6 +193,13 @@ public final class NotificationMessages {
                 interviewTime(schedule), interviewPlace(schedule));
     }
 
+    // ducnm bổ sung: chỉ báo ứng viên khi hủy lịch (nội bộ tự báo nhau); lý do hiển thị cho ứng viên biết
+    public static String interviewCancelledCandidateContent(InterviewSchedule schedule, String reason) {
+        return String.format("Lịch phỏng vấn vị trí \"%s\" của bạn lúc %s đã bị hủy.%s",
+                schedule.getApplication().getJobPosting().getPostingTitle(),
+                interviewTime(schedule), declineReasonText(reason));
+    }
+
     public static String interviewResultContent(Application application, String hmName, String result) {
         return String.format("%s đã chốt kết quả phỏng vấn của ứng viên %s (Vị trí: %s): %s.",
                 hmName, candidateName(application), application.getJobPosting().getPostingTitle(), result);
@@ -197,7 +211,7 @@ public final class NotificationMessages {
             salary = String.format("%,d ₫", offer.getProposedSalary().longValue());
         }
         return String.format(
-                "Chuyên viên tuyển dụng %s đã nộp đề xuất nhận việc cho ứng viên %s (Vị trí: %s, Lương chính thức: %s). Vui lòng xem xét và thực hiện phê duyệt.",
+                "Chuyên viên tuyển dụng %s đã nộp thư mời nhận việc cho ứng viên %s (Vị trí: %s, Lương chính thức: %s). Vui lòng xem xét và thực hiện phê duyệt.",
                 hrName, candidateName(offer.getApplication()), positionTitle(offer), salary);
     }
 
@@ -207,7 +221,7 @@ public final class NotificationMessages {
             noteText = " Ghi chú: \"" + shortComment(comments) + "\".";
         }
         return String.format(
-                "Giám đốc %s đã phê duyệt đề xuất nhận việc cho ứng viên %s (Vị trí: %s).%s Bạn có thể tiến hành phát hành Thư mời nhận việc cho ứng viên.",
+                "Giám đốc %s đã phê duyệt thư mời nhận việc cho ứng viên %s (Vị trí: %s).%s Bạn có thể tiến hành phát hành Thư mời nhận việc cho ứng viên.",
                 directorName, candidateName(offer.getApplication()), positionTitle(offer), noteText);
     }
 
@@ -217,7 +231,7 @@ public final class NotificationMessages {
             reasonText = shortComment(comments);
         }
         return String.format(
-                "Giám đốc %s đã từ chối đề xuất nhận việc cho ứng viên %s (Vị trí: %s). Lý do: \"%s\". Vui lòng kiểm tra lại điều khoản và chỉnh sửa bản thảo nếu cần.",
+                "Giám đốc %s đã từ chối thư mời nhận việc cho ứng viên %s (Vị trí: %s). Lý do: \"%s\". Vui lòng kiểm tra lại điều khoản và chỉnh sửa bản thảo nếu cần.",
                 directorName, candidateName(offer.getApplication()), positionTitle(offer), reasonText);
     }
 

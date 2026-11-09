@@ -121,6 +121,7 @@ public class RequisitionServiceImpl implements RequisitionService {
 
         applySavedStatus(jobRequisition, request.getAction(), currentUser);
 
+        // lưu db + audit
         requisitions.saveAndFlush(jobRequisition);
 
         jobRequisition.setRequisitionCode(RequisitionLabels.requisitionCode(jobRequisition.getRequisitionId()));

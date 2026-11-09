@@ -207,3 +207,6 @@ body.auth-page {
   html:has(> body.auth-page) { scroll-behavior: auto; }
   .auth-password-toggle { transition: none; }
 }
+@media (max-width: 600px) {
+  .auth-login .flash-toasts { top: 72px; }
+}

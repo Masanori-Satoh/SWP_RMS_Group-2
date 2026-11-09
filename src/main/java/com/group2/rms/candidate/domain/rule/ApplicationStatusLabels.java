@@ -10,7 +10,8 @@ public final class ApplicationStatusLabels {
 
     /** Các trạng thái hợp lệ, theo thứ tự luồng tuyển dụng; tham số lọc {@code status} ngoài danh sách này bị bỏ qua. */
     public static final List<String> STATUSES = List.of(
-            "Applied", "HR_Passed", "HM_Suggested", "HM_Passed", "Interviewing", "Offered", "Hired", "Rejected");
+            "Applied", "HR_Passed", "HM_Suggested", "HM_Passed", "Interviewing", "Offered", "Hired", "Rejected",
+            "Withdrawn", "Cancelled");
 
     private ApplicationStatusLabels() {
     }
@@ -25,6 +26,8 @@ public final class ApplicationStatusLabels {
             case "Offered" -> "Đã có thư mời";
             case "Hired" -> "Đã nhận việc";
             case "Rejected" -> "Không tiếp tục";
+            case "Withdrawn" -> "Đã rút đơn";
+            case "Cancelled" -> "Dừng do đóng tin";
             default -> status;
         };
     }
@@ -35,6 +38,24 @@ public final class ApplicationStatusLabels {
             case "Offered", "Hired" -> "badge--success";
             case "Rejected" -> "badge--danger";
             default -> "badge--neutral";
+        };
+    }
+
+    /**
+     * Nhãn trạng thái thư mời nhận việc ({@code OfferProposal.OfferStatus}) cho phía nhân viên; trạng thái lạ giữ nguyên.
+     */
+    // dunglt bổ sung: dòng hành trình "Thư mời: ..." trước đây hiện thẳng mã trạng thái (vd "Offer: Sent_Candidate").
+    public static String offerLabel(String offerStatus) {
+        return switch (offerStatus) {
+            case "Draft" -> "Đang soạn";
+            case "Pending_Director" -> "Chờ giám đốc duyệt";
+            case "Director_Approved" -> "Giám đốc đã duyệt";
+            case "Director_Rejected" -> "Giám đốc trả lại";
+            case "Sent_Candidate" -> "Đã gửi, chờ ứng viên trả lời";
+            case "Accepted" -> "Ứng viên đã nhận lời";
+            case "Declined" -> "Ứng viên đã từ chối";
+            case "Expired" -> "Đã quá hạn";
+            default -> offerStatus;
         };
     }
 

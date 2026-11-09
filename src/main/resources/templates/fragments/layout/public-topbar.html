@@ -14,7 +14,7 @@
       - Đảo 2 & 3 (Góc trên cùng bên phải):
           * Đã đăng nhập: Nút Bảng điều khiển / Đơn ứng tuyển (Đảo 2) + Khối thông tin người dùng (Đảo 3)
           * Chưa đăng nhập: Khối Đăng nhập / Tạo tài khoản ứng viên
-      - Đảo cuộn dọc (Sát mép trái, chỉ hiện ở Trang chủ):
+      - Thanh mục lục (Giữa topbar, chỉ hiện ở Trang chủ):
           * [🔥] Việc làm Hot (#featured)
           * [🔄] Quy trình (#process)
           * [🌿] Văn hóa Mộc (#culture)
@@ -53,6 +53,47 @@
         </span>
       </th:block>
     </div>
+
+    <!-- THANH MỤC LỤC 4 MỤC: giữa topbar, chỉ ở trang chủ. Mục đầu sáng sẵn trong HTML (để JS bật sau khi vẽ thì màu chạy trước mắt) -->
+    <nav th:if="${onLanding}" class="public-scroll-rail" aria-label="Điều hướng các mục trang chủ" data-public-nav>
+    <a class="public-scroll-item active" aria-current="location" data-section="featured" href="#featured" title="Việc làm Hot" aria-label="Việc làm Hot">
+      <span class="public-scroll-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>
+        </svg>
+      </span>
+      <span class="public-scroll-label">Việc làm Hot</span>
+    </a>
+    <a class="public-scroll-item" data-section="process" href="#process" title="Quy trình tuyển dụng" aria-label="Quy trình">
+      <span class="public-scroll-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+        </svg>
+      </span>
+      <span class="public-scroll-label">Quy trình</span>
+    </a>
+    <a class="public-scroll-item" data-section="culture" href="#culture" title="Văn hóa Mộc" aria-label="Văn hóa Mộc">
+      <span class="public-scroll-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/>
+          <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>
+        </svg>
+      </span>
+      <span class="public-scroll-label">Văn hóa Mộc</span>
+    </a>
+    <a class="public-scroll-item" data-section="perks" href="#perks" title="Chế độ đãi ngộ" aria-label="Chế độ đãi ngộ">
+      <span class="public-scroll-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 12 20 22 4 22 4 12"/>
+          <rect x="2" y="7" width="20" height="5"/>
+          <line x1="12" y1="22" x2="12" y2="7"/>
+          <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/>
+          <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>
+        </svg>
+      </span>
+      <span class="public-scroll-label">Chế độ đãi ngộ</span>
+    </a>
+    </nav>
 
     <!-- CỤM ĐẢO GÓC TRÊN CÙNG BÊN PHẢI (Tài khoản & Bảng điều khiển) -->
     <div class="public-actions-cluster">
@@ -99,47 +140,6 @@
       <th:block th:replace="~{fragments/layout/candidate-nav :: links(${activeNav == 'jobs' or activeNav == 'job-detail' ? 'jobs' : ''})}"></th:block>
     </nav>
   </div>
-
-  <!-- ĐẢO CUỘN DỌC 4 MỤC (Cạnh trái màn hình — Chỉ hiện ở Trang chủ) -->
-  <nav th:if="${onLanding}" class="public-scroll-rail" aria-label="Điều hướng các mục trang chủ" data-public-nav>
-    <a class="public-scroll-item" data-section="featured" href="#featured" title="Việc làm Hot" aria-label="Việc làm Hot">
-      <span class="public-scroll-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>
-        </svg>
-      </span>
-      <span class="public-scroll-label">Việc làm Hot</span>
-    </a>
-    <a class="public-scroll-item" data-section="process" href="#process" title="Quy trình tuyển dụng" aria-label="Quy trình">
-      <span class="public-scroll-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
-        </svg>
-      </span>
-      <span class="public-scroll-label">Quy trình</span>
-    </a>
-    <a class="public-scroll-item" data-section="culture" href="#culture" title="Văn hóa Mộc" aria-label="Văn hóa Mộc">
-      <span class="public-scroll-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/>
-          <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>
-        </svg>
-      </span>
-      <span class="public-scroll-label">Văn hóa Mộc</span>
-    </a>
-    <a class="public-scroll-item" data-section="perks" href="#perks" title="Chế độ đãi ngộ" aria-label="Chế độ đãi ngộ">
-      <span class="public-scroll-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="20 12 20 22 4 22 4 12"/>
-          <rect x="2" y="7" width="20" height="5"/>
-          <line x1="12" y1="22" x2="12" y2="7"/>
-          <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/>
-          <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>
-        </svg>
-      </span>
-      <span class="public-scroll-label">Chế độ đãi ngộ</span>
-    </a>
-  </nav>
 
   <script defer th:src="@{/js/public-topbar.js}"></script>
 </header>

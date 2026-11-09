@@ -18,10 +18,9 @@
 -->
 <head>
     <title th:text="|Thư mời nhận việc - ${offer.offeredPositionTitle}|">Thư mời nhận việc</title>
-    <th:block layout:fragment="styles">
-        <link rel="stylesheet" th:href="@{/css/pages/candidate-offers.css}">
-        <link rel="stylesheet" th:href="@{/css/pages/flash-toast.css}">
-    </th:block>
+    <link rel="stylesheet" th:href="@{/css/pages/candidate-offers.css}">
+    <link rel="stylesheet" th:href="@{/css/pages/candidate-offer-detail.css}">
+    <link rel="stylesheet" th:href="@{/css/pages/flash-toast.css}">
 </head>
 <body>
 <main id="main" layout:fragment="content" class="page-content container" tabindex="-1">
@@ -318,7 +317,7 @@
                 </p>
             </div>
             <div class="dialog-actions">
-                <button type="button" class="btn btn--secondary btn--sm" data-detail-close="cof-accept-dialog">Xem lại</button>
+                <button type="button" class="btn btn--secondary btn--sm" data-detail-close="cof-accept-dialog">Quay lại</button>
                 <form th:action="@{/portal/offers/{id}/accept(id=${offer.offerId})}" method="post" class="cof-detail-form">
                     <input type="hidden" name="fromDetail" value="true">
                     <button type="submit" class="btn btn--primary btn--sm">Đồng ý nhận việc</button>
@@ -334,7 +333,7 @@
             <form th:action="@{/portal/offers/{id}/decline(id=${offer.offerId})}" method="post" class="cof-detail-form">
                 <input type="hidden" name="fromDetail" value="true">
                 <div class="dialog-header cof-modal__header">
-                    <h2 id="cof-decline-dialog-title" class="dialog-title">Từ chối thư mời</h2>
+                    <h2 id="cof-decline-dialog-title" class="dialog-title">Từ chối thư mời?</h2>
                     <button type="button" class="cof-modal__close-btn" data-detail-close="cof-decline-dialog" aria-label="Đóng">&times;</button>
                 </div>
                 <div class="dialog-body cof-modal__body">

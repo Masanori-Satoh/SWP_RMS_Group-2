@@ -22,6 +22,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
@@ -111,12 +113,13 @@ class ApplicationStatusServiceTests {
     private static final int ID = 298;
 
     @Mock ApplicationRepository applications;
+    @Mock com.group2.rms.notification.service.NotificationService notificationService;
 
     private ApplicationStatusService service;
 
     @BeforeEach
     void setUp() {
-        service = new ApplicationStatusService(applications, mock(com.group2.rms.jobposting.repository.JobPostingRepository.class));
+        service = new ApplicationStatusService(applications, mock(com.group2.rms.jobposting.repository.JobPostingRepository.class), notificationService);
     }
 
     @Test
@@ -147,6 +150,36 @@ class ApplicationStatusServiceTests {
     }
 
     @Test
+    void failedDecisionNotifiesCandidate() {
+        Application application = Application.builder().applicationId(ID).build();
+        when(applications.transition(anyInt(), anyCollection(), anyString())).thenReturn(1);
+        when(applications.findDetailById(ID)).thenReturn(java.util.Optional.of(application));
+
+        service.onInterviewDecided(ID, false);
+
+        verify(notificationService).notifyApplicationRejected(application);
+    }
+
+    @Test
+    void passedDecisionDoesNotNotifyRejection() {
+        when(applications.transition(anyInt(), anyCollection(), anyString())).thenReturn(1);
+
+        service.onInterviewDecided(ID, true);
+
+        verifyNoInteractions(notificationService);
+    }
+
+    /** Đơn đã kết thúc từ trước: không đổi trạng thái nên không báo trượt. */
+    @Test
+    void failedDecisionOnFinishedApplicationDoesNotNotify() {
+        when(applications.transition(anyInt(), anyCollection(), anyString())).thenReturn(0);
+
+        service.onInterviewDecided(ID, false);
+
+        verifyNoInteractions(notificationService);
+    }
+
+    @Test
     void acceptedOfferMovesOnlyOfferedToHired() {
         when(applications.transition(anyInt(), anyCollection(), anyString())).thenReturn(1);
 
@@ -156,12 +189,30 @@ class ApplicationStatusServiceTests {
     }
 
     @Test
-    void declinedOfferMovesOnlyOfferedToRejected() {
+    void declinedOfferMovesOnlyOfferedToWithdrawn() {
         when(applications.transition(anyInt(), anyCollection(), anyString())).thenReturn(1);
 
         service.onOfferAnswered(ID, false);
 
-        verify(applications).transition(ID, Set.of("Offered"), "Rejected");
+        verify(applications).transition(ID, Set.of("Offered"), "Withdrawn");
+    }
+
+    @Test
+    void terminalStatusesAreOneSharedListOfFour() {
+        assertEquals(Set.of("Hired", "Rejected", "Withdrawn", "Cancelled"), ApplicationStatusService.TERMINAL);
+        assertEquals("Withdrawn", ApplicationStatusService.WITHDRAWN);
+        assertEquals("Cancelled", ApplicationStatusService.CANCELLED);
+    }
+
+    @Test
+    void newTerminalStatusesAreValidFilterValuesWithOwnLabels() {
+        assertTrue(ApplicationStatusLabels.STATUSES.containsAll(ApplicationStatusService.TERMINAL));
+        assertEquals("Đã rút đơn", ApplicationStatusLabels.label("Withdrawn"));
+        assertEquals("Dừng do đóng tin", ApplicationStatusLabels.label("Cancelled"));
+        assertEquals("Không tiếp tục", ApplicationStatusLabels.label("Rejected"));
+        assertEquals("badge--neutral", ApplicationStatusLabels.badge("Withdrawn"));
+        assertEquals("badge--neutral", ApplicationStatusLabels.badge("Cancelled"));
+        assertEquals("badge--danger", ApplicationStatusLabels.badge("Rejected"));
     }
 
     @Test

@@ -11,23 +11,25 @@
 
 <!-- 1. Adapter chính nhận đối tượng Spring Data Page<T> -->
 <nav th:fragment="paged(page)"
-     th:if="${page != null and (page.totalPages > 1 or page.totalElements > 0)}"
+     th:if="${page != null and page.totalPages > 0 and page.totalElements > 0}"
+     th:with="lastPage=${page.totalPages - 1}, windowPage=${T(java.lang.Math).min(page.number, lastPage)}"
      class="pagination-wrapper"
      aria-label="Điều hướng phân trang">
 
     <div class="pagination-info">
-        <span>Hiển thị trang <strong th:text="${page.number + 1}">1</strong> / <strong th:text="${page.totalPages}">1</strong></span>
+        <span th:if="${page.number <= lastPage}">Hiển thị trang <strong th:text="${page.number + 1}">1</strong> / <strong th:text="${page.totalPages}">1</strong></span>
+        <span th:if="${page.number > lastPage}">Trang yêu cầu không tồn tại.</span>
         <span>(<span th:text="${page.totalElements}">0</span> kết quả)</span>
     </div>
 
     <div class="pagination-controls">
         <ul class="pagination-list"
-            th:with="startPage=${T(java.lang.Math).max(0, page.number - 2)}, endPage=${T(java.lang.Math).min(page.totalPages - 1, page.number + 2)}">
+            th:with="startPage=${T(java.lang.Math).max(0, windowPage - 2)}, endPage=${windowPage + T(java.lang.Math).min(2, lastPage - windowPage)}, previousPage=${T(java.lang.Math).min(page.number - 1, lastPage)}">
 
             <!-- Nút Trang Trước -->
             <li class="page-item">
                 <a th:if="${page.hasPrevious()}"
-                   th:href="${pageLinks.to(page.number - 1)}"
+                   th:href="${pageLinks.to(previousPage)}"
                    class="page-link"
                    aria-label="Trang trước"
                    title="Trang trước">&lsaquo;</a>
@@ -56,24 +58,24 @@
                       aria-current="page">1</span>
             </li>
 
-            <!-- Dấu ... ở cuối nếu endPage < totalPages - 1 -->
-            <li class="page-item" th:if="${endPage < page.totalPages - 2}">
+            <!-- Dấu ... ở cuối nếu còn trang giữa endPage và lastPage -->
+            <li class="page-item" th:if="${endPage < lastPage - 1}">
                 <span class="page-link disabled">&hellip;</span>
             </li>
-            <li class="page-item" th:if="${endPage < page.totalPages - 1}">
-                <a th:href="${pageLinks.to(page.totalPages - 1)}"
+            <li class="page-item" th:if="${endPage < lastPage}">
+                <a th:href="${pageLinks.to(lastPage)}"
                    th:text="${page.totalPages}"
                    class="page-link">10</a>
             </li>
 
             <!-- Nút Trang Sau -->
             <li class="page-item">
-                <a th:if="${page.hasNext()}"
+                <a th:if="${page.number < lastPage}"
                    th:href="${pageLinks.to(page.number + 1)}"
                    class="page-link"
                    aria-label="Trang sau"
                    title="Trang sau">&rsaquo;</a>
-                <span th:unless="${page.hasNext()}"
+                <span th:unless="${page.number < lastPage}"
                       class="page-link disabled"
                       aria-hidden="true">&rsaquo;</span>
             </li>
@@ -84,21 +86,23 @@
 <!-- 2. Overload hỗ trợ truyền thêm baseUrl (tương thích các view cũ) -->
 <nav th:fragment="pagedWithUrl(page, baseUrl)"
      th:if="${page != null and page.totalPages >= 1 and page.totalElements > 0}"
+     th:with="lastPage=${page.totalPages - 1}, windowPage=${T(java.lang.Math).min(page.number, lastPage)}"
      class="pagination-wrapper"
      aria-label="Điều hướng phân trang">
 
     <div class="pagination-info">
-        <span>Trang <strong th:text="${page.number + 1}">1</strong>/<strong th:text="${page.totalPages}">1</strong></span>
+        <span th:if="${page.number <= lastPage}">Trang <strong th:text="${page.number + 1}">1</strong>/<strong th:text="${page.totalPages}">1</strong></span>
+        <span th:if="${page.number > lastPage}">Trang yêu cầu không tồn tại.</span>
         <span>(<span th:text="${page.totalElements}">0</span> kết quả)</span>
     </div>
 
     <div class="pagination-controls">
         <ul class="pagination-list"
-            th:with="startPage=${T(java.lang.Math).max(0, page.number - 2)}, endPage=${T(java.lang.Math).min(page.totalPages - 1, page.number + 2)}">
+            th:with="startPage=${T(java.lang.Math).max(0, windowPage - 2)}, endPage=${windowPage + T(java.lang.Math).min(2, lastPage - windowPage)}, previousPage=${T(java.lang.Math).min(page.number - 1, lastPage)}">
 
             <li class="page-item">
                 <a th:if="${page.hasPrevious()}"
-                   th:href="@{${baseUrl}(page=${page.number - 1})}"
+                   th:href="@{${baseUrl}(page=${previousPage})}"
                    class="page-link">&lsaquo;</a>
                 <span th:unless="${page.hasPrevious()}" class="page-link disabled">&lsaquo;</span>
             </li>
@@ -115,10 +119,10 @@
             </li>
 
             <li class="page-item">
-                <a th:if="${page.hasNext()}"
+                <a th:if="${page.number < lastPage}"
                    th:href="@{${baseUrl}(page=${page.number + 1})}"
                    class="page-link">&rsaquo;</a>
-                <span th:unless="${page.hasNext()}" class="page-link disabled">&rsaquo;</span>
+                <span th:unless="${page.number < lastPage}" class="page-link disabled">&rsaquo;</span>
             </li>
         </ul>
     </div>

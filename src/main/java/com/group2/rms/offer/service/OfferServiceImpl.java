@@ -7,6 +7,7 @@ import com.group2.rms.interview.entity.InterviewFinalResult;
 import com.group2.rms.offer.dto.CreateOfferRequest;
 import com.group2.rms.offer.dto.OfferDetailResponse;
 import com.group2.rms.offer.dto.OfferResponse;
+import com.group2.rms.offer.dto.OfferResponse.EmailStatus;
 import com.group2.rms.offer.dto.PassedCandidateResponse;
 import com.group2.rms.offer.dto.UpdateOfferRequest;
 import com.group2.rms.offer.entity.OfferApproval;
@@ -16,7 +17,7 @@ import com.group2.rms.offer.repository.OfferProposalRepository;
 import com.group2.rms.interview.repository.InterviewFinalResultRepository;
 import com.group2.rms.offer.exception.OfferValidationException;
 import com.group2.rms.user.entity.User;
-import com.group2.rms.user.repository.UserRepository;
+import com.group2.rms.core.security.CurrentUserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.group2.rms.candidate.domain.entity.Candidate;
@@ -28,13 +29,16 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.security.authentication.AnonymousAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.support.TransactionTemplate;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.math.BigDecimal;
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -47,6 +51,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
 
 @Slf4j
 @Service
@@ -56,131 +61,59 @@ public class OfferServiceImpl implements OfferService {
 
     private final OfferProposalRepository offerProposalRepository;
     private final ApplicationRepository applicationRepository;
-    private final UserRepository userRepository;
+    private final CurrentUserService currentUserService;
     private final InterviewFinalResultRepository interviewFinalResultRepository;
     private final OfferApprovalRepository offerApprovalRepository;
     private final OfferMailSender offerMailSender;
+    private final Clock clock;
+    private final PlatformTransactionManager transactionManager;
     private final com.group2.rms.notification.service.NotificationService systemNotificationService;
 
-    /**
-     * Quy tắc GBR-07:
-     * - Chỉ chấp nhận tạo mới Offer Proposal đối với ứng viên đã đỗ phỏng vấn (Passed) và CHƯA CÓ bất kỳ lịch sử/gói Offer nào.
-     * - Khi đơn ứng tuyển đã có Offer trong hệ thống (kể cả trạng thái Draft), không gợi ý trong mục tạo đề xuất mới
-     *   và chặn thao tác tạo mới trực tiếp (bắt buộc HR chỉnh sửa trực tiếp trên danh sách Offer).
-     */
-    public static final Set<String> OVERRIDABLE_STATUSES = Collections.emptySet();
-
-    /**
-     * Quy tắc GBR-07:
-     * Tất cả các trạng thái có Offer đang hoạt động (kể cả Draft) đều bị khóa khỏi luồng tạo mới trực tiếp.
-     */
-    public static final Set<String> LOCKED_STATUSES = Set.of(
-            "Draft", "Pending_Director", "Approved", "Director_Approved", "Sent_Candidate", "Accepted",
-            "Rejected", "Director_Rejected", "Declined", "Canceled", "Voided");
-
-    public static boolean isOverridableStatus(String status) {
-        if (status == null) return false;
-        for (String s : OVERRIDABLE_STATUSES) {
-            if (s.equalsIgnoreCase(status)) return true;
-        }
-        return false;
+    private OfferProposal findActiveOffer(Integer id) {
+        return offerProposalRepository.findById(id)
+                .filter(offer -> !Boolean.TRUE.equals(offer.getIsDeleted()))
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy thư mời nhận việc với ID: " + id));
     }
 
-    public static boolean isLockedStatus(String status) {
-        if (status == null) return false;
-        for (String s : LOCKED_STATUSES) {
-            if (s.equalsIgnoreCase(status)) return true;
-        }
-        return false;
-    }
-
-    @Override
-    public OfferResponse createOfferProposal(CreateOfferRequest request) {
-        validateProbationSalaryRule(request.getProposedSalary(), request.getProbationSalary());
-
-        Application application = applicationRepository.findById(request.getApplicationId())
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Không tìm thấy đơn ứng tuyển với ID: " + request.getApplicationId()));
-
-        User proposedBy = resolveProposedBy(request.getProposedById());
-
-        deactivateExistingActiveOffers(application.getApplicationId());
-
-        Integer responsePeriodDays = request.getResponsePeriodDays() != null ? request.getResponsePeriodDays() : 5;
-
-        Optional<OfferProposal> existingOfferOpt = offerProposalRepository
-                .findByApplication_ApplicationId(application.getApplicationId());
-
-        OfferProposal offerToSave;
-        if (existingOfferOpt.isPresent()) {
-            offerToSave = existingOfferOpt.get();
-            offerToSave.setOfferedPositionTitle(request.getOfferedPositionTitle());
-            offerToSave.setProposedSalary(request.getProposedSalary());
-            offerToSave.setProbationSalary(request.getProbationSalary());
-            offerToSave.setExpectedStartDate(request.getExpectedStartDate());
-            offerToSave.setWorkLocation(request.getWorkLocation());
-            offerToSave.setBenefitsPackage(request.getBenefitsPackage());
-            offerToSave.setResponsePeriodDays(responsePeriodDays);
-            offerToSave.setResponseDeadline(null);
-            offerToSave.setProposedBy(proposedBy);
-            offerToSave.setOfferStatus("Pending_Director");
-            offerToSave.setIsDeleted(false);
-            offerToSave.setDeclineReason(null);
-        } else {
-            offerToSave = OfferProposal.builder()
-                    .application(application)
-                    .offeredPositionTitle(request.getOfferedPositionTitle())
-                    .proposedSalary(request.getProposedSalary())
-                    .probationSalary(request.getProbationSalary())
-                    .expectedStartDate(request.getExpectedStartDate())
-                    .workLocation(request.getWorkLocation())
-                    .benefitsPackage(request.getBenefitsPackage())
-                    .responsePeriodDays(responsePeriodDays)
-                    .responseDeadline(null)
-                    .proposedBy(proposedBy)
-                    .offerStatus("Pending_Director")
-                    .isDeleted(false)
-                    .build();
-        }
-
-        OfferProposal savedOffer = offerProposalRepository.save(offerToSave);
-
-        if ("Pending_Director".equals(savedOffer.getOfferStatus())) {
-            if (systemNotificationService != null) {
-                try {
-                    systemNotificationService.notifyOfferPendingDirector(savedOffer, proposedBy);
-                } catch (Exception e) {
-                    log.warn("Lỗi khi gửi in-app notification Director về Offer mới ID {}: {}", savedOffer.getOfferId(), e.getMessage());
-                }
-            }
-        }
-
-        return mapToResponse(savedOffer);
+    /**
+     * Đọc Offer chưa xóa và giữ khóa ghi đến khi giao dịch kết thúc.
+     * HR phải kiểm tra trạng thái sau khi có khóa để hai yêu cầu không cùng phát hành hoặc ghi đè bản nháp.
+     */
+    private OfferProposal findActiveOfferForUpdate(Integer id) {
+        return offerProposalRepository.findActiveForUpdate(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy thư mời nhận việc với ID: " + id));
     }
 
     @Override
     @Transactional(readOnly = true)
     public OfferResponse getOfferById(Integer offerId) {
-        OfferProposal offer = offerProposalRepository.findById(offerId)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đề xuất nhận việc với ID: " + offerId));
+        OfferProposal offer = findActiveOffer(offerId);
         return mapToResponse(offer);
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public OfferResponse getOfferByApplicationId(Integer applicationId) {
-        OfferProposal offer = offerProposalRepository.findByApplication_ApplicationId(applicationId)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Không tìm thấy đề xuất nhận việc cho đơn ứng tuyển ID: " + applicationId));
-        return mapToResponse(offer);
-    }
 
+    /**
+     * Nguồn cho dropdown tạo đề xuất: hồ sơ có kết quả Passed, chưa kết thúc và chưa có Offer chưa xóa mềm.
+     * Loại theo ApplicationId, không theo CandidateId: một ứng viên có thể ứng tuyển nhiều tin.
+     * Đọc Offer hiện hữu theo lô 500 ID; kết quả trùng hồ sơ chỉ đưa vào dropdown một lần.
+     */
     @Override
     @Transactional(readOnly = true)
     public List<PassedCandidateResponse> getPassedCandidatesForOffer() {
         List<InterviewFinalResult> passedResults = interviewFinalResultRepository.findAllPassedWithDetails();
         if (passedResults == null) {
             return Collections.emptyList();
+        }
+
+        List<Integer> applicationIds = passedResults.stream().map(result -> result.getInterviewSchedule())
+                .filter(java.util.Objects::nonNull).map(schedule -> schedule.getApplication())
+                .filter(application -> application != null && application.getApplicationId() != null && !isApplicationEnded(application))
+                .map(Application::getApplicationId).distinct().toList();
+        Set<Integer> existingApplications = new HashSet<>();
+        // Chia lô 500 ID để không vượt giới hạn 2100 tham số của SQL Server.
+        for (int offset = 0; offset < applicationIds.size(); offset += 500) {
+            existingApplications.addAll(offerProposalRepository.findActiveApplicationIds(
+                    applicationIds.subList(offset, Math.min(offset + 500, applicationIds.size()))));
         }
 
         List<PassedCandidateResponse> list = new ArrayList<>();
@@ -192,16 +125,17 @@ public class OfferServiceImpl implements OfferService {
             if (application == null || application.getApplicationId() == null) {
                 continue;
             }
+            if (isApplicationEnded(application)) {
+                continue;
+            }
 
             Integer appId = application.getApplicationId();
             if (processedAppIds.contains(appId)) {
                 continue;
             }
 
-            // Quy tắc GBR-07: Chỉ chấp nhận tạo mới đối với ứng viên chưa từng có bất kỳ Offer nào (kể cả bản Draft)
-            Optional<OfferProposal> offerOpt = offerProposalRepository.findByApplication_ApplicationId(appId);
-            if (offerOpt.isPresent() && !Boolean.TRUE.equals(offerOpt.get().getIsDeleted())) {
-                continue; // Ứng viên đã có Offer (kể cả Draft) -> Không gợi ý trong mục tạo đề xuất mới
+            if (existingApplications.contains(appId)) {
+                continue;
             }
 
             processedAppIds.add(appId);
@@ -246,6 +180,12 @@ public class OfferServiceImpl implements OfferService {
         return list;
     }
 
+    /**
+     * HR tạo đề xuất: kiểm tra đãi ngộ → hồ sơ còn mở → chưa có Offer chưa xóa → có ít nhất một kết quả Passed.
+     * Người đề xuất lấy từ tài khoản đăng nhập, không tin proposedById gửi lên từ giao diện.
+     * isDraft=true lưu Draft; trường hợp còn lại trình Pending_Director và thông báo cho Giám đốc.
+     * Nếu bản nháp cũ đã xóa mềm thì tái sử dụng bản ghi để giữ ràng buộc một Offer cho mỗi hồ sơ.
+     */
     @Override
     public OfferResponse createOfferByHr(CreateOfferRequest dto) {
         validateOfferBusinessRules(
@@ -261,7 +201,7 @@ public class OfferServiceImpl implements OfferService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Không tìm thấy đơn ứng tuyển với ID: " + dto.getApplicationId()));
 
-        User proposedBy = resolveProposedBy(dto.getProposedById());
+        requireActiveApplication(application);
 
         String status = Boolean.TRUE.equals(dto.getIsDraft()) ? "Draft" : "Pending_Director";
 
@@ -270,15 +210,24 @@ public class OfferServiceImpl implements OfferService {
         // Áp dụng quy tắc Single Active Offer Rule (GBR-07):
         // Chỉ chấp nhận tạo mới cho ứng viên chưa có Offer; nếu đã tồn tại Offer (kể cả Draft) thì chặn lại
         Optional<OfferProposal> existingOfferOpt = offerProposalRepository
-                .findByApplication_ApplicationId(application.getApplicationId());
+                .findByApplicationForUpdate(application.getApplicationId());
 
         if (existingOfferOpt.isPresent() && !Boolean.TRUE.equals(existingOfferOpt.get().getIsDeleted())) {
             String currentStatus = existingOfferOpt.get().getOfferStatus();
             throw new OfferValidationException(
-                    "Theo quy tắc GBR-07, không thể tạo mới đề xuất nhận việc vì đơn ứng tuyển đang có gói đề xuất ở trạng thái ["
-                            + OfferExportServiceImpl.mapOfferStatusLabel(currentStatus) + "]. Vui lòng chỉnh sửa trực tiếp trên danh sách đề xuất thay vì tạo mới.",
+                    "Theo quy tắc GBR-07, không thể tạo mới thư mời nhận việc vì đơn ứng tuyển đang có thư mời ở trạng thái ["
+                            + OfferExportServiceImpl.mapOfferStatusLabel(currentStatus) + "]. Vui lòng chỉnh sửa trực tiếp trên danh sách thư mời thay vì tạo mới.",
                     "OFFER_LOCKED_STATE");
         }
+
+        boolean passedInterview = interviewFinalResultRepository
+                .findByApplicationIdOrderByApprovedAtDesc(application.getApplicationId()).stream()
+                .anyMatch(result -> InterviewFinalResult.PASSED.equalsIgnoreCase(result.getFinalDecision()));
+        if (!passedInterview) {
+            throw new OfferValidationException("Chỉ được tạo thư mời nhận việc cho hồ sơ đã đạt phỏng vấn.");
+        }
+
+        User proposedBy = currentUserService.requireUser();
 
         Integer responsePeriodDays = dto.getResponsePeriodDays() != null ? dto.getResponsePeriodDays() : 5;
 
@@ -288,6 +237,7 @@ public class OfferServiceImpl implements OfferService {
             offerToSave.setOfferedPositionTitle(dto.getOfferedPositionTitle());
             offerToSave.setProposedSalary(dto.getProposedSalary());
             offerToSave.setProbationSalary(dto.getProbationSalary());
+            offerToSave.setProbationDays(dto.getProbationDays());
             offerToSave.setExpectedStartDate(dto.getExpectedStartDate());
             offerToSave.setWorkLocation(dto.getWorkLocation());
             offerToSave.setBenefitsPackage(dto.getBenefitsPackage());
@@ -303,6 +253,7 @@ public class OfferServiceImpl implements OfferService {
                     .offeredPositionTitle(dto.getOfferedPositionTitle())
                     .proposedSalary(dto.getProposedSalary())
                     .probationSalary(dto.getProbationSalary())
+                    .probationDays(dto.getProbationDays())
                     .expectedStartDate(dto.getExpectedStartDate())
                     .workLocation(dto.getWorkLocation())
                     .benefitsPackage(dto.getBenefitsPackage())
@@ -317,13 +268,7 @@ public class OfferServiceImpl implements OfferService {
         OfferProposal saved = offerProposalRepository.save(offerToSave);
 
         if ("Pending_Director".equals(status)) {
-            if (systemNotificationService != null) {
-                try {
-                    systemNotificationService.notifyOfferPendingDirector(saved, proposedBy);
-                } catch (Exception e) {
-                    log.warn("Lỗi khi gửi in-app notification Director về Offer mới ID {}: {}", saved.getOfferId(), e.getMessage());
-                }
-            }
+            notifyAfterCommit(saved, current -> systemNotificationService.notifyOfferPendingDirector(current, proposedBy));
         }
 
         return mapToResponse(saved);
@@ -335,6 +280,10 @@ public class OfferServiceImpl implements OfferService {
         return getAllOffersForHr(null, status, null, pageable);
     }
 
+    /**
+     * Danh sách HR: lọc bản ghi chưa xóa, phân trang và chuyển entity thành DTO trong giao dịch đọc.
+     * Khi có tìm kiếm/sắp xếp tùy chọn, dùng cùng bộ lọc với xuất Excel để kết quả nhất quán.
+     */
     @Override
     @Transactional(readOnly = true)
     public Page<OfferResponse> getAllOffersForHr(String search, String status, String timeSort, Pageable pageable) {
@@ -365,48 +314,7 @@ public class OfferServiceImpl implements OfferService {
 
         Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
 
-        Specification<OfferProposal> spec = (root, query, builder) -> {
-            List<Predicate> predicates = new ArrayList<>();
-
-            // 1. Chỉ lấy các bản ghi chưa bị xóa mềm
-            predicates.add(builder.or(
-                    builder.isNull(root.get("isDeleted")),
-                    builder.isFalse(root.get("isDeleted"))
-            ));
-
-            // 2. Lọc theo từ khóa (tên ứng viên, vị trí đề xuất)
-            if (hasSearch) {
-                String pattern = "%" + search.trim().toLowerCase(Locale.ROOT) + "%";
-                Join<OfferProposal, Application> appJoin = root.join("application", JoinType.LEFT);
-                Join<Application, Candidate> candJoin = appJoin.join("candidate", JoinType.LEFT);
-                Join<Candidate, User> userJoin = candJoin.join("account", JoinType.LEFT);
-
-                predicates.add(builder.or(
-                        builder.like(builder.lower(root.get("offeredPositionTitle")), pattern),
-                        builder.like(builder.lower(userJoin.get("fullName")), pattern)
-                ));
-            }
-
-            // 3. Lọc theo trạng thái
-            if (hasStatus) {
-                String s = status.trim();
-                if ("Director_Approved".equalsIgnoreCase(s) || "Approved".equalsIgnoreCase(s)) {
-                    predicates.add(builder.or(
-                            builder.equal(builder.lower(root.get("offerStatus")), "director_approved"),
-                            builder.equal(builder.lower(root.get("offerStatus")), "approved")
-                    ));
-                } else if ("Director_Rejected".equalsIgnoreCase(s) || "Rejected".equalsIgnoreCase(s)) {
-                    predicates.add(builder.or(
-                            builder.equal(builder.lower(root.get("offerStatus")), "director_rejected"),
-                            builder.equal(builder.lower(root.get("offerStatus")), "rejected")
-                    ));
-                } else {
-                    predicates.add(builder.equal(builder.lower(root.get("offerStatus")), s.toLowerCase(Locale.ROOT)));
-                }
-            }
-
-            return builder.and(predicates.toArray(new Predicate[0]));
-        };
+        Specification<OfferProposal> spec = OfferProposalRepository.matchingFilters(search, status);
 
         Page<OfferProposal> pagedEntities = offerProposalRepository.findAll(spec, sortedPageable);
         return pagedEntities.map(this::mapToResponse);
@@ -424,11 +332,14 @@ public class OfferServiceImpl implements OfferService {
         return stats;
     }
 
+    /**
+     * Ghép trang chi tiết: thông tin hồ sơ/phỏng vấn, nội dung đề xuất và lịch sử quyết định của Giám đốc.
+     * Trạng thái hiện tại của Offer và quyết định trong lịch sử là hai dữ liệu khác nhau.
+     */
     @Override
     @Transactional(readOnly = true)
     public OfferDetailResponse getOfferDetailForHr(Integer id) {
-        OfferProposal offer = offerProposalRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đề xuất nhận việc với ID: " + id));
+        OfferProposal offer = findActiveOffer(id);
 
         var app = offer.getApplication();
         var cand = app != null ? app.getCandidate() : null;
@@ -481,12 +392,13 @@ public class OfferServiceImpl implements OfferService {
                 .offeredPositionTitle(offer.getOfferedPositionTitle())
                 .proposedSalary(offer.getProposedSalary())
                 .probationSalary(offer.getProbationSalary())
-                .probationDays(60)
+                .probationDays(offer.getProbationDays())
                 .expectedStartDate(offer.getExpectedStartDate())
                 .workLocation(offer.getWorkLocation())
                 .benefitsPackage(offer.getBenefitsPackage())
                 .responsePeriodDays(offer.getResponsePeriodDays())
                 .responseDeadline(offer.getResponseDeadline())
+                .responseExpired(offer.isResponseExpiredAt(LocalDateTime.now(clock)))
                 .proposedById(proposedById)
                 .proposedByName(proposedByName)
                 .createdAt(offer.getCreatedAt())
@@ -511,17 +423,21 @@ public class OfferServiceImpl implements OfferService {
                 .build();
     }
 
+    /**
+     * HR chỉ sửa Draft: lấy khóa ghi → kiểm tra hồ sơ/trạng thái → kiểm tra dữ liệu → lưu.
+     * Lưu nháp giữ Draft; trình duyệt chuyển sang Pending_Director. Offer đã bị từ chối không được sửa ở đường này.
+     */
     @Override
     public OfferResponse updateOfferByHr(Integer id, UpdateOfferRequest dto) {
-        OfferProposal offer = offerProposalRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đề xuất nhận việc với ID: " + id));
+        OfferProposal offer = findActiveOfferForUpdate(id);
+        requireActiveApplication(offer.getApplication());
 
         String currentStatus = offer.getOfferStatus();
         boolean canEdit = "Draft".equalsIgnoreCase(currentStatus);
 
         if (!canEdit) {
             throw new OfferValidationException(
-                    "Theo quy tắc GBR-07, chỉ được phép cập nhật đề xuất khi ở trạng thái Bản nháp (Draft). Trạng thái hiện tại: "
+                    "Theo quy tắc GBR-07, chỉ được phép cập nhật thư mời khi ở trạng thái Bản nháp (Draft). Trạng thái hiện tại: "
                             + OfferExportServiceImpl.mapOfferStatusLabel(currentStatus),
                     "OFFER_STATUS_INVALID");
         }
@@ -540,6 +456,7 @@ public class OfferServiceImpl implements OfferService {
         }
         offer.setProposedSalary(dto.getProposedSalary());
         offer.setProbationSalary(dto.getProbationSalary());
+        offer.setProbationDays(dto.getProbationDays());
         offer.setExpectedStartDate(dto.getExpectedStartDate());
         offer.setWorkLocation(dto.getWorkLocation());
         offer.setBenefitsPackage(dto.getBenefitsPackage());
@@ -556,14 +473,8 @@ public class OfferServiceImpl implements OfferService {
         OfferProposal saved = offerProposalRepository.save(offer);
 
         if ("Pending_Director".equals(offer.getOfferStatus())) {
-            if (systemNotificationService != null) {
-                try {
-                    User currentHr = resolveProposedBy(null);
-                    systemNotificationService.notifyOfferPendingDirector(saved, currentHr != null ? currentHr : saved.getProposedBy());
-                } catch (Exception e) {
-                    log.warn("Lỗi khi gửi in-app notification Director về Offer cập nhật ID {}: {}", saved.getOfferId(), e.getMessage());
-                }
-            }
+            notifyAfterCommit(saved, current -> systemNotificationService.notifyOfferPendingDirector(
+                    current, currentUserService.requireUser()));
         }
 
         return mapToResponse(saved);
@@ -572,13 +483,12 @@ public class OfferServiceImpl implements OfferService {
     @Override
     @Transactional(readOnly = true)
     public UpdateOfferRequest getUpdateOfferRequestById(Integer id) {
-        OfferProposal offer = offerProposalRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đề xuất nhận việc với ID: " + id));
+        OfferProposal offer = findActiveOffer(id);
 
         String currentStatus = offer.getOfferStatus();
         if (!"Draft".equalsIgnoreCase(currentStatus)) {
             throw new OfferValidationException(
-                    "Theo quy tắc GBR-07, chỉ được phép chỉnh sửa đề xuất khi ở trạng thái Bản nháp (Draft). Trạng thái hiện tại: "
+                    "Theo quy tắc GBR-07, chỉ được phép chỉnh sửa thư mời khi ở trạng thái Bản nháp (Draft). Trạng thái hiện tại: "
                             + OfferExportServiceImpl.mapOfferStatusLabel(currentStatus),
                     "OFFER_STATUS_INVALID");
         }
@@ -587,7 +497,7 @@ public class OfferServiceImpl implements OfferService {
                 .offeredPositionTitle(offer.getOfferedPositionTitle())
                 .proposedSalary(offer.getProposedSalary())
                 .probationSalary(offer.getProbationSalary())
-                .probationDays(60)
+                .probationDays(offer.getProbationDays())
                 .expectedStartDate(offer.getExpectedStartDate())
                 .workLocation(offer.getWorkLocation())
                 .benefitsPackage(offer.getBenefitsPackage())
@@ -596,14 +506,17 @@ public class OfferServiceImpl implements OfferService {
                 .build();
     }
 
+    /**
+     * Xóa mềm bản nháp: khóa và kiểm tra Draft rồi đặt isDeleted=true.
+     * Bản ghi vẫn nằm trong database; thao tác này không phải hủy một thư mời đã phát hành.
+     */
     @Override
     public void deleteDraftOfferByHr(Integer id) {
-        OfferProposal offer = offerProposalRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đề xuất nhận việc với ID: " + id));
+        OfferProposal offer = findActiveOfferForUpdate(id);
 
         if (!"Draft".equalsIgnoreCase(offer.getOfferStatus())) {
             throw new OfferValidationException(
-                    "Chỉ được phép xóa bản nháp đề xuất nhận việc. Trạng thái hiện tại: " + OfferExportServiceImpl.mapOfferStatusLabel(offer.getOfferStatus()),
+                    "Chỉ được phép xóa bản nháp thư mời nhận việc. Trạng thái hiện tại: " + OfferExportServiceImpl.mapOfferStatusLabel(offer.getOfferStatus()),
                     "OFFER_NOT_DRAFT");
         }
 
@@ -613,10 +526,16 @@ public class OfferServiceImpl implements OfferService {
         offerProposalRepository.save(offer);
     }
 
+    /**
+     * Phát hành là bước riêng sau khi Giám đốc duyệt: Approved/Director_Approved → Sent_Candidate.
+     * Hạn trả lời tính từ thời điểm phát hành, phải trước ngày bắt đầu dự kiến; hồ sơ chuyển sang Offered.
+     * Nếu hồ sơ vừa đổi trạng thái, cập nhật có điều kiện thất bại thì hủy giao dịch để không hồi sinh hồ sơ đã đóng.
+     * Email chỉ gửi sau commit; gửi email thất bại không đảo ngược việc thư mời đã xuất hiện trên cổng ứng viên.
+     */
     @Override
     public OfferResponse sendOfferToCandidate(Integer id) {
-        OfferProposal offer = offerProposalRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đề xuất nhận việc với ID: " + id));
+        OfferProposal offer = findActiveOfferForUpdate(id);
+        requireActiveApplication(offer.getApplication());
 
         String currentStatus = offer.getOfferStatus();
         boolean isApproved = "Approved".equalsIgnoreCase(currentStatus)
@@ -624,7 +543,7 @@ public class OfferServiceImpl implements OfferService {
 
         if (!isApproved) {
             throw new OfferValidationException(
-                    "Chỉ được gửi thư mời nhận việc khi đề xuất đã được Giám đốc phê duyệt. Trạng thái hiện tại: "
+                    "Chỉ được gửi thư mời nhận việc khi thư mời đã được Giám đốc phê duyệt. Trạng thái hiện tại: "
                             + OfferExportServiceImpl.mapOfferStatusLabel(currentStatus),
                     "OFFER_NOT_APPROVED");
         }
@@ -633,7 +552,7 @@ public class OfferServiceImpl implements OfferService {
             throw new OfferValidationException("Thư mời nhận việc chưa có thời gian phản hồi hợp lệ.");
         }
 
-        LocalDateTime deadline = LocalDateTime.now().plusDays(offer.getResponsePeriodDays());
+        LocalDateTime deadline = LocalDateTime.now(clock).plusDays(offer.getResponsePeriodDays());
 
         if (offer.getExpectedStartDate() != null
                 && !deadline.toLocalDate().isBefore(offer.getExpectedStartDate())) {
@@ -644,53 +563,60 @@ public class OfferServiceImpl implements OfferService {
         offer.setOfferStatus("Sent_Candidate");
         OfferProposal saved = offerProposalRepository.save(offer);
 
-        if (offerMailSender != null) {
-            try {
-                offerMailSender.sendOfferLetterToCandidate(saved);
-            } catch (Exception e) {
-                log.warn("Lỗi khi gửi email thư mời nhận việc cho ứng viên Offer ID {}: {}", saved.getOfferId(), e.getMessage());
-            }
-        }
-
-        if (systemNotificationService != null) {
-            try {
-                systemNotificationService.notifyOfferLetterSent(saved);
-            } catch (Exception e) {
-                log.warn("Lỗi khi gửi in-app notification thư mời nhận việc cho ứng viên Offer ID {}: {}", saved.getOfferId(), e.getMessage());
-            }
-        }
-
         if (saved.getApplication() != null) {
             Application application = saved.getApplication();
-            application.setApplicationStatus("Offered");
-            applicationRepository.save(application);
+            // So sánh trạng thái đã đọc với trạng thái còn trong DB; không gọi setApplicationStatus rồi save đè.
+            if (application.getApplicationStatus() == null
+                    || applicationRepository.transition(application.getApplicationId(),
+                            Set.of(application.getApplicationStatus()), "Offered") != 1) {
+                throw new OfferValidationException("Hồ sơ đã được cập nhật. Vui lòng tải lại trang.",
+                        "APPLICATION_STATE_CONFLICT");
+            }
         }
 
-        return mapToResponse(saved);
+        notifyAfterCommit(saved, current -> systemNotificationService.notifyOfferLetterSent(current));
+
+        OfferResponse response = mapToResponse(saved);
+        response.setEmailStatus(EmailStatus.NOT_SENT);
+        if (TransactionSynchronizationManager.isActualTransactionActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    sendOfferEmail(saved, response);
+                }
+            });
+        } else {
+            sendOfferEmail(saved, response);
+        }
+        return response;
     }
 
-    private void validateProbationSalaryRule(BigDecimal proposedSalary, BigDecimal probationSalary) {
-        if (proposedSalary == null || probationSalary == null) {
-            throw new OfferValidationException("Mức lương đề xuất và lương thử việc không được để trống.");
-        }
-
-        if (proposedSalary.compareTo(BigDecimal.ZERO) <= 0 || probationSalary.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new OfferValidationException("Mức lương đề xuất và lương thử việc phải lớn hơn 0.");
-        }
-
-        BigDecimal minProbationSalary = proposedSalary.multiply(new BigDecimal("0.85"));
-
-        if (probationSalary.compareTo(minProbationSalary) < 0) {
-            throw new OfferValidationException(
-                    "Lương thử việc (" + probationSalary + " VND) phải đạt tối thiểu 85% lương chính thức ("
-                            + minProbationSalary + " VND) theo quy định Luật Lao động .");
-        }
-
-        if (probationSalary.compareTo(proposedSalary) > 0) {
-            throw new OfferValidationException("Lương thử việc không được vượt quá lương chính thức.");
+    private void sendOfferEmail(OfferProposal offer, OfferResponse response) {
+        try {
+            response.setEmailStatus(offerMailSender.sendOfferLetterToCandidate(offer));
+        } catch (Exception e) {
+            log.warn("Lỗi khi gửi email cho Offer ID {}: {}", offer.getOfferId(), e.getClass().getSimpleName());
         }
     }
 
+    private void requireActiveApplication(Application application) {
+        if (isApplicationEnded(application)) {
+            throw new OfferValidationException("Hồ sơ đã kết thúc nên không thể xử lý thư mời nhận việc.",
+                    "APPLICATION_TERMINATED");
+        }
+    }
+
+    private boolean isApplicationEnded(Application application) {
+        return application != null && application.getApplicationStatus() != null
+                && Set.of("Hired", "Rejected", "Withdrawn", "Cancelled")
+                        .contains(application.getApplicationStatus());
+    }
+
+    /**
+     * Kiểm tra ở service để cả form và lời gọi Java đều chịu cùng luật lương/ngày/thời gian thử việc.
+     * Lương thử việc phải trong khoảng 85%–100% lương chính thức; thử việc 1–365 ngày.
+     * Ngày bắt đầu phải sau hôm nay cộng thời gian phản hồi. DTO còn có giới hạn/định dạng riêng trước khi vào đây.
+     */
     private void validateOfferBusinessRules(
             BigDecimal proposedSalary,
             BigDecimal probationSalary,
@@ -718,13 +644,13 @@ public class OfferServiceImpl implements OfferService {
         if (probationSalary.compareTo(proposedSalary) > 0) {
             throw new OfferValidationException("Lương thử việc không được vượt quá lương chính thức.");
         }
-        if (probationDays == null || probationDays <= 0) {
-            throw new OfferValidationException("Thời gian thử việc phải lớn hơn 0.");
+        if (probationDays == null || probationDays <= 0 || probationDays > 365) {
+            throw new OfferValidationException("Thời gian thử việc phải từ 1 đến 365 ngày.");
         }
         if (expectedStartDate == null) {
             throw new OfferValidationException("Ngày bắt đầu dự kiến không được để trống.");
         }
-        if (!expectedStartDate.isAfter(LocalDate.now())) {
+        if (!expectedStartDate.isAfter(LocalDate.now(clock))) {
             throw new OfferValidationException("Ngày bắt đầu dự kiến phải lớn hơn ngày hiện tại.");
         }
         if (workLocation == null || workLocation.isBlank()) {
@@ -733,8 +659,8 @@ public class OfferServiceImpl implements OfferService {
         if (responsePeriodDays == null || responsePeriodDays <= 0) {
             throw new OfferValidationException("Thời gian phản hồi phải lớn hơn 0 ngày.");
         }
-        if (!expectedStartDate.isAfter(LocalDate.now().plusDays(responsePeriodDays))) {
-            LocalDate minStartDate = LocalDate.now().plusDays(responsePeriodDays + 1);
+        if (!expectedStartDate.isAfter(LocalDate.now(clock).plusDays(responsePeriodDays))) {
+            LocalDate minStartDate = LocalDate.now(clock).plusDays(responsePeriodDays + 1);
             throw new OfferValidationException(
                     "Ngày bắt đầu dự kiến phải sau ngày hiện tại cộng với thời hạn phản hồi ("
                             + responsePeriodDays + " ngày). Vui lòng chọn ngày bắt đầu từ ngày "
@@ -742,39 +668,6 @@ public class OfferServiceImpl implements OfferService {
         }
     }
 
-    private void deactivateExistingActiveOffers(Integer applicationId) {
-        List<String> inactiveStatuses = List.of("Voided", "Canceled", "Rejected", "Declined", "Director_Rejected",
-                "Expired");
-
-        List<OfferProposal> activeOffers = offerProposalRepository
-                .findByApplication_ApplicationIdAndOfferStatusNotIn(applicationId, inactiveStatuses);
-
-        for (OfferProposal oldOffer : activeOffers) {
-            oldOffer.setOfferStatus("Voided");
-        }
-
-        if (!activeOffers.isEmpty()) {
-            offerProposalRepository.saveAll(activeOffers);
-            offerProposalRepository.flush();
-        }
-    }
-
-    private User resolveProposedBy(Integer proposedById) {
-        if (proposedById != null) {
-            return userRepository.findById(proposedById).orElse(null);
-        }
-        try {
-            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-            if (auth != null && auth.isAuthenticated() && !(auth instanceof AnonymousAuthenticationToken)) {
-                User user = userRepository.findByUsernameIgnoreCase(auth.getName()).orElse(null);
-                if (user != null) {
-                    return user;
-                }
-            }
-        } catch (Exception ignored) {
-        }
-        return userRepository.findAll().stream().findFirst().orElse(null);
-    }
 
     private OfferResponse mapToResponse(OfferProposal entity) {
         String candidateName = null;
@@ -802,11 +695,13 @@ public class OfferServiceImpl implements OfferService {
                 .offeredPositionTitle(entity.getOfferedPositionTitle())
                 .proposedSalary(entity.getProposedSalary())
                 .probationSalary(entity.getProbationSalary())
+                .probationDays(entity.getProbationDays())
                 .expectedStartDate(entity.getExpectedStartDate())
                 .workLocation(entity.getWorkLocation())
                 .benefitsPackage(entity.getBenefitsPackage())
                 .responsePeriodDays(entity.getResponsePeriodDays())
                 .responseDeadline(entity.getResponseDeadline())
+                .responseExpired(entity.isResponseExpiredAt(LocalDateTime.now(clock)))
                 .proposedById(proposedById)
                 .proposedByName(proposedByName)
                 .offerStatus(entity.getOfferStatus())
@@ -818,75 +713,90 @@ public class OfferServiceImpl implements OfferService {
 
     @Override
     public OfferResponse approveOfferByDirector(Integer id, String comments) {
-        OfferProposal offer = offerProposalRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đề xuất nhận việc với ID: " + id));
-
-        if (!"Pending_Director".equalsIgnoreCase(offer.getOfferStatus())) {
-            throw new OfferValidationException(
-                    "Chỉ được phê duyệt đề xuất khi ở trạng thái Chờ Giám đốc duyệt. Trạng thái hiện tại: "
-                            + OfferExportServiceImpl.mapOfferStatusLabel(offer.getOfferStatus()),
-                    "OFFER_STATUS_INVALID");
-        }
-
-        User director = resolveProposedBy(null); // Resolve current logged in user (Director)
-        if (director == null) {
-            throw new OfferValidationException("Không xác định được danh tính Giám đốc để thực hiện phê duyệt.", "USER_NOT_FOUND");
-        }
-
-        offer.setOfferStatus("Director_Approved");
-        OfferProposal saved = offerProposalRepository.save(offer);
-
-        OfferApproval approval = new OfferApproval(saved, director, "Approved", comments);
-        offerApprovalRepository.save(approval);
-
-        if (systemNotificationService != null) {
-            try {
-                systemNotificationService.notifyDirectorDecisionOnOffer(saved, director, true, comments);
-            } catch (Exception e) {
-                log.warn("Lỗi khi gửi in-app notification duyệt Offer ID {}: {}", saved.getOfferId(), e.getMessage());
-            }
-        }
-
-        return mapToResponse(saved);
+        return decideOffer(id, comments, true);
     }
 
     @Override
     public OfferResponse rejectOfferByDirector(Integer id, String comments) {
-        OfferProposal offer = offerProposalRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đề xuất nhận việc với ID: " + id));
-
-        if (!"Pending_Director".equalsIgnoreCase(offer.getOfferStatus())) {
-            throw new OfferValidationException(
-                    "Chỉ được từ chối đề xuất khi ở trạng thái Chờ Giám đốc duyệt. Trạng thái hiện tại: "
-                            + OfferExportServiceImpl.mapOfferStatusLabel(offer.getOfferStatus()),
-                    "OFFER_STATUS_INVALID");
-        }
-
-        User director = resolveProposedBy(null); // Resolve current logged in user (Director)
-        if (director == null) {
-            throw new OfferValidationException("Không xác định được danh tính Giám đốc để thực hiện từ chối.", "USER_NOT_FOUND");
-        }
-
-        offer.setOfferStatus("Director_Rejected");
-        OfferProposal saved = offerProposalRepository.save(offer);
-
-        OfferApproval approval = new OfferApproval(saved, director, "Rejected", comments);
-        offerApprovalRepository.save(approval);
-
-        if (systemNotificationService != null) {
-            try {
-                systemNotificationService.notifyDirectorDecisionOnOffer(saved, director, false, comments);
-            } catch (Exception e) {
-                log.warn("Lỗi khi gửi in-app notification từ chối Offer ID {}: {}", saved.getOfferId(), e.getMessage());
-            }
-        }
-
-        return mapToResponse(saved);
+        return decideOffer(id, comments, false);
     }
+
+    /**
+     * Luồng chung cho Giám đốc duyệt/từ chối: chỉ nhận Offer Pending_Director và hồ sơ chưa kết thúc.
+     * decideIfPending cập nhật có điều kiện; 0 dòng nghĩa là yêu cầu đã cũ, không ghi thêm lịch sử/thông báo.
+     * OfferApproval lưu quyết định Approved/Rejected; OfferProposal lưu vòng đời Director_Approved/Director_Rejected.
+     * Thông báo quyết định chạy sau commit trong giao dịch mới để lỗi thông báo không làm mất quyết định đã lưu.
+     * Lý do từ chối bắt buộc được kiểm tra cả controller và service để bảo vệ lời gọi Java trực tiếp.
+     */
+    private OfferResponse decideOffer(Integer id, String comments, boolean approved) {
+        OfferProposal offer = findActiveOffer(id);
+        requireActiveApplication(offer.getApplication());
+        if (!"Pending_Director".equalsIgnoreCase(offer.getOfferStatus())) {
+            throw decisionConflict();
+        }
+
+        User director = currentUserService.requireUser();
+
+        if (!approved && (comments == null || comments.isBlank())) {
+            throw new OfferValidationException("Vui lòng nhập lý do từ chối vào ô nhận xét trước khi tiếp tục.", "DIRECTOR_REASON_REQUIRED");
+        }
+        if (comments != null && comments.length() > 2000) {
+            throw new OfferValidationException("Phản hồi của Giám đốc không được vượt quá 2000 ký tự.");
+        }
+
+        String status = approved ? "Director_Approved" : "Director_Rejected";
+        if (offerProposalRepository.decideIfPending(id, status) == 0) {
+            throw decisionConflict();
+        }
+
+        OfferProposal decided = findActiveOffer(id);
+        offerApprovalRepository.save(new OfferApproval(decided, director, approved ? "Approved" : "Rejected", comments));
+
+        notifyAfterCommit(decided, current ->
+                systemNotificationService.notifyDirectorDecisionOnOffer(current, director, approved, comments));
+        return mapToResponse(decided);
+    }
+
+    /** Chỉ ghi thông báo sau khi nghiệp vụ đã lưu chắc chắn; lỗi thông báo không rollback Offer. */
+    private void notifyAfterCommit(OfferProposal offer, Consumer<OfferProposal> notification) {
+        if (systemNotificationService == null || notification == null) return;
+        boolean transactional = TransactionSynchronizationManager.isActualTransactionActive();
+        Runnable send = () -> {
+            try {
+                if (transactional) {
+                    TransactionTemplate isolated = new TransactionTemplate(transactionManager);
+                    isolated.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+                    // Đọc lại trong giao dịch mới để các quan hệ LAZY dùng bởi notification còn truy cập được.
+                    isolated.executeWithoutResult(status -> notification.accept(findActiveOffer(offer.getOfferId())));
+                } else {
+                    notification.accept(offer);
+                }
+            } catch (Exception error) {
+                log.warn("Không thể ghi thông báo cho thư mời ID {}", offer.getOfferId(), error);
+            }
+        };
+        if (transactional) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override public void afterCommit() { send.run(); }
+            });
+        } else {
+            send.run();
+        }
+    }
+
+    private OfferValidationException decisionConflict() {
+        return new OfferValidationException("Thư mời nhận việc đã được cập nhật. Vui lòng tải lại trang.",
+                "OFFER_STATUS_INVALID");
+    }
+
+    /**
+     * Thẻ thống kê: số chờ duyệt là toàn hệ thống; số đã duyệt/từ chối đếm log quyết định của Giám đốc hiện tại.
+     * Không đồng nhất các số này với bộ đếm trạng thái vòng đời ở getDirectorStatusCounts.
+     */
     @Override
     @Transactional(readOnly = true)
     public Map<String, Long> getDirectorOfferStats() {
-        User director = resolveProposedBy(null);
+        User director = currentUserService.requireUser();
         Integer directorId = director != null ? director.getUserId() : 0;
         
         Map<String, Long> stats = new HashMap<>();
@@ -904,12 +814,18 @@ public class OfferServiceImpl implements OfferService {
         counts.put("Pending_Director", offerProposalRepository.countPendingDirector());
         counts.put("Director_Approved", offerProposalRepository.countDirectorApproved());
         counts.put("Sent_Candidate", offerProposalRepository.countSentCandidate());
+        counts.put("Expired", offerProposalRepository.countExpired());
         counts.put("Accepted", offerProposalRepository.countAccepted());
         counts.put("Declined", offerProposalRepository.countDeclined());
         counts.put("Director_Rejected", offerProposalRepository.countDirectorRejected());
         return counts;
     }
 
+    /**
+     * Danh sách Giám đốc luôn ẩn Draft. Nhóm đã duyệt còn bao gồm các Offer đã gửi/được nhận/bị ứng viên từ chối.
+     * Đây là nhóm nghiệp vụ khác bộ lọc Approved của HR/Excel, nên không gộp máy móc hai điều kiện.
+     * Tìm kiếm hỗ trợ thêm mã Offer; sắp xếp mặc định mới nhất theo ID, khác HR mặc định tăng dần.
+     */
     @Override
     @Transactional(readOnly = true)
     public Page<OfferResponse> getDirectorOffers(String search, String status, String timeSort, Pageable pageable) {
@@ -972,7 +888,8 @@ public class OfferServiceImpl implements OfferService {
                             builder.equal(builder.lower(root.get("offerStatus")), "approved"),
                             builder.equal(builder.lower(root.get("offerStatus")), "sent_candidate"),
                             builder.equal(builder.lower(root.get("offerStatus")), "accepted"),
-                            builder.equal(builder.lower(root.get("offerStatus")), "declined")
+                            builder.equal(builder.lower(root.get("offerStatus")), "declined"),
+                            builder.equal(builder.lower(root.get("offerStatus")), "expired")
                     ));
                 } else if ("Director_Rejected".equalsIgnoreCase(s) || "Rejected".equalsIgnoreCase(s)) {
                     predicates.add(builder.or(
@@ -991,16 +908,5 @@ public class OfferServiceImpl implements OfferService {
         return pagedEntities.map(this::mapToResponse);
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public Page<OfferResponse> getDirectorOfferHistory(Pageable pageable) {
-        User director = resolveProposedBy(null);
-        Integer directorId = director != null ? director.getUserId() : 0;
-        
-        Page<OfferApproval> approvals = offerApprovalRepository.findByDirector_UserIdOrderByApprovedAtDesc(directorId, pageable);
-        return approvals.map(approval -> {
-            OfferProposal offer = approval.getOfferProposal();
-            return mapToResponse(offer);
-        });
-    }
+
 }

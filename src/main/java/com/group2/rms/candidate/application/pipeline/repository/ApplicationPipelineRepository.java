@@ -4,6 +4,7 @@ import com.group2.rms.candidate.application.pipeline.dto.ApplicationPipelineResp
 import com.group2.rms.candidate.application.pipeline.dto.JobPostingOption;
 import com.group2.rms.candidate.domain.entity.Application;
 import com.group2.rms.candidate.domain.repository.ApplicationRepository;
+import com.group2.rms.core.util.ListFilters;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -24,25 +25,35 @@ public interface ApplicationPipelineRepository extends org.springframework.data.
         String SEARCH_FILTER = """
                           and (:jobPostingId is null or jp.jobPostingId = :jobPostingId)
                           and (:status is null or a.applicationStatus = :status)
-                          and (:keyword is null
-                               or lower(u.fullName) like lower(concat('%', :keyword, '%'))
-                               or lower(u.email) like lower(concat('%', :keyword, '%')))
+                          and (:keywordPattern is null
+                               or collate(u.fullName as Latin1_General_100_CI_AI) like :keywordPattern escape '\\'
+                               or collate(u.email as Latin1_General_100_CI_AI) like :keywordPattern escape '\\')
                         """;
 
     /**
      * Id các đơn của danh sách hồ sơ (5.1.22) trong phạm vi người xem và bộ lọc, đúng thứ tự hiển thị:
      * mới nộp trước.
      * Chỉ lấy id: giai đoạn của đơn tính ở Service (xem {@link ApplicationRepository#findProgressFacts}), rồi mới lọc và cắt trang.
+     * <p>
+     * Từ khóa khớp <b>cả cụm</b> trong họ tên hoặc email, không phân biệt hoa thường và dấu ("nguyen" ra "Nguyễn");
+     * ký tự {@code % _ [} người dùng gõ được hiểu là chữ thường (gõ "%" không ra mọi đơn).
      */
+    default List<Integer> findPipelineIds(boolean allDepartments, Integer managerUserId, Integer departmentId,
+                                          Integer jobPostingId, String status, String keyword) {
+        String pattern = keyword == null || keyword.isBlank() ? null : "%" + ListFilters.escapeLike(keyword.strip()) + "%";
+        return findPipelineIdsMatching(allDepartments, managerUserId, departmentId, jobPostingId, status, pattern);
+    }
+
+    /** Câu SQL của {@link #findPipelineIds}; {@code keywordPattern} là mẫu LIKE đã thoát ký tự, hoặc {@code null}. */
     @Query("select a.applicationId " + PIPELINE_JOINS + FORMAL_SCOPE_FILTER + SEARCH_FILTER + """
             order by a.submissionDate desc, a.applicationId desc
             """)
-    List<Integer> findPipelineIds(@Param("allDepartments") boolean allDepartments,
-                                  @Param("managerUserId") Integer managerUserId,
-                                  @Param("departmentId") Integer departmentId,
-                                  @Param("jobPostingId") Integer jobPostingId,
-                                  @Param("status") String status,
-                                  @Param("keyword") String keyword);
+    List<Integer> findPipelineIdsMatching(@Param("allDepartments") boolean allDepartments,
+                                          @Param("managerUserId") Integer managerUserId,
+                                          @Param("departmentId") Integer departmentId,
+                                          @Param("jobPostingId") Integer jobPostingId,
+                                          @Param("status") String status,
+                                          @Param("keywordPattern") String keywordPattern);
 
     /**
      * Các dòng của một trang danh sách; không theo thứ tự nào (Service xếp lại theo
@@ -105,9 +116,6 @@ public interface ApplicationPipelineRepository extends org.springframework.data.
                 String getKind();
                 String getActor();
         }
-
-        @Query(value = "select count(*) from AuditLog where EntityName = 'Application' and EntityId = cast(:id as nvarchar(50)) and NewValue = 'PostingClosed'", nativeQuery = true)
-        int countPostingClosure(@Param("id") Integer applicationId);
 
         /** Một mốc đọc từ bảng của module khác: thời điểm + trạng thái gốc. */
         interface TimelineEventRow {

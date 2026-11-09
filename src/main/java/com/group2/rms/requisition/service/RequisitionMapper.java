@@ -136,6 +136,7 @@ public class RequisitionMapper {
                 .probationLabel(RequisitionLabels.probation(jobRequisition.getProbationPeriod()))
                 .genderLabel(RequisitionLabels.gender(jobRequisition.getGender()))
                 .workModelLabel(RequisitionLabels.workModel(jobRequisition.getWorkModel()))
+                // Văn bản nhiều dòng: escape HTML rồi đổi xuống dòng thành <br/> (AG §6.3)
                 .reasonForHiringHtml(RequisitionLabels.multilineHtml(jobRequisition.getReasonForHiring()))
                 .jobDescriptionHtml(RequisitionLabels.multilineHtml(jobRequisition.getJobDescription()))
                 .requirementDetailsHtml(RequisitionLabels.multilineHtml(jobRequisition.getRequirementDetails()))

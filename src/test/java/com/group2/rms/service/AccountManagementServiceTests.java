@@ -205,7 +205,7 @@ class AccountManagementServiceTests {
         assertThrows(AccountFieldException.class, () -> f.service.update(90,
             new AccountManagementService.UpdateCommand("New name", "new@example.test", null, 2, 1, "Active")));
         // Then: Tách lifecycle Candidate và nội bộ ở create/update; Candidate không nhận department.
-        assertThrows(org.springframework.web.server.ResponseStatusException.class, () -> f.service.updateInternal(90,
+        assertThrows(com.group2.rms.user.exception.AccountOperationException.class, () -> f.service.updateInternal(90,
             new AccountManagementService.UpdateCommand("New name", "new@example.test", null, 2, 1, "Active")));
         assertThrows(AccountFieldException.class, () -> f.service.createInternal(
             new AccountManagementService.CreateCommand("Name", "name", "name@example.test", null, 6, null, "validPassword12")));

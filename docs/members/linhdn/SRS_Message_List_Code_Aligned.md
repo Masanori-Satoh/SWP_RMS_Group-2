@@ -51,7 +51,6 @@ Chỉ giữ các message có câu tương ứng trong code; {…} là tham số 
 | 46 | MSG79 | Toast | The Hiring Manager declines a suggested Candidate. | Đã từ chối gợi ý. Hồ sơ, CV và ghi chú của ứng viên được giữ nguyên. |
 | 47 | MSG80 | Toast | HR confirms Candidate consent to apply using an existing CV. | Đã xác nhận ứng tuyển bằng CV cũ. Có thể lên lịch phỏng vấn. |
 | 48 | MSG81 | Toast | HR closes a Candidate suggestion while retaining its history. | Đã kết thúc đề xuất; lịch sử được giữ lại. |
-| 49 | MSG82 | Toast | HR completes AI re-screening for an application. | Đã chấm lại AI: {match_score} điểm. |
 | 50 | MSG83 | Toast | HR resends a job-closure email for an eligible application. | Đã gửi lại email. |
 | 51 | MSG84 | Toast | HR resends an invitation for an eligible interview. | Đã gửi lại thư mời phỏng vấn. |
 | 52 | MSG85 | Inline / error | An interview or application requested by the user does not exist. | Không tìm thấy lịch phỏng vấn với mã: {id} |

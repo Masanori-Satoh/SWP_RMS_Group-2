@@ -6,20 +6,15 @@ import jakarta.validation.constraints.Size;
 
 /**
  * Editable profile fields.
- * Includes strict validation against invalid characters, code injection, and enforces real-name format.
- * Trên form, câu báo của {@code @NotBlank}, {@code @Size} lấy từ {@code messages.properties} của nhóm (đã là tiếng Việt).
+ * Same name and phone limits as registration and Admin account forms (SRS, User schema).
  * Ảnh đại diện không nằm ở đây: chỉ đổi bằng file tải lên ({@code UserProfileService.changeAvatar}).
  */
 public record UpdateProfileRequest(
-        @NotBlank(message = "Vui lòng nhập họ tên.")
-        @Size(min = 2, max = 100, message = "Họ tên dài từ 2 đến 100 ký tự.")
-        @Pattern(
-                regexp = "^[\\p{L}][\\p{L}\\s.'-]*$",
-                message = "Họ tên bắt đầu bằng chữ cái, chỉ gồm chữ cái, khoảng trắng, dấu chấm, dấu gạch nối và dấu nháy."
-        )
+        @NotBlank(message = "Vui lòng nhập họ và tên.")
+        @Size(max = 100, message = "Họ và tên không được quá 100 ký tự.")
         String fullName,
 
-        @Size(max = 15, message = "Số điện thoại tối đa 15 ký tự.")
-        @Pattern(regexp = "^$|^[0-9+\\s()-]+$", message = "Số điện thoại chỉ gồm chữ số, khoảng trắng, dấu gạch nối, dấu cộng và ngoặc.")
+        @Size(max = 20, message = "Số điện thoại không được quá 20 ký tự.")
+        @Pattern(regexp = "( *|0[0-9]{9})", message = "Số điện thoại phải gồm 10 chữ số, bắt đầu bằng 0.")
         String phoneNumber) {
 }

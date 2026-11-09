@@ -1,0 +1,1732 @@
+/* =============================================================================
+   SWP391 — MỘC RECRUITMENT MANAGEMENT SYSTEM (RMS)
+   OFFER MANAGEMENT MODULE — ROLE-BASED ARCHITECTURE
+   COMMON CORE STYLESHEET (offer-common.css)
+   =============================================================================
+   Developer: HuyenPT
+   Responsibility: Shared Offer UI tokens, status badges, modal foundation,
+                   action buttons, alert banners, and common layout utilities.
+   Target Pages:
+     - /offers (HR & Director Workspace Lists)
+     - /offers/{id} (Offer Detail View for HR & Director)
+     - /offers/new, /offers/{id}/edit (Offer Create/Edit Forms)
+   Cascade Position: Loaded FIRST among Offer stylesheets, providing the
+                     shared foundation for role-specific overlays.
+   ============================================================================= */
+
+/* -----------------------------------------------------------------------------
+   SECTION 1 — STATUS BADGES & DECLINE INDICATOR
+   Synchronized with UI Catalog & Data Dictionary.
+   Used across list.html, director-list.html, and detail.html.
+   ----------------------------------------------------------------------------- */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 11.5px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.status-draft {
+    background: var(--surface-subtle);
+    color: var(--muted);
+    border: 1px solid var(--line);
+}
+
+.status-pending {
+    background: var(--warning-soft);
+    color: var(--warning);
+    border: 1px solid var(--warning-soft);
+}
+
+.status-approved {
+    background: var(--brand-soft);
+    color: var(--brand-dark);
+    border: 1px solid var(--brand-caption);
+}
+
+.status-rejected {
+    background: var(--error-soft);
+    color: var(--error);
+    border: 1px solid var(--error-soft);
+}
+
+.status-sent {
+    background: var(--neutral-soft);
+    color: var(--neutral);
+    border: 1px solid var(--line);
+}
+
+.status-accepted {
+    background: var(--brand-soft);
+    color: var(--brand);
+    border: 1px solid var(--brand-caption);
+}
+
+.status-declined {
+    background: var(--error-soft);
+    color: var(--error);
+    border: 1px solid var(--error-soft);
+}
+
+.cand-decline-sub {
+    margin-top: 5px;
+    font-size: 11.5px;
+    color: var(--error);
+    background: var(--error-soft);
+    border: 1px dashed var(--error-soft);
+    border-radius: 4px;
+    padding: 2px 6px;
+    max-width: 175px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    cursor: default;
+    transition: all 0.15s ease;
+}
+
+.cand-decline-sub:hover {
+    background: var(--error-soft);
+    border-color: var(--error);
+}
+
+.cand-decline-sub i,
+.cand-decline-sub svg {
+    font-size: 10px;
+    flex-shrink: 0;
+}
+
+
+/* -----------------------------------------------------------------------------
+   SECTION 2 — MODALS & DIALOG OVERLAY ARCHITECTURE
+   Base modal structure for Director Quick Decision, Excel Export, and Dialogs.
+   ----------------------------------------------------------------------------- */
+dialog.confirm-dialog.ofw-workspace-dialog {
+    max-height: calc(100dvh - var(--s6));
+}
+
+dialog.confirm-dialog#offerExportModal {
+    max-width: 620px;
+}
+
+.ofw-dialog-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--s3);
+}
+
+.ofw-workspace-dialog .dialog-actions {
+    flex-wrap: wrap;
+}
+
+.ofw-modal-close {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 18px;
+    color: var(--muted);
+    padding: 4px;
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+}
+
+.ofw-modal-close:hover {
+    background: color-mix(in srgb, var(--ink) 5%, transparent);
+    color: var(--ink);
+}
+
+.ofw-modal-title-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.ofw-modal-title-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 6px;
+    vertical-align: middle;
+}
+
+.ofw-modal-title-icon--success {
+    color: var(--success);
+}
+
+.ofw-modal-title-icon--danger {
+    color: var(--error);
+}
+
+
+/* -----------------------------------------------------------------------------
+   SECTION 3 — ACTION ICON BUTTONS
+   Shared button styles for row-level actions on HR & Director lists.
+   ----------------------------------------------------------------------------- */
+.action-buttons {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.btn-icon,
+.ofw-action-btn {
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 13.5px;
+    transition: all 0.15s ease;
+    text-decoration: none;
+}
+
+.btn-icon:hover,
+.ofw-action-btn:hover {
+    background: var(--brand-soft);
+    color: var(--brand-dark);
+    border-color: var(--control-line);
+}
+
+.btn-icon-primary {
+    color: var(--brand-dark);
+}
+
+.btn-icon-primary:hover {
+    background: var(--brand-soft);
+    color: var(--brand-dark);
+    border-color: var(--brand);
+}
+
+.btn-icon-success,
+.ofw-action-btn--success {
+    color: var(--brand-dark);
+}
+
+.btn-icon-success:hover,
+.ofw-action-btn--success:hover {
+    background: var(--brand-soft);
+    border-color: var(--brand-caption);
+    color: var(--brand-hover);
+}
+
+.btn-icon-danger,
+.ofw-action-btn--danger {
+    color: var(--error);
+}
+
+.btn-icon-danger:hover,
+.ofw-action-btn--danger:hover {
+    background: var(--error-soft);
+    border-color: var(--error-soft);
+    color: var(--error);
+}
+
+
+/* -----------------------------------------------------------------------------
+   SECTION 4 — MODAL BANNER ALERTS & INLINE FEEDBACK
+   Feedback boxes inside modals and form validation notes.
+   ----------------------------------------------------------------------------- */
+.modal-alert {
+    padding: 10px 14px;
+    border-radius: 4px;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+}
+
+.modal-alert-warning {
+    background: var(--warning-soft);
+    border: 1px solid var(--warning-soft);
+    color: var(--warning);
+}
+
+.modal-alert-danger {
+    background: var(--error-soft);
+    border: 1px solid var(--error-soft);
+    color: var(--error);
+}
+
+.modal-alert-success {
+    background: var(--brand-soft);
+    border: 1px solid var(--brand-caption);
+    color: var(--brand-dark);
+}
+
+.ofw-modal-alert--spaced {
+    margin-top: 14px;
+}
+
+.director-comment-error-msg {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--error);
+    margin-top: 6px;
+    font-weight: 500;
+}
+
+.director-decision-subnote,
+.ofw-dialog-subnote {
+    margin-top: 8px;
+    font-size: 13px;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.ofw-btn-icon-inline {
+    margin-right: 6px;
+    vertical-align: middle;
+}
+
+
+/* -----------------------------------------------------------------------------
+   SECTION 5 — SHARED OFFER LAYOUT & UTILITY TOKENS
+   Common typography, counters, empty states, and layout helpers.
+   ----------------------------------------------------------------------------- */
+.offer-position-title {
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.offer-date-cell,
+.ofw-date-cell {
+    color: var(--muted);
+    font-size: 13.5px;
+}
+
+.offer-empty-state-cell {
+    text-align: center;
+    padding: 48px 24px;
+    color: var(--muted);
+}
+
+.offer-empty-state-icon {
+    font-size: 32px;
+    margin-bottom: 12px;
+    display: block;
+    color: var(--control-line);
+}
+
+.offer-cursor-pointer {
+    cursor: pointer;
+}
+
+.offer-text-center {
+    text-align: center;
+}
+
+.offer-text-right {
+    text-align: right;
+}
+
+.offer-justify-end {
+    justify-content: flex-end;
+}
+/* =============================================================================
+
+
+/* =============================================================================
+   SECTION 6 — WORKSPACE PRIMITIVES & LAYOUT (MIGRATED FROM offer-workspace.css)
+   ============================================================================= */
+
+/* 1. Page Wrap & Heading */
+.ofw-page {
+  min-width: 0;
+}
+
+.ofw-form-wrap,
+.ofw-page.offer-detail-container {
+  width: 100%;
+  max-width: none;
+  margin-inline: 0;
+}
+
+.ofw-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--s4);
+  margin-bottom: var(--s6);
+  padding: var(--s2) 0;
+}
+
+.ofw-title {
+  margin: 0;
+}
+
+.ofw-subtitle {
+  max-width: 76ch;
+  margin-top: var(--s2);
+  color: var(--ink);
+  font-size: var(--font-base);
+  line-height: 1.5;
+}
+
+
+/* 3. Surface Cards & Step Headers */
+.ofw-card {
+  margin-bottom: var(--s6);
+  overflow: hidden;
+}
+
+.ofw-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--s4) var(--s6);
+}
+
+/* .ofw-panel-title-wrap & .ofw-step-badge migrated to offer-hr.css (Task 15) */
+
+.ofw-card-body {
+  padding: var(--s6);
+}
+
+@media (max-width: 768px) {
+  .ofw-card-body {
+    padding: var(--s4);
+  }
+}
+
+button.ofw-stat-card,
+button.director-stat-card {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  width: 100%;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.ofw-stat-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: var(--s4) var(--s5);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease, background-color .15s ease;
+  cursor: pointer;
+}
+
+.ofw-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--brand);
+}
+
+.ofw-stat-card--active,
+.ofw-stat-card--active:hover {
+  border-color: var(--brand);
+  background: color-mix(in srgb, var(--brand-soft) 40%, var(--surface));
+  box-shadow: 0 0 0 1px var(--brand), var(--shadow-sm);
+}
+
+.ofw-stat-card:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+.ofw-stat-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .02em;
+}
+
+.ofw-stat-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: var(--s3);
+}
+
+.ofw-stat-icon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius-md);
+}
+
+.ofw-stat-icon.stat-icon-brand {
+  background: var(--brand-soft);
+  color: var(--brand-dark);
+}
+
+.ofw-stat-icon.stat-icon-amber {
+  background: var(--warning-soft);
+  color: var(--warning);
+}
+
+.ofw-stat-icon.stat-icon-green,
+.ofw-stat-icon.stat-icon-emerald {
+  background: var(--success-soft);
+  color: var(--success);
+}
+
+.ofw-stat-icon.stat-icon-blue {
+  background: color-mix(in srgb, var(--brand-soft) 80%, var(--surface));
+  color: var(--brand-dark);
+}
+
+.ofw-stat-icon.stat-icon-danger {
+  background: var(--error-soft);
+  color: var(--error);
+}
+
+.ofw-stat-value {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--brand-dark);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+
+/* 11. Toolbar (Filters & Search) */
+.ofw-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--s3);
+  padding: var(--s3) var(--s4);
+  margin-bottom: var(--s5);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.ofw-toolbar-left {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--s3);
+  flex: 1 1 auto;
+}
+
+.ofw-search-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1 1 300px;
+  max-width: 380px;
+}
+
+.ofw-search-box svg {
+  position: absolute;
+  left: 14px;
+  color: var(--muted);
+  pointer-events: none;
+}
+
+.ofw-search-input {
+  width: 100%;
+  height: 42px;
+  padding: 0 36px 0 38px;
+  border: 1px solid var(--control-line);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 14px;
+  transition: border-color .15s ease;
+}
+
+.ofw-search-input:focus {
+  outline: none;
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 15%, transparent);
+}
+
+.ofw-search-clear {
+  position: absolute;
+  right: 10px;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-full);
+  background: var(--neutral-soft);
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.ofw-search-clear:hover {
+  background: var(--line);
+  color: var(--ink);
+}
+
+.ofw-filter-select {
+  height: 42px;
+  padding: 0 34px 0 14px;
+  border: 1px solid var(--control-line);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.ofw-filter-select:focus {
+  outline: none;
+  border-color: var(--brand);
+}
+
+
+/* 13. List Container Surface & Table */
+.ofw-list-surface {
+  margin-bottom: var(--s6);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+}
+
+.ofw-list-header {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  padding: var(--s4) var(--s6);
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.ofw-list-heading {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  width: 100%;
+}
+
+.ofw-list-heading-text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s1);
+  min-width: 0;
+}
+
+.ofw-list-heading-text .adw-panel-title {
+  margin: 0;
+  line-height: 1.3;
+}
+
+.ofw-list-heading-text .ofw-list-count {
+  margin-left: 0;
+  width: fit-content;
+}
+
+.ofw-list-icon {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  background: var(--brand-soft);
+  color: var(--brand-dark);
+}
+
+.ofw-list-count {
+  margin-left: auto;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-subtle);
+  color: var(--muted);
+}
+
+.ofw-table-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.ofw-list-surface .adw-data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.ofw-list-surface .adw-data-table thead th {
+  padding: var(--s3) var(--s4);
+  background: var(--surface-subtle);
+  color: var(--brand-dark);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+
+.ofw-list-surface .adw-data-table tbody td {
+  padding: var(--s3) var(--s4);
+  border-bottom: 1px solid var(--line);
+  font-size: 14px;
+  color: var(--ink);
+  vertical-align: middle;
+}
+
+.ofw-list-surface .adw-data-table tbody tr:hover td {
+  background: color-mix(in srgb, var(--brand-soft) 35%, var(--surface));
+}
+
+.ofw-cand-name {
+  font-weight: 650;
+  color: var(--brand-dark);
+  text-decoration: none;
+}
+
+.ofw-cand-name:hover {
+  text-decoration: underline;
+}
+
+.ofw-cand-email {
+  font-size: 12.5px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.ofw-salary-main {
+  font-weight: 650;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.ofw-salary-prob {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.ofw-pct-badge {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+  background: var(--success-soft);
+  color: var(--success);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.ofw-actions-cell {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--s2);
+}
+
+.ofw-action-btn {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--ink);
+  text-decoration: none;
+  cursor: pointer;
+  transition: all .15s ease;
+}
+
+.ofw-action-btn:hover {
+  border-color: var(--brand);
+  background: var(--brand-soft);
+  color: var(--brand-dark);
+}
+
+.ofw-action-btn--success:hover {
+  border-color: var(--success);
+  background: var(--success-soft);
+  color: var(--success);
+}
+
+.ofw-action-btn--danger:hover {
+  border-color: var(--error);
+  background: var(--error-soft);
+  color: var(--error);
+}
+
+
+@media (max-width: 768px) {
+  .ofw-director-stats-grid {
+    grid-template-columns: 1fr;
+  }
+  .ofw-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .ofw-toolbar-left {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .ofw-search-box {
+    max-width: none;
+  }
+}
+
+/* ==========================================================================
+   15. Modal & Dialog UI Enhancements (No inline styles)
+   ========================================================================== */
+.ofw-modal-title-group {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+}
+
+.ofw-modal-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.ofw-modal-desc {
+  font-size: 12.5px;
+  color: var(--muted);
+  font-family: var(--sans);
+  font-weight: normal;
+  margin-top: 2px;
+}
+
+.ofw-modal-stat-icon {
+  width: 36px;
+  height: 36px;
+  font-size: 16px;
+  border-radius: var(--radius-sm);
+}
+
+/* Export modal spacing helpers migrated to offer-hr.css (Task 15) */
+
+.ofw-modal-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--s4);
+}
+
+@media (max-width: 640px) {
+  .ofw-modal-grid-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ofw-required-star {
+  color: var(--error);
+}
+
+.ofw-optional-text {
+  color: var(--muted);
+  font-weight: normal;
+}
+
+.ofw-hint--brand {
+  color: var(--brand-dark);
+}
+
+.ofw-textarea-compact {
+  height: 76px;
+  resize: vertical;
+}
+
+.ofw-btn-icon {
+  margin-right: 6px;
+}
+
+/* .ofw-empty-state-icon migrated to offer-hr.css (Task 15) */
+
+/* ==========================================================================
+   16. Detail Screen Semantic Classes (Clean inline styles)
+   ========================================================================== */
+.ofw-form-inline {
+  display: inline;
+}
+
+.ofw-cand-decline-header {
+  background: transparent;
+  border-bottom: 1px solid var(--error-soft);
+}
+
+.ofw-cand-decline-title {
+  font-size: 16px;
+  color: var(--error);
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+}
+
+.ofw-cand-decline-label {
+  font-size: 13.5px;
+  color: var(--error);
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.ofw-cand-decline-time {
+  margin-top: 10px;
+  font-size: 12.5px;
+  color: var(--error);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ofw-detail-section-title {
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.ofw-card-title-icon {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 8px;
+}
+
+.ofw-eval-manager-text {
+  font-size: 13.5px;
+}
+
+.ofw-deadline-sub {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 400;
+  margin-top: 2px;
+}
+
+.ofw-deadline-val {
+  color: var(--ink);
+}
+
+.ofw-soft-box-pre {
+  white-space: pre-wrap;
+}
+
+.ofw-detail-audit-footer {
+  margin-top: var(--s5);
+  padding-top: 14px;
+  border-top: 1px dashed var(--line);
+  font-size: 13px;
+  color: var(--muted);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--s2);
+}
+
+.ofw-detail-audit-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ofw-detail-audit-item strong {
+  color: var(--ink);
+}
+
+.ofw-counter-label {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.ofw-history-header-title {
+  font-size: 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s2);
+}
+
+.ofw-history-status--approved {
+  font-weight: 700;
+  color: var(--brand-dark);
+}
+
+.ofw-history-status--rejected {
+  font-weight: 700;
+  color: var(--error);
+}
+
+
+/* ==========================================================================
+   17. Director List Specific Utilities (100% Tokens, Zero Inline Styles)
+   ========================================================================== */
+.ofw-col-id {
+  width: 80px;
+}
+
+.ofw-col-action {
+  width: 100px;
+  text-align: right;
+}
+
+.ofw-col-action-wide {
+  width: 140px;
+  text-align: right;
+}
+
+.ofw-cell-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+.ofw-date-cell {
+  color: var(--muted);
+  font-size: 13.5px;
+}
+
+.ofw-empty-cell {
+  text-align: center;
+  padding: 48px 24px;
+  color: var(--muted);
+}
+
+.ofw-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s3);
+}
+
+.ofw-empty-state svg {
+  color: var(--control-line);
+}
+
+
+/* -----------------------------------------------------------------------------
+   18. SPINNER & FLASH TOAST EXTENSIONS (Zero CDN)
+   ----------------------------------------------------------------------------- */
+.ofw-spinner-sm {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid color-mix(in srgb, var(--surface) 35%, transparent);
+    border-top-color: var(--surface);
+    border-radius: 50%;
+    animation: ofw-spin 0.6s linear infinite;
+    vertical-align: middle;
+    margin-right: 6px;
+}
+
+@keyframes ofw-spin {
+    to { transform: rotate(360deg); }
+}
+
+.flash-toast--warning {
+    --toast-color: var(--focus);
+    --toast-soft: var(--warning-soft);
+}
+
+
+/* =============================================================================
+   SECTION 7 — DETAIL VIEW SHARED COMPONENTS (MIGRATED FROM offers.css)
+   ============================================================================= */
+
+/* Candidate Decline Detail Callout Card */
+.cand-decline-card {
+    border-left: 4px solid var(--error) !important;
+    background: var(--error-soft);
+    border-radius: 8px;
+    box-shadow: 0 1px 3px color-mix(in srgb, var(--ink) 5%, transparent);
+}
+
+.cand-decline-reason-box {
+    background: var(--surface);
+    border: 1px solid var(--error-soft);
+    border-radius: 6px;
+    padding: 12px 16px;
+    font-size: 14px;
+    color: var(--ink);
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+
+.status-voided {
+    background: var(--surface-subtle);
+    color: var(--control-line);
+    border: 1px solid var(--line);
+    text-decoration: line-through;
+}
+
+
+/* History logs & timeline */
+.history-timeline {
+    border-left: 2px solid var(--line);
+    padding-left: 16px;
+    margin-left: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.timeline-item {
+    position: relative;
+}
+
+.timeline-dot {
+    position: absolute;
+    left: -22px;
+    top: 4px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--brand-dark);
+    border: 2px solid var(--surface);
+    box-shadow: 0 0 0 2px var(--brand-soft);
+}
+
+.timeline-dot.dot-rejected {
+    background: var(--error);
+    box-shadow: 0 0 0 2px var(--error-soft);
+}
+
+.timeline-dot.dot-approved {
+    background: var(--brand-dark);
+    box-shadow: 0 0 0 2px var(--brand-soft);
+}
+
+.timeline-time {
+    font-size: 11.5px;
+    color: var(--muted);
+}
+
+.timeline-header {
+    font-weight: 600;
+    color: var(--ink);
+    font-size: 13px;
+}
+
+.timeline-content {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 8px 12px;
+    font-size: 13px;
+    color: var(--ink);
+    margin-top: 4px;
+}
+
+
+/* Header & Meta */
+.offers-detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 16px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--line);
+}
+
+.offers-detail-title-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.offers-detail-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--ink);
+    margin: 0;
+}
+
+.offers-detail-inline-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 13.5px;
+    color: var(--muted);
+    margin-top: 8px;
+}
+
+.offers-detail-inline-meta .meta-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.offers-detail-inline-meta .meta-item i {
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.offers-detail-inline-meta .meta-label {
+    color: var(--muted);
+}
+
+.offers-detail-inline-meta .meta-val {
+    color: var(--ink);
+    font-weight: 600;
+}
+
+.offers-detail-inline-meta .meta-dot {
+    color: var(--line);
+    font-size: 12px;
+}
+
+.offers-detail-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+
+/* Card General Enhancements */
+.card-header-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.card-title-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    background: var(--brand-soft);
+    border: 1px solid var(--brand-caption);
+    color: var(--brand-dark);
+    font-size: 13px;
+    margin-right: 8px;
+}
+
+
+/* Section 1 Grid */
+.candidate-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px 24px;
+}
+
+.candidate-detail-grid .detail-item.col-span-2 {
+    grid-column: span 2;
+}
+
+.detail-item-label-upper {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 5px;
+}
+
+.detail-item-value-bold {
+    font-size: 14.5px;
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.detail-dept-badge {
+    display: inline-block;
+    background: var(--neutral-soft);
+    color: var(--ink);
+    border: 1px solid var(--line);
+    padding: 3px 10px;
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+
+/* Section 2: Interview Evaluation Summary Box */
+.interview-eval-box {
+    background: var(--surface-subtle);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin-bottom: 18px;
+}
+
+.interview-eval-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.interview-eval-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--ink);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.interview-eval-badge-passed {
+    background: var(--brand);
+    color: var(--surface);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 9999px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.interview-eval-manager {
+    font-size: 13px;
+    color: var(--muted);
+}
+
+.interview-eval-manager strong {
+    color: var(--ink);
+}
+
+.interview-eval-comment {
+    font-size: 13.5px;
+    color: var(--ink);
+    line-height: 1.5;
+    margin-bottom: 10px;
+}
+
+.interview-eval-salary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 10px;
+    border-top: 1px dashed var(--line);
+    font-size: 13.5px;
+    color: var(--muted);
+}
+
+.interview-eval-salary-val {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--brand);
+}
+
+
+/* Section 2: Compensation KPI Cards */
+.salary-kpi-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.salary-kpi-card {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 16px 20px;
+    background: var(--surface);
+}
+
+.salary-kpi-card.official {
+    border-color: var(--brand-caption);
+    background: var(--brand-soft);
+}
+
+.salary-kpi-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.salary-kpi-title {
+    font-size: 11.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--ink);
+}
+
+.salary-kpi-badge {
+    background: var(--brand-soft);
+    color: var(--brand-dark);
+    font-size: 11.5px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+.salary-kpi-badge-pct {
+    background: var(--neutral-soft);
+    color: var(--neutral);
+    font-size: 11.5px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+.salary-kpi-amount {
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--brand-dark);
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    line-height: 1.2;
+}
+
+.salary-kpi-amount.probation {
+    color: var(--ink);
+}
+
+.salary-kpi-unit {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--muted);
+}
+
+.salary-kpi-sub {
+    font-size: 12.5px;
+    color: var(--muted);
+    margin-top: 6px;
+}
+
+
+/* Section 2: 3 Dates / Tiles */
+.detail-info-tiles {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-bottom: 16px;
+}
+
+.detail-info-tile {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 12px 16px;
+    background: var(--surface);
+}
+
+.detail-info-tile-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+}
+
+.detail-info-tile-val {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--ink);
+}
+
+
+/* Section 2: Location & Benefits Box */
+.detail-soft-field {
+    margin-top: 14px;
+}
+
+.detail-soft-box {
+    background: var(--surface-subtle);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-size: 13.5px;
+    color: var(--ink);
+    margin-top: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.detail-soft-box i {
+    color: var(--muted);
+    font-size: 14px;
+}
+
+
+
+/* =============================================================================
+   SECTION 6 — LEGACY ALIASES & PARITY COMPATIBILITY
+   Ensures dual-classed markup (.offers-table, .search-box, etc.) maintains
+   100% cascade and visual parity during legacy stylesheet decoupling.
+   ============================================================================= */
+
+/* Stat icon colors (matching legacy .stat-icon-* classes) */
+.stat-icon-amber {
+    background: var(--warning-soft);
+    color: var(--warning);
+}
+.stat-icon-green,
+.stat-icon-emerald {
+    background: var(--success-soft);
+    color: var(--success);
+}
+.stat-icon-blue {
+    background: color-mix(in srgb, var(--brand-soft) 80%, var(--surface));
+    color: var(--brand-dark);
+}
+.stat-icon-danger {
+    background: var(--error-soft);
+    color: var(--error);
+}
+
+/* Toolbar & Filter aliases */
+.offers-toolbar {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    padding: var(--s3) var(--s4);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--s3);
+    margin-bottom: var(--s5);
+}
+
+.toolbar-left {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--s3);
+    flex: 1 1 auto;
+}
+
+.search-box {
+    position: relative;
+    display: flex;
+    align-items: center;
+    flex: 1 1 300px;
+    max-width: 380px;
+}
+
+.search-box svg,
+.search-box i {
+    position: absolute;
+    left: 14px;
+    color: var(--muted);
+    pointer-events: none;
+}
+
+.search-box input {
+    width: 100%;
+    height: 42px;
+    padding: 0 36px 0 38px;
+    border: 1px solid var(--control-line);
+    border-radius: var(--radius-md);
+    background: var(--surface);
+    color: var(--ink);
+    font-size: 14px;
+    transition: border-color .15s ease;
+}
+
+.search-box input:focus {
+    outline: none;
+    border-color: var(--brand);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 15%, transparent);
+}
+
+.filter-select {
+    height: 42px;
+    padding: 0 34px 0 14px;
+    border: 1px solid var(--control-line);
+    border-radius: var(--radius-md);
+    background: var(--surface);
+    color: var(--ink);
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.filter-select:focus {
+    outline: none;
+    border-color: var(--brand);
+}
+
+/* Table container & cell aliases */
+.offers-table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.offers-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.offers-table th {
+    padding: var(--s3) var(--s4);
+    background: var(--surface-subtle);
+    color: var(--brand-dark);
+    font-size: 13px;
+    font-weight: 600;
+    text-align: left;
+    border-bottom: 1px solid var(--line);
+    white-space: nowrap;
+}
+
+.offers-table td {
+    padding: var(--s3) var(--s4);
+    border-bottom: 1px solid var(--line);
+    font-size: 14px;
+    color: var(--ink);
+    vertical-align: middle;
+}
+
+.offers-table tr:hover td {
+    background: color-mix(in srgb, var(--brand-soft) 35%, var(--surface));
+}
+
+.offer-id-link {
+    font-weight: 600;
+    color: var(--brand);
+    text-decoration: none;
+}
+
+.offer-id-link:hover {
+    text-decoration: underline;
+}
+
+.cand-name-cell {
+    font-weight: 650;
+    color: var(--brand-dark);
+    text-decoration: none;
+}
+
+.cand-name-cell:hover {
+    text-decoration: underline;
+}
+
+.cand-email-sub {
+    font-size: 12.5px;
+    color: var(--muted);
+    margin-top: 2px;
+}
+
+.salary-main {
+    font-weight: 650;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+}
+
+.salary-probation {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 2px;
+}
+
+.salary-badge-pct {
+    display: inline-block;
+    padding: 1px 6px;
+    border-radius: var(--radius-sm);
+    background: var(--success-soft);
+    color: var(--success);
+    font-size: 11px;
+    font-weight: 700;
+}
+
+/* Shared Detail Section & Grid */
+.detail-section {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: var(--s5);
+    overflow: hidden;
+}
+
+.section-title {
+    font-size: 15px;
+    display: flex;
+    align-items: center;
+    text-transform: uppercase;
+    font-weight: 700;
+    margin: 0;
+}
+
+.detail-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: var(--s4);
+}
+
+.detail-item-label {
+    font-size: 11.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    margin-bottom: 2px;
+}
+
+.detail-item-value {
+    font-size: 14px;
+    color: var(--ink);
+    font-weight: 500;
+}
+
+/* Modal Form Controls (Export modal & dialogs) */
+.input-control {
+    width: 100%;
+    height: 40px;
+    padding: 0 var(--s3);
+    border: 1px solid var(--control-line);
+    border-radius: var(--radius-md);
+    background: var(--surface);
+    color: var(--ink);
+    font-size: 14px;
+    box-sizing: border-box;
+    transition: border-color 0.15s ease;
+}
+
+.input-control:focus {
+    outline: none;
+    border-color: var(--brand);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 15%, transparent);
+}
+
+.ofw-page [hidden] {
+    display: none !important;
+}

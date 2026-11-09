@@ -84,6 +84,48 @@ class InterviewEvaluationServiceTests {
         verify(interviewScheduleRepository).save(schedule);
     }
 
+    // ducnm bổ sung: còn trong giờ phỏng vấn và chưa đủ phiếu hội đồng thì lịch vẫn giữ Scheduled
+    @Test
+    @DisplayName("Chưa đủ phiếu và chưa hết giờ: lịch vẫn giữ Scheduled")
+    void notAllSubmittedAndBeforeEndTimeKeepsScheduled() {
+        InterviewSchedule schedule = schedule(InterviewStatus.Scheduled, LocalDateTime.now().minusMinutes(10));
+
+        service.submit(INTERVIEW_ID, request(), interviewer.getUserId());
+
+        assertEquals(InterviewStatus.Scheduled, schedule.getInterviewStatus());
+        verify(interviewScheduleRepository, never()).save(any());
+    }
+
+    // ducnm bổ sung: đủ phiếu của cả hội đồng thì chuyển Completed dù chưa hết giờ phỏng vấn
+    @Test
+    @DisplayName("Đủ phiếu của cả hội đồng: chuyển Completed dù chưa hết giờ")
+    void allPanelMembersSubmittedCompletesScheduleBeforeEndTime() {
+        InterviewSchedule schedule = schedule(InterviewStatus.Scheduled, LocalDateTime.now().minusMinutes(10));
+        InterviewEvaluation priorEvaluation = InterviewEvaluation.builder().interviewer(hiringManager).build();
+        when(interviewEvaluationRepository.findByScheduleIdWithInterviewer(INTERVIEW_ID))
+                .thenReturn(java.util.List.of(priorEvaluation));
+
+        service.submit(INTERVIEW_ID, request(), interviewer.getUserId());
+
+        assertEquals(InterviewStatus.Completed, schedule.getInterviewStatus());
+        verify(interviewScheduleRepository).save(schedule);
+    }
+
+    // ducnm sửa lỗi IE3: truy vấn đã thấy luôn phiếu vừa lưu (Hibernate auto-flush) thì không được đếm trùng
+    @Test
+    @DisplayName("Phiếu vừa lưu đã có trong truy vấn, mới 1/2 phiếu và chưa hết giờ: lịch vẫn giữ Scheduled")
+    void justSavedEvaluationVisibleInQueryIsNotCountedTwice() {
+        InterviewSchedule schedule = schedule(InterviewStatus.Scheduled, LocalDateTime.now().minusMinutes(10));
+        InterviewEvaluation justSaved = InterviewEvaluation.builder().interviewer(interviewer).build();
+        when(interviewEvaluationRepository.findByScheduleIdWithInterviewer(INTERVIEW_ID))
+                .thenReturn(java.util.List.of(justSaved));
+
+        service.submit(INTERVIEW_ID, request(), interviewer.getUserId());
+
+        assertEquals(InterviewStatus.Scheduled, schedule.getInterviewStatus());
+        verify(interviewScheduleRepository, never()).save(any());
+    }
+
     @Test
     @DisplayName("Lịch đã Completed: vẫn nộp được, không chuyển trạng thái lần nữa")
     void evaluationOnCompletedScheduleKeepsStatus() {

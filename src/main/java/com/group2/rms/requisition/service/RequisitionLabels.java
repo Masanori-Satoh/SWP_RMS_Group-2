@@ -116,8 +116,7 @@ public final class RequisitionLabels {
         return model == null ? "—" : model;
     }
 
-
-    // Formats the salary range.
+    /** Lương theo đơn vị triệu: "20 – 30 triệu VND/tháng"; không nhập thì "Thỏa thuận". */
     public static String salary(BigDecimal min, BigDecimal max) {
         if (min == null && max == null) {
             return "Thỏa thuận";
@@ -137,8 +136,7 @@ public final class RequisitionLabels {
         return value.stripTrailingZeros().toPlainString().replace('.', ',');
     }
 
-
-    // Returns the display label for a probation period.
+    /** Thời gian thử việc (JobRequisition.ProbationPeriod); trống = không thử việc. */
     public static String probation(String period) {
         return period == null || period.isBlank() ? "Không thử việc" : period;
     }

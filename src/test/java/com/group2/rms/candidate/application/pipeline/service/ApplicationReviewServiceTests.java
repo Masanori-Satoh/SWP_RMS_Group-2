@@ -97,7 +97,7 @@ class ApplicationReviewServiceTests {
 
     @Test
     void directorFailOnBehalfOfHiringManagerRejects() {
-        reviewable("HR_Passed");
+        Application application = reviewable("HR_Passed");
         when(access.isDirector(actor)).thenReturn(true);
         when(applications.transition(ID, Set.of("HR_Passed"), "Rejected")).thenReturn(1);
 
@@ -105,17 +105,41 @@ class ApplicationReviewServiceTests {
 
         assertEquals("Director", savedReview().getReviewerRole());
         assertEquals("Fail", savedReview().getDecision());
+        verify(notificationService).notifyApplicationRejected(application);
     }
 
     @Test
     void failRejectsWithOptionalComment() {
-        reviewable("HR_Passed");
+        Application application = reviewable("HR_Passed");
         when(applications.transition(ID, Set.of("HR_Passed"), "Rejected")).thenReturn(1);
 
         service.review(ID, new ApplicationReviewRequest("Fail", "   "));
 
         assertEquals("Fail", savedReview().getDecision());
         assertNull(savedReview().getComments(), "nhận xét rỗng lưu null");
+        verify(notificationService).notifyApplicationRejected(application);
+        verifyNoMoreInteractions(notificationService);
+    }
+
+    @Test
+    void hrFailRejectsAndNotifiesCandidate() {
+        Application application = reviewable("Applied");
+        when(applications.transition(ID, ApplicationAccess.HR_REVIEW_STATUSES, "Rejected")).thenReturn(1);
+
+        service.review(ID, new ApplicationReviewRequest("Fail", "Chưa đủ kinh nghiệm"));
+
+        verify(notificationService).notifyApplicationRejected(application);
+    }
+
+    /** Hai người duyệt cùng lúc: người sau thua thì không báo ứng viên lần nữa. */
+    @Test
+    void failLosingTheRaceDoesNotNotifyCandidate() {
+        reviewable("Applied");
+        when(applications.transition(ID, ApplicationAccess.HR_REVIEW_STATUSES, "Rejected")).thenReturn(0);
+
+        assertThrows(ApplicationReviewException.class,
+                () -> service.review(ID, new ApplicationReviewRequest("Fail", null)));
+
         verifyNoInteractions(notificationService);
     }
 

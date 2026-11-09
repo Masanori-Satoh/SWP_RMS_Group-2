@@ -1,5 +1,6 @@
 package com.group2.rms.offer.service;
 
+import com.group2.rms.offer.dto.OfferResponse.EmailStatus;
 import com.group2.rms.offer.entity.OfferProposal;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
@@ -10,7 +11,7 @@ import org.springframework.stereotype.Service;
 
 /**
  * Gửi email cho luồng Offer: phát hành thư mời nhận việc (Offer Letter) tới ứng viên.
- * Không có cấu hình SMTP thì chỉ ghi log (mock).
+ * Không có cấu hình SMTP thì ghi log và trả NOT_SENT, không giả lập gửi thành công.
  * Thông báo in-app cho nội bộ (Giám đốc, HR) nằm ở {@link com.group2.rms.notification.service.NotificationService}.
  */
 @Slf4j
@@ -19,17 +20,25 @@ public class OfferMailSender {
 
     private final ObjectProvider<JavaMailSender> mailSender;
     private final String from;
+    private final String testRecipient;
     private final String baseUrl;
 
     public OfferMailSender(ObjectProvider<JavaMailSender> mailSender,
                            @Value("${app.mail.from:${APP_MAIL_FROM:noreply@rms.group2.com}}") String from,
+                           @Value("${app.mail.offer-test-recipient:}") String testRecipient,
                            @Value("${app.base-url:${APP_BASE_URL:http://localhost:8080}}") String baseUrl) {
         this.mailSender = mailSender;
         this.from = from;
+        this.testRecipient = testRecipient.trim();
         this.baseUrl = baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;
     }
 
-    public void sendOfferLetterToCandidate(OfferProposal offer) {
+    /**
+     * Gửi email thực sau khi Offer đã được phát hành; testRecipient có cấu hình thì chuyển tới địa chỉ kiểm thử.
+     * SENT: gửi tới ứng viên; TEST_RECIPIENT: gửi tới địa chỉ thử; NOT_SENT: thiếu email/SMTP hoặc gửi lỗi.
+     * Kết quả này phục vụ thông báo UI, không phải trạng thái vòng đời của Offer.
+     */
+    public EmailStatus sendOfferLetterToCandidate(OfferProposal offer) {
         String candidateEmail = null;
         String candidateName = "Ứng viên";
 
@@ -41,15 +50,11 @@ public class OfferMailSender {
             }
         }
 
-        // Ưu tiên gửi về email được cấu hình nếu đang dùng hòm thư phát triển cá nhân (from != noreply),
-        // đảm bảo người test nhận được email trực tiếp vào hòm thư cá nhân.
-        String targetRecipient = (from != null && !from.isBlank() && !from.contains("noreply"))
-                ? from
-                : candidateEmail;
+        String targetRecipient = testRecipient.isEmpty() ? candidateEmail : testRecipient;
 
         if (targetRecipient == null || targetRecipient.isBlank()) {
             log.warn("Không thể gửi thư mời nhận việc: Ứng viên cho Offer ID {} không có email hợp lệ.", offer.getOfferId());
-            return;
+            return EmailStatus.NOT_SENT;
         }
 
         JavaMailSender sender = mailSender.getIfAvailable();
@@ -73,6 +78,7 @@ public class OfferMailSender {
                         + "THÔNG TIN ĐÃI NGỘ CHÍNH THỨC:\n"
                         + "• Mức lương chính thức (Trước thuế): " + officialSalary + "\n"
                         + "• Mức lương thử việc (Trước thuế): " + probationSalary + "\n"
+                        + "• Thời gian thử việc: " + offer.getProbationDays() + " ngày\n"
                         + "• Địa điểm làm việc: " + (offer.getWorkLocation() != null ? offer.getWorkLocation() : "Văn phòng công ty") + "\n"
                         + deadlineInfo
                         + "Bạn có thể xem chi tiết Thư mời nhận việc và gửi phản hồi trực tiếp tại đường dẫn sau:\n"
@@ -80,13 +86,14 @@ public class OfferMailSender {
                         + "Trân trọng,\nBộ phận Tuyển dụng Mộc RMS"
                 );
                 sender.send(message);
-                log.info("Đã gửi email Offer Letter thành công tới {}", targetRecipient);
+                log.info("Đã gửi email cho Offer ID {}.", offer.getOfferId());
+                return testRecipient.isEmpty() ? EmailStatus.SENT : EmailStatus.TEST_RECIPIENT;
             } catch (Exception ex) {
-                log.error("Lỗi khi gửi email Offer Letter tới {}: {}", targetRecipient, ex.getMessage());
+                log.warn("Lỗi khi gửi email cho Offer ID {}: {}", offer.getOfferId(), ex.getClass().getSimpleName());
             }
         } else {
-            log.info("[MOCK EMAIL] Gửi Offer Letter tới {} ({}) cho vị trí {} với lương {}. Link: {}/portal/offers/{}",
-                    candidateName, targetRecipient, offer.getOfferedPositionTitle(), offer.getProposedSalary(), baseUrl, offer.getOfferId());
+            log.info("Bỏ qua email Offer ID {} vì chưa có cấu hình SMTP.", offer.getOfferId());
         }
+        return EmailStatus.NOT_SENT;
     }
 }

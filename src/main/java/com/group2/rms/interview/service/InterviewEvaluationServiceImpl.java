@@ -22,7 +22,8 @@ import java.time.LocalDateTime;
  * Nộp phiếu đánh giá phỏng vấn.
  * - D1': chỉ thành viên InterviewPanel của lịch được nộp, mỗi người một phiếu.
  * - D2': nộp được khi đã tới giờ bắt đầu và lịch chưa bị hủy.
- * - D3': phiếu đầu tiên chuyển lịch Scheduled/Rescheduled sang Completed (GBR-01 chỉ đi tiến).
+ * - D3' (ducnm sửa): lịch Scheduled/Rescheduled chuyển sang Completed khi đã đủ phiếu của cả hội đồng
+ *   HOẶC đã qua giờ kết thúc buổi phỏng vấn (GBR-01 chỉ đi tiến) — không còn tự chuyển ngay từ phiếu đầu tiên.
  */
 @Service
 @RequiredArgsConstructor
@@ -69,16 +70,34 @@ public class InterviewEvaluationServiceImpl implements InterviewEvaluationServic
                 .build();
         interviewEvaluationRepository.save(evaluation);
 
-        // D3': phiếu đầu tiên coi như buổi phỏng vấn đã diễn ra
+        // D3' (ducnm sửa): hết giờ phỏng vấn HOẶC đủ phiếu của cả hội đồng thì chuyển Completed
         InterviewStatus current = schedule.getInterviewStatus();
         if (current == InterviewStatus.Scheduled || current == InterviewStatus.Rescheduled) {
-            if (!current.canTransitionTo(InterviewStatus.Completed)) {
-                throw new InterviewStatusException(current, InterviewStatus.Completed,
-                        "Business Rule GBR-01: Không thể chuyển lịch phỏng vấn sang trạng thái Đã hoàn thành.");
+            java.util.Set<Integer> panelIds = schedule.getInterviewPanels().stream()
+                    .filter(panel -> panel.getInterviewer() != null)
+                    .map(panel -> panel.getInterviewer().getUserId())
+                    .collect(java.util.stream.Collectors.toSet());
+            // Gom theo tập người đã nộp rồi thêm người vừa nộp: truy vấn có thể đã thấy phiếu vừa lưu (Hibernate
+            // auto-flush) hoặc chưa, dùng tập thì không bị đếm trùng như cách cộng +1 trước đây.
+            java.util.Set<Integer> submittedIds = interviewEvaluationRepository.findByScheduleIdWithInterviewer(interviewId).stream()
+                    .map(e -> e.getInterviewer().getUserId())
+                    .filter(panelIds::contains)
+                    .collect(java.util.stream.Collectors.toSet());
+            if (panelIds.contains(evaluatorId)) {
+                submittedIds.add(evaluatorId);
             }
-            schedule.transitionTo(InterviewStatus.Completed);
-            interviewScheduleRepository.save(schedule);
-            log.info("Lịch phỏng vấn #{} chuyển sang Completed sau phiếu đánh giá đầu tiên.", interviewId);
+            boolean allSubmitted = !panelIds.isEmpty() && submittedIds.containsAll(panelIds);
+            boolean pastEnd = schedule.getEndTime() != null && !LocalDateTime.now().isBefore(schedule.getEndTime());
+            if (allSubmitted || pastEnd) {
+                if (!current.canTransitionTo(InterviewStatus.Completed)) {
+                    throw new InterviewStatusException(current, InterviewStatus.Completed,
+                            "Business Rule GBR-01: Không thể chuyển lịch phỏng vấn sang trạng thái Đã hoàn thành.");
+                }
+                schedule.transitionTo(InterviewStatus.Completed);
+                interviewScheduleRepository.save(schedule);
+                log.info("Lịch phỏng vấn #{} chuyển sang Completed ({}).", interviewId,
+                        allSubmitted ? "đủ phiếu hội đồng" : "đã qua giờ kết thúc");
+            }
         }
 
         log.info("Người dùng #{} đã nộp phiếu đánh giá cho lịch phỏng vấn #{}.", evaluatorId, interviewId);

@@ -67,21 +67,24 @@ class MyApplicationQueryTests {
     }
 
     @Test
-    void withdrawalIsRecordedAndReadBack() {
+    void withdrawalIsStoredAsWithdrawnStatusAndReadBack() {
         Integer id = early.getApplicationId();
-        assertFalse(myApplications.findWithdrawnApplicationIds(ownerUserId).contains(id));
+        assertTrue(myApplications.findMyApplicationMarks(ownerUserId).stream()
+                .noneMatch(row -> row.getApplicationId().equals(id) && "Withdrawn".equals(row.getKind())));
 
-        assertEquals(1, applications.transition(id, Set.of("Applied"), "Rejected"));
+        assertEquals(1, applications.transition(id, Set.of("Applied"), "Withdrawn"));
         applications.recordWithdrawal(ownerUserId, id, early.getApplicationStatus());
+        entityManager.clear();
 
-        assertTrue(myApplications.findWithdrawnApplicationIds(ownerUserId).contains(id));
-        assertFalse(myApplications.findWithdrawnApplicationIds(-1).contains(id));
+        assertEquals("Withdrawn", myApplications.findOwnedById(id, ownerUserId).orElseThrow().getApplicationStatus());
+        assertTrue(myApplications.findMyApplicationMarks(ownerUserId).stream()
+                .anyMatch(row -> row.getApplicationId().equals(id) && "Withdrawn".equals(row.getKind())));
     }
 
     @Test
     void withdrawalMarkComesBackWithStatusBeforeAndTime() {
         Integer id = early.getApplicationId();
-        applications.transition(id, Set.of("Applied"), "Rejected");
+        applications.transition(id, Set.of("Applied"), "Withdrawn");
         applications.recordWithdrawal(ownerUserId, id, early.getApplicationStatus());
 
         MyApplicationRepository.MyApplicationMarkRow mark = myApplications.findMyApplicationMarks(ownerUserId).stream()

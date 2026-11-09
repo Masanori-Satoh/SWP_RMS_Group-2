@@ -93,14 +93,14 @@ class ApplicationProgressResolverTests {
                     interview("Interviewing", "Completed", YESTERDAY, 3, 3, "Passed"));
 
             assertProgress(progress, ApplicationStage.OFFER, PASSED_AWAITING_OFFER,
-                    "Đạt phỏng vấn, chờ lập offer", "HR", "warning");
+                    "Đạt phỏng vấn, chờ lập thư mời", "HR", "warning");
         }
 
         @Test
         void draftOffer() {
             ApplicationProgressResponse progress = resolve(offer("Interviewing", "Draft"));
 
-            assertProgress(progress, ApplicationStage.OFFER, OFFER_DRAFT, "Offer đang soạn", "HR", "warning");
+            assertProgress(progress, ApplicationStage.OFFER, OFFER_DRAFT, "Thư mời đang soạn", "HR", "warning");
         }
 
         @Test
@@ -108,7 +108,7 @@ class ApplicationProgressResolverTests {
             ApplicationProgressResponse progress = resolve(offer("Interviewing", "Pending_Director"));
 
             assertProgress(progress, ApplicationStage.OFFER, OFFER_AWAITING_DIRECTOR,
-                    "Chờ giám đốc duyệt offer", "Giám đốc", "warning");
+                    "Chờ giám đốc duyệt thư mời", "Giám đốc", "warning");
         }
 
         @Test
@@ -116,14 +116,14 @@ class ApplicationProgressResolverTests {
             ApplicationProgressResponse progress = resolve(offer("Interviewing", "Director_Rejected"));
 
             assertProgress(progress, ApplicationStage.OFFER, OFFER_RETURNED,
-                    "Giám đốc trả offer, HR sửa lại", "HR", "danger");
+                    "Giám đốc trả thư mời, HR sửa lại", "HR", "danger");
         }
 
         @Test
         void offerApprovedByDirector_awaitsSending() {
             ApplicationProgressResponse progress = resolve(offer("Interviewing", "Director_Approved"));
 
-            assertProgress(progress, ApplicationStage.OFFER, OFFER_AWAITING_SEND, "Chờ HR gửi offer", "HR", "warning");
+            assertProgress(progress, ApplicationStage.OFFER, OFFER_AWAITING_SEND, "Chờ HR gửi thư mời", "HR", "warning");
         }
 
         @Test
@@ -131,7 +131,16 @@ class ApplicationProgressResolverTests {
             ApplicationProgressResponse progress = resolve(offer("Offered", "Sent_Candidate"));
 
             assertProgress(progress, ApplicationStage.OFFER, OFFER_SENT,
-                    "Đã gửi offer, chờ ứng viên trả lời", "Ứng viên", "brand");
+                    "Đã gửi thư mời, chờ ứng viên trả lời", "Ứng viên", "brand");
+        }
+
+        /** Offer hết hạn: không còn chờ ứng viên, HR xử lý tiếp; đơn vẫn Offered, chưa kết thúc. */
+        @Test
+        void offerExpired_handsBackToHr() {
+            ApplicationProgressResponse progress = resolve(offer("Offered", "Expired"));
+
+            assertProgress(progress, ApplicationStage.OFFER, OFFER_EXPIRED,
+                    "Thư mời đã quá hạn phản hồi", "HR", "neutral");
         }
 
         @Test
@@ -143,28 +152,35 @@ class ApplicationProgressResolverTests {
 
         @Test
         void withdrawnByCandidate() {
-            ApplicationProgressResponse progress = resolve(rejected(true, null, null));
+            ApplicationProgressResponse progress = resolve(closed("Withdrawn", null, null));
 
             assertProgress(progress, ApplicationStage.CLOSED, WITHDRAWN, "Ứng viên đã rút hồ sơ", null, "neutral");
         }
 
         @Test
         void offerDeclinedByCandidate() {
-            ApplicationProgressResponse progress = resolve(rejected(false, "Passed", "Declined"));
+            ApplicationProgressResponse progress = resolve(closed("Withdrawn", "Passed", "Declined"));
 
-            assertProgress(progress, ApplicationStage.CLOSED, OFFER_DECLINED, "Ứng viên từ chối offer", null, "neutral");
+            assertProgress(progress, ApplicationStage.CLOSED, OFFER_DECLINED, "Ứng viên từ chối thư mời", null, "neutral");
+        }
+
+        @Test
+        void cancelledBecausePostingWasClosed() {
+            ApplicationProgressResponse progress = resolve(closed("Cancelled", null, null));
+
+            assertProgress(progress, ApplicationStage.CLOSED, POSTING_CLOSED, "Dừng do đợt tuyển đóng", null, "neutral");
         }
 
         @Test
         void failedInterview() {
-            ApplicationProgressResponse progress = resolve(rejected(false, "Failed", null));
+            ApplicationProgressResponse progress = resolve(closed("Rejected", "Failed", null));
 
             assertProgress(progress, ApplicationStage.CLOSED, INTERVIEW_FAILED, "Không đạt phỏng vấn", null, "danger");
         }
 
         @Test
         void otherRejection_failedCvRound() {
-            ApplicationProgressResponse progress = resolve(rejected(false, null, null));
+            ApplicationProgressResponse progress = resolve(closed("Rejected", null, null));
 
             assertProgress(progress, ApplicationStage.CLOSED, CV_REJECTED, "Không qua vòng CV", null, "danger");
         }
@@ -243,20 +259,27 @@ class ApplicationProgressResolverTests {
         }
 
         @Test
-        void withdrawalWinsOverOtherRejectionReasons() {
-            assertEquals(WITHDRAWN, resolve(rejected(true, "Failed", "Declined")).step());
+        void withdrawnWithoutDeclinedOfferIsWithdrawalEvenAfterAFailedInterviewRow() {
+            assertEquals(WITHDRAWN, resolve(closed("Withdrawn", "Failed", null)).step());
         }
 
         @Test
-        void declinedOfferWinsOverInterviewResult() {
-            assertEquals(OFFER_DECLINED, resolve(rejected(false, "Failed", "Declined")).step());
+        void withdrawnWithDeclinedOfferIsOfferDeclined() {
+            assertEquals(OFFER_DECLINED, resolve(closed("Withdrawn", "Failed", "Declined")).step());
+        }
+
+        /** Trạng thái là nguồn sự thật: một lượt từ chối offer cũ không biến đơn bị loại thành đơn tự dừng. */
+        @Test
+        void rejectedStaysCompanyDecisionWhateverTheOfferSays() {
+            assertEquals(INTERVIEW_FAILED, resolve(closed("Rejected", "Failed", "Declined")).step());
+            assertEquals(CV_REJECTED, resolve(closed("Rejected", null, "Declined")).step());
         }
 
         @Test
         void brandToneUsesSuccessBadge() {
             assertEquals("badge--success", resolve(offer("Offered", "Sent_Candidate")).badge());
             assertEquals("badge--warning", resolve(status("HM_Passed")).badge());
-            assertEquals("badge--danger", resolve(rejected(false, null, null)).badge());
+            assertEquals("badge--danger", resolve(closed("Rejected", null, null)).badge());
         }
     }
 
@@ -275,21 +298,21 @@ class ApplicationProgressResolverTests {
     }
 
     private static ApplicationProgressFacts status(String status) {
-        return new ApplicationProgressFacts(ID, status, false, null, null, null, 0, 0, null, null);
+        return new ApplicationProgressFacts(ID, status, null, null, null, 0, 0, null, null);
     }
 
     private static ApplicationProgressFacts interview(String status, String interviewStatus, LocalDateTime start,
                                                       int panel, int evaluations, String decision) {
-        return new ApplicationProgressFacts(ID, status, false, null, interviewStatus, start, panel, evaluations, decision, null);
+        return new ApplicationProgressFacts(ID, status, null, interviewStatus, start, panel, evaluations, decision, null);
     }
 
     /** Đã phỏng vấn đạt rồi mới có offer. */
     private static ApplicationProgressFacts offer(String status, String offerStatus) {
-        return new ApplicationProgressFacts(ID, status, false, null, "Completed", YESTERDAY, 2, 2, "Passed", offerStatus);
+        return new ApplicationProgressFacts(ID, status, null, "Completed", YESTERDAY, 2, 2, "Passed", offerStatus);
     }
 
-    private static ApplicationProgressFacts rejected(boolean withdrawn, String decision, String offerStatus) {
-        return new ApplicationProgressFacts(ID, "Rejected", withdrawn, null, decision == null ? null : "Completed",
+    private static ApplicationProgressFacts closed(String status, String decision, String offerStatus) {
+        return new ApplicationProgressFacts(ID, status, null, decision == null ? null : "Completed",
                 decision == null ? null : YESTERDAY, 2, 2, decision, offerStatus);
     }
 }

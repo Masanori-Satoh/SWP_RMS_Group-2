@@ -393,17 +393,20 @@ class JobPostingControllerTests {
                 .thenReturn(publishedDetail().talentPoolVisible(true).suggestionsLinkLabel("Ứng viên được HM đề xuất")
                         .recommendationsLinkLabel("Gợi ý đã gửi cho HM").build());
         when(talentPoolService.pendingRecommendationCount(30)).thenReturn(2L);
+        when(talentPoolService.suggestedCandidateCount(30)).thenReturn(3L);
 
         mvc.perform(get(BASE + "/30"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("job-postings/detail"))
                 .andExpect(model().attribute("hrRecommendationCount", 2L))
+                .andExpect(model().attribute("suggestedCandidateCount", 3L))
                 .andExpect(content().string(allOf(
                         containsString("Còn 5 ngày là hết hạn nộp hồ sơ."),
                         containsString("Tạm dừng nhận hồ sơ"),
                         containsString("Trần Quốc Bảo"),
                         containsString("Xem tất cả 14 hồ sơ"),
                         containsString("Lịch sử"),
+                        containsString("<span class=\"badge badge--neutral\">3</span>"),
                         containsString("Gợi ý đã gửi cho HM"))));
     }
 
@@ -415,6 +418,7 @@ class JobPostingControllerTests {
 
         mvc.perform(get(BASE + "/30"))
                 .andExpect(status().isOk())
+                .andExpect(model().attributeDoesNotExist("suggestedCandidateCount"))
                 .andExpect(model().attributeDoesNotExist("hrRecommendationCount"));
         verifyNoInteractions(talentPoolService);
     }

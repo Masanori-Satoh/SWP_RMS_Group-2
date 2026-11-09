@@ -3,12 +3,19 @@ package com.group2.rms.core.config;
 import com.group2.rms.user.repository.UserRepository;
 import com.group2.rms.core.security.AccountSessionGuardFilter;
 import com.group2.rms.core.security.DatabaseUserDetailsService;
+import com.group2.rms.core.security.PageAccessDeniedHandler;
 import com.group2.rms.core.security.RoleAuthorities;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.access.AccessDeniedHandler;
+import org.springframework.security.web.access.AccessDeniedHandlerImpl;
+import org.springframework.security.web.csrf.CsrfException;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -34,7 +41,8 @@ import org.springframework.security.web.util.matcher.RequestMatcher;
 public class SecurityConfig {
 
         /**
-         * Paths the CV viewer frame loads: the protected CV endpoint and the seed sample CVs it redirects to.
+         * Paths the CV viewer frame loads: the protected CV endpoint and the seed
+         * sample CVs it redirects to.
          * Only these may be framed by the same origin.
          */
         private static final RequestMatcher CV_PATHS = new OrRequestMatcher(
@@ -64,11 +72,15 @@ public class SecurityConfig {
                                 .authenticationProvider(provider)
                                 .csrf(csrf -> csrf
                                                 .ignoringRequestMatchers("/api/**"))
-                                // CV viewer: only CV paths may be framed (same origin); every other page keeps DENY
+                                .exceptionHandling(exceptions -> exceptions.accessDeniedHandler(
+                                                new PageAccessDeniedHandler()))
+                                // CV viewer: only CV paths may be framed (same origin); every other page keeps
+                                // DENY
                                 .headers(headers -> headers
                                                 .frameOptions(frame -> frame.disable())
                                                 .addHeaderWriter(new DelegatingRequestMatcherHeaderWriter(CV_PATHS,
-                                                                new XFrameOptionsHeaderWriter(XFrameOptionsMode.SAMEORIGIN)))
+                                                                new XFrameOptionsHeaderWriter(
+                                                                                XFrameOptionsMode.SAMEORIGIN)))
                                                 .addHeaderWriter(new DelegatingRequestMatcherHeaderWriter(
                                                                 new NegatedRequestMatcher(CV_PATHS),
                                                                 new XFrameOptionsHeaderWriter(XFrameOptionsMode.DENY))))
@@ -86,7 +98,8 @@ public class SecurityConfig {
                                                 .requestMatchers(HttpMethod.POST, "/policy-consents")
                                                 .hasAuthority("ROLE_CANDIDATE")
                                                 // permit all for login, register, forgot-password, reset-password
-                                                .requestMatchers("/login", "/register", "/register/**", "/forgot-password",
+                                                .requestMatchers("/login", "/register", "/register/**",
+                                                                "/forgot-password",
                                                                 "/reset-password/**")
                                                 .permitAll()
                                                 // required role canididate for job apply
@@ -112,57 +125,87 @@ public class SecurityConfig {
                                                 // Candidate portal is read-only and isolated from internal schedules.
                                                 .requestMatchers(HttpMethod.GET, "/portal/interviews")
                                                 .hasAuthority("ROLE_CANDIDATE")
-                                                .requestMatchers("/portal/interviews", "/portal/interviews/**").denyAll()
-                                                // Candidate's own applications and withdrawal (ownership checked in MyApplicationService)
+                                                .requestMatchers("/portal/interviews", "/portal/interviews/**")
+                                                .denyAll()
+                                                // Candidate's own applications and withdrawal (ownership checked in
+                                                // MyApplicationService)
                                                 .requestMatchers("/portal/applications", "/portal/applications/**")
                                                 .hasAuthority("ROLE_CANDIDATE")
                                                 // Candidate's own profile page (Q7.1); internal roles use /profile
                                                 .requestMatchers("/portal/profile", "/portal/profile/**")
                                                 .hasAuthority("ROLE_CANDIDATE")
-                                                // dunglt bổ sung: ứng viên xem / nhận / từ chối offer đã gửi cho mình (phải đứng trước /offers/**)
+                                                // dunglt bổ sung: ứng viên xem / nhận / từ chối offer đã gửi cho mình
+                                                // (phải đứng trước /offers/**)
                                                 .requestMatchers("/portal/offers", "/portal/offers/**")
                                                 .hasAuthority("ROLE_CANDIDATE")
-                                                // Forms and all writes: HR, Director (UC 62-64, SRS footnote 13).
-                                                .requestMatchers("/interviews/new", "/interviews/*/edit")
+                                                // Forms (ghi): chỉ HR, Director (UC 62-64, SRS footnote 13).
+                                                .requestMatchers(HttpMethod.POST, "/interviews/new", "/interviews/*/edit")
                                                 .hasAnyAuthority("ROLE_HR", "ROLE_DIRECTOR")
+                                                // Xem form (GET): mở cho cả 4 vai trò nội bộ; Controller tự ẩn form và
+                                                // hiện thông báo "không có quyền" cho vai trò không phải HR/Director,
+                                                // vẫn giữ sidebar/topbar thay vì chuyển hẳn sang trang lỗi 403.
                                                 .requestMatchers(HttpMethod.GET, "/interviews", "/interviews/**")
                                                 .hasAnyAuthority("ROLE_HR",
-                                                                "ROLE_DIRECTOR", "ROLE_HIRING_MANAGER", "ROLE_INTERVIEWER")
+                                                                "ROLE_DIRECTOR", "ROLE_HIRING_MANAGER",
+                                                                "ROLE_INTERVIEWER")
                                                 .requestMatchers(HttpMethod.POST, "/interviews/*/evaluations")
-                                                .hasAnyAuthority("ROLE_INTERVIEWER", "ROLE_HIRING_MANAGER", "ROLE_DIRECTOR", "ROLE_HR")
+                                                .hasAnyAuthority("ROLE_INTERVIEWER", "ROLE_HIRING_MANAGER",
+                                                                "ROLE_DIRECTOR", "ROLE_HR")
+                                                // Chốt kết quả: Hiring Manager phụ trách phòng ban; Director khi
+                                                // tuyển vị trí Hiring Manager (Phương án 2) — InterviewFinalResultService
+                                                // tự kiểm tra ai đúng người, ở đây chỉ chặn 2 vai trò không liên quan.
                                                 .requestMatchers(HttpMethod.POST, "/interviews/*/final-result")
-                                                .hasAuthority("ROLE_HIRING_MANAGER")
+                                                .hasAnyAuthority("ROLE_HIRING_MANAGER", "ROLE_DIRECTOR")
                                                 .requestMatchers("/interviews", "/interviews/**")
                                                 .hasAnyAuthority("ROLE_HR", "ROLE_DIRECTOR")
-                                                .requestMatchers(HttpMethod.POST, "/offers/*/approve", "/offers/*/reject")
+                                                .requestMatchers(HttpMethod.POST, "/offers/*/approve",
+                                                                "/offers/*/reject")
                                                 .hasAuthority("ROLE_DIRECTOR")
+                                                .requestMatchers(HttpMethod.GET, "/offers/create", "/offers/*/edit")
+                                                .hasAuthority("ROLE_HR")
+                                                .requestMatchers(HttpMethod.POST, "/offers/create", "/offers/*/edit",
+                                                                "/offers/*/delete", "/offers/*/send")
+                                                .hasAuthority("ROLE_HR")
+                                                .requestMatchers(HttpMethod.PUT, "/offers/*")
+                                                .hasAuthority("ROLE_HR")
+                                                .requestMatchers(HttpMethod.DELETE, "/offers/*")
+                                                .hasAuthority("ROLE_HR")
                                                 .requestMatchers("/offers", "/offers/**")
                                                 .hasAnyAuthority("ROLE_HR", "ROLE_DIRECTOR")
                                                 // authenticaed require for dashboard notification
                                                 .requestMatchers("/dashboard", "/dashboard/**", "/notifications",
-                                                                "/notifications/**", "/api/notifications", "/api/notifications/**",
+                                                                "/notifications/**", "/api/notifications",
+                                                                "/api/notifications/**",
                                                                 WebSocketConfig.ENDPOINT)
                                                 .authenticated()
                                                 .requestMatchers("/requisitions", "/requisitions/**")
                                                 .hasAnyAuthority("ROLE_HIRING_MANAGER", "ROLE_DIRECTOR", "ROLE_HR")
-                                                .requestMatchers("/talent-pool/applications/*/confirm", "/talent-pool/applications/*/decline",
-                                                        "/talent-pool/applications/*/resend-email", "/talent-pool/interviews/*/resend-email",
-                                                        "/talent-pool/jobs/*/close", "/internal/job-postings/*/close")
+                                                .requestMatchers("/talent-pool/applications/*/confirm",
+                                                                "/talent-pool/applications/*/decline",
+                                                                "/talent-pool/applications/*/resend-email",
+                                                                "/talent-pool/interviews/*/resend-email",
+                                                                "/talent-pool/jobs/*/close",
+                                                                "/internal/job-postings/*/close")
                                                 .hasAuthority("ROLE_HR")
-                                                .requestMatchers("/talent-pool/jobs/*/recommend", "/talent-pool/jobs/*/recommendations/*/withdraw")
+                                                .requestMatchers("/talent-pool/jobs/*/recommend",
+                                                                "/talent-pool/jobs/*/recommendations/*/withdraw")
                                                 .hasAuthority("ROLE_HR")
-                                                .requestMatchers("/talent-pool/recommendations/*/decision", "/talent-pool/jobs/*/suggest")
+                                                .requestMatchers("/talent-pool/recommendations/*/decision",
+                                                                "/talent-pool/jobs/*/suggest")
                                                 .hasAuthority("ROLE_HIRING_MANAGER")
                                                 .requestMatchers("/talent-pool", "/talent-pool/**")
                                                 .hasAnyAuthority("ROLE_HR", "ROLE_HIRING_MANAGER")
                                                 .requestMatchers("/internal/job-postings/create")
                                                 .hasAuthority("ROLE_HR")
-                                                // Xem danh sách / chi tiết tin: thêm Director (chỉ xem, không thao tác); service ẩn tin nháp với HM, Director
-                                                .requestMatchers(HttpMethod.GET, "/internal/job-postings", "/internal/job-postings/*")
+                                                // Xem danh sách / chi tiết tin: thêm Director (chỉ xem, không thao
+                                                // tác); service ẩn tin nháp với HM, Director
+                                                .requestMatchers(HttpMethod.GET, "/internal/job-postings",
+                                                                "/internal/job-postings/*")
                                                 .hasAnyAuthority("ROLE_HR", "ROLE_HIRING_MANAGER", "ROLE_DIRECTOR")
                                                 .requestMatchers("/internal/job-postings", "/internal/job-postings/**")
                                                 .hasAuthority("ROLE_HR")
-                                                // application pipeline: HM scope (own department) is checked in ApplicationAccess
+                                                // application pipeline: HM scope (own department) is checked in
+                                                // ApplicationAccess
                                                 .requestMatchers("/applications", "/applications/**")
                                                 .hasAnyAuthority("ROLE_HR", "ROLE_HIRING_MANAGER", "ROLE_DIRECTOR")
                                                 .anyRequest().authenticated())
@@ -178,11 +221,35 @@ public class SecurityConfig {
                                                 .logoutUrl("/logout")
                                                 .logoutSuccessUrl("/login?logout")
                                                 .permitAll())
+                                // ducnm bổ sung: phiên đã hết hạn mà người dùng vẫn bấm gửi form -> token CSRF gắn phiên cũ
+                                // không còn hợp lệ. Chưa đăng nhập thì đưa về trang đăng nhập (như AccountSessionGuardFilter)
+                                // thay vì trang 403; đã đăng nhập mà sai token thì giữ nguyên 403.
+                                .exceptionHandling(ex -> ex.accessDeniedHandler(sessionExpiredAwareAccessDeniedHandler()))
                                 .httpBasic(basic -> basic.disable())
                                 // add filter before authorization filter
                                 .addFilterBefore(new AccountSessionGuardFilter(userRepository),
                                                 AuthorizationFilter.class);
 
                 return http.build();
+        }
+
+        static AccessDeniedHandler sessionExpiredAwareAccessDeniedHandler() {
+                AccessDeniedHandlerImpl fallback = new AccessDeniedHandlerImpl();
+                return (request, response, exception) -> {
+                        // Chỉ khi trình duyệt còn gửi mã phiên cũ nhưng phiên đó đã hết hạn trên server; khách chưa
+                        // từng có phiên (form đăng ký, đăng nhập...) thiếu CSRF vẫn nhận 403 như trước.
+                        boolean sessionExpired = request.getRequestedSessionId() != null
+                                        && !request.isRequestedSessionIdValid();
+                        if (exception instanceof CsrfException && sessionExpired) {
+                                Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+                                boolean anonymous = auth == null || !auth.isAuthenticated()
+                                                || auth instanceof AnonymousAuthenticationToken;
+                                if (anonymous) {
+                                        response.sendRedirect(request.getContextPath() + "/login?session-expired");
+                                        return;
+                                }
+                        }
+                        fallback.handle(request, response, exception);
+                };
         }
 }

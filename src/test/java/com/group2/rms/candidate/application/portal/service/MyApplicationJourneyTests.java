@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -64,9 +65,10 @@ class MyApplicationJourneyTests {
 
         @Test
         void row04_offerSent_asksForAnswerBeforeDeadline() {
-            View view = resolve(facts("Offered").interviews(completed()).offer(offer(3, "Sent_Candidate")));
+            // Hạn 27/10 còn sau NOW (20/10): thư mời còn trả lời được.
+            View view = resolve(facts("Offered").interviews(completed()).offer(openOffer(3)));
 
-            assertStatus(view, "Có thư mời", "Vui lòng trả lời trước 17/10.", "warning",
+            assertStatus(view, "Có thư mời", "Vui lòng trả lời trước 27/10.", "warning",
                     "Trả lời thư mời", "/portal/offers/3");
             assertSteps(view, "done", "done", "current", "upcoming");
         }
@@ -81,7 +83,7 @@ class MyApplicationJourneyTests {
 
         @Test
         void row06_withdrawn_stopsAtTheStepItWasInWithWithdrawalDate() {
-            View view = resolve(facts("Rejected").marks(mark("Withdrawn", "Applied", LocalDateTime.of(2026, 10, 5, 14, 0))));
+            View view = resolve(facts("Withdrawn").marks(mark("Withdrawn", "Applied", LocalDateTime.of(2026, 10, 5, 14, 0))));
 
             assertStatus(view, "Đã tự rút hồ sơ", "Bạn đã rút hồ sơ ngày 05/10.", "neutral", null, null);
             assertSteps(view, "done", "upcoming", "upcoming", "upcoming");
@@ -107,7 +109,7 @@ class MyApplicationJourneyTests {
 
         @Test
         void row08_offerDeclined_stopsAtOffer() {
-            View view = resolve(facts("Rejected").interviews(completed()).offer(offer(7, "Declined")));
+            View view = resolve(facts("Withdrawn").interviews(completed()).offer(offer(7, "Declined")));
 
             assertStatus(view, "Đã từ chối thư mời", null, "neutral", "Xem thư mời", "/portal/offers/7");
             assertSteps(view, "done", "done", "done", "upcoming");
@@ -115,7 +117,7 @@ class MyApplicationJourneyTests {
 
         @Test
         void row08_postingClosed_pointsToOpenJobs() {
-            View view = resolve(facts("Rejected").marks(mark("PostingClosed", "Applied", PAST)));
+            View view = resolve(facts("Cancelled").marks(mark("PostingClosed", "Applied", PAST)));
 
             assertStatus(view, "Vị trí đã ngừng tuyển",
                     "Công ty đã ngừng tuyển vị trí này nên hồ sơ của bạn dừng lại. Bạn có thể ứng tuyển vị trí khác.",
@@ -136,7 +138,7 @@ class MyApplicationJourneyTests {
     class Edges {
         @Test
         void withdrawalWinsOverOtherReasons() {
-            View view = resolve(facts("Rejected").interviews(completed())
+            View view = resolve(facts("Withdrawn").interviews(completed())
                     .marks(mark("Withdrawn", "Applied", PAST), mark("PostingClosed", "Applied", PAST)));
 
             assertEquals("Đã tự rút hồ sơ", view.statusLabel());
@@ -149,10 +151,35 @@ class MyApplicationJourneyTests {
             assertEquals("Đã nộp CV", view.statusLabel());
         }
 
+        /** Trạng thái là nguồn sự thật: dấu trong AuditLog không biến đơn bị công ty loại thành đơn tự rút. */
+        @Test
+        void rejectedApplicationIsNotReadFromWithdrawalMark() {
+            View view = resolve(facts("Rejected").marks(mark("Withdrawn", "Applied", PAST)));
+
+            assertEquals("Không đạt vòng CV", view.statusLabel());
+        }
+
+        @Test
+        void withdrawnWithoutAuditMarkStillSaysWithdrawn() {
+            View view = resolve(facts("Withdrawn"));
+
+            assertStatus(view, "Đã tự rút hồ sơ", "Bạn đã rút hồ sơ.", "neutral", null, null);
+            assertSteps(view, "done", "upcoming", "upcoming", "upcoming");
+        }
+
+        @Test
+        void cancelledWithoutAuditMarkStillSaysPostingClosed() {
+            View view = resolve(facts("Cancelled"));
+
+            assertEquals("Vị trí đã ngừng tuyển", view.statusLabel());
+            assertTrue(view.ended());
+            assertTrue(view.stopped());
+        }
+
         /** Chuẩn bị cho PR 4 (rút được tới trước thư mời): bước dừng lấy từ trạng thái ngay trước khi rút. */
         @Test
         void withdrawalDuringInterviewRoundStopsAtInterview() {
-            View view = resolve(facts("Rejected").interviews(new Interview(FUTURE, "Offline_Office", "Cancelled"))
+            View view = resolve(facts("Withdrawn").interviews(new Interview(FUTURE, "Offline_Office", "Cancelled"))
                     .marks(mark("Withdrawn", "Interviewing", PAST)));
 
             assertSteps(view, "done", "done", "upcoming", "upcoming");
@@ -207,7 +234,7 @@ class MyApplicationJourneyTests {
     class ClosedPosting {
         @Test
         void closedWhileWaitingForInterview_stopsAtInterviewThoughTheScheduleWasCancelled() {
-            View view = resolve(facts("Rejected")
+            View view = resolve(facts("Cancelled")
                     .interviews(new Interview(FUTURE, "Offline_Office", "Cancelled"))
                     .marks(mark("PostingClosed", "Interviewing", PAST)));
 
@@ -217,14 +244,14 @@ class MyApplicationJourneyTests {
         /** L6: HM đạt mà chưa có lịch thì ứng viên chưa được báo gì, nên đơn vẫn dừng ở Nộp CV. */
         @Test
         void closedAfterHmPassedWithoutSchedule_stopsAtSubmit() {
-            View view = resolve(facts("Rejected").marks(mark("PostingClosed", "HM_Passed", PAST)));
+            View view = resolve(facts("Cancelled").marks(mark("PostingClosed", "HM_Passed", PAST)));
 
             assertSteps(view, "done", "upcoming", "upcoming", "upcoming");
         }
 
         @Test
         void closedAfterOfferWasSent_stopsAtOffer() {
-            View view = resolve(facts("Rejected").interviews(completed()).offer(offer(3, "Sent_Candidate"))
+            View view = resolve(facts("Cancelled").interviews(completed()).offer(offer(3, "Sent_Candidate"))
                     .marks(mark("PostingClosed", "Offered", PAST)));
 
             assertSteps(view, "done", "done", "done", "upcoming");
@@ -232,7 +259,7 @@ class MyApplicationJourneyTests {
 
         @Test
         void completedInterviewCountsEvenWhenStatusBeforeCloseIsEarlier() {
-            View view = resolve(facts("Rejected").interviews(completed())
+            View view = resolve(facts("Cancelled").interviews(completed())
                     .marks(mark("PostingClosed", "HR_Passed", PAST)));
 
             assertSteps(view, "done", "done", "upcoming", "upcoming");
@@ -240,7 +267,7 @@ class MyApplicationJourneyTests {
 
         @Test
         void missingStatusBeforeCloseFallsBackToFacts() {
-            View view = resolve(facts("Rejected").marks(mark("PostingClosed", null, PAST)));
+            View view = resolve(facts("Cancelled").marks(mark("PostingClosed", null, PAST)));
 
             assertSteps(view, "done", "upcoming", "upcoming", "upcoming");
         }
@@ -313,7 +340,7 @@ class MyApplicationJourneyTests {
 
         @Test
         void stoppedApplicationIsNeverUrgent() {
-            assertNotUrgent(resolve(facts("Rejected").offer(sent(NOW.plusDays(2)))
+            assertNotUrgent(resolve(facts("Cancelled").offer(sent(NOW.plusDays(2)))
                     .marks(mark("PostingClosed", "Offered", PAST))));
         }
 
@@ -340,7 +367,7 @@ class MyApplicationJourneyTests {
         void hiredOrStoppedApplicationIsEnded() {
             assertTrue(resolve(facts("Hired")).ended());
             assertTrue(resolve(facts("Rejected")).ended());
-            assertTrue(resolve(facts("Rejected").marks(mark("Withdrawn", "Applied", PAST))).ended());
+            assertTrue(resolve(facts("Withdrawn").marks(mark("Withdrawn", "Applied", PAST))).ended());
         }
     }
 
@@ -404,7 +431,7 @@ class MyApplicationJourneyTests {
 
         @Test
         void endedApplicationsAreLastGroupWhateverHappenedRecently() {
-            View withdrawn = resolve(facts("Rejected").marks(mark("Withdrawn", "Applied", NOW.minusMinutes(5))));
+            View withdrawn = resolve(facts("Withdrawn").marks(mark("Withdrawn", "Applied", NOW.minusMinutes(5))));
             View hired = resolve(facts("Hired").offer(offer(8, "Accepted")));
 
             assertEquals(MyApplicationJourney.PRIORITY_ENDED, withdrawn.priority());
@@ -415,7 +442,7 @@ class MyApplicationJourneyTests {
         @Test
         void onlyApplicationsStoppedHalfwayAreMarkedStopped() {
             assertTrue(resolve(facts("Rejected")).stopped());
-            assertTrue(resolve(facts("Rejected").marks(mark("Withdrawn", "Applied", PAST))).stopped());
+            assertTrue(resolve(facts("Withdrawn").marks(mark("Withdrawn", "Applied", PAST))).stopped());
             assertFalse(resolve(facts("Hired")).stopped());
             assertFalse(resolve(facts("Applied")).stopped());
         }
@@ -425,7 +452,7 @@ class MyApplicationJourneyTests {
     class Journey {
         @Test
         void milestonesAreOldestFirstWithCandidateWording() {
-            View view = resolve(facts("Rejected")
+            View view = resolve(facts("Withdrawn")
                     .interviews(new Interview(LocalDateTime.of(2026, 10, 8, 9, 0), "Online_GoogleMeet", "Cancelled"),
                             new Interview(LocalDateTime.of(2026, 10, 9, 9, 0), "Offline_Office", "Rescheduled"),
                             new Interview(LocalDateTime.of(2026, 10, 11, 9, 0), "Offline_Office", "Completed"))
@@ -438,13 +465,13 @@ class MyApplicationJourneyTests {
         @Test
         void offerAndStopMarksUseCandidateWording() {
             assertEquals(List.of("Đã nộp hồ sơ", "Nhận thư mời nhận việc"),
-                    titles(resolve(facts("Offered").offer(offer(3, "Sent_Candidate")))));
+                    titles(resolve(facts("Offered").offer(openOffer(3)))));
             assertEquals(List.of("Đã nộp hồ sơ", "Bạn đã nhận lời"),
                     titles(resolve(facts("Hired").offer(offer(8, "Accepted")))));
             assertEquals(List.of("Đã nộp hồ sơ", "Đã rút hồ sơ"),
-                    titles(resolve(facts("Rejected").marks(mark("Withdrawn", "Applied", PAST)))));
+                    titles(resolve(facts("Withdrawn").marks(mark("Withdrawn", "Applied", PAST)))));
             assertEquals(List.of("Đã nộp hồ sơ", "Vị trí đã ngừng tuyển"),
-                    titles(resolve(facts("Rejected").marks(mark("PostingClosed", "Applied", PAST)))));
+                    titles(resolve(facts("Cancelled").marks(mark("PostingClosed", "Applied", PAST)))));
         }
 
         @Test
@@ -471,6 +498,226 @@ class MyApplicationJourneyTests {
 
     // ---- Dựng dữ kiện ----
 
+    /** Thư mời Expired: đơn vẫn Offered, ứng viên xem được nhưng không còn phải trả lời. */
+    @Nested
+    class ExpiredOffer {
+
+        private static final LocalDateTime DEADLINE = LocalDateTime.of(2026, 10, 17, 17, 0);
+        /** Job ghi muộn hơn hạn: UpdatedAt không phải lúc hết hạn. */
+        private static final LocalDateTime JOB_WROTE_AT = LocalDateTime.of(2026, 10, 19, 2, 0);
+
+        @Test
+        void showsOverdueWithViewLinkAndNoAnswerAction() {
+            View view = resolve(facts("Offered").interviews(completed())
+                    .offer(new Offer(3, "Expired", DEADLINE, JOB_WROTE_AT)));
+
+            assertStatus(view, "Thư mời đã quá hạn", "Vui lòng liên hệ bộ phận tuyển dụng nếu cần hỗ trợ.", "neutral",
+                    "Xem thư mời", "/portal/offers/3");
+            assertSteps(view, "done", "done", "current", "upcoming");
+        }
+
+        @Test
+        void isNotUrgentNotUpcomingAndNotEnded() {
+            View view = resolve(facts("Offered").offer(new Offer(3, "Expired", NOW.plusDays(1), JOB_WROTE_AT)));
+
+            assertNull(view.urgentUntil());
+            assertNull(view.urgentLabel());
+            assertNull(view.upcomingAt());
+            assertEquals(MyApplicationJourney.PRIORITY_IN_FLOW, view.priority());
+            assertFalse(view.ended());
+            assertFalse(view.stopped());
+        }
+
+        @Test
+        void timelineUsesTheDeadlineNotTheLateJobTime() {
+            View view = resolve(facts("Offered").offer(new Offer(3, "Expired", DEADLINE, JOB_WROTE_AT)));
+
+            TimelineItem item = expiredItem(view);
+            assertEquals(DEADLINE, item.at());
+        }
+
+        /** Hết hạn vì qua ngày bắt đầu, không có hạn trả lời: chỉ biết lúc hệ thống ghi nhận. */
+        @Test
+        void timelineFallsBackToRecordedTimeWithoutDeadline() {
+            View view = resolve(facts("Offered").offer(new Offer(3, "Expired", null, JOB_WROTE_AT)));
+
+            assertEquals(JOB_WROTE_AT, expiredItem(view).at());
+        }
+
+        @Test
+        void closedPostingAfterExpiryStillEndsTheApplication() {
+            View view = resolve(facts("Cancelled").interviews(completed())
+                    .offer(new Offer(3, "Expired", DEADLINE, JOB_WROTE_AT))
+                    .marks(mark("PostingClosed", "Offered", PAST)));
+
+            assertTrue(view.ended());
+            assertSteps(view, "done", "done", "done", "upcoming");
+            assertEquals(DEADLINE, expiredItem(view).at());
+        }
+
+        private static TimelineItem expiredItem(View view) {
+            return view.journey().stream()
+                    .filter(item -> "Thư mời đã quá hạn phản hồi".equals(item.title()))
+                    .findFirst().orElseThrow();
+        }
+    }
+
+    /**
+     * PR W: thư mời {@code Sent_Candidate} đã quá hạn theo thời gian nhưng job chưa ghi {@code Expired}. Luật trùng
+     * {@code CandidateOfferServiceImpl.isExpired}: quá {@code ResponseDeadline} (đúng bằng hạn vẫn trả lời được) hoặc
+     * {@code ExpectedStartDate} trước hôm nay; thiếu ngày thì không suy ra hết hạn.
+     */
+    @Nested
+    class OverdueByTime {
+
+        private static final LocalDate TODAY = NOW.toLocalDate();
+        private static final LocalDateTime SENT_AT = LocalDateTime.of(2026, 10, 12, 9, 0);
+
+        private Offer sent(LocalDateTime deadline, LocalDate startDate) {
+            return new Offer(3, "Sent_Candidate", deadline, SENT_AT, startDate);
+        }
+
+        private void assertShownAsExpired(View view) {
+            assertStatus(view, "Thư mời đã quá hạn", "Vui lòng liên hệ bộ phận tuyển dụng nếu cần hỗ trợ.", "neutral",
+                    "Xem thư mời", "/portal/offers/3");
+            assertSteps(view, "done", "done", "current", "upcoming");
+            assertNull(view.urgentUntil());
+            assertNull(view.urgentLabel());
+            assertNull(view.upcomingAt());
+            assertEquals(MyApplicationJourney.PRIORITY_IN_FLOW, view.priority());
+        }
+
+        @Test
+        void pastDeadline_showsAsExpiredWithoutAnswerButton() {
+            View view = resolve(facts("Offered").interviews(completed()).offer(sent(NOW.minusMinutes(1), null)));
+
+            assertShownAsExpired(view);
+        }
+
+        @Test
+        void exactlyAtDeadline_canStillAnswer() {
+            View view = resolve(facts("Offered").interviews(completed()).offer(sent(NOW, null)));
+
+            assertEquals("Có thư mời", view.statusLabel());
+            assertEquals("Trả lời thư mời", view.actionLabel());
+        }
+
+        @Test
+        void startDatePassedWhileDeadlineIsFar_showsAsExpired() {
+            View view = resolve(facts("Offered").interviews(completed())
+                    .offer(sent(NOW.plusDays(10), TODAY.minusDays(1))));
+
+            assertShownAsExpired(view);
+        }
+
+        @Test
+        void startDateToday_canStillAnswer() {
+            View view = resolve(facts("Offered").interviews(completed()).offer(sent(NOW.plusDays(10), TODAY)));
+
+            assertEquals("Có thư mời", view.statusLabel());
+            assertEquals("Trả lời thư mời", view.actionLabel());
+        }
+
+        @Test
+        void noDeadlineAndStartDatePassed_showsAsExpired() {
+            View view = resolve(facts("Offered").interviews(completed()).offer(sent(null, TODAY.minusDays(3))));
+
+            assertShownAsExpired(view);
+        }
+
+        @Test
+        void noDeadlineAndNoStartDate_isNotInferredExpired() {
+            View view = resolve(facts("Offered").interviews(completed()).offer(sent(null, null)));
+
+            assertEquals("Có thư mời", view.statusLabel());
+            assertEquals("Trả lời thư mời", view.actionLabel());
+        }
+
+        @Test
+        void futureDeadlineAndStartDate_isUnchangedUrgentAndUpcoming() {
+            LocalDateTime deadline = NOW.plusDays(2);
+            View view = resolve(facts("Offered").interviews(completed()).offer(sent(deadline, TODAY.plusDays(20))));
+
+            assertEquals("Có thư mời", view.statusLabel());
+            assertEquals(deadline, view.urgentUntil());
+            assertEquals(deadline, view.upcomingAt());
+            assertEquals(MyApplicationJourney.PRIORITY_UPCOMING, view.priority());
+        }
+
+        @Test
+        void overdueByStartDate_timelineMomentIsStartOfNextDayAndNeverInTheFuture() {
+            View view = resolve(facts("Offered").offer(sent(NOW.plusDays(10), TODAY.minusDays(2))));
+
+            TimelineItem item = expiredItem(view);
+            assertEquals(TODAY.minusDays(1).atStartOfDay(), item.at());
+            assertFalse(item.at().isAfter(NOW));
+        }
+
+        @Test
+        void overdueByDeadline_timelineUsesTheDeadline() {
+            LocalDateTime deadline = NOW.minusDays(1);
+            View view = resolve(facts("Offered").offer(sent(deadline, null)));
+
+            assertEquals(deadline, expiredItem(view).at());
+        }
+
+        @Test
+        void overdueWithBothMoments_timelineUsesTheEarlier() {
+            LocalDateTime deadline = NOW.minusHours(5);
+            View view = resolve(facts("Offered").offer(sent(deadline, TODAY.minusDays(3))));
+
+            assertEquals(TODAY.minusDays(2).atStartOfDay(), expiredItem(view).at());
+        }
+
+        /** Hạn còn xa nhưng đã qua ngày bắt đầu: mốc Expired không được lấy hạn ở tương lai. */
+        @Test
+        void expiredByJob_deadlineInFutureStartDatePassed_timelineIsNotInTheFuture() {
+            View view = resolve(facts("Offered").offer(
+                    new Offer(3, "Expired", NOW.plusDays(10), SENT_AT.plusDays(7), TODAY.minusDays(2))));
+
+            TimelineItem item = expiredItem(view);
+            assertFalse(item.at().isAfter(NOW));
+            assertEquals(TODAY.minusDays(1).atStartOfDay(), item.at());
+        }
+
+        /** Job ghi muộn: mốc không muộn hơn lúc ghi, kể cả khi thiếu cả hạn lẫn ngày bắt đầu. */
+        @Test
+        void expiredByJob_timelineIsNotLaterThanTheRecordedTime() {
+            LocalDateTime wroteAt = NOW.minusHours(2);
+            View view = resolve(facts("Offered").offer(
+                    new Offer(3, "Expired", NOW.minusHours(1), wroteAt, null)));
+
+            assertEquals(wroteAt, expiredItem(view).at());
+        }
+
+        @Test
+        void expiredByJob_deadlineInFutureAndNoStartDate_timelineFallsBackToRecordedTimeNotFuture() {
+            LocalDateTime wroteAt = NOW.minusHours(2);
+            View view = resolve(facts("Offered").offer(new Offer(3, "Expired", NOW.plusDays(1), wroteAt, null)));
+
+            assertFalse(expiredItem(view).at().isAfter(NOW));
+        }
+
+        @Test
+        void otherStatusesIgnoreDatesInThePast() {
+            for (String status : List.of("Accepted", "Declined")) {
+                String application = "Accepted".equals(status) ? "Hired" : "Withdrawn";
+                View view = resolve(facts(application).offer(
+                        new Offer(3, status, NOW.minusDays(5), SENT_AT, TODAY.minusDays(5))));
+
+                assertNotEquals("Thư mời đã quá hạn", view.statusLabel(), status);
+                assertTrue(view.journey().stream()
+                        .noneMatch(item -> "Thư mời đã quá hạn phản hồi".equals(item.title())), status);
+            }
+        }
+
+        private TimelineItem expiredItem(View view) {
+            return view.journey().stream()
+                    .filter(item -> "Thư mời đã quá hạn phản hồi".equals(item.title()))
+                    .findFirst().orElseThrow();
+        }
+    }
+
     private static View resolve(FactsBuilder builder) {
         return MyApplicationJourney.resolve(builder.build(), NOW);
     }
@@ -485,6 +732,11 @@ class MyApplicationJourneyTests {
 
     private static Offer offer(int id, String status) {
         return new Offer(id, status, LocalDateTime.of(2026, 10, 17, 23, 59), LocalDateTime.of(2026, 10, 12, 9, 0));
+    }
+
+    /** Thư mời đã gửi, hạn 27/10 còn sau {@code NOW}: ứng viên còn trả lời được. */
+    private static Offer openOffer(int id) {
+        return new Offer(id, "Sent_Candidate", LocalDateTime.of(2026, 10, 27, 23, 59), LocalDateTime.of(2026, 10, 12, 9, 0));
     }
 
     private static Mark mark(String kind, String oldStatus, LocalDateTime at) {

@@ -106,7 +106,7 @@ public class OfferControllerBugTests {
                 .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.view().name("offers/director-list"))
                 .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.model().attribute("currentStatus", "Pending_Director"))
                 .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.model().attribute("currentTab", "PENDING"))
-                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.content().string(org.hamcrest.Matchers.containsString("Phê Duyệt Đề Xuất Nhận Việc")))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.content().string(org.hamcrest.Matchers.containsString("Phê duyệt đề xuất thư mời")))
                 .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.content().string(org.hamcrest.Matchers.containsString("Danh Sách Đề Xuất Chờ Phê Duyệt")));
     }
 

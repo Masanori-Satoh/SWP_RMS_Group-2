@@ -17,10 +17,14 @@ public interface TalentPoolCandidateRepository extends org.springframework.data.
     String POTENTIAL_FILTER = """
         FROM Candidate c JOIN [User] u ON u.UserId = c.UserId
         WHERE c.IsPotential = 1
+          AND u.AccountStatus = 'Active'
           AND (:keyword IS NULL OR u.FullName LIKE CONCAT('%', :keyword, '%') OR u.Email LIKE CONCAT('%', :keyword, '%'))
           AND (:markedBy IS NULL OR EXISTS (SELECT 1 FROM AuditLog l
             WHERE l.EntityName = 'Candidate' AND l.EntityId = CAST(c.CandidateId AS NVARCHAR(50))
-              AND l.NewValue = 'TalentPoolMarked' AND l.UserId = :markedBy))
+              AND l.NewValue = 'TalentPoolMarked' AND l.UserId = :markedBy
+              AND l.AuditLogId = (SELECT MAX(l2.AuditLogId) FROM AuditLog l2
+                WHERE l2.EntityName = 'Candidate' AND l2.EntityId = l.EntityId
+                  AND l2.NewValue IN ('TalentPoolMarked', 'TalentPoolUnmarked'))))
           AND (:sourceJobId IS NULL OR EXISTS (SELECT 1 FROM Application a
             WHERE a.CandidateId = c.CandidateId AND a.JobPostingId = :sourceJobId
               AND a.ApplicationStatus <> 'HM_Suggested'))

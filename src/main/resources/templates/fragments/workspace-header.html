@@ -6,7 +6,7 @@
     Dữ liệu người dùng ưu tiên model attribute topbarUser (TopbarUserAdvice, có ở mọi trang);
     chuỗi biến cũ (dashboard, userProfile, ...) chỉ còn là phương án dự phòng.
 -->
-<header th:fragment="header(role, fullName)" class="workspace-header"
+<header th:fragment="header(role, fullName)" class="workspace-header adw-topbar"
         th:with="userRole=${topbarUser != null and topbarUser.roleName != null ? topbarUser.roleName : (role ?: (userRole ?: (dashboard != null ? dashboard.roleName : (userProfile != null ? userProfile.roleName : (viewerRole != null ? viewerRole : (currentUser != null and currentUser instanceof T(com.group2.rms.user.entity.User) ? currentUser.role.roleName : (authenticatedUser != null ? authenticatedUser.role.roleName : (session.user != null ? session.user.role : null))))))))},
                  userName=${topbarUser != null ? topbarUser.fullName : (fullName ?: (userName ?: (dashboard != null ? dashboard.fullName : (userProfile != null ? userProfile.fullName : (viewerName != null ? viewerName : (currentUser != null and currentUser instanceof T(com.group2.rms.user.entity.User) ? currentUser.fullName : (authenticatedUser != null ? authenticatedUser.fullName : (session.user != null ? session.user.fullName : null))))))))},
                  userAvatar=${topbarUser != null ? topbarUser.avatarUrl : (avatarUrl ?: (userProfile != null ? userProfile.avatarUrl : (authenticatedUser != null ? authenticatedUser.avatarUrl : (session.user != null ? session.user.avatarUrl : null))))},
@@ -14,7 +14,7 @@
   <a class="skip-link" href="#main">Chuyển đến nội dung chính</a>
   <a th:replace="~{fragments/brand :: wordmark('RMS')}"></a>
 
-  <div class="workspace-header-actions">
+  <div class="workspace-header-actions adw-actions">
     <!-- Nút mở menu cho màn hình di động -->
     <button class="btn btn--secondary workspace-menu" type="button" data-workspace-menu aria-controls="workspace-navigation" aria-expanded="true" hidden>Menu</button>
 

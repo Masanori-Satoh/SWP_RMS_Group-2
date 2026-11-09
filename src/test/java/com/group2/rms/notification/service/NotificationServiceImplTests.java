@@ -373,7 +373,7 @@ class NotificationServiceImplTests {
         Notification saved = captor.getValue();
         assertEquals(hrUser, saved.getRecipient());
         assertEquals("OFFER_ACCEPTED", saved.getEventType());
-        assertEquals("/offers", saved.getLinkUrl());
+        assertEquals("/offers/1", saved.getLinkUrl());
         assertEquals("1", saved.getReferenceId());
         assertFalse(saved.getIsRead());
         assertTrue(saved.getTitle().contains("Huỳnh Hoàng Trung"));
@@ -411,12 +411,38 @@ class NotificationServiceImplTests {
         Notification saved = captor.getValue();
         assertEquals(hrUser, saved.getRecipient());
         assertEquals("OFFER_DECLINED", saved.getEventType());
-        assertEquals("/offers", saved.getLinkUrl());
+        assertEquals("/offers/1", saved.getLinkUrl());
         assertEquals("1", saved.getReferenceId());
         assertFalse(saved.getIsRead());
         assertTrue(saved.getTitle().contains("Huỳnh Hoàng Trung"));
         assertTrue(saved.getContent().contains("Mức đãi ngộ chưa đạt kỳ vọng"));
+        // dunglt bổ sung: từ chối offer đặt đơn thành Withdrawn (ứng viên tự dừng), không còn là "Không tiếp tục" (Rejected)
+        assertTrue(saved.getContent().contains("Đã rút đơn"));
+        assertFalse(saved.getContent().contains("Không tiếp tục"));
         assertEquals("OFFER_RESP_DEC_1", saved.getEventId());
+    }
+
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(booleans = {true, false})
+    void candidateResponseLinksMatchEachRecipientsAccess(boolean accepted) {
+        User hr = User.builder().userId(15).username("synthetic_hr").build();
+        User hm = User.builder().userId(16).username("synthetic_hm").build();
+        User candidateUser = User.builder().userId(22).username("synthetic_candidate").build();
+        Application application = Application.builder().applicationId(58)
+                .candidate(Candidate.builder().account(candidateUser).build())
+                .jobPosting(JobPosting.builder().requisition(JobRequisition.builder().hiringManager(hm).build()).build())
+                .build();
+        var offer = com.group2.rms.offer.entity.OfferProposal.builder().offerId(12).application(application)
+                .offeredPositionTitle("Synthetic position").proposedBy(hr).build();
+
+        notificationService.notifyOfferResponseFromCandidate(offer, accepted, null);
+
+        var captor = ArgumentCaptor.forClass(Notification.class);
+        verify(notificationRepository, times(2)).save(captor.capture());
+        var saved = captor.getAllValues();
+        assertEquals("/offers/12", saved.stream().filter(n -> n.getRecipient().getUserId().equals(15)).findFirst().orElseThrow().getLinkUrl());
+        assertEquals("/applications/58", saved.stream().filter(n -> n.getRecipient().getUserId().equals(16)).findFirst().orElseThrow().getLinkUrl());
+        assertTrue(saved.stream().allMatch(n -> "12".equals(n.getReferenceId())));
     }
 
     @Test
@@ -455,7 +481,7 @@ class NotificationServiceImplTests {
         assertEquals("OFFER_PENDING_DIRECTOR", saved.getEventType());
         assertEquals("/offers/1", saved.getLinkUrl());
         assertEquals("1", saved.getReferenceId());
-        assertTrue(saved.getTitle().contains("Yêu cầu phê duyệt Đề xuất nhận việc"));
+        assertTrue(saved.getTitle().contains("Yêu cầu phê duyệt Thư mời nhận việc"));
         assertTrue(saved.getContent().contains("Huỳnh Hoàng Trung"));
         assertTrue(saved.getEventId().startsWith("OFFER_PENDING_DIR_1_20_"));
     }
@@ -493,7 +519,7 @@ class NotificationServiceImplTests {
         assertEquals(directorUser, saved.getActor());
         assertEquals("OFFER_DIRECTOR_APPROVED", saved.getEventType());
         assertEquals("/offers/1", saved.getLinkUrl());
-        assertTrue(saved.getTitle().contains("Đề xuất nhận việc đã được Giám đốc phê duyệt"));
+        assertTrue(saved.getTitle().contains("Thư mời nhận việc đã được Giám đốc phê duyệt"));
         assertTrue(saved.getContent().contains("Đồng ý mức đãi ngộ"));
         assertTrue(saved.getEventId().startsWith("OFFER_DEC_APPV_1_"));
     }
@@ -531,7 +557,7 @@ class NotificationServiceImplTests {
         assertEquals(directorUser, saved.getActor());
         assertEquals("OFFER_DIRECTOR_REJECTED", saved.getEventType());
         assertEquals("/offers/1", saved.getLinkUrl());
-        assertTrue(saved.getTitle().contains("Đề xuất nhận việc bị Giám đốc từ chối"));
+        assertTrue(saved.getTitle().contains("Thư mời nhận việc bị Giám đốc từ chối"));
         assertTrue(saved.getContent().contains("Lương vượt ngân sách"));
         assertTrue(saved.getEventId().startsWith("OFFER_DEC_REJ_1_"));
     }
@@ -917,6 +943,23 @@ class NotificationServiceImplTests {
         }
 
         @Test
+        @DisplayName("notifyApplicationRejected: hồ sơ bị loại -> Chỉ ứng viên nhận, không lộ người duyệt, link về đơn của tôi")
+        void notifyApplicationRejected_shouldNotifyCandidateOnly_withoutActor() {
+            // Act
+            notificationService.notifyApplicationRejected(application());
+
+            // Assert
+            Notification saved = savedNotifications(1).get(0);
+            assertEquals(candidateUser, saved.getRecipient());
+            assertNull(saved.getActor());
+            assertEquals("APPLICATION_REJECTED", saved.getEventType());
+            assertEquals("APP_REJECTED_88", saved.getEventId());
+            assertEquals("/portal/applications/88", saved.getLinkUrl());
+            assertEquals("danger", NotificationLabels.eventTone(saved.getEventType()));
+            assertNotNull(NotificationLabels.eventLabel(saved.getEventType()));
+        }
+
+        @Test
         @DisplayName("notifyInterviewScheduled: HR tạo lịch -> Hội đồng (trừ HR tạo) và ứng viên nhận, link đúng phía")
         void notifyInterviewScheduled_shouldNotifyPanelAndCandidate_exceptActor() {
             // Act
@@ -936,17 +979,21 @@ class NotificationServiceImplTests {
             assertEquals("INT_SCHED_9", candidate.getEventId());
         }
 
+        // ducnm sửa: hủy lịch chỉ báo ứng viên (kèm lý do); hội đồng là người trong công ty, HR tự báo trực
+        // tiếp cho họ nên không cần thêm thông báo in-app riêng.
         @Test
-        @DisplayName("notifyInterviewCancelled: có lý do -> Lý do chỉ ghi cho hội đồng, ứng viên không thấy")
-        void notifyInterviewCancelled_shouldShowReasonOnlyToPanel() {
+        @DisplayName("notifyInterviewCancelled: chỉ ứng viên nhận, nội dung có lý do")
+        void notifyInterviewCancelled_shouldNotifyCandidateOnlyWithReason() {
             // Act
             notificationService.notifyInterviewCancelled(schedule(), hr, "Ứng viên xin dời");
 
             // Assert
-            List<Notification> saved = savedNotifications(2);
-            assertTrue(saved.get(0).getContent().contains("Ứng viên xin dời"));
-            assertFalse(saved.get(1).getContent().contains("Ứng viên xin dời"));
-            assertEquals("INTERVIEW_CANCELLED", saved.get(1).getEventType());
+            Notification saved = savedNotifications(1).get(0);
+            assertEquals(candidateUser, saved.getRecipient());
+            assertEquals(hr, saved.getActor());
+            assertEquals("/portal/interviews", saved.getLinkUrl());
+            assertEquals("INTERVIEW_CANCELLED", saved.getEventType());
+            assertTrue(saved.getContent().contains("Ứng viên xin dời"));
         }
 
         @Test

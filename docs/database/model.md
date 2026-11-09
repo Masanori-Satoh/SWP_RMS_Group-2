@@ -112,7 +112,7 @@ CandidateId;NOT NULL, FOREIGN KEY -> Candidate.CandidateId;Applying candidate
 JobPostingId;NOT NULL, FOREIGN KEY -> JobPosting.JobPostingId;Position applied for
 AppliedCvUrl;NOT NULL;CV file path/URL used for this application (replaces Resume)
 SubmissionDate;NOT NULL, DEFAULT SYSDATETIME();Submission timestamp
-ApplicationStatus;NOT NULL;Applied, HR_Passed, HM_Passed, HM_Suggested, Interviewing, Offered, Hired, Rejected
+ApplicationStatus;NOT NULL;Applied, HR_Passed, HM_Passed, HM_Suggested, Interviewing, Offered, Hired, Rejected, Withdrawn, Cancelled
 CreatedAt;NOT NULL, DEFAULT SYSDATETIME();Record creation date
 UpdatedAt;NULL;Last update date
 3.12 ApplicationReview
@@ -171,10 +171,11 @@ ApplicationId;NOT NULL, UNIQUE, FOREIGN KEY -> Application.ApplicationId;1-1 wit
 OfferedPositionTitle;NOT NULL;Proposed job title
 ProposedSalary;NOT NULL;Proposed official salary
 ProbationSalary;NOT NULL, CHECK >= 85% of ProposedSalary;Probation-period salary
+ProbationDays;NOT NULL, DEFAULT 60, CHECK BETWEEN 1 AND 365;Probation duration in days
 ExpectedStartDate;NULL;Expected start date
 WorkLocation;NULL;Work location
 BenefitsPackage;NULL;Benefits/bonus package attached to the offer
-OfferStatus;NOT NULL;Draft, Pending_Director, Director_Approved, Director_Rejected, Sent_Candidate, Accepted, Declined
+OfferStatus;NOT NULL;Draft, Pending_Director, Director_Approved, Director_Rejected, Sent_Candidate, Expired, Accepted, Declined
 ProposedBy;NOT NULL, FOREIGN KEY -> User.UserId;HR who created the offer
 CreatedAt;NOT NULL, DEFAULT GETDATE();Creation date
 UpdatedAt;NULL;Last update date

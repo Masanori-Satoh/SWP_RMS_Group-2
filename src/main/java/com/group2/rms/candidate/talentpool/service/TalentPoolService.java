@@ -8,6 +8,7 @@ import com.group2.rms.candidate.infra.cv.CvStorage;
 import com.group2.rms.candidate.infra.cv.LocalCvStorage;
 import com.group2.rms.candidate.domain.repository.ApplicationRepository;
 import com.group2.rms.candidate.domain.repository.ApplicationReviewRepository;
+import com.group2.rms.candidate.domain.rule.ApplicationStatusService;
 import com.group2.rms.candidate.domain.repository.CandidateRepository;
 import com.group2.rms.candidate.talentpool.repository.TalentPoolApplicationRepository;
 import com.group2.rms.candidate.talentpool.repository.TalentPoolCandidateRepository;
@@ -82,12 +83,18 @@ public class TalentPoolService {
         // get keyword
         String keyword = filter.keyword() == null || filter.keyword().isBlank() ? null : filter.keyword().strip();
         // check if keyword is exceed max
-        if (keyword != null && keyword.length() > 100)
-            keyword = keyword.substring(0, 100);
-        // get match potential candidate
-        return poolCandidates.searchPotential(keyword, filter.markedBy(), filter.sourceJobId(),
-                PageRequest.of(Math.max(0, page.getPageNumber()), Math.min(50, page.getPageSize())))
-                .map(this::candidateResponse);
+        if (keyword != null && keyword.length() > 150)
+            keyword = keyword.substring(0, 150);
+        int pageSize = Math.min(50, page.getPageSize());
+        // JPA expects an int offset, so even a large page number must fit after multiplication.
+        int pageNumber = Math.min(Math.max(0, page.getPageNumber()), Integer.MAX_VALUE / pageSize);
+        PageRequest request = PageRequest.of(pageNumber, pageSize);
+        Page<Candidate> result = poolCandidates.searchPotential(keyword, filter.markedBy(), filter.sourceJobId(), request);
+        if (result.getTotalPages() > 0 && result.getNumber() >= result.getTotalPages()) {
+            result = poolCandidates.searchPotential(keyword, filter.markedBy(), filter.sourceJobId(),
+                    request.withPage(result.getTotalPages() - 1));
+        }
+        return result.map(this::candidateResponse);
     }
 
     public Map<Integer, String> authors() {
@@ -359,6 +366,7 @@ public class TalentPoolService {
                 submittedAt = source.getSubmissionDate();
                 if (!candidate.isPotential())
                     throw new TalentPoolException("Ứng viên không còn trong kho tiềm năng.");
+                requireActiveAccount(candidate);
                 if (!selected.add(candidateId))
                     throw new TalentPoolException("Ứng viên được chọn nhiều lần.");
                 if (source.getJobPosting().getJobPostingId().equals(jobId))
@@ -413,6 +421,7 @@ public class TalentPoolService {
             // check if candidate is not potential
             if (!candidate.isPotential())
                 throw new TalentPoolException("Ứng viên phải được đánh dấu tiềm năng.");
+            requireActiveAccount(candidate);
             // check if candidate is add before
             if (!selected.add(candidate.getCandidateId()))
                 throw new TalentPoolException("Chỉ chọn một CV cho mỗi ứng viên.");
@@ -500,6 +509,11 @@ public class TalentPoolService {
     public long pendingRecommendationCount(Integer jobId) {
         requireTarget(actor(), job(jobId, false));
         return poolApplications.countPendingHrRecommendationsForJob(jobId);
+    }
+
+    public long suggestedCandidateCount(Integer jobId) {
+        requireTarget(actor(), job(jobId, false));
+        return poolApplications.countSuggestedCandidatesForJob(jobId);
     }
 
     public List<TalentPoolRecommendationResponse> recommendations(Integer jobId) {
@@ -660,7 +674,7 @@ public class TalentPoolService {
         if (!"Published".equals(posting.getPostingStatus()) && !"Paused".equals(posting.getPostingStatus()))
             throw new TalentPoolException("Chỉ tin đã đăng hoặc đang tạm dừng mới được đóng đợt tuyển.");
         if (audit.hasOpenOffers(id))
-            throw new TalentPoolException("Còn Offer chưa kết thúc. Hãy xử lý Offer trước khi đóng đợt tuyển.");
+            throw new TalentPoolException("Còn thư mời chưa kết thúc. Hãy xử lý thư mời trước khi đóng đợt tuyển.");
         posting.setPostingStatus("Closed");
         posting.setClosedAt(java.time.LocalDateTime.now());
         audit.record(user.getUserId(), "UPDATE", "JobPosting", id, null, "Closed");
@@ -673,7 +687,8 @@ public class TalentPoolService {
             if (audit.hasAcceptedOffer(app.getApplicationId()))
                 continue;
             String old = app.getApplicationStatus();
-            if (applications.transition(app.getApplicationId(), Set.of(old), "Rejected") == 1) {
+            // dunglt bổ sung: đơn chính thức dừng vì tin bị đóng là Cancelled (không phải Rejected: công ty không loại ứng viên)
+            if (applications.transition(app.getApplicationId(), Set.of(old), ApplicationStatusService.CANCELLED) == 1) {
                 if (audit.cancelInterviews(app.getApplicationId()) > 0)
                     audit.record(user.getUserId(), "UPDATE", "Application", app.getApplicationId(), null,
                             "InterviewCancelledOnClose");
@@ -708,6 +723,11 @@ public class TalentPoolService {
             return ApplicationCv
                     .file(storage.load(app.getAppliedCvUrl().substring(LocalCvStorage.URL_PREFIX.length())));
         return ApplicationCv.redirect(app.getAppliedCvUrl());
+    }
+
+    private void requireActiveAccount(Candidate candidate) {
+        if (!"Active".equals(candidate.getAccount().getAccountStatus()))
+            throw new TalentPoolException("Tài khoản ứng viên đã bị vô hiệu hóa.");
     }
 
     private void requireCv(String url) {
@@ -771,7 +791,7 @@ public class TalentPoolService {
                 : RequisitionLabels.employmentType(requisition.getEmploymentType());
         return new TalentPoolCvResponse(a.getApplicationId(), a.getJobPosting().getPostingTitle(),
                 a.getSubmissionDate(), department, employmentType,
-                audit.has("Application", a.getApplicationId(), "Withdrawn") ? "Withdrawn" : a.getApplicationStatus());
+                a.getApplicationStatus()); // dunglt bổ sung: Withdrawn nằm ngay trong trạng thái, không cần tra AuditLog
     }
 
     private TalentPoolCandidateResponse candidateResponse(Candidate c) {

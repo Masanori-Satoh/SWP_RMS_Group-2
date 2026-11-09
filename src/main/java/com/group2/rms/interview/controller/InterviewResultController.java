@@ -4,6 +4,7 @@ import com.group2.rms.core.security.CurrentUserService;
 import com.group2.rms.interview.service.InterviewResultService;
 import com.group2.rms.user.entity.User;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,9 +26,15 @@ public class InterviewResultController {
     @GetMapping("/{id}/result")
     public String viewResult(@PathVariable("id") Long id, Model model) {
         User viewer = currentUserService.requireUser();
-        model.addAttribute("result", interviewResultService.getResult(id, viewer));
         model.addAttribute("activeMenu", "interviews");
-        model.addAttribute("canResendRecruitmentEmail", com.group2.rms.core.security.CurrentUserService.hasRole(viewer, "HR"));
+        // ducnm bổ sung: không thuộc hội đồng của buổi này (GBR-05) thì vẫn vào được trang (còn sidebar/topbar)
+        // nhưng ẩn nội dung kết quả, thay bằng banner "không có quyền" — không chuyển hẳn sang trang lỗi 403.
+        try {
+            model.addAttribute("result", interviewResultService.getResult(id, viewer));
+            model.addAttribute("canResendRecruitmentEmail", CurrentUserService.hasRole(viewer, "HR"));
+        } catch (AccessDeniedException ex) {
+            model.addAttribute("accessDenied", true);
+        }
         return "interview/result";
     }
 }

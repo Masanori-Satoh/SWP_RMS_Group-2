@@ -1,5 +1,10 @@
 package com.group2.rms.user.controller;
 
+import com.group2.rms.core.exception.ModuleErrorResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.web.servlet.HandlerMapping;
+import com.group2.rms.core.exception.ResourceNotFoundException;
 import com.group2.rms.user.dto.DepartmentRequest;
 import com.group2.rms.user.service.DepartmentService;
 import jakarta.validation.Valid;
@@ -75,5 +80,14 @@ public class DepartmentController {
         departments.activate(id);
         redirect.addFlashAttribute("successMessage", "Đã kích hoạt lại phòng ban.");
         return "redirect:/admin/departments";
+    }
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public Object handleMissingDepartment(
+            ResourceNotFoundException exception, HttpServletRequest request,
+            HttpServletResponse response) {
+        return ModuleErrorResponse.reject(request, response,
+                request.getAttribute(HandlerMapping.BEST_MATCHING_HANDLER_ATTRIBUTE),
+                404, exception.getMessage(), "/admin/departments");
     }
 }

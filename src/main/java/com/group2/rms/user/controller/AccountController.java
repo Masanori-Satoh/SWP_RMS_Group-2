@@ -1,5 +1,11 @@
 package com.group2.rms.user.controller;
 
+import com.group2.rms.core.exception.ModuleErrorResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.web.servlet.HandlerMapping;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import com.group2.rms.user.exception.AccountOperationException;
 import com.group2.rms.user.dto.CreateAccountRequest;
 import com.group2.rms.user.dto.UpdateAccountRequest;
 import com.group2.rms.user.exception.AccountFieldException;
@@ -148,5 +154,14 @@ public class AccountController {
         model.addAttribute("accountSummary", account);
         model.addAttribute("roles", accounts.findRoles());
         model.addAttribute("departments", accounts.findDepartments());
+    }
+
+    @ExceptionHandler(AccountOperationException.class)
+    public Object handleAccountOperationFailure(
+            AccountOperationException exception, HttpServletRequest request,
+            HttpServletResponse response) {
+        return ModuleErrorResponse.reject(request, response,
+                request.getAttribute(HandlerMapping.BEST_MATCHING_HANDLER_ATTRIBUTE),
+                ("ACCOUNT_STATUS_INVALID".equals(exception.getErrorCode()) ? 409 : 404), exception.getMessage(), "/admin/accounts");
     }
 }

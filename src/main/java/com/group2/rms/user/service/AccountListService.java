@@ -14,10 +14,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
+import com.group2.rms.user.exception.AccountOperationException;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -30,6 +29,7 @@ import java.util.Set;
 public class AccountListService {
 
     private static final int PAGE_SIZE = 10;
+    private static final String HIRING_MANAGER = "Hiring Manager";
     private static final Set<String> STATUSES = Set.of("Active", "Inactive");
 
     private final UserRepository users;
@@ -153,33 +153,54 @@ public class AccountListService {
 
     private void activateScoped(int userId, boolean candidate) {
         User user = users.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy tài khoản."));
+                .orElseThrow(() -> new AccountOperationException("Không tìm thấy tài khoản."));
         if (candidate ? !"Candidate".equals(user.getRole().getRoleName())
                 : !RoleAuthorities.INTERNAL_ROLE_NAMES.contains(user.getRole().getRoleName())) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tài khoản không thuộc nhóm này.");
+            throw new AccountOperationException("Tài khoản không thuộc nhóm này.");
         }
         if (!"Active".equals(user.getAccountStatus()) && !"Inactive".equals(user.getAccountStatus())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Trạng thái tài khoản không hợp lệ.");
+            throw new AccountOperationException("Trạng thái tài khoản không hợp lệ.", "ACCOUNT_STATUS_INVALID");
         }
         if ("Inactive".equals(user.getAccountStatus())) {
             var before = UserAuditLogger.userSnapshot(user);
+            Department department = user.getDepartment();
+            boolean hiringManager = HIRING_MANAGER.equals(user.getRole().getRoleName());
+            // A department has at most one active Hiring Manager.
+            if (hiringManager && department != null && users
+                    .existsByDepartmentDepartmentIdAndRoleRoleNameAndAccountStatusAndUserIdNot(
+                            department.getDepartmentId(), HIRING_MANAGER, "Active", userId)) {
+                throw new AccountOperationException(
+                        "Phòng ban này đã có trưởng phòng tuyển dụng đang hoạt động. Vui lòng thay đổi trưởng phòng trước.",
+                        "ACCOUNT_STATUS_INVALID");
+            }
             user.setAccountStatus("Active");
             users.save(user);
+            if (hiringManager && department != null && department.getManager() == null) {
+                department.setManager(user);
+                departments.save(department);
+            }
             audit.changes("User", userId, before, UserAuditLogger.userSnapshot(user));
         }
     }
 
     private void deactivateScoped(int userId, boolean candidate) {
         User user = users.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found"));
+                .orElseThrow(() -> new AccountOperationException("Không tìm thấy tài khoản."));
         if (candidate ? !"Candidate".equals(user.getRole().getRoleName())
                 : !RoleAuthorities.INTERNAL_ROLE_NAMES.contains(user.getRole().getRoleName())) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found in this account group");
+            throw new AccountOperationException("Tài khoản không thuộc nhóm này.");
         }
         if (!"Inactive".equals(user.getAccountStatus())) {
             var before = UserAuditLogger.userSnapshot(user);
             user.setAccountStatus("Inactive");
             users.save(user);
+            // An inactive account must not remain the department's manager.
+            Department department = user.getDepartment();
+            if (department != null && department.getManager() != null
+                    && userId == department.getManager().getUserId()) {
+                department.setManager(null);
+                departments.save(department);
+            }
             audit.changes("User", userId, before, UserAuditLogger.userSnapshot(user));
         }
     }

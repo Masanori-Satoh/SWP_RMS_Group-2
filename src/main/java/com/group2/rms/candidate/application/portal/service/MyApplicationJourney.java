@@ -5,6 +5,7 @@ import com.group2.rms.candidate.domain.rule.ApplicationProgressResolver;
 import com.group2.rms.core.web.TimelineItem;
 
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -74,8 +75,14 @@ public final class MyApplicationJourney {
         }
     }
 
-    /** Offer ứng viên được thấy ({@code Sent_Candidate}, {@code Accepted}, {@code Declined}). */
-    public record Offer(Integer offerId, String status, LocalDateTime responseDeadline, LocalDateTime at) {
+    /** Offer ứng viên được thấy ({@code Sent_Candidate}, {@code Accepted}, {@code Declined}, {@code Expired}). */
+    public record Offer(Integer offerId, String status, LocalDateTime responseDeadline, LocalDateTime at,
+                        LocalDate expectedStartDate) {
+
+        /** Thư mời không rõ ngày bắt đầu dự kiến (dữ liệu cũ, test). */
+        public Offer(Integer offerId, String status, LocalDateTime responseDeadline, LocalDateTime at) {
+            this(offerId, status, responseDeadline, at, null);
+        }
     }
 
     /** Dấu dừng trong {@code AuditLog}: {@code Withdrawn} hoặc {@code PostingClosed}, kèm trạng thái ngay trước đó. */
@@ -123,7 +130,7 @@ public final class MyApplicationJourney {
 
     public static View resolve(Facts facts, LocalDateTime now) {
         Status status = status(facts, now);
-        List<TimelineItem> journey = journey(facts);
+        List<TimelineItem> journey = journey(facts, now);
         boolean inFlow = status.mode() == Mode.IN_FLOW;
         Optional<Urgency> urgency = inFlow ? urgency(facts, now) : Optional.empty();
         Optional<Upcoming> upcoming = inFlow ? upcoming(facts, now) : Optional.empty();
@@ -173,13 +180,37 @@ public final class MyApplicationJourney {
 
     // ---- Chữ trạng thái + bước (bảng 5.3) ----
 
+    /**
+     * Thư mời này đã quá hạn chưa: một nơi duy nhất, mọi chỗ (chữ trạng thái, việc gấp, mốc sắp tới, hành trình) cùng
+     * gọi. {@code Expired} (job đã ghi) là quá hạn; {@code Sent_Candidate} thì quá hạn khi {@code now} sau
+     * {@code ResponseDeadline} (đúng bằng hạn còn trả lời được) hoặc {@code ExpectedStartDate} trước hôm nay, trùng
+     * {@code CandidateOfferServiceImpl.isExpired}. Thiếu ngày thì không suy ra hết hạn. Không ghi gì xuống DB.
+     */
+    // dunglt bổ sung: ứng viên thấy "quá hạn" ngay cả khi job chuyển Expired chưa chạy (Huyền, điểm 1).
+    static boolean overdue(Offer offer, LocalDateTime now) {
+        if (offer == null) {
+            return false;
+        }
+        if ("Expired".equals(offer.status())) {
+            return true;
+        }
+        if (!"Sent_Candidate".equals(offer.status())) {
+            return false;
+        }
+        boolean deadlinePassed = offer.responseDeadline() != null && now.isAfter(offer.responseDeadline());
+        boolean startDatePassed = offer.expectedStartDate() != null && offer.expectedStartDate().isBefore(now.toLocalDate());
+        return deadlinePassed || startDatePassed;
+    }
+
     private static Status status(Facts facts, LocalDateTime now) {
         Offer offer = facts.offer();
         return switch (facts.applicationStatus()) {
-            case "Rejected" -> stopped(facts);
+            case "Rejected" -> rejected(facts);
+            case "Withdrawn" -> withdrawn(facts);
+            case "Cancelled" -> cancelled(facts);
             case "Hired" -> new Status(Round.HIRED, Mode.FINISHED, "Đã nhận việc", "Chúc mừng bạn!", "success",
                     offer == null ? null : "Xem thư mời", offerHref(offer));
-            case "Offered" -> offered(offer);
+            case "Offered" -> offered(offer, now);
             case "HM_Passed", "Interviewing" -> interviewing(facts.interviews(), now);
             case "Applied", "HR_Passed" -> submitted();
             // Trạng thái lạ (ngoài CK_Application_Status): không đoán, chỉ báo đang xử lý.
@@ -187,26 +218,34 @@ public final class MyApplicationJourney {
         };
     }
 
-    /** Đơn {@code Rejected}: vì sao dừng và dừng ở bước nào. */
-    private static Status stopped(Facts facts) {
-        Optional<Mark> withdrawn = mark(facts, WITHDRAWN);
-        if (withdrawn.isPresent()) {
-            LocalDateTime at = withdrawn.get().at();
-            String note = at == null ? "Bạn đã rút hồ sơ." : "Bạn đã rút hồ sơ ngày " + at.format(DAY_MONTH) + ".";
-            return new Status(roundWhenStopped(facts, withdrawn.get().oldStatus()), Mode.STOPPED, "Đã tự rút hồ sơ",
-                    note, "neutral", null, null);
-        }
-        Optional<Mark> closed = mark(facts, POSTING_CLOSED);
-        if (closed.isPresent()) {
-            return new Status(roundWhenStopped(facts, closed.get().oldStatus()), Mode.STOPPED, "Vị trí đã ngừng tuyển",
-                    "Công ty đã ngừng tuyển vị trí này nên hồ sơ của bạn dừng lại. Bạn có thể ứng tuyển vị trí khác.",
-                    "neutral", "Xem vị trí đang tuyển", JOBS_HREF);
-        }
+    /**
+     * Đơn {@code Withdrawn} (ứng viên tự dừng): từ chối thư mời, hoặc rút hồ sơ. Trạng thái quyết định đơn dừng
+     * vì sao; dấu {@code Withdrawn} trong {@code AuditLog} chỉ cho biết ngày rút và bước đang đứng.
+     */
+    private static Status withdrawn(Facts facts) {
         Offer offer = facts.offer();
         if (offer != null && "Declined".equals(offer.status())) {
             return new Status(Round.OFFER, Mode.STOPPED, "Đã từ chối thư mời", null, "neutral",
                     "Xem thư mời", offerHref(offer));
         }
+        Optional<Mark> withdrawn = mark(facts, WITHDRAWN);
+        LocalDateTime at = withdrawn.map(Mark::at).orElse(null);
+        String note = at == null ? "Bạn đã rút hồ sơ." : "Bạn đã rút hồ sơ ngày " + at.format(DAY_MONTH) + ".";
+        return new Status(roundWhenStopped(facts, withdrawn.map(Mark::oldStatus).orElse(null)), Mode.STOPPED,
+                "Đã tự rút hồ sơ", note, "neutral", null, null);
+    }
+
+    /** Đơn {@code Cancelled}: tin bị đóng. Dấu {@code PostingClosed} cho biết bước đang đứng lúc đóng. */
+    private static Status cancelled(Facts facts) {
+        Optional<Mark> closed = mark(facts, POSTING_CLOSED);
+        return new Status(roundWhenStopped(facts, closed.map(Mark::oldStatus).orElse(null)), Mode.STOPPED,
+                "Vị trí đã ngừng tuyển",
+                "Công ty đã ngừng tuyển vị trí này nên hồ sơ của bạn dừng lại. Bạn có thể ứng tuyển vị trí khác.",
+                "neutral", "Xem vị trí đang tuyển", JOBS_HREF);
+    }
+
+    /** Đơn {@code Rejected} (công ty loại): dừng sau phỏng vấn hay sau vòng CV. */
+    private static Status rejected(Facts facts) {
         if (hasActiveInterview(facts.interviews())) {
             return new Status(Round.INTERVIEW, Mode.STOPPED, "Không đạt phỏng vấn",
                     "Cảm ơn bạn đã tham gia phỏng vấn.", "danger", null, null);
@@ -235,7 +274,14 @@ public final class MyApplicationJourney {
     }
 
     /** Đơn {@code Offered}. */
-    private static Status offered(Offer offer) {
+    private static Status offered(Offer offer, LocalDateTime now) {
+        // Quá hạn (job đã ghi Expired, hoặc chưa ghi nhưng đã qua hạn / ngày bắt đầu): đơn vẫn Offered, ứng viên chỉ
+        // xem lại được, không còn trả lời.
+        if (overdue(offer, now)) {
+            return new Status(Round.OFFER, Mode.IN_FLOW, "Thư mời đã quá hạn",
+                    "Vui lòng liên hệ bộ phận tuyển dụng nếu cần hỗ trợ.", "neutral",
+                    "Xem thư mời", offerHref(offer));
+        }
         if (offer != null && "Sent_Candidate".equals(offer.status())) {
             String note = offer.responseDeadline() == null
                     ? "Vui lòng xem và trả lời thư mời."
@@ -296,7 +342,7 @@ public final class MyApplicationJourney {
         List<Urgency> candidates = new ArrayList<>();
         Offer offer = facts.offer();
         if ("Offered".equals(facts.applicationStatus()) && offer != null && "Sent_Candidate".equals(offer.status())
-                && offer.responseDeadline() != null && offer.responseDeadline().isAfter(now)) {
+                && !overdue(offer, now) && offer.responseDeadline() != null && offer.responseDeadline().isAfter(now)) {
             candidates.add(new Urgency(offer.responseDeadline(), offerUrgentLabel(Duration.between(now, offer.responseDeadline()))));
         }
         upcomingInterview(facts.interviews(), now)
@@ -314,7 +360,7 @@ public final class MyApplicationJourney {
         Optional<LocalDateTime> interview = upcomingInterview(facts.interviews(), now).map(Interview::start);
         Offer offer = facts.offer();
         boolean offerAwaiting = "Offered".equals(facts.applicationStatus()) && offer != null
-                && "Sent_Candidate".equals(offer.status())
+                && "Sent_Candidate".equals(offer.status()) && !overdue(offer, now)
                 && (offer.responseDeadline() == null || offer.responseDeadline().isAfter(now));
         if (!offerAwaiting) {
             return interview.map(Upcoming::new);
@@ -341,7 +387,7 @@ public final class MyApplicationJourney {
     // ---- Hành trình ----
 
     /** Các mốc ứng viên được biết, cũ nhất trước. Không có người thực hiện, không có nhận xét (GBR-02). */
-    static List<TimelineItem> journey(Facts facts) {
+    static List<TimelineItem> journey(Facts facts, LocalDateTime now) {
         List<TimelineItem> items = new ArrayList<>();
         items.add(new TimelineItem(facts.submittedAt(), "Đã nộp hồ sơ", null, null, "brand"));
         for (Interview interview : facts.interviews()) {
@@ -351,9 +397,16 @@ public final class MyApplicationJourney {
         Offer offer = facts.offer();
         if (offer != null) {
             switch (offer.status()) {
-                case "Sent_Candidate" -> items.add(new TimelineItem(offer.at(), "Nhận thư mời nhận việc", null, null, "warning"));
+                case "Sent_Candidate" -> {
+                    items.add(new TimelineItem(offer.at(), "Nhận thư mời nhận việc", null, null, "warning"));
+                    // Đã quá hạn theo thời gian nhưng job chưa ghi Expired: hiện mốc hết hạn như Expired.
+                    if (overdue(offer, now)) {
+                        items.add(expiredItem(offer, now));
+                    }
+                }
                 case "Accepted" -> items.add(new TimelineItem(offer.at(), "Bạn đã nhận lời", null, null, "success"));
                 case "Declined" -> items.add(new TimelineItem(offer.at(), "Bạn đã từ chối thư mời", null, null, "neutral"));
+                case "Expired" -> items.add(expiredItem(offer, now));
                 default -> { }
             }
         }
@@ -367,6 +420,29 @@ public final class MyApplicationJourney {
         // Sắp xếp ổn định: mốc cùng thời điểm giữ thứ tự luồng ở trên.
         items.sort(Comparator.comparing(TimelineItem::at, Comparator.nullsLast(Comparator.naturalOrder())));
         return items;
+    }
+
+    /**
+     * Mốc "thư mời đã quá hạn": sớm nhất trong các mốc có thật là {@code ResponseDeadline} và đầu ngày sau
+     * {@code ExpectedStartDate}; thư mời {@code Expired} còn bị chặn bởi lúc job ghi ({@code at}, không muộn hơn). Không
+     * bao giờ sau {@code now}. Không có mốc nào thì dùng lúc hệ thống ghi nhận.
+     */
+    private static TimelineItem expiredItem(Offer offer, LocalDateTime now) {
+        List<LocalDateTime> moments = new ArrayList<>();
+        if (offer.responseDeadline() != null) {
+            moments.add(offer.responseDeadline());
+        }
+        if (offer.expectedStartDate() != null) {
+            moments.add(offer.expectedStartDate().plusDays(1).atStartOfDay());
+        }
+        if ("Expired".equals(offer.status()) && offer.at() != null) {
+            moments.add(offer.at());
+        }
+        LocalDateTime at = moments.stream().min(Comparator.naturalOrder()).orElse(offer.at());
+        if (at != null && at.isAfter(now)) {
+            at = now;
+        }
+        return new TimelineItem(at, "Thư mời đã quá hạn phản hồi", null, null, "neutral");
     }
 
     private static String interviewTitle(Interview interview) {

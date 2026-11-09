@@ -28,23 +28,21 @@ public final class ApplicationProgressResolver {
             case "HR_Passed" -> of(AWAITING_HM_REVIEW);
             case "HM_Suggested" -> of(HM_SUGGESTED);
             case "Hired" -> of(HIRED_DONE);
-            case "Rejected" -> of(closedStep(facts));
+            case "Rejected" -> of(rejectedStep(facts));
+            case "Withdrawn" -> of(withdrawnStep(facts));
+            case "Cancelled" -> of(POSTING_CLOSED);
             default -> inProgress(facts, now);
         };
     }
 
-    /** Đơn {@code Rejected}: vì sao dừng. */
-    private static ApplicationProgressStep closedStep(ApplicationProgressFacts facts) {
-        if (facts.withdrawn()) {
-            return WITHDRAWN;
-        }
-        if ("Declined".equals(facts.offerStatus())) {
-            return OFFER_DECLINED;
-        }
-        if ("Failed".equals(facts.finalDecision())) {
-            return INTERVIEW_FAILED;
-        }
-        return CV_REJECTED;
+    /** Đơn {@code Rejected} (công ty loại): dừng sau phỏng vấn hay sau vòng CV. */
+    private static ApplicationProgressStep rejectedStep(ApplicationProgressFacts facts) {
+        return "Failed".equals(facts.finalDecision()) ? INTERVIEW_FAILED : CV_REJECTED;
+    }
+
+    /** Đơn {@code Withdrawn} (ứng viên tự dừng): từ chối offer, hay rút đơn từ sớm. */
+    private static ApplicationProgressStep withdrawnStep(ApplicationProgressFacts facts) {
+        return "Declined".equals(facts.offerStatus()) ? OFFER_DECLINED : WITHDRAWN;
     }
 
     /** Đơn {@code HM_Passed}, {@code Interviewing}, {@code Offered}. */
@@ -95,6 +93,7 @@ public final class ApplicationProgressResolver {
             case "Director_Rejected" -> OFFER_RETURNED;
             case "Director_Approved", "Approved" -> OFFER_AWAITING_SEND;
             case "Sent_Candidate" -> OFFER_SENT;
+            case "Expired" -> OFFER_EXPIRED;
             case "Accepted" -> HIRED_DONE;
             case "Declined" -> OFFER_DECLINED;
             default -> null;

@@ -1,6 +1,6 @@
 ﻿# Schema migration impact analysis
 
-> **Cập nhật 2026-11-01:** đã gỡ chấm điểm AI và tiêu chí sàng lọc. Bảng `AIScreeningResult`, `ScreeningCriteria`, cột `Application.OverallScore` và trạng thái `AI_Screened` không còn (migration `013`, `014`). Nội dung bên dưới là phân tích tại thời điểm viết, giữ nguyên để tra.
+> **Cập nhật 2026-11-01:** đã gỡ chấm điểm AI và tiêu chí sàng lọc. Bảng `AIScreeningResult`, `ScreeningCriteria`, cột `Application.OverallScore`(Đã bỏ) và trạng thái `AI_Screened` không còn (migration `013`, `014`). Nội dung bên dưới là phân tích tại thời điểm viết, giữ nguyên để tra.
 
 Source of truth: `database/schema/db.sql` (20 SQL Server tables). This analysis was
 completed before changing Java mappings. The schema script drops and recreates

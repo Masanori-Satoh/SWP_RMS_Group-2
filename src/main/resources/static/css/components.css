@@ -1273,13 +1273,17 @@ a.stage-bar__link:focus-visible {
 }
 .rms-app .adw-sidebar .adw-sidebar-head { position: sticky; top: var(--s4); z-index: 2; background: var(--surface-subtle); }
 .rms-app .adw-sidebar .adw-sidebar-menu { position: sticky; top: calc(var(--topbar-h) + var(--s4)); z-index: 1; }
-/* Fixed artwork width is clipped as the rail folds; it never resizes the menu. */
+/* Fixed artwork width is clipped as the rail folds; it never resizes the menu.
+   dunglt bổ sung: rail cao bằng cả trang nên ảnh nằm ở cuối tài liệu, trang dài không thấy.
+   sticky giữ ảnh ở đáy màn hình; 580px là đáy menu dài nhất (Admin), màn hình thấp thì ảnh co lại, không đè menu. */
 .adw-sidebar::after {
   content: '';
   display: block;
+  position: sticky;
+  bottom: var(--s4);
   flex: 1 1 0%;
   min-height: 0;
-  max-height: 360px;
+  max-height: min(360px, calc(100dvh - 580px));
   width: var(--sidebar-expanded-w);
   margin-top: auto;
   background: url('../images/admin-tech-plant.png') left bottom / 100% auto no-repeat;

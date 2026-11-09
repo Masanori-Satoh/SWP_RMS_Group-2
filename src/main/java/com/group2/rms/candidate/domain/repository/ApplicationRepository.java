@@ -116,9 +116,8 @@ public interface ApplicationRepository extends JpaRepository<Application, Intege
         Optional<Application> findDetailById(@Param("id") Integer applicationId);
 
         /**
-         * Ghi dấu ứng viên tự rút đơn. Schema không có trạng thái {@code Withdrawn}:
-         * đơn chuyển {@code Rejected},
-         * dòng {@code AuditLog} này phân biệt "đã rút" với "bị loại". SQL thuần vì
+         * Ghi nhật ký ứng viên tự rút đơn ({@code OldValue} là trạng thái ngay trước khi rút, dùng để biết đơn dừng
+         * ở bước nào). Trạng thái đơn nằm ở {@code Application.ApplicationStatus = Withdrawn}. SQL thuần vì
          * module admin (chủ bảng AuditLog)
          * phụ thuộc user, user phụ thuộc candidate: import entity của admin vào đây sẽ
          * thành vòng phụ thuộc.
@@ -138,11 +137,6 @@ public interface ApplicationRepository extends JpaRepository<Application, Intege
     @Query(value = """
             SELECT a.ApplicationId AS applicationId,
                    a.ApplicationStatus AS applicationStatus,
-                   CAST(CASE WHEN EXISTS (
-                            SELECT 1 FROM AuditLog l
-                            WHERE l.EntityName = 'Application' AND l.NewValue = 'Withdrawn'
-                              AND l.EntityId = CAST(a.ApplicationId AS NVARCHAR(50)))
-                        THEN 1 ELSE 0 END AS BIT) AS withdrawn,
                    s.InterviewId AS interviewId,
                    s.InterviewStatus AS interviewStatus,
                    s.StartTime AS interviewStart,
@@ -235,8 +229,6 @@ public interface ApplicationRepository extends JpaRepository<Application, Intege
                 Integer getApplicationId();
 
                 String getApplicationStatus();
-
-                Boolean getWithdrawn();
 
                 Long getInterviewId();
 

@@ -1,5 +1,7 @@
 # BỘ DỮ LIỆU ĐẦU VÀO MẪU HỢP LỆ (TEST INPUT DATA)
 
+> **Ghi chú 06/11/2026:** Chấm CV bằng AI (`AI_Screened`, `AIScreeningResult`, `OverallScore`) và tiêu chí sàng lọc (`ScreeningCriteria`) đã gỡ khỏi hệ thống (migration `013`, `014`). Phần nhắc tới chúng bên dưới là nội dung tại thời điểm viết, không còn đúng với hệ thống.
+
 > **Phụ trách:** Nguyễn Huy Hoàng (`hoangnh`)  
 > **Phân hệ:** Job Requisition (Iter 1) & Job Posting (Iter 2)  
 > **Mục đích:** Cung cấp sẵn các bộ dữ liệu đầu vào chuẩn chỉ, hợp lệ 100% theo các quy tắc Validation của hệ thống. Dễ dàng sao chép (copy-paste) trực tiếp vào giao diện web hoặc công cụ API (Postman/Curl) khi kiểm thử, demo với Giảng viên.

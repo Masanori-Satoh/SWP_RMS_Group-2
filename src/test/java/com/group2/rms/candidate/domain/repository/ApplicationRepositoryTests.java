@@ -79,7 +79,8 @@ class ApplicationRepositoryTests {
 
     private JobRequisition savedRequisition(Department department, User hiringManager, int round, JobRequisition original) {
         return requisitions.saveAndFlush(JobRequisition.builder().title("IT-AR Backend").recruitmentRound(round)
-                .originalRequisition(original).numberOfPositions(1).employmentType("Full-time")
+                // dunglt bổ sung: RequiredGender là NOT NULL (migration 017), thiếu thì cả lớp test vỡ ở setUp
+                .originalRequisition(original).numberOfPositions(1).gender("Any").employmentType("Full-time")
                 .workModel("On-site").jobDescription("Integration-test responsibilities")
                 .requirementDetails("Integration-test requirements").approvalStatus(RequisitionAccess.STATUS_APPROVED)
                 .hiringManager(hiringManager).department(department).build());
@@ -113,6 +114,16 @@ class ApplicationRepositoryTests {
 
         // Act + Assert
         assertTrue(appliedInSameRequisition(roundOnePostingTwo));
+    }
+
+    @Test
+    @DisplayName("BR-CAN-01 giữ nguyên: đơn đã rút (Withdrawn) hoặc dừng do đóng tin (Cancelled) vẫn tính là đã ứng tuyển")
+    void existsActiveByCandidateInSameRequisition_shouldStayTrue_forWithdrawnAndCancelledApplications() {
+        savedApplication(roundOnePostingOne, "Withdrawn");
+        assertTrue(appliedInSameRequisition(roundOnePostingTwo));
+
+        savedApplication(roundOnePostingTwo, "Cancelled");
+        assertTrue(appliedInSameRequisition(roundOnePostingOne));
     }
 
     @Test

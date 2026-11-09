@@ -10,11 +10,10 @@ import com.group2.rms.user.exception.AccountFieldException;
 import com.group2.rms.user.repository.DepartmentRepository;
 import com.group2.rms.user.repository.RoleRepository;
 import com.group2.rms.user.repository.UserRepository;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
+import com.group2.rms.user.exception.AccountOperationException;
 
 import java.util.Optional;
 import java.util.Set;
@@ -68,7 +67,7 @@ public class AccountManagementService {
 
     private static void requireInternal(User user) {
         if (!RoleAuthorities.INTERNAL_ROLE_NAMES.contains(user.getRole().getRoleName())) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy tài khoản nội bộ.");
+            throw new AccountOperationException("Không tìm thấy tài khoản nội bộ.");
         }
     }
 
@@ -89,7 +88,7 @@ public class AccountManagementService {
         Role role = findRole(command.roleId());
         Department department = findDepartment(command.departmentId(), role, null);
         checkUsernameAvailable(username, null);
-        checkEmailAvailable(email, null);
+        checkEmailAvailable(users, email, null);
         checkSingleHiringManager(role, department, "Active", 0);
         int id = persistAccount(fullName, username, email, phone, role, department,
                 passwordEncoder.encode(command.password()), false);
@@ -119,7 +118,7 @@ public class AccountManagementService {
     @Transactional(readOnly = true)
     public void assertLoginIdentifiersAvailable(String username, String email) {
         checkUsernameAvailable(required(username, "username", "Vui lòng nhập tên đăng nhập."), null);
-        checkEmailAvailable(required(email, "email", "Vui lòng nhập email."), null);
+        checkEmailAvailable(users, required(email, "email", "Vui lòng nhập email."), null);
     }
 
     /**
@@ -132,7 +131,7 @@ public class AccountManagementService {
         Role candidate = roles.findByRoleName("Candidate")
                 .orElseThrow(() -> new IllegalStateException("Candidate role is not configured"));
         checkUsernameAvailable(username, null);
-        checkEmailAvailable(email, null);
+        checkEmailAvailable(users, email, null);
         return persistAccount(fullName, username, email, null, candidate, null, passwordHash, true);
     }
 
@@ -174,7 +173,7 @@ public class AccountManagementService {
         if (command.accountStatus() == null || !STATUSES.contains(command.accountStatus())) {
             throw new AccountFieldException("accountStatus", "Trạng thái tài khoản không hợp lệ.");
         }
-        checkEmailAvailable(email, userId);
+        checkEmailAvailable(users, email, userId);
         checkSingleHiringManager(role, department, command.accountStatus(), userId);
 
         // Keep Department.ManagerId consistent when this account stops being the manager.
@@ -205,7 +204,7 @@ public class AccountManagementService {
 
     private User findUser(int userId) {
         return users.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy tài khoản."));
+                .orElseThrow(() -> new AccountOperationException("Không tìm thấy tài khoản."));
     }
 
     private Role findRole(Integer roleId) {
@@ -248,7 +247,7 @@ public class AccountManagementService {
         }
     }
 
-    private void checkEmailAvailable(String email, Integer currentId) {
+    static void checkEmailAvailable(UserRepository users, String email, Integer currentId) {
         // check if email or username hasexist
         if (belongsToAnother(users.findByEmailIgnoreCase(email), currentId)
                 || belongsToAnother(users.findByUsernameIgnoreCase(email), currentId)) {

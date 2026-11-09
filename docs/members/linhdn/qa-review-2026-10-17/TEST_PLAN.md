@@ -1,5 +1,7 @@
 # Test Plan RMS cho các luồng của Linh
 
+> **Ghi chú 06/11/2026:** Chấm CV bằng AI (`AI_Screened`, `AIScreeningResult`, `OverallScore`) và tiêu chí sàng lọc (`ScreeningCriteria`) đã gỡ khỏi hệ thống (migration `013`, `014`). Phần nhắc tới chúng bên dưới là nội dung tại thời điểm viết, không còn đúng với hệ thống.
+
 Ngày lập: 17/10/2026, Asia/Saigon. Chủ thể rà soát: `linhkata1806` và `linh hoang`. Đây là kế hoạch và thiết kế test; chưa thực thi, chưa chứng nhận Passed.
 
 ## 1. Phạm vi và cơ sở xác định kết quả
