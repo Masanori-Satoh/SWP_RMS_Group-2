@@ -13,5 +13,7 @@ public record JobPostingListResponse(
                 JobPostingSearchRequest filter,
                 JobPostingFilterOptions options,
                 List<FilterChip> chips,
-                boolean canManage) {
+                boolean canManage,
+                // Lỗi tham số URL; có lỗi thì page rỗng
+                List<String> errors) {
 }

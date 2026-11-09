@@ -22,6 +22,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -46,12 +47,10 @@ public class JobPostingController {
 
     private static final String LIST_URL = "/internal/job-postings";
     private static final String FORM_VIEW = "job-postings/create";
-    private static final String PUBLISHED_NOW_MESSAGE = "Đã đăng tin. Ứng viên có thể nộp hồ sơ ngay.";
-    /** Các ô có trên form (lỗi của ô khác, ví dụ "action", hiện ở đầu form). */
+    private static final String PUBLISHED_NOW_MESSAGE = "Đã đăng tin thành công lên trang tuyển dụng";
     private static final Set<String> FORM_FIELDS = Set.of("postingTitle", "jobDescription", "jobRequirements",
             "benefits", "workLocation", "workingHours", "employmentType", "workModel", "gender", "probationPeriod", "salaryMode",
             "salaryCustom", "numberOfPositionsDisplay", "applicationDeadline");
-    /** Gợi ý quyền lợi trên form (nút thêm nhanh), theo mockup. */
     private static final List<String> BENEFIT_SUGGESTIONS = List.of("Lương tháng 13", "Thưởng theo hiệu quả công việc",
             "Đóng BHXH, BHYT, BHTN đầy đủ", "Bảo hiểm sức khỏe", "Review lương 2 lần/năm", "12 ngày phép năm",
             "Cấp laptop làm việc", "Du lịch công ty hằng năm");
@@ -80,11 +79,12 @@ public class JobPostingController {
                 "applicationDeadline", "action");
     }
 
-    /** Màn danh sách; tham số sai định dạng trên URL (?page=abc) chỉ bị bỏ qua, không lỗi trang. */
+    /** Màn danh sách; tham số sai định dạng trên URL (?page=abc) -> bảng rỗng kèm lỗi, không lỗi trang. */
     @GetMapping
     public String listJobPostings(@ModelAttribute("searchRequest") JobPostingSearchRequest searchRequest,
             BindingResult invalidParams, HttpServletRequest request, Model model) {
-        model.addAttribute("list", listService.getListPage(searchRequest, access.actor()));
+        model.addAttribute("list", listService.getListPage(searchRequest, access.actor(),
+                invalidParams.getFieldErrors().stream().map(FieldError::getField).distinct().toList()));
         // Link "bỏ một bộ lọc" cho các chip: giữ nguyên các tham số khác trên URL (dùng chung với màn yêu cầu)
         model.addAttribute("filterLinks", new FilterLinks(request.getRequestURI(), request.getQueryString()));
         model.addAttribute("bodyClass", "jp-list-page");
@@ -191,7 +191,7 @@ public class JobPostingController {
     public String publishJobPosting(@PathVariable Integer id, RedirectAttributes flash) {
         try {
             jobPostingService.publishJobPosting(id, access.actor());
-            flash.addFlashAttribute("successMessage", "Đã đăng tin tuyển dụng.");
+            flash.addFlashAttribute("successMessage", PUBLISHED_NOW_MESSAGE);
         } catch (JobPostingValidationException e) {
             flash.addFlashAttribute("errorMessage", e.getMessage());
         }
