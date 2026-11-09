@@ -18,6 +18,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
@@ -67,6 +69,30 @@ class MyApplicationWebTests {
                     .andExpect(status().isForbidden());
         }
         verifyNoInteractions(myApplications);
+    }
+
+    @Test
+    void candidateOpeningAdminPageSeesAccessDeniedToastOnceOnTheirApplications() throws Exception {
+        var candidate = as("an.vo", "Candidate");
+        when(myApplications.list(null)).thenReturn(page(List.of(), "all"));
+
+        var denied = mvc.perform(get("/admin/accounts").with(candidate).accept(MediaType.TEXT_HTML)
+                        .header("Sec-Fetch-Mode", "navigate").header("Sec-Fetch-Dest", "document"))
+                .andExpect(status().isSeeOther())
+                .andExpect(redirectedUrl("/portal/applications"))
+                .andReturn();
+        var session = (MockHttpSession) denied.getRequest().getSession(false);
+        String message = "Bạn không có quyền truy cập vào trang này.";
+
+        mvc.perform(get("/portal/applications").session(session).with(candidate))
+                .andExpect(status().isOk())
+                .andExpect(view().name("candidate/my-applications"))
+                .andExpect(content().string(containsString(message)))
+                .andExpect(content().string(containsString("data-flash-toast")))
+                .andExpect(content().string(containsString("/js/pages/flash-toast.js")));
+        mvc.perform(get("/portal/applications").session(session).with(candidate))
+                .andExpect(status().isOk())
+                .andExpect(content().string(not(containsString(message))));
     }
 
     // ---- Danh sách ----

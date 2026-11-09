@@ -14,7 +14,6 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.access.AccessDeniedHandler;
-import org.springframework.security.web.access.AccessDeniedHandlerImpl;
 import org.springframework.security.web.csrf.CsrfException;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -72,8 +71,6 @@ public class SecurityConfig {
                                 .authenticationProvider(provider)
                                 .csrf(csrf -> csrf
                                                 .ignoringRequestMatchers("/api/**"))
-                                .exceptionHandling(exceptions -> exceptions.accessDeniedHandler(
-                                                new PageAccessDeniedHandler()))
                                 // CV viewer: only CV paths may be framed (same origin); every other page keeps
                                 // DENY
                                 .headers(headers -> headers
@@ -235,7 +232,7 @@ public class SecurityConfig {
         }
 
         static AccessDeniedHandler sessionExpiredAwareAccessDeniedHandler() {
-                AccessDeniedHandlerImpl fallback = new AccessDeniedHandlerImpl();
+                AccessDeniedHandler fallback = new PageAccessDeniedHandler();
                 return (request, response, exception) -> {
                         // Chỉ khi trình duyệt còn gửi mã phiên cũ nhưng phiên đó đã hết hạn trên server; khách chưa
                         // từng có phiên (form đăng ký, đăng nhập...) thiếu CSRF vẫn nhận 403 như trước.
