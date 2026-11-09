@@ -178,11 +178,8 @@ Application Deadline → Hạn nộp hồ sơ
 - **Guard clause** trước, luồng chính sau:
 
   ```java
-  // Rule: Chỉ người tạo yêu cầu mới được rút lại yêu cầu đang chờ duyệt
-  if (!access.canWithdraw(currentUser, jobRequisition)) {
-      throw new AccessDeniedException("Chỉ người tạo yêu cầu mới có quyền rút lại yêu cầu đang chờ duyệt.");
-  }
-  jobRequisition.setApprovalStatus(RequisitionAccess.STATUS_DRAFT);
+  // Rule: Chỉ người tạo mới được sửa yêu cầu ở trạng thái Draft hoặc Rejected.
+  access.requireEdit(currentUser, jobRequisition);
   ```
 
 - **`if / else` rõ ràng thay cho ternary lồng nhau.** Ternary chỉ dùng cho một phép chọn đơn giản trên một dòng.
@@ -383,7 +380,6 @@ Draft            → Pending_Director   (HM gửi duyệt)
 Draft            → Approved           (NGOẠI LỆ: Giám đốc tự tạo bấm "Phê duyệt trực tiếp";
                                         vẫn lưu RequisitionApproval người duyệt = chính Giám đốc + audit)
 Pending_Director → Approved | Rejected (Giám đốc, không tự duyệt yêu cầu của mình; trả lại bắt buộc lý do)
-Pending_Director → Draft              (người tạo rút lại)
 Rejected         → Pending_Director   (sửa rồi gửi lại)
 ```
 

@@ -113,8 +113,8 @@ Applied có thể chuyển AI_Screened sau async; không kiểm snapshot muộn 
 | [IT-R01](#it-r01) | HM submit requisition và Director khác người tạo approve |
 | [IT-R02](#it-r02) | Reject requisition bắt buộc lý do và lưu feedback |
 | [IT-R03](#it-r03) | Chặn tự duyệt, sai role và quyết định khi không pending |
-| [IT-R04](#it-r04) | Owner rút yêu cầu đang chờ về Draft và quyền sửa sau rút |
-| [IT-R05](#it-r05) | Approve và withdraw cạnh tranh không ghi lịch sử mâu thuẫn |
+| [IT-R04](#it-r04) | Yêu cầu đang chờ không sửa được; bản bị trả lại sửa và gửi lại được |
+| [IT-R05](#it-r05) | Hai Director quyết định đồng thời không ghi lịch sử mâu thuẫn |
 | [IT-R06](#it-r06) | HR chỉ lấy Approved requisition và Job Posting dùng requisition hợp lệ |
 | [IT-M01](#it-m01) | Tạo/sửa internal account không đổi username và password khi update thông tin |
 | [IT-M02](#it-m02) | Department lifecycle và chọn manager đúng phòng |
@@ -1206,40 +1206,40 @@ Applied có thể chuyển AI_Screened sau async; không kiểm snapshot muộn 
 
 <a id="it-r04"></a>
 
-## IT-R04 Owner rút yêu cầu đang chờ về Draft và quyền sửa sau rút
+## IT-R04 Yêu cầu đang chờ không sửa được; bản bị trả lại sửa và gửi lại được
 
 - **Test Case ID:** IT-R04
 - **Test Type:** Integration Test; Spring context + real SQL Server, controlled external adapters when needed
 - **Test Technique:** ST/DT
-- **Test Scenario:** Owner rút yêu cầu đang chờ về Draft và quyền sửa sau rút
+- **Test Scenario:** Owner không sửa được yêu cầu đang chờ, nhưng sửa và gửi lại được yêu cầu bị trả lại.
 - **Preconditions:** Requisition Pending_Director của HM_A; HM_B không owner.
-- **Test Data:** Withdraw HM_B; Withdraw HM_A; chỉnh sửa Draft; attempt withdraw Approved ở fixture khác.
-- **Test Steps:** 1. HM_B gọi withdraw rồi kiểm không đổi. 2. Owner withdraw. 3. Đọc Draft/Withdrawn workflow event/audit. 4. Owner sửa và submit lại theo luồng hiện có.
-- **Expected Result:** Chỉ owner của Pending_Director rút được; về Draft có audit/workflow event; sửa/gửi lại dùng cùng requisition. Không biến withdrawal thành xóa và không áp rule một chiều của Application cứng nhắc sang Requisition.
+- **Test Data:** HM_B mở/sửa yêu cầu của HM_A; HM_A thử sửa khi Pending_Director; Director trả lại có lý do; HM_A sửa và gửi lại.
+- **Test Steps:** 1. HM_B thử sửa rồi kiểm tra dữ liệu không đổi. 2. HM_A thử sửa khi đang chờ duyệt. 3. Director trả lại. 4. HM_A sửa và gửi lại cùng requisition.
+- **Expected Result:** Không ai sửa được yêu cầu Pending_Director; chỉ owner sửa được Rejected và gửi lại thành Pending_Director. Lịch sử quyết định được giữ.
 - **Actual Result:** 
 - **Status:** Pending
 - **Priority:** P1
 - **SRS Reference:** OLD-REQ UC20/21; OR-06; GAP-02
-- **Source Code Reference:** [RequisitionServiceImpl.withdraw](<D:/KÌ 5/SWP/hireflow-api/RetireManagement/SWP_RMS_Group-2/src/main/java/com/group2/rms/requisition/service/RequisitionServiceImpl.java:477>); [RequisitionServiceImpl.updateRequisition](<D:/KÌ 5/SWP/hireflow-api/RetireManagement/SWP_RMS_Group-2/src/main/java/com/group2/rms/requisition/service/RequisitionServiceImpl.java:289>); [RequisitionAccess.canEdit](<D:/KÌ 5/SWP/hireflow-api/RetireManagement/SWP_RMS_Group-2/src/main/java/com/group2/rms/requisition/service/RequisitionAccess.java:84>)
-- **Existing Test Coverage (static review):** RequisitionIntegrationTest.it06_withdraw_revertsToDraft cover chính.
+- **Source Code Reference:** `RequisitionServiceImpl.updateRequisition`, `RequisitionServiceImpl.decide`, `RequisitionAccess.canEdit`.
+- **Existing Test Coverage (static review):** Cần chạy lại ca tích hợp theo luồng hiện tại.
 
 <a id="it-r05"></a>
 
-## IT-R05 Approve và withdraw cạnh tranh không ghi lịch sử mâu thuẫn
+## IT-R05 Hai Director quyết định đồng thời không ghi lịch sử mâu thuẫn
 
 - **Test Case ID:** IT-R05
 - **Test Type:** Integration Test; Spring context + real SQL Server, controlled external adapters when needed
 - **Test Technique:** DT/ST
-- **Test Scenario:** Approve và withdraw cạnh tranh không ghi lịch sử mâu thuẫn
-- **Preconditions:** Một Pending_Director; owner và Director khác owner; hai connection/transaction riêng.
-- **Test Data:** Director approve đồng thời owner withdraw; lượt approve thứ hai stale.
+- **Test Scenario:** Hai Director quyết định đồng thời không ghi lịch sử mâu thuẫn.
+- **Preconditions:** Một Pending_Director; hai Director khác người tạo; hai connection/transaction riêng.
+- **Test Data:** Hai Director cùng approve/reject một yêu cầu.
 - **Test Steps:** 1. Đọc cùng trạng thái ban đầu từ hai transaction. 2. Phát hai thao tác cạnh tranh. 3. Commit cả hai theo kết quả. 4. Đọc status/approval/events/audit từ transaction mới.
-- **Expected Result:** Lock/guard serialize quyết định: chỉ một action hợp lệ với trạng thái tại thời điểm ghi; action thua bị chặn. Không có Approved rồi bị request withdraw cũ đưa Draft, không có hai approval do replay.
+- **Expected Result:** Lock/guard serialize quyết định: chỉ một action hợp lệ với trạng thái tại thời điểm ghi; action thua bị chặn. Không có hai quyết định do replay.
 - **Actual Result:** 
 - **Status:** Pending
 - **Priority:** P0
 - **SRS Reference:** OR-06/07; OLD-REQ
-- **Source Code Reference:** [RequisitionServiceImpl.decide](<D:/KÌ 5/SWP/hireflow-api/RetireManagement/SWP_RMS_Group-2/src/main/java/com/group2/rms/requisition/service/RequisitionServiceImpl.java:435>); [RequisitionServiceImpl.withdraw](<D:/KÌ 5/SWP/hireflow-api/RetireManagement/SWP_RMS_Group-2/src/main/java/com/group2/rms/requisition/service/RequisitionServiceImpl.java:477>); [JobRequisitionRepository.findForUpdate](<D:/KÌ 5/SWP/hireflow-api/RetireManagement/SWP_RMS_Group-2/src/main/java/com/group2/rms/requisition/repository/JobRequisitionRepository.java:17>)
+- **Source Code Reference:** `RequisitionServiceImpl.decide`, `JobRequisitionRepository.findForUpdate`.
 - **Existing Test Coverage (static review):** Cần DB concurrency bổ sung; suite 7 method hiện hữu chưa đủ proof race.
 
 <a id="it-r06"></a>

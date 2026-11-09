@@ -10,7 +10,7 @@
 
 | Vai trò (Role) | Username | Password | Họ và tên | Phòng ban | Mục đích sử dụng |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Hiring Manager** | `hm_tuan` | `12345678` | Vũ Anh Tuấn | Engineering (ID: 1) | Tạo / Sửa / Rút Yêu cầu tuyển dụng kỹ thuật |
+| **Hiring Manager** | `hm_tuan` | `12345678` | Vũ Anh Tuấn | Engineering (ID: 1) | Tạo / Sửa yêu cầu tuyển dụng kỹ thuật |
 | **Hiring Manager** | `hm_huong` | `12345678` | Đỗ Thu Hương | Sales & Marketing (ID: 2) | Tạo / Sửa Yêu cầu tuyển dụng kinh doanh |
 | **Director** | `director` | `12345678` | Nguyễn Thế Hoàng | Ban Giám đốc (HR) | Duyệt / Từ chối Yêu cầu tuyển dụng; tự tạo yêu cầu và Phê duyệt trực tiếp |
 | **HR Specialist** | `hr_lan` | `12345678` | Lê Thị Mai Lan | Human Resources (ID: 3) | Soạn tin / Đăng tin / Quản lý Tin tuyển dụng |

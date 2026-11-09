@@ -23,7 +23,7 @@ SRS hiện tại đã được chủ dự án xác nhận chưa cập nhật; Ex
 | Application | IT-P01–P09 | 9 | Upload PDF, hạn job, duplicate/race, file rollback, HR/HM review, AI lỗi, rút đơn |
 | Talent Pool và HM Suggested | IT-T01–T17 | 17 | Bookmark/note/CV, selection, HM → HR consent, HR → HM decision, CV mới, thu hồi, batch/race, Interview bookmark |
 | Closure và email | IT-E01–E05 | 5 | Offer chặn close, audit dừng đợt, bảo vệ Accepted offer, SMTP sau commit, invite/resend |
-| Requisition Approval liên phân hệ | IT-R01–R06 | 6 | Submit/approve/reject, self-approval, withdraw, concurrency, Approved → Job Posting |
+| Requisition Approval liên phân hệ | IT-R01–R06 | 6 | Submit/approve/reject, self-approval, quyền sửa theo trạng thái, concurrency, Approved → Job Posting |
 | Admin và hiển thị số liệu | IT-M01–M04 | 4 | Internal account, Department, dashboard theo role, pipeline query/detail/CV |
 | **Tổng Integration Test** | | **64** | **Chưa thực hiện; mỗi biến thể cần kết quả riêng** |
 

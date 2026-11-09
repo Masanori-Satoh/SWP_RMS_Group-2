@@ -13,7 +13,7 @@
 Trình duyệt ──► SecurityConfig (lớp 1: có được vào URL không?)
             ──► RequisitionController (nhận tham số, gọi service, chọn view, đổi lỗi quyền thành toast)
             ──► RequisitionListService (màn danh sách: phạm vi theo role, bộ lọc, chip, phân trang)
-                RequisitionServiceImpl (một phiếu: tạo / sửa / xóa / duyệt / rút lại / sao chép; transaction)
+                RequisitionServiceImpl (một phiếu: tạo / sửa / xóa / duyệt / sao chép; transaction)
                   ├─ RequisitionAccess      : ai được làm gì (role, chủ sở hữu, trạng thái), canX / requireX
                   ├─ RequisitionValidator   : dữ liệu nhập có hợp lệ không
                   ├─ RequisitionMapper      : entity → DTO, gắn cờ nút (editable, decidable...)
@@ -34,7 +34,6 @@ Trình duyệt ──► SecurityConfig (lớp 1: có được vào URL không?)
 | `GET /requisitions/edit/{id}` | `edit` | `prepareEditForm` | |
 | `POST /requisitions/edit/{id}` | `update` | `updateRequisition` | `JobRequisition`, `AuditLog`, `Notification` (khi gửi duyệt); Director gửi thì thêm `RequisitionApproval` |
 | `GET /requisitions/copy/{id}` | `copy` | `copy` | (không ghi gì, chỉ điền sẵn form) |
-| `POST /requisitions/{id}/withdraw` | `withdraw` | `withdraw` | `JobRequisition`, `AuditLog`, `Notification` (báo Director) |
 | `POST /requisitions/{id}/decision` | `decide` | `decide` | `JobRequisition`, `RequisitionApproval`, `AuditLog`, `Notification` |
 | `POST /requisitions/delete/{id}` | `delete` | `deleteRequisition` | xóa `JobRequisition` (+ lịch sử duyệt), ghi `AuditLog` |
 
@@ -50,15 +49,15 @@ Mọi `POST` đều cần CSRF token (Spring Security tự chèn `_csrf` vào fo
 
 **Lớp 2, theo dữ liệu** (`RequisitionListService#scope` cho danh sách, `RequisitionAccess` cho từng phiếu):
 
-| Role | Thấy những yêu cầu nào (`scope` / `requireView`) | Sửa / xóa (`canEdit`) | Duyệt (`canDecide`) | Rút lại (`canWithdraw`) | Sao chép (`canCopy`) |
-|---|---|---|---|---|---|
-| Hiring Manager | Phiếu **mình tạo**, hoặc thuộc **phòng mình / phòng mình làm trưởng** | Của mình, khi **Draft / Rejected** | Không | Của mình, khi **Pending_Director** | Phiếu **Approved** |
-| Director | Mọi phiếu **trừ bản nháp của người khác** (thấy nháp do mình tạo) | Của mình, khi Draft / Rejected | Khi **Pending_Director** và **không phải người tạo** | Của mình, khi Pending_Director | Phiếu Approved |
-| HR | Chỉ **Approved** | Không | Không | Không | Không |
+| Role | Thấy những yêu cầu nào (`scope` / `requireView`) | Sửa / xóa (`canEdit`) | Duyệt (`canDecide`) | Sao chép (`canCopy`) |
+|---|---|---|---|---|
+| Hiring Manager | Phiếu **mình tạo**, hoặc thuộc **phòng mình / phòng mình làm trưởng** | Của mình, khi **Draft / Rejected** | Không | Phiếu **Approved** |
+| Director | Mọi phiếu **trừ bản nháp của người khác** (thấy nháp do mình tạo) | Của mình, khi Draft / Rejected | Khi **Pending_Director** và **không phải người tạo** | Phiếu Approved |
+| HR | Chỉ **Approved** | Không | Không | Không |
 
 **Khi không đủ quyền** (`RequisitionController#whenAccessDenied`): không hiện trang 403 nữa, mà quay về trang danh sách / chi tiết vừa xem kèm toast lỗi (trang vừa xem lưu trong session theo đúng tài khoản, `rememberPage`). Nếu chính trang danh sách bị chặn thì về `/dashboard` để tránh chuyển trang vòng lặp.
 
-**Đúng người nhưng sai trạng thái** (ví dụ mở `/edit/{id}` của phiếu đã Approved, hoặc bấm Duyệt trên tab cũ khi phiếu đã bị rút lại): `requireEdit` / `requireDecide` / `requireWithdraw` / `requireCopy` ném `RequisitionStateException`, controller đưa về trang vừa xem kèm toast (`backToPreviousPage`).
+**Đúng người nhưng sai trạng thái** (ví dụ mở `/edit/{id}` của phiếu đã Approved, hoặc bấm Duyệt trên tab cũ khi phiếu đã được quyết định): `requireEdit` / `requireDecide` / `requireCopy` ném `RequisitionStateException`, controller đưa về trang vừa xem kèm toast (`backToPreviousPage`).
 
 > GV hỏi: *"Nếu HR sửa URL thành `?status=Draft` thì sao?"*
 > Trả lời: HR không có ô lọc trạng thái nên `normalizeFilter` bỏ luôn tham số `status`. Kể cả nếu còn, bộ lọc luôn được **nối AND** vào `scope` (`ApprovalStatus = 'Approved'`) nên ra 0 dòng.
@@ -73,9 +72,8 @@ Mọi `POST` đều cần CSRF token (Spring Security tự chèn `_csrf` vào fo
 ```
             Lưu nháp                Gửi duyệt (HM)
  (mới) ───────────────► Draft ─────────────────► Pending_Director
-                          ▲   ◄─────────────────      │      │
-                          │    Rút lại (người tạo)     │      │
-                          │                  Phê duyệt │      │ Trả lại (bắt buộc lý do)
+                           ▲                           │      │
+                           │                  Phê duyệt │      │ Trả lại (bắt buộc lý do)
                           │                            ▼      ▼
                           │    Director tự gửi ──►  Approved   Rejected
                           └─── Lưu nháp sau khi sửa ──────────┘
@@ -219,7 +217,6 @@ Fragment catalog `fragments/ui/pagination :: paged`: **giữ mọi tham số đa
 |---|---|---|
 | **← Quay về danh sách** | Luôn hiện | `GET /requisitions` |
 | **Chỉnh sửa / Sửa & gửi lại** | `editable`: người tạo, Draft hoặc Rejected | `GET /edit/{id}` → form |
-| **Rút lại để chỉnh sửa** | `withdrawable`: người tạo, Pending_Director | `POST /{id}/withdraw` → khóa dòng, `requireWithdraw`, `Pending_Director → Draft`, ghi `AuditLog`, đánh dấu đã đọc thông báo "chờ duyệt" cũ, **báo Director** đã rút lại → **mở thẳng form sửa** |
 | **Xóa** | `deletable`: sửa được, **chưa có tin tuyển dụng, chưa có đợt sau sao chép từ nó** | Hộp xác nhận → `POST /delete/{id}` → `requireEdit`, chặn nếu đã có `JobPosting` hoặc đã là phiếu gốc của đợt sau, ghi `AuditLog` (`DELETE`), xóa `RequisitionApproval`, xóa phiếu |
 | **Sao chép thành đợt mới** | `copyable`: HM / Director, phiếu Approved | `GET /copy/{id}` (mục 4.5) |
 | **Tạo tin tuyển dụng** | `postable`: HR, Approved, chưa có tin | `GET /internal/job-postings/create?requisitionId=...` |
@@ -231,7 +228,7 @@ Fragment catalog `fragments/ui/pagination :: paged`: **giữ mọi tham số đa
 ## 6. Câu hỏi GV hay hỏi
 
 **Vì sao service dùng `findForUpdate` (khóa dòng)?**
-Hai người cùng thao tác một phiếu (HM rút lại đúng lúc Director bấm duyệt). `PESSIMISTIC_WRITE` khóa dòng trong transaction, người sau phải chờ. Sau đó người sau kiểm tra lại trạng thái, bị `RequisitionStateException` → về trang vừa xem kèm toast.
+Hai Giám đốc cùng quyết định trên một phiếu. `PESSIMISTIC_WRITE` khóa dòng trong transaction, người sau phải chờ. Sau đó người sau kiểm tra lại trạng thái, bị `RequisitionStateException` → về trang vừa xem kèm toast.
 
 **Dữ liệu ngày tạo, người tạo lấy từ client à?**
 Không. `CreatedAt` do `BaseEntity#onCreate` đặt; `HiringManagerId`, `CreatedBy` lấy từ người đang đăng nhập (`RequisitionAccess#actor`); phòng ban của HM lấy từ tài khoản. `@InitBinder` không cho bind `approvalStatus`.
@@ -258,6 +255,6 @@ Không ra trang lỗi: controller bắt lỗi, quay về trang danh sách / chi 
 
 ## 7. Hạn chế đã biết (nói trước nếu GV hỏi)
 
-- Rút lại không xóa `SubmittedAt` (lần gửi lại sẽ ghi đè).
+- Yêu cầu đang chờ duyệt không còn thao tác đưa về nháp; người tạo chỉ sửa được sau khi Giám đốc trả lại.
 - Trạng thái `Closed` / `Cancelled` có trong DB nhưng chưa có chức năng.
 - Một số phiếu seed thiếu `AuditLog` nên phần Lịch sử ít dòng.
