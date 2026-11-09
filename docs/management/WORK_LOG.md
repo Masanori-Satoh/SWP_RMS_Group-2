@@ -6,6 +6,7 @@ Tài liệu này là lịch sử tóm tắt các thay đổi quan trọng và b�
 
 | Ngày | Tên công việc / Yêu cầu chính | Người thực hiện | Chi tiết thay đổi |
 | --- | --- | --- | --- |
+| **2026-11-09** | Khôi phục toast khi mở trang ngoài quyền sau merge | LinhDN | [Work log](work_logs/2026-11-09-forbidden-page-toast-regression.md) · [Báo cáo](../members/linhdn/2026-11-09-forbidden-page-toast-regression.md) |
 | **2026-11-08** | Hiện toast khi người đã đăng nhập mở trang ngoài quyền | LinhDN | [Work log](work_logs/2026-11-08-forbidden-page-toast.md) · [Báo cáo](../members/linhdn/2026-11-08-forbidden-page-toast.md) |
 | **2026-11-08** | Cho ứng viên tự đổi email trên Hồ sơ cá nhân, giữ tên đăng nhập chỉ đọc và đối chiếu quyền của các vai trò nội bộ | LinhDN | [Work log](work_logs/2026-11-08-candidate-profile-email.md) · [Báo cáo](../members/linhdn/2026-11-08-candidate-profile-email.md) |
 | **2026-11-08** | Đối chiếu hai bản sơ đồ kiến trúc hệ thống RMS với mã nguồn, xác nhận luồng chính và xác định vị trí lưu tệp, lớp truy cập dữ liệu | LinhDN | [Work log](work_logs/2026-11-08-system-architecture-code-review.md) · [Báo cáo](../members/linhdn/2026-11-08-system-architecture-code-review.md) |
