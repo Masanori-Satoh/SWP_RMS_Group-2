@@ -1,5 +1,6 @@
 package com.group2.rms.candidate.application.portal.dto;
 
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Past;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
@@ -10,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Phần riêng ứng viên (bảng {@code Candidate}) trên trang {@code /portal/profile}. Mọi trường không bắt buộc.
+ * Các trường dành riêng cho form {@code /portal/profile}, gồm email tài khoản và thông tin ứng viên.
  * Không có {@code CandidateSource}, {@code IsPotential}: là thông tin nội bộ, ứng viên không thấy, không sửa.
  * Giới tính lưu đúng chữ như seed ({@code Nam}, {@code Nữ}) cộng thêm {@code Khác}; giá trị khác đang có sẵn trong DB
  * vẫn giữ được ({@link #genderOptions(String)}), kiểm ở {@code CandidateProfileService.update}.
@@ -33,7 +34,17 @@ public record CandidateDetailsRequest(
 
         @Size(max = 500)
         @Pattern(regexp = "^$|^https?://[^\\s<>\"]+$", message = "Link Portfolio phải bắt đầu bằng http:// hoặc https://.")
-        String portfolioUrl) {
+        String portfolioUrl,
+
+        @Email(message = "Vui lòng nhập email hợp lệ.")
+        @Size(max = 150, message = "Email không được quá 150 ký tự.")
+        @Pattern(regexp = ".+", message = "Vui lòng nhập email.")
+        String email) {
+
+    public CandidateDetailsRequest {
+        // Form cũ không gửi email. Chuỗi rỗng từ form mới vẫn phải qua validation.
+        email = email == null ? null : email.strip();
+    }
 
     /** Các lựa chọn giới tính trên form, đúng thứ tự hiển thị. */
     public static final List<String> GENDERS = List.of("Nam", "Nữ", "Khác");

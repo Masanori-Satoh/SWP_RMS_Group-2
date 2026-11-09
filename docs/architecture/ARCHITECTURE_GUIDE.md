@@ -139,7 +139,8 @@ Không `catch (Exception e)`, không nuốt lỗi rồi trả về như thành c
 | `Exception` (còn lại) | `error/500` + log |
 
 - **Không thêm handler riêng của module vào Global.** Lỗi cần quay lại form thì bắt ở Controller như mẫu trên.
-- Lỗi bị Spring Security chặn ở tầng filter (sai quyền theo URL, thiếu CSRF) hoặc URL không khớp Controller không đi qua Global; Spring Boot chuyển sang `/error` và `RmsErrorViewResolver` render cùng 4 trang trên.
+- Khi người đã đăng nhập mở một trang HTML bằng GET nhưng sai quyền, `PageAccessDeniedHandler` chuyển về màn hình của vai trò đó và dùng toast chung để báo lỗi một lần. Luồng áp dụng cho cả chặn theo URL ở Spring Security và `AccessDeniedException` đi qua Global.
+- Các yêu cầu API, tải tài liệu, thao tác ghi và lỗi CSRF giữ cách trả lỗi hiện tại. Lỗi ở tầng filter không đi qua Global; khi Spring Boot chuyển sang `/error`, `RmsErrorViewResolver` dựng trang lỗi tương ứng.
 - Cả hai đường dựng trang qua **`ErrorPages.view(status, message, request)`**: câu thông báo (thiếu thì dùng câu mặc định theo mã) và nút quay về theo vai (ứng viên → `/portal/applications`, nội bộ → `/dashboard`, khách → `/`). Thêm handler mới vào Global thì cũng gọi hàm này, không tự `new ModelAndView("error/...")`.
 
 #### Phạm vi thông báo lỗi thao tác

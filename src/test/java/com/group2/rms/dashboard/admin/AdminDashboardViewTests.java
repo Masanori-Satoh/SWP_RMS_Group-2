@@ -16,6 +16,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -28,9 +30,13 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 
 /** Real dashboard/layout rendering with fixture data; no database or service probes. */
 @WebMvcTest(AdminDashboardController.class)
@@ -124,5 +130,26 @@ class AdminDashboardViewTests {
         assertTrue(html.contains("Chưa có dữ liệu giám sát"));
         assertTrue(html.contains("/admin/accounts?roleId=77&amp;page=0"));
         assertFalse(html.contains("class=\"table adm-service-table\""));
+    }
+
+    @Test void adminOpeningApplicationsGetsOneToastOnTheirOwnDashboard() throws Exception {
+        var admin = user("dashboard-ui").roles("SYSTEM_ADMIN");
+        when(dashboards.forUsername("dashboard-ui")).thenReturn(fixture(true, List.of()));
+        when(audit.recent()).thenReturn(List.of());
+
+        var denied = mvc.perform(get("/applications").with(admin).accept(MediaType.TEXT_HTML)
+                        .header("Sec-Fetch-Mode", "navigate").header("Sec-Fetch-Dest", "document"))
+                .andExpect(status().isSeeOther())
+                .andExpect(redirectedUrl("/dashboard/admin"))
+                .andReturn();
+        var session = (MockHttpSession) denied.getRequest().getSession(false);
+
+        mvc.perform(get("/dashboard/admin").with(admin).session(session))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("flash-toast--error")))
+                .andExpect(content().string(containsString("Bạn không có quyền truy cập vào trang này.")));
+        mvc.perform(get("/dashboard/admin").with(admin).session(session))
+                .andExpect(status().isOk())
+                .andExpect(content().string(not(containsString("flash-toast--error"))));
     }
 }

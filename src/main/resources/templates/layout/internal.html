@@ -4,6 +4,7 @@
 
 <head>
     <link rel="stylesheet" th:href="@{/css/workspace.css}">
+    <link th:if="${accessDeniedMessage}" rel="stylesheet" th:href="@{/css/pages/flash-toast.css}">
     <!-- Nhân sự: đặt class ghim sidebar lên <html> trước lần vẽ đầu (đồng bộ, KHÔNG defer: nếu trễ thì nội dung giật 68px -> 274px) -->
     <th:block th:unless="${topbarUser != null and topbarUser.roleName == 'Candidate'}">
         <script th:src="@{/js/sidebar-state.js}"></script>
@@ -47,6 +48,10 @@
             <main id="main" layout:fragment="content" class="page-content container">
                 <!-- Ruột trang con đặt tại đây -->
             </main>
+            <th:block th:if="${accessDeniedMessage}">
+                <th:block th:replace="~{fragments/ui/flash-toast :: flashToast(null, ${accessDeniedMessage})}"></th:block>
+                <script defer th:src="@{/js/pages/flash-toast.js}"></script>
+            </th:block>
             <!-- 3. Chân trang Mộc chỉ cho ứng viên (nhân sự làm việc trong workspace, không cần footer công khai).
                  th:block vì th:replace chạy trước th:if. -->
             <th:block th:if="${candidateShell}">
