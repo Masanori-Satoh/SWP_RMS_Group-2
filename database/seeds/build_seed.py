@@ -1,783 +1,935 @@
-import datetime
-import random
+"""Sinh database/seeds/seed_data.sql: dữ liệu mẫu phủ mọi trạng thái và luồng mà code hiện tại xử lý.
+
+Chạy:  python database/seeds/build_seed.py
+Mọi mốc thời gian trong file SQL tính theo lúc chạy seed (@D0 = 00:00 hôm nay, @Now = SYSDATETIME()),
+nên dashboard, lịch phỏng vấn sắp tới, hạn phản hồi offer... luôn "mới" mà không cần seed phụ.
+ID gán tường minh (IDENTITY_INSERT) để test case tra được: xem bảng ID ở đầu file SQL.
+"""
 import os
+import random
 
-# Set deterministic seed in python so generated data is reproducible and high quality
-random.seed(42)
-
+random.seed(2026)
 OUT_FILE = os.path.join(os.path.dirname(__file__), "seed_data.sql")
+BCRYPT = "$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO"  # 12345678
 
-ho_list = [
-    "Nguyễn", "Trần", "Lê", "Phạm", "Hoàng", "Huỳnh", "Phan", "Vũ", "Võ",
-    "Đặng", "Bùi", "Đỗ", "Hồ", "Ngô", "Dương", "Lý", "Đoàn", "Đinh", "Trịnh"
-]
 
-dem_nam = ["Văn", "Minh", "Tuấn", "Đức", "Hoàng", "Quốc", "Đình", "Hữu", "Thành", "Thế", "Trọng", "Duy", "Tiến", "Khắc"]
-ten_nam = [
-    "An", "Bình", "Cường", "Dũng", "Đạt", "Đức", "Hải", "Hiếu", "Hoàng", "Hùng", "Huy",
-    "Khánh", "Khoa", "Long", "Minh", "Nam", "Nghĩa", "Phong", "Phúc", "Quân", "Quang",
-    "Sơn", "Tài", "Thắng", "Thịnh", "Tiến", "Toàn", "Trung", "Tuấn", "Tùng", "Việt", "Vinh", "Vũ"
-]
+def q(v):
+    """Giá trị Python -> literal T-SQL."""
+    if v is None:
+        return "NULL"
+    if isinstance(v, bool):
+        return "1" if v else "0"
+    if isinstance(v, (int, float)):
+        return str(v)
+    if isinstance(v, Raw):
+        return v.sql
+    return "N'" + str(v).replace("'", "''") + "'"
 
-dem_nu = ["Thị", "Mai", "Phương", "Ngọc", "Thu", "Thảo", "Thanh", "Diệu", "Khánh", "Mỹ", "Quỳnh", "Ánh", "Hải"]
-ten_nu = [
-    "Anh", "Châu", "Chi", "Diệp", "Dung", "Duyên", "Giang", "Hà", "Hân", "Hằng", "Hạnh",
-    "Hoa", "Hương", "Huyền", "Lan", "Linh", "Ly", "Mai", "My", "Nga", "Ngân", "Ngọc",
-    "Nhung", "Oanh", "Phương", "Quyên", "Quỳnh", "Thảo", "Thu", "Trang", "Trâm", "Trinh", "Uyên", "Vân", "Vy", "Yến"
-]
 
-addresses_hn = [
-    "Số 15 Duy Tân, Dịch Vọng Hậu, Cầu Giấy, Hà Nội",
-    "Số 48 Tố Hữu, Trung Văn, Nam Từ Liêm, Hà Nội",
-    "Số 102 Nguyễn Trãi, Thanh Xuân, Hà Nội",
-    "Số 25 Vũ Phạm Hàm, Yên Hòa, Cầu Giấy, Hà Nội",
-    "Số 88 Láng Hạ, Đống Đa, Hà Nội",
-    "Số 14 Phố Huế, Hàng Bài, Hoàn Kiếm, Hà Nội",
-    "Số 68 Hoàng Quốc Việt, Nghĩa Đô, Cầu Giấy, Hà Nội",
-    "Số 120 Kim Mã, Ba Đình, Hà Nội",
-    "Số 35 Lê Văn Lương, Nhân Chính, Thanh Xuân, Hà Nội",
-    "Số 50 Trần Phú, Văn Quán, Hà Đông, Hà Nội",
-    "Số 77 Xuân Thủy, Cầu Giấy, Hà Nội",
-    "Số 91 Chùa Bộc, Quang Trung, Đống Đa, Hà Nội",
-    "Số 234 Phạm Văn Đồng, Cổ Nhuế, Bắc Từ Liêm, Hà Nội",
-    "Số 16 Đại Cồ Việt, Bách Khoa, Hai Bà Trưng, Hà Nội"
-]
+class Raw:
+    def __init__(self, sql):
+        self.sql = sql
 
-addresses_hcm = [
-    "Số 12 Lê Thánh Tôn, Bến Nghé, Quận 1, TP. Hồ Chí Minh",
-    "Số 45 Nguyễn Thị Minh Khai, Đa Kao, Quận 1, TP. Hồ Chí Minh",
-    "Số 88 Điện Biên Phủ, Phường 15, Bình Thạnh, TP. Hồ Chí Minh",
-    "Số 120 Cách Mạng Tháng 8, Phường 7, Quận 3, TP. Hồ Chí Minh",
-    "Số 30 Quang Trung, Phường 10, Gò Vấp, TP. Hồ Chí Minh",
-    "Số 15 Võ Văn Ngân, Linh Chiểu, TP. Thủ Đức, TP. Hồ Chí Minh",
-    "Số 210 Nguyễn Văn Linh, Tân Thuận Tây, Quận 7, TP. Hồ Chí Minh",
-    "Số 56 Hoàng Văn Thụ, Phường 4, Tân Bình, TP. Hồ Chí Minh",
-    "Số 72 Ba Tháng Hai, Phường 12, Quận 10, TP. Hồ Chí Minh"
-]
 
-sources = ["TopCV", "VietnamWorks", "LinkedIn", "ITViec", "Employee Referral"]
-email_domains = ["gmail.com", "gmail.com", "gmail.com", "fpt.edu.vn", "hust.edu.vn", "vnu.edu.vn", "outlook.com"]
+def at(day, hour=9, minute=0):
+    """Số phút tính từ 00:00 hôm nay."""
+    return day * 1440 + hour * 60 + minute
 
-# Helper to remove accents for email/username
-def remove_accents(input_str):
-    s1 = "àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđÀÁẠẢÃÂẦẤẬẨẪĂẰẮẶẲẴÈÉẸẺẼÊỀẾỆỂỄÌÍỊỈĨÒÓỌỎÕÔỒỐỘỔỖƠỜỚỢỞỠÙÚỤỦŨƯỪỨỰỬỮỲÝỴỶỸĐ"
-    s0 = "aaaaaaaaaaaaaaaaaeeeeeeeeeeeiiiiiooooooooooooooooouuuuuuuuuuuyyyyydAAAAAAAAAAAAAAAAAEEEEEEEEEEEIIIIIOOOOOOOOOOOOOOOOOUUUUUUUUUUUYYYYYD"
-    res = ""
-    for ch in input_str:
-        idx = s1.find(ch)
-        if idx >= 0:
-            res += s0[idx]
-        else:
-            res += ch
-    return res
 
-lines = []
+def T(m):
+    return None if m is None else Raw(f"DATEADD(MINUTE, {m}, @D0)")
 
-# Header
-lines.append("-- =============================================================================")
-lines.append("-- RECRUITMENT MANAGEMENT SYSTEM (RMS) - PRODUCTION SEED DATA")
-lines.append("-- Target Database : RitirementManagement2")
-lines.append("-- DBMS            : Microsoft SQL Server (T-SQL)")
-lines.append("-- Standard        : 100% Pure Explicit INSERTs (Zero-Loop, Anti-Laziness Protocol)")
-lines.append("-- Tables Covered  : 20/20 PascalCase Tables")
-lines.append("-- Funnel Scope    : 77 Days (2026-09-30 to 2026-12-15), 3-4 Applications/Day")
-lines.append("-- =============================================================================")
-lines.append("USE RitirementManagement2;")
-lines.append("GO")
-lines.append("")
-lines.append("SET NOCOUNT ON;")
-lines.append("GO")
-lines.append("")
-lines.append("BEGIN TRANSACTION;")
-lines.append("BEGIN TRY")
-lines.append("")
 
-# 1. ROLE
-lines.append("-- =============================================================================")
-lines.append("-- 1. ROLE (6 System Roles)")
-lines.append("-- =============================================================================")
-roles = [
-    ("System Admin", "Quản trị viên toàn quyền cấu hình và vận hành hệ thống"),
-    ("HR", "Chuyên viên tuyển dụng phụ trách quản lý hồ sơ và quy trình ứng tuyển"),
-    ("Hiring Manager", "Trưởng bộ phận chuyên môn duyệt yêu cầu và phỏng vấn chuyên sâu"),
-    ("Director", "Giám đốc phê duyệt phiếu yêu cầu tuyển dụng và đề xuất đãi ngộ"),
-    ("Interviewer", "Thành viên hội đồng đánh giá chuyên môn phỏng vấn ứng viên"),
-    ("Candidate", "Ứng viên tham gia nộp hồ sơ và ứng tuyển vào doanh nghiệp")
-]
-for r_name, r_desc in roles:
-    lines.append(f"INSERT INTO [Role] (RoleName, [Description]) VALUES (N'{r_name}', N'{r_desc}');")
-lines.append("")
+def ago(minutes):
+    """Mốc tính lùi từ lúc chạy (dùng cho dữ liệu 'hôm nay', luôn nằm trong quá khứ)."""
+    return Raw(f"DATEADD(MINUTE, -{minutes}, @Now)")
 
-# 2. DEPARTMENT
-lines.append("-- =============================================================================")
-lines.append("-- 2. DEPARTMENT (3 SME Departments)")
-lines.append("-- =============================================================================")
-depts = ["Kỹ thuật", "Kinh doanh & Marketing", "Nhân sự"]
-for d in depts:
-    lines.append(f"INSERT INTO Department (DepartmentName, ManagerId, DepartmentStatus) VALUES (N'{d}', NULL, N'Active');")
-lines.append("")
 
-# 3. INTERNAL USERS
-lines.append("-- =============================================================================")
-lines.append("-- 3. INTERNAL USERS (12 Accounts: Admin, Director, 2 HR, 2 HM, 2 Interviewers, 4 Interviewers-role)")
-lines.append("-- Password: '12345678' -> BCrypt: $2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO")
-lines.append("-- RoleId: 1=Admin, 2=HR, 3=HiringManager, 4=Director, 5=Interviewer, 6=Candidate")
-lines.append("-- =============================================================================")
-bcrypt_hash = "$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO"
+def DAY(d):
+    return Raw(f"CAST(DATEADD(DAY, {d}, @D0) AS DATE)")
 
-internal_users = [
-    # (RoleId, Username, Email, FullName, Phone, DeptId, CreatedAt)
-    # UserId 1: Admin
-    (1, "admin", "admin@rms-tech.vn", "Trần Minh Đức", "0901234567", 1, "2026-08-01 08:00:00"),
-    # UserId 2: Director (RoleInPanel: Director)
-    (4, "director", "hoang.director@rms-tech.vn", "Nguyễn Thế Hoàng", "0902345678", 3, "2026-08-01 08:30:00"),
-    # UserId 3: HR (RoleInPanel: HR)
-    (2, "hr_lan", "lan.le@rms-tech.vn", "Lê Thị Mai Lan", "0903456789", 3, "2026-08-05 09:00:00"),
-    # UserId 4: HR (RoleInPanel: HR)
-    (2, "hr_quang", "quang.pham@rms-tech.vn", "Phạm Quang Huy", "0904567890", 3, "2026-08-05 09:15:00"),
-    # UserId 5: HiringManager (RoleInPanel: HM)
-    (3, "hm_tuan", "tuan.vu@rms-tech.vn", "Vũ Anh Tuấn", "0905678901", 1, "2026-08-10 10:00:00"),
-    # UserId 6: HiringManager (RoleInPanel: HM)
-    (3, "hm_huong", "huong.do@rms-tech.vn", "Đỗ Thu Hương", "0906789012", 2, "2026-08-10 10:30:00"),
-    # UserId 7: Interviewer (RoleInPanel: Interviewer) - Java/Backend specialist
-    (5, "interviewer_nam", "nam.hoang@rms-tech.vn", "Hoàng Nhật Nam", "0907890123", 1, "2026-08-15 08:45:00"),
-    # UserId 8: Interviewer (RoleInPanel: Interviewer) - Frontend specialist
-    (5, "interviewer_viet", "viet.bui@rms-tech.vn", "Bùi Quốc Việt", "0908901234", 1, "2026-08-15 09:00:00"),
-    # UserId 9: Interviewer (RoleInPanel: Interviewer) - QA specialist
-    (5, "interviewer_thao", "thao.ngo@rms-tech.vn", "Ngô Phương Thảo", "0909012345", 1, "2026-08-15 09:30:00"),
-    # UserId 10: Interviewer (RoleInPanel: Interviewer) - Sales specialist
-    (5, "interviewer_trung", "trung.dang@rms-tech.vn", "Đặng Thành Trung", "0909123456", 2, "2026-08-15 10:00:00")
-]
 
-for role_id, uname, email, fname, phone, dept_id, created_at in internal_users:
-    avatar = f"https://ui-avatars.com/api/?name={fname.replace(' ', '+')}&background=0D8ABC&color=fff"
-    lines.append(
-        f"INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) "
-        f"VALUES ({role_id}, N'{uname}', N'{bcrypt_hash}', N'{email}', N'{fname}', N'{phone}', N'{avatar}', {dept_id}, N'Active', '{created_at}');"
-    )
+tables = {}  # tên bảng -> (cột, [dòng])
 
-lines.append("")
-lines.append("-- Update Department Managers (Kỹ thuật -> hm_tuan (5), Kinh doanh & Marketing -> hm_huong (6), Nhân sự -> director (2))")
-lines.append("UPDATE Department SET ManagerId = 5 WHERE DepartmentId = 1;")
-lines.append("UPDATE Department SET ManagerId = 6 WHERE DepartmentId = 2;")
-lines.append("UPDATE Department SET ManagerId = 2 WHERE DepartmentId = 3;")
-lines.append("")
 
-# 4. SYSTEM CONFIG
-lines.append("-- =============================================================================")
-lines.append("-- 4. SYSTEM CONFIG (4 SME System Configurations)")
-lines.append("-- =============================================================================")
-configs = [
-    ("SMTP_HOST", "smtp.office365.com", "Máy chủ mail gateway gửi email tự động cho ứng viên", "2026-09-01 08:00:00"),
-    ("SME_COMPANY_NAME", "RMS Technology Solutions Vietnam", "Tên doanh nghiệp công nghệ SME triển khai hệ thống RMS", "2026-09-01 08:00:00")
-]
-for k, v, desc, u_at in configs:
-    lines.append(f"INSERT INTO SystemConfig (ConfigKey, ConfigValue, [Description], UpdatedAt) VALUES (N'{k}', N'{v}', N'{desc}', '{u_at}');")
-lines.append("")
+def add(table, row):
+    cols, rows = tables.setdefault(table, (list(row.keys()), []))
+    rows.append(row)
+    return row
 
-# 5. AUDIT LOG (18 logs before Sep 30, 2026)
-lines.append("-- =============================================================================")
-lines.append("-- 5. AUDIT LOG (18 SME System Activity Logs Prior to 2026-09-30)")
-lines.append("-- =============================================================================")
-audit_logs = [
-    (1, "LOGIN", "User", "1", None, "User logged in successfully", "192.168.1.10", "2026-08-01 08:05:00"),
-    (1, "CREATE", "Department", "1", None, "Đã tạo phòng ban Kỹ thuật", "192.168.1.10", "2026-08-01 08:10:00"),
-    (1, "CREATE", "Department", "2", None, "Đã tạo phòng ban Kinh doanh & Marketing", "192.168.1.10", "2026-08-01 08:12:00"),
-    (1, "CREATE", "Department", "3", None, "Đã tạo phòng ban Nhân sự", "192.168.1.10", "2026-08-01 08:15:00"),
-    (1, "CREATE", "User", "2", None, "Created director account", "192.168.1.10", "2026-08-01 08:35:00"),
-    (2, "LOGIN", "User", "2", None, "Director initial login", "192.168.1.15", "2026-08-02 09:00:00"),
-    (5, "CREATE", "JobRequisition", "1", None, "Tạo yêu cầu: Senior Java Backend Engineer · Pending_Director", "192.168.1.25", "2026-09-10 09:00:00"),
-    (2, "UPDATE", "JobRequisition", "1", "Pending_Director", "Status: Pending_Director → Approved\nÝ kiến Giám đốc: Đã rà soát ngân sách quý 4/2026. Đồng ý phê duyệt tuyển 2 kỹ sư Java Backend.", "192.168.1.15", "2026-09-15 10:00:00"),
-    (5, "CREATE", "JobRequisition", "2", None, "Tạo yêu cầu: Frontend ReactJS Developer · Pending_Director", "192.168.1.25", "2026-09-11 10:00:00"),
-    (2, "UPDATE", "JobRequisition", "2", "Pending_Director", "Status: Pending_Director → Approved\nÝ kiến Giám đốc: Phê duyệt tuyển 2 vị trí Frontend ReactJS phục vụ kế hoạch ra mắt Portal mới.", "192.168.1.15", "2026-09-16 11:00:00"),
-    (5, "CREATE", "JobRequisition", "3", None, "Tạo yêu cầu: QA Automation Engineer · Pending_Director", "192.168.1.25", "2026-09-12 08:30:00"),
-    (2, "UPDATE", "JobRequisition", "3", "Pending_Director", "Status: Pending_Director → Approved\nÝ kiến Giám đốc: Đồng ý tuyển 1 kỹ sư QA Automation để củng cố quy trình kiểm thử CI/CD.", "192.168.1.15", "2026-09-17 14:00:00"),
-    (6, "CREATE", "JobRequisition", "4", None, "Tạo yêu cầu: Business Development Executive (B2B) · Pending_Director", "192.168.1.30", "2026-09-15 14:00:00"),
-    (2, "UPDATE", "JobRequisition", "4", "Pending_Director", "Status: Pending_Director → Approved\nÝ kiến Giám đốc: Phê duyệt mở 2 vị trí Business Development mở rộng tệp khách hàng B2B.", "192.168.1.15", "2026-09-18 09:30:00"),
-    (3, "CREATE", "JobPosting", "1", None, "Published Senior Java Engineer posting", "192.168.1.20", "2026-09-25 08:05:00"),
-    (3, "CREATE", "JobPosting", "2", None, "Published Frontend React posting", "192.168.1.20", "2026-09-25 08:35:00")
-]
-
-for u_id, act, ent_name, ent_id, old_v, new_v, ip, ts in audit_logs:
-    old_str = f"N'{old_v}'" if old_v else "NULL"
-    lines.append(
-        f"INSERT INTO AuditLog (UserId, [Action], EntityName, EntityId, OldValue, NewValue, IpAddress, [Timestamp]) "
-        f"VALUES ({u_id}, N'{act}', N'{ent_name}', N'{ent_id}', {old_str}, N'{new_v}', N'{ip}', '{ts}');"
-    )
-lines.append("")
-
-# 6. JOB REQUISITION (4 Approved positions)
-lines.append("-- =============================================================================")
-lines.append("-- 6. JOB REQUISITION (4 SME Requisitions: Java, React, QA, Business Dev)")
-lines.append("-- =============================================================================")
-requisitions = [
-    (
-        "Senior Java Backend Engineer", 1, 5, 2, "Full-time", 30000000.00, 45000000.00,
-        "Mở rộng đội ngũ kỹ thuật phát triển hệ thống Core RMS & Microservices",
-        "Phát triển backend RESTful APIs bằng Spring Boot, tối ưu hóa cơ sở dữ liệu SQL Server, triển khai Docker/Kubernetes.",
-        "Tối thiểu 3 năm kinh nghiệm lập trình Java, thành thạo Spring Boot, JPA/Hibernate, hiểu sâu về Caching Redis và Message Queue RabbitMQ.",
-        "Any", "2 tháng", "Hybrid", "Tầng 8, Tòa nhà RMS Tower, Phố Duy Tân, Cầu Giấy, Hà Nội",
-        "Approved", "2026-09-10 09:00:00", "2026-09-15 10:00:00"
-    ),
-    (
-        "Frontend ReactJS Developer", 1, 5, 2, "Full-time", 20000000.00, 32000000.00,
-        "Xây dựng giao diện web portal quản trị và cổng ứng viên hiện đại, responsive",
-        "Phát triển module giao diện người dùng bằng React 18, TypeScript, TailwindCSS/Vanilla CSS, tích hợp REST APIs.",
-        "Tối thiểu 2 năm kinh nghiệm ReactJS, thành thạo Redux Toolkit hoặc Zustand, có kinh nghiệm tối ưu hóa hiệu năng web và UI/UX.",
-        "Any", "2 tháng", "Hybrid", "Tầng 8, Tòa nhà RMS Tower, Phố Duy Tân, Cầu Giấy, Hà Nội",
-        "Approved", "2026-09-11 10:00:00", "2026-09-16 11:00:00"
-    ),
-    (
-        "QA Automation Engineer", 1, 5, 1, "Full-time", 18000000.00, 28000000.00,
-        "Thiết lập quy trình kiểm thử tự động, đảm bảo chất lượng hệ thống phần mềm trước release",
-        "Xây dựng test automation framework cho API và Web UI bằng Playwright/Selenium và Java/Python, tích hợp CI/CD.",
-        "Tối thiểu 2 năm kinh nghiệm Automation Test, thành thạo Postman/Newman, k6 hoặc JMeter, hiểu biết về quy trình Agile/Scrum.",
-        "Any", "2 tháng", "On-site", "Tầng 8, Tòa nhà RMS Tower, Phố Duy Tân, Cầu Giấy, Hà Nội",
-        "Approved", "2026-09-12 08:30:00", "2026-09-17 14:00:00"
-    ),
-    (
-        "Business Development Executive (B2B)", 2, 6, 2, "Full-time", 15000000.00, 25000000.00,
-        "Mở rộng thị trường khách hàng doanh nghiệp SME sử dụng giải pháp phần mềm",
-        "Tìm kiếm khách hàng tiềm năng B2B, tư vấn giải pháp chuyển đổi số, đàm phán và ký kết hợp đồng dịch vụ phần mềm.",
-        "Tối thiểu 1 năm kinh nghiệm Sales B2B khối phần mềm/IT, kỹ năng giao tiếp và thuyết trình xuất sắc, tiếng Anh giao tiếp tốt.",
-        "Any", "2 tháng", "On-site", "Quận 1, TP. Hồ Chí Minh & Cầu Giấy, Hà Nội",
-        "Approved", "2026-09-15 14:00:00", "2026-09-18 09:30:00"
-    )
-]
-
-# Schema mới yêu cầu RequisitionCode và RecruitmentRound (NOT NULL, > 0)
-for idx, (title, d_id, hm_id, num_pos, emp_type, min_sal, max_sal, reason, jd, req_det, req_gender, prob_duration, work_model, work_loc, app_status, cr_at, up_at) in enumerate(requisitions, start=1):
-    req_code = f"REQ-{idx:04d}"
-    rec_round = 1  # Vòng tuyển dụng đầu tiên
-    lines.append(
-        f"INSERT INTO JobRequisition (Title, RequisitionCode, RecruitmentRound, DepartmentId, HiringManagerId, NumberOfPositions, EmploymentType, MinSalary, MaxSalary, ReasonForHiring, JobDescription, RequirementDetails, RequiredGender, ProbationDuration, WorkModel, WorkLocation, ApprovalStatus, CreatedAt, UpdatedAt) "
-        f"VALUES (N'{title}', N'{req_code}', {rec_round}, {d_id}, {hm_id}, {num_pos}, N'{emp_type}', {min_sal:.2f}, {max_sal:.2f}, N'{reason}', N'{jd}', N'{req_det}', N'{req_gender}', N'{prob_duration}', N'{work_model}', N'{work_loc}', N'{app_status}', '{cr_at}', '{up_at}');"
-    )
-lines.append("")
-
-# 7. REQUISITION APPROVAL
-lines.append("-- =============================================================================")
-lines.append("-- 7. REQUISITION APPROVAL (Director Approvals for 4 Requisitions)")
-lines.append("-- =============================================================================")
-req_approvals = [
-    (1, 2, "Approved", "Đã rà soát ngân sách quý 4/2026. Đồng ý phê duyệt tuyển 2 kỹ sư Java Backend.", "2026-09-15 10:00:00"),
-    (2, 2, "Approved", "Phê duyệt tuyển 2 vị trí Frontend ReactJS phục vụ kế hoạch ra mắt Portal mới.", "2026-09-16 11:00:00"),
-    (3, 2, "Approved", "Đồng ý tuyển 1 kỹ sư QA Automation để củng cố quy trình kiểm thử CI/CD.", "2026-09-17 14:00:00"),
-    (4, 2, "Approved", "Phê duyệt mở 2 vị trí Business Development mở rộng tệp khách hàng B2B.", "2026-09-18 09:30:00")
-]
-for req_id, dir_id, st, com, ap_dt in req_approvals:
-    lines.append(
-        f"INSERT INTO RequisitionApproval (RequisitionId, DirectorId, [Status], Comments, ApprovalDate) "
-        f"VALUES ({req_id}, {dir_id}, N'{st}', N'{com}', '{ap_dt}');"
-    )
-lines.append("")
-
-# 9. JOB POSTING (4 Published postings)
-lines.append("-- =============================================================================")
-lines.append("-- 9. JOB POSTING (4 Published Job Postings Active from 2026-09-25 to 2026-12-31)")
-lines.append("-- =============================================================================")
-job_postings = [
-    (
-        1, "Senior Java Backend Engineer (Spring Boot / Microservices)",
-        "Chúng tôi tìm kiếm Senior Java Engineer tham gia xây dựng nền tảng quản trị tuyển dụng và nhân sự RMS hiệu năng cao.",
-        "- Tối thiểu 3 năm làm việc với Java, Spring Boot, Hibernate\n- Thành thạo SQL Server, Redis Cache\n- Có tư duy thiết kế hệ thống Microservices sạch sẽ.",
-        "- Mức lương cạnh tranh từ 30 - 45 triệu\n- Thưởng dự án và tháng lương 13\n- Bảo hiểm sức khỏe PVI cao cấp\n- Môi trường làm việc trẻ trung, trang thiết bị Macbook Pro.",
-        "30,000,000 - 45,000,000 VND", "Tầng 8, Tòa nhà RMS Tower, Phố Duy Tân, Cầu Giấy, Hà Nội",
-        "2026-09-25 08:00:00", "2026-12-31 23:59:59", "Published", 3, "2026-09-25 08:00:00"
-    ),
-    (
-        2, "Frontend ReactJS Developer (TypeScript / Next.js)",
-        "Gia nhập đội ngũ Frontend để phát triển cổng thông tin quản trị và trải nghiệm ứng viên mượt mà, chuẩn UI/UX.",
-        "- Tối thiểu 2 năm kinh nghiệm ReactJS, TypeScript\n- Khả năng xây dựng Responsive Web và Design System hiện đại\n- Thành thạo Redux Toolkit hoặc Zustand.",
-        "- Thu nhập 20 - 32 triệu\n- Review lương 2 lần/năm\n- Du lịch công ty hằng năm\n- Hỗ trợ chi phí chứng chỉ chuyên môn quốc tế.",
-        "20,000,000 - 32,000,000 VND", "Tầng 8, Tòa nhà RMS Tower, Phố Duy Tân, Cầu Giấy, Hà Nội",
-        "2026-09-25 08:30:00", "2026-12-31 23:59:59", "Published", 3, "2026-09-25 08:30:00"
-    ),
-    (
-        3, "QA Automation Engineer (Playwright / Selenium / API)",
-        "Đảm bảo chất lượng các bản phát hành phần mềm bằng hệ thống kiểm thử tự động toàn diện và liên tục.",
-        "- Tối thiểu 2 năm kinh nghiệm Automation Test web và API\n- Nắm vững Playwright hoặc Selenium\n- Kinh nghiệm CI/CD với GitLab/GitHub Actions.",
-        "- Thu nhập 18 - 28 triệu\n- Phụ cấp ăn trưa, gửi xe\n- Tham gia các khóa đào tạo nâng cao kỹ năng kiểm thử và bảo mật.",
-        "18,000,000 - 28,000,000 VND", "Tầng 8, Tòa nhà RMS Tower, Phố Duy Tân, Cầu Giấy, Hà Nội",
-        "2026-09-25 09:00:00", "2026-12-31 23:59:59", "Published", 3, "2026-09-25 09:00:00"
-    ),
-    (
-        4, "Chuyên Viên Phát Triển Kinh Doanh B2B (Software Solutions)",
-        "Tìm kiếm và phát triển mạng lưới khách hàng doanh nghiệp sử dụng hệ thống phần mềm quản trị RMS.",
-        "- Tối thiểu 1 năm kinh nghiệm kinh doanh B2B ngành CNTT / SaaS\n- Khả năng giao tiếp, thương lượng và chốt deal xuất sắc\n- Tinh thần chủ động, trách nhiệm cao.",
-        "- Lương cứng 15 - 25 triệu + Hoa hồng doanh số hấp dẫn\n- Thu nhập trung bình 30 - 45 triệu/tháng\n- Lộ trình thăng tiến rõ ràng lên Trưởng nhóm kinh doanh.",
-        "15,000,000 - 25,000,000 VND + Hoa hồng", "Quận 1, TP. Hồ Chí Minh & Cầu Giấy, Hà Nội",
-        "2026-09-25 09:30:00", "2026-12-31 23:59:59", "Published", 3, "2026-09-25 09:30:00"
-    )
-]
-
-for req_id, title, jd, jr, ben, sal_disp, loc, p_date, dead_date, st, cr_by, cr_at in job_postings:
-    lines.append(
-        f"INSERT INTO JobPosting (RequisitionId, PostingTitle, JobDescription, JobRequirements, Benefits, SalaryDisplay, WorkLocation, PostingDate, ApplicationDeadline, PostingStatus, CreatedBy, CreatedAt) "
-        f"VALUES ({req_id}, N'{title}', N'{jd}', N'{jr}', N'{ben}', N'{sal_disp}', N'{loc}', '{p_date}', '{dead_date}', N'{st}', {cr_by}, '{cr_at}');"
-    )
-lines.append("")
 
 # =============================================================================
-# CANDIDATES & APPLICATION FLOW (77 Days: 2026-09-30 to 2026-12-15)
-# Every single day has EXACTLY 3 or 4 candidates.
+# 1. ROLE, DEPARTMENT, USER NỘI BỘ
 # =============================================================================
-lines.append("-- =============================================================================")
-lines.append("-- 10. CANDIDATES & APPLICATIONS FLOW (2026-09-30 TO 2026-12-15 = 77 DAYS)")
-lines.append("-- STRICT PROTOCOL: Exactly 3 or 4 applications per day, fully written out.")
-lines.append("-- =============================================================================")
+ROLES = [(1, "System Admin", "Quản trị viên toàn quyền cấu hình và vận hành hệ thống"),
+         (2, "HR", "Chuyên viên tuyển dụng phụ trách quản lý hồ sơ và quy trình ứng tuyển"),
+         (3, "Hiring Manager", "Trưởng bộ phận chuyên môn duyệt yêu cầu và phỏng vấn chuyên sâu"),
+         (4, "Director", "Giám đốc phê duyệt phiếu yêu cầu tuyển dụng và đề xuất đãi ngộ"),
+         (5, "Interviewer", "Thành viên hội đồng đánh giá chuyên môn phỏng vấn ứng viên"),
+         (6, "Candidate", "Ứng viên tham gia nộp hồ sơ và ứng tuyển vào doanh nghiệp")]
+for rid, name, desc in ROLES:
+    add("[Role]", {"RoleId": rid, "RoleName": name, "[Description]": desc})
 
-start_date = datetime.date(2026, 9, 30)
-end_date = datetime.date(2026, 12, 15)
-num_days = (end_date - start_date).days + 1  # 77 days
+DEPTS = [(1, "Kỹ thuật", 5, "Active"), (2, "Kinh doanh & Marketing", 6, "Active"), (3, "Nhân sự", 2, "Active"),
+         (4, "Tài chính – Kế toán", 11, "Active"), (5, "Sản phẩm & Thiết kế", None, "Inactive")]
+for did, name, _, st in DEPTS:
+    add("Department", {"DepartmentId": did, "DepartmentName": name, "ManagerId": None, "DepartmentStatus": st})
 
-# Pre-determine apps per day: 3 or 4
-# Let's create an alternating/realistic sequence of 3s and 4s
-daily_counts = []
-for i in range(num_days):
-    # Weekday vs weekend realistic variation: 4 on busy days, 3 on others
-    day_obj = start_date + datetime.timedelta(days=i)
-    if day_obj.weekday() in [1, 2, 3]:  # Tue, Wed, Thu usually have more applications
-        daily_counts.append(4)
+ADMIN, DIRECTOR, HR_LAN, HR_QUANG, HM_TUAN, HM_HUONG = 1, 2, 3, 4, 5, 6
+IV_NAM, IV_VIET, IV_THAO, IV_TRUNG, HM_MINH, HR_NGOC, IV_HOA = 7, 8, 9, 10, 11, 12, 13
+HRS = [HR_LAN, HR_QUANG]
+INTERNAL = [
+    # id, role, username, email, name, phone, dept, status, created(day)
+    (1, 1, "admin", "admin@rms-tech.vn", "Trần Minh Đức", "0901234567", 1, "Active", -120),
+    (2, 4, "director", "hoang.director@rms-tech.vn", "Nguyễn Thế Hoàng", "0902345678", 3, "Active", -120),
+    (3, 2, "hr_lan", "lan.le@rms-tech.vn", "Lê Thị Mai Lan", "0903456789", 3, "Active", -115),
+    (4, 2, "hr_quang", "quang.pham@rms-tech.vn", "Phạm Quang Huy", "0904567890", 3, "Active", -115),
+    (5, 3, "hm_tuan", "tuan.vu@rms-tech.vn", "Vũ Anh Tuấn", "0905678901", 1, "Active", -110),
+    (6, 3, "hm_huong", "huong.do@rms-tech.vn", "Đỗ Thu Hương", "0906789012", 2, "Active", -110),
+    (7, 5, "interviewer_nam", "nam.hoang@rms-tech.vn", "Hoàng Nhật Nam", "0907890123", 1, "Active", -105),
+    (8, 5, "interviewer_viet", "viet.bui@rms-tech.vn", "Bùi Quốc Việt", "0908901234", 1, "Active", -105),
+    (9, 5, "interviewer_thao", "thao.ngo@rms-tech.vn", "Ngô Phương Thảo", "0909012345", 1, "Active", -105),
+    (10, 5, "interviewer_trung", "trung.dang@rms-tech.vn", "Đặng Thành Trung", "0909123456", 2, "Active", -105),
+    (11, 3, "hm_minh", "minh.tran@rms-tech.vn", "Trần Đức Minh", "0909234567", 4, "Active", -100),
+    (12, 2, "hr_ngoc", "ngoc.vo@rms-tech.vn", "Võ Bảo Ngọc", "0909345678", 3, "Inactive", -100),
+    (13, 5, "interviewer_hoa", "hoa.ly@rms-tech.vn", "Lý Thanh Hoa", "0909456789", 4, "Active", -95),
+]
+USER_NAME = {}
+for uid, role, uname, email, name, phone, dept, st, cday in INTERNAL:
+    USER_NAME[uid] = name
+    add("[User]", {"UserId": uid, "RoleId": role, "Username": uname, "PasswordHash": BCRYPT, "Email": email,
+                   "FullName": name, "PhoneNumber": phone, "AvatarUrl": None, "DepartmentId": dept,
+                   "AccountStatus": st, "CreatedAt": T(at(cday, 8)),
+                   "UpdatedAt": T(at(-20, 10)) if st == "Inactive" else None})
+
+add("SystemConfig", {"ConfigKey": "SME_COMPANY_NAME", "ConfigValue": "RMS Technology Solutions Vietnam",
+                     "[Description]": "Tên doanh nghiệp triển khai hệ thống RMS", "UpdatedAt": T(at(-120, 8))})
+add("SystemConfig", {"ConfigKey": "SMTP_HOST", "ConfigValue": "smtp.gmail.com",
+                     "[Description]": "Máy chủ gửi email tự động cho ứng viên", "UpdatedAt": T(at(-120, 8))})
+
+# =============================================================================
+# 2. AUDIT & NOTIFICATION HELPERS
+# =============================================================================
+def audit(user, action, entity, eid, old, new, when, ip="192.168.1.20"):
+    add("AuditLog", {"UserId": user, "[Action]": action, "EntityName": entity, "EntityId": str(eid),
+                     "OldValue": old, "NewValue": new, "IpAddress": ip, "[Timestamp]": T(when)})
+
+
+notified = set()
+
+
+def notify(recipient, actor, title, content, event_type, ref_id, link, event_id, when):
+    if (recipient, event_id) in notified or recipient == actor:
+        return
+    notified.add((recipient, event_id))
+    is_read = when < at(-2)  # cũ hơn 2 ngày thì đã đọc
+    add("[Notification]", {"RecipientId": recipient, "ActorId": actor, "Title": title, "Content": content,
+                           "EventType": Raw(f"'{event_type}'"), "ReferenceType": None,
+                           "ReferenceId": Raw(f"'{ref_id}'"), "LinkUrl": link, "IsRead": is_read,
+                           "ReadAt": T(when + 120) if is_read else None,
+                           "EventId": Raw(f"'{event_id}'"), "CreatedAt": T(when)})
+
+
+for uid in (ADMIN, DIRECTOR, HR_LAN, HR_QUANG, HM_TUAN, HM_HUONG, HM_MINH, IV_VIET):
+    for d in (-30, -7, -1):
+        audit(uid, "LOGIN", "User", uid, None, "Đăng nhập thành công", at(d, 8, 5 + uid))
+audit(ADMIN, "CREATE", "Department", 4, None, "Tạo phòng ban: Tài chính – Kế toán", at(-118, 9))
+audit(ADMIN, "CREATE", "Department", 5, None, "Tạo phòng ban: Sản phẩm & Thiết kế", at(-118, 9, 5))
+audit(ADMIN, "UPDATE", "Department", 5, "Active", "Inactive", at(-25, 14))
+audit(ADMIN, "CREATE", "User", HM_MINH, None, "Tạo tài khoản hm_minh (Hiring Manager)", at(-100, 9))
+audit(ADMIN, "UPDATE", "User", HR_NGOC, "Active", "Inactive", at(-20, 10))
+audit(ADMIN, "UPDATE", "SystemConfig", "SMTP_HOST", "smtp.office365.com", "smtp.gmail.com", at(-60, 15))
+audit(ADMIN, "UPDATE", "PolicyDocument", "privacy", None, "Chính sách bảo mật: thay file privacy.pdf (120 KB)", at(-40, 11))
+
+# =============================================================================
+# 3. JOB REQUISITION + APPROVAL
+# =============================================================================
+JD = {
+    "java": ("Phát triển RESTful API bằng Spring Boot, tối ưu SQL Server, triển khai Docker.",
+             "Tối thiểu 3 năm Java, thành thạo Spring Boot, JPA/Hibernate, Redis, RabbitMQ."),
+    "react": ("Phát triển giao diện web bằng React 18, TypeScript, tích hợp REST API.",
+              "Tối thiểu 2 năm ReactJS, thành thạo Redux Toolkit hoặc Zustand."),
+    "qa": ("Xây dựng framework kiểm thử tự động API và Web UI bằng Playwright, tích hợp CI/CD.",
+           "Tối thiểu 2 năm Automation Test, thành thạo Postman, Playwright hoặc Selenium."),
+    "bd": ("Tìm kiếm khách hàng B2B, tư vấn giải pháp chuyển đổi số, đàm phán hợp đồng.",
+           "Tối thiểu 1 năm Sales B2B ngành phần mềm, giao tiếp và thuyết trình tốt."),
+    "mkt": ("Lập kế hoạch và triển khai chiến dịch quảng cáo Facebook, Google, TikTok.",
+            "Tối thiểu 1 năm Digital Marketing, biết đo lường hiệu quả chiến dịch."),
+    "acc": ("Hạch toán, lập báo cáo thuế tháng/quý, quyết toán cuối năm.",
+            "Tốt nghiệp Kế toán – Kiểm toán, tối thiểu 2 năm kế toán tổng hợp, thành thạo MISA."),
+    "intern": ("Tham gia phát triển module nội bộ cùng đội Backend dưới sự hướng dẫn của mentor.",
+               "Sinh viên năm 3-4 ngành CNTT, nắm vững Java cơ bản và OOP."),
+    "devops": ("Vận hành hạ tầng Kubernetes, xây dựng pipeline CI/CD.",
+               "Tối thiểu 2 năm DevOps, thành thạo Docker, Kubernetes, Terraform."),
+    "data": ("Phân tích dữ liệu kinh doanh, xây dựng dashboard Power BI.",
+             "Thành thạo SQL, Excel nâng cao, Power BI."),
+    "salesadmin": ("Hỗ trợ đội kinh doanh soạn hợp đồng, theo dõi công nợ.",
+                   "Cẩn thận, thành thạo tin học văn phòng."),
+    "mobile": ("Phát triển ứng dụng di động bằng Flutter.", "Tối thiểu 1 năm Flutter hoặc React Native."),
+    "cs": ("Tiếp nhận và xử lý yêu cầu hỗ trợ của khách hàng qua điện thoại, email, chat.",
+           "Giao tiếp tốt, kiên nhẫn, ưu tiên có kinh nghiệm chăm sóc khách hàng."),
+    "ba": ("Thu thập yêu cầu, viết tài liệu đặc tả, phối hợp đội phát triển.",
+           "Tối thiểu 2 năm Business Analyst, thành thạo UML, BPMN."),
+}
+HN = "Tầng 8, Tòa nhà RMS Tower, Phố Duy Tân, Cầu Giấy, Hà Nội"
+HCM = "Số 12 Lê Thánh Tôn, Bến Nghé, Quận 1, TP. Hồ Chí Minh"
+# id, code, title, key, dept, hm, created_by, positions, type, min, max, gender, probation, model, location,
+# status, created(day), submitted(day), round, original
+REQS = [
+    (1, "Senior Java Backend Engineer", "java", 1, HM_TUAN, 2, "Full-time", 30e6, 45e6, "Any", "2 tháng", "Hybrid", HN, "Approved", -75, -74),
+    (2, "Frontend ReactJS Developer", "react", 1, HM_TUAN, 2, "Full-time", 20e6, 32e6, "Any", "2 tháng", "Hybrid", HN, "Approved", -74, -73),
+    (3, "QA Automation Engineer", "qa", 1, HM_TUAN, 1, "Full-time", 18e6, 28e6, "Any", "2 tháng", "On-site", HN, "Approved", -73, -72),
+    (4, "Business Development Executive (B2B)", "bd", 2, HM_HUONG, 2, "Full-time", 15e6, 25e6, "Any", "2 tháng", "On-site", HCM, "Approved", -72, -71),
+    (5, "Digital Marketing Specialist", "mkt", 2, HM_HUONG, 1, "Contract", 14e6, 20e6, "Female", "1 tháng", "Hybrid", HCM, "Approved", -70, -69),
+    (6, "Kế toán tổng hợp", "acc", 4, HM_MINH, 1, "Full-time", 15e6, 22e6, "Any", "Thỏa thuận", "On-site", HN, "Approved", -68, -67),
+    (7, "Thực tập sinh Java Backend", "intern", 1, HM_TUAN, 3, "Internship", 3e6, 5e6, "Any", None, "Remote", None, "Approved", -100, -99),
+    (8, "DevOps Engineer", "devops", 1, HM_TUAN, 1, "Full-time", 30e6, 40e6, "Any", "2 tháng", "Hybrid", HN, "Pending_Director", -3, -2),
+    (9, "Data Analyst", "data", 4, HM_MINH, 1, "Full-time", None, None, "Any", "2 tháng", "On-site", HN, "Draft", -1, None),
+    (10, "Sales Admin bán thời gian", "salesadmin", 2, HM_HUONG, 1, "Part-time", 6e6, 8e6, "Female", None, "On-site", HCM, "Rejected", -20, -19),
+    (11, "Mobile Developer (Flutter)", "mobile", 1, HM_TUAN, 1, "Full-time", 20e6, 30e6, "Any", "2 tháng", "On-site", HN, "Cancelled", -30, None),
+    (12, "Customer Support Executive", "cs", 2, HM_HUONG, 2, "Full-time", 9e6, 12e6, "Any", "1 tháng", "On-site", HCM, "Closed", -110, -109),
+    (13, "Customer Support Executive", "cs", 2, HM_HUONG, 1, "Full-time", 9e6, 13e6, "Any", "1 tháng", "On-site", HCM, "Approved", -6, -5),
+    (14, "Business Analyst", "ba", 1, HM_TUAN, 1, "Full-time", 22e6, 32e6, "Male", "2 tháng", "Hybrid", HN, "Approved", -5, -4),
+]
+REQ = {}
+for rid, title, key, dept, hm, pos, etype, mn, mx, gender, prob, model, loc, st, cday, sday in REQS:
+    rnd, orig = (2, 12) if rid == 13 else (1, None)
+    REQ[rid] = dict(title=title, key=key, dept=dept, hm=hm, pos=pos, type=etype, min=mn, max=mx, model=model,
+                    loc=loc, gender=gender, prob=prob)
+    approved_day = (sday or cday) + 2
+    add("JobRequisition", {
+        "RequisitionId": rid, "Title": title, "RequisitionCode": f"REQ-{rid:04d}", "DepartmentId": dept,
+        "HiringManagerId": hm, "CreatedBy": hm, "RecruitmentRound": rnd, "OriginalRequisitionId": orig,
+        "NumberOfPositions": pos, "EmploymentType": etype,
+        "MinSalary": None if mn is None else f"{mn:.2f}", "MaxSalary": None if mx is None else f"{mx:.2f}",
+        "ReasonForHiring": f"Bổ sung nhân sự cho vị trí {title} theo kế hoạch quý." + (" Tuyển đợt 2 do đợt 1 chưa đủ người." if rid == 13 else ""),
+        "JobDescription": JD[key][0], "RequirementDetails": JD[key][1], "RequiredGender": gender,
+        "ProbationPeriod": prob, "WorkModel": model, "WorkLocation": loc, "ApprovalStatus": st,
+        "SubmittedAt": T(at(sday, 9)) if sday is not None else None,
+        "ClosedAt": T(at(-12, 17)) if st == "Closed" else None,
+        "CreatedAt": T(at(cday, 9)),
+        "UpdatedAt": T(at(min(approved_day, -1), 10)) if st not in ("Draft", "Pending_Director") else None})
+    # MinSalary/MaxSalary là DECIMAL: bỏ dấu nháy
+    row = tables["JobRequisition"][1][-1]
+    for c in ("MinSalary", "MaxSalary"):
+        if row[c] is not None:
+            row[c] = Raw(row[c])
+    audit(hm, "CREATE", "JobRequisition", rid, None,
+          f"Tạo yêu cầu: {title} · {'Draft' if sday is None else 'Pending_Director'}", at(cday, 9))
+    if sday is not None:
+        notify(DIRECTOR, hm, "Yêu cầu tuyển dụng mới cần duyệt", f"{USER_NAME[hm]} gửi yêu cầu \"{title}\" chờ phê duyệt.",
+               "REQUISITION_PENDING_DIRECTOR", rid, f"/requisitions/{rid}", f"REQ_PENDING_DIR_{rid}_{DIRECTOR}_{rid}", at(sday, 9))
+    if rid == 6:  # bị từ chối một lần, sửa rồi được duyệt
+        add("RequisitionApproval", {"RequisitionId": rid, "DirectorId": DIRECTOR, "[Status]": "Rejected",
+                                    "Comments": "Mức lương đề xuất vượt ngân sách, đề nghị điều chỉnh.", "ApprovalDate": T(at(cday + 1, 15))})
+    if st in ("Approved", "Closed"):
+        add("RequisitionApproval", {"RequisitionId": rid, "DirectorId": DIRECTOR, "[Status]": "Approved",
+                                    "Comments": f"Đồng ý tuyển {pos} vị trí {title}.", "ApprovalDate": T(at(approved_day, 10))})
+        audit(DIRECTOR, "UPDATE", "JobRequisition", rid, "Pending_Director", "Approved", at(approved_day, 10))
+        notify(hm, DIRECTOR, "Yêu cầu tuyển dụng đã được duyệt", f"Yêu cầu \"{title}\" đã được Giám đốc phê duyệt.",
+               "REQUISITION_APPROVED", rid, f"/requisitions/{rid}", f"REQ_APPROVE_{rid}", at(approved_day, 10))
+        for hr in HRS:
+            notify(hr, DIRECTOR, "Yêu cầu tuyển dụng đã được duyệt", f"Yêu cầu \"{title}\" đã được duyệt, có thể tạo tin tuyển dụng.",
+                   "REQUISITION_APPROVED", rid, f"/internal/job-postings/create?requisitionId={rid}", f"REQ_APPROVE_{rid}", at(approved_day, 10))
+    if st == "Rejected":
+        add("RequisitionApproval", {"RequisitionId": rid, "DirectorId": DIRECTOR, "[Status]": "Rejected",
+                                    "Comments": "Chưa cần thiết trong quý này, đề nghị phân bổ lại công việc nội bộ.", "ApprovalDate": T(at(sday + 1, 11))})
+        audit(DIRECTOR, "UPDATE", "JobRequisition", rid, "Pending_Director", "Rejected", at(sday + 1, 11))
+        notify(hm, DIRECTOR, "Yêu cầu tuyển dụng bị từ chối", f"Yêu cầu \"{title}\" đã bị Giám đốc từ chối.",
+               "REQUISITION_REJECTED", rid, f"/requisitions/{rid}", f"REQ_REJECT_{rid}", at(sday + 1, 11))
+    if st == "Cancelled":
+        audit(hm, "UPDATE", "JobRequisition", rid, "Draft", "Cancelled", at(cday + 3, 16))
+    if st == "Closed":
+        audit(HR_LAN, "UPDATE", "JobRequisition", rid, "Approved", "Closed", at(-12, 17))
+
+# =============================================================================
+# 4. JOB POSTING
+# =============================================================================
+BENEFITS = "- Lương tháng 13, thưởng dự án\n- Bảo hiểm sức khỏe PVI\n- 12 ngày phép năm\n- Review lương 2 lần/năm"
+HOURS = "Thứ 2 - Thứ 6 (08:30 - 17:30)"
+# id, req, no, status, posted(day), deadline(day), creator, overrides
+POSTINGS = [
+    (1, 1, 1, "Published", -60, 30, HR_LAN, {}),
+    (2, 2, 1, "Published", -58, 25, HR_LAN, {"NumberOfPositionsDisplay": None}),
+    (3, 3, 1, "Paused", -55, 20, HR_QUANG, {}),
+    (4, 4, 1, "Published", -56, 21, HR_QUANG, {"WorkingHours": "Thứ 2 - Thứ 7 (08:00 - 17:00)"}),
+    (5, 5, 1, "Published", -45, -2, HR_QUANG, {}),  # đã quá hạn nộp nhưng chưa đóng
+    (6, 6, 1, "Published", -40, 35, HR_LAN, {"ProbationPeriod": None}),
+    (7, 7, 1, "Closed", -95, -50, HR_LAN, {}),
+    (8, 7, 2, "Published", 0, 40, HR_LAN, {"WorkModel": "Hybrid", "EmploymentType": "Internship"}),  # đăng lại hôm nay
+    (9, 12, 1, "Closed", -105, -15, HR_QUANG, {}),
+    (10, 13, 1, "Draft", None, None, HR_QUANG, {}),
+]
+POST = {}
+for pid, rid, no, st, pday, dday, creator, ov in POSTINGS:
+    r = REQ[rid]
+    POST[pid] = dict(req=rid, title=r["title"], hm=r["hm"], key=r["key"], status=st)
+    salary = "Thỏa thuận" if r["min"] is None else f"{int(r['min']):,} - {int(r['max']):,} VND"
+    row = {"JobPostingId": pid, "RequisitionId": rid, "PostingNo": no,
+           "PostingTitle": r["title"] + (" (Đợt 2)" if rid == 13 else ""),
+           "JobDescription": JD[r["key"]][0] + "\nLàm việc cùng đội ngũ trẻ, quy trình Agile/Scrum.",
+           "JobRequirements": "- " + JD[r["key"]][1].replace(", ", "\n- ", 1), "Benefits": BENEFITS,
+           "SalaryDisplay": salary, "NumberOfPositionsDisplay": f"{r['pos']} người", "WorkLocation": r["loc"] or "Làm việc từ xa",
+           "WorkingHours": HOURS, "EmploymentType": None, "WorkModel": None, "RequiredGender": r["gender"],
+           "ProbationPeriod": r["prob"],
+           # tin đăng hôm nay: lùi 1 giờ so với lúc chạy để luôn ở quá khứ
+           "PostingDate": None if pday is None else (ago(60) if pday == 0 else T(at(pday, 8))),
+           "ApplicationDeadline": None if dday is None else T(at(dday, 23, 59)),
+           "PostingStatus": st, "ClosedAt": None, "CreatedBy": creator,
+           "CreatedAt": ago(90) if pday == 0 else T(at((pday or -2) - 1, 16)), "UpdatedAt": None}
+    row.update(ov)
+    if st == "Closed":
+        row["ClosedAt"] = T(at(-12, 17) if pid == 9 else at(-50, 17))
+        row["UpdatedAt"] = row["ClosedAt"]
+    if st == "Paused":
+        row["UpdatedAt"] = T(at(-5, 11))
+    add("JobPosting", row)
+    if pday is not None:
+        audit(creator, "CREATE", "JobPosting", pid, None, f"Đăng tin: {row['PostingTitle']}", at(pday, 8) if pday else at(0, 0, 1))
+        ev, title_ev = ("JOB_POSTING_REOPENED", "Tin tuyển dụng được đăng lại") if no > 1 else ("JOB_POSTING_PUBLISHED", "Tin tuyển dụng đã đăng")
+        prefix = "JOB_REOPEN_" if no > 1 else "JOB_PUB_"
+        notify(r["hm"], creator, title_ev, f"Tin \"{row['PostingTitle']}\" đã được đăng công khai.", ev, pid,
+               f"/internal/job-postings/{pid}", f"{prefix}{pid}_{pid}", at(pday, 8) if pday else at(0, 0, 1))
+    if st == "Paused":
+        audit(creator, "UPDATE", "JobPosting", pid, "Published", "Paused", at(-5, 11))
+        notify(r["hm"], creator, "Tin tuyển dụng tạm dừng", f"Tin \"{row['PostingTitle']}\" đang tạm dừng nhận hồ sơ.",
+               "JOB_POSTING_PAUSED", pid, f"/internal/job-postings/{pid}", f"JOB_PAUSE_{pid}_1", at(-5, 11))
+    if st == "Closed":
+        cday = -12 if pid == 9 else -50
+        audit(creator, "UPDATE", "JobPosting", pid, None, "Closed", at(cday, 17))
+        notify(r["hm"], creator, "Tin tuyển dụng đã đóng", f"Tin \"{row['PostingTitle']}\" đã đóng đợt tuyển.",
+               "JOB_POSTING_CLOSED", pid, f"/internal/job-postings/{pid}", f"JOB_CLOSE_{pid}_1", at(cday, 17))
+
+# =============================================================================
+# 5. ỨNG VIÊN
+# =============================================================================
+HO = ["Nguyễn", "Trần", "Lê", "Phạm", "Hoàng", "Phan", "Vũ", "Võ", "Đặng", "Bùi", "Đỗ", "Hồ", "Ngô", "Dương", "Lý", "Đinh"]
+DEM_NAM = ["Văn", "Minh", "Tuấn", "Đức", "Quốc", "Hữu", "Thành", "Trọng", "Duy", "Tiến"]
+TEN_NAM = ["Bình", "Cường", "Dũng", "Đạt", "Hải", "Hiếu", "Hùng", "Huy", "Khánh", "Khoa", "Long", "Nam", "Phong",
+           "Phúc", "Quân", "Sơn", "Tài", "Thắng", "Toàn", "Trung", "Tùng", "Việt", "Vinh"]
+DEM_NU = ["Thị", "Mai", "Phương", "Ngọc", "Thu", "Thanh", "Khánh", "Mỹ", "Quỳnh", "Hải"]
+TEN_NU = ["Anh", "Chi", "Dung", "Giang", "Hà", "Hằng", "Hạnh", "Hoa", "Hương", "Huyền", "Lan", "Linh", "Ly",
+          "Mai", "My", "Ngân", "Nhung", "Phương", "Quỳnh", "Thảo", "Trang", "Uyên", "Vân", "Vy", "Yến"]
+ADDR = ["Số 15 Duy Tân, Cầu Giấy, Hà Nội", "Số 102 Nguyễn Trãi, Thanh Xuân, Hà Nội", "Số 88 Láng Hạ, Đống Đa, Hà Nội",
+        "Số 120 Kim Mã, Ba Đình, Hà Nội", "Số 50 Trần Phú, Hà Đông, Hà Nội", HCM,
+        "Số 88 Điện Biên Phủ, Bình Thạnh, TP. Hồ Chí Minh", "Số 30 Quang Trung, Gò Vấp, TP. Hồ Chí Minh"]
+SOURCES = ["TopCV", "VietnamWorks", "LinkedIn", "ITViec", "Employee Referral", "Website"]
+S1 = "àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ"
+S0 = "aaaaaaaaaaaaaaaaaeeeeeeeeeeeiiiiiooooooooooooooooouuuuuuuuuuuyyyyyd"
+
+
+def remove_accents(s):
+    return "".join(S0[S1.index(c)] if c in S1 else c for c in s.lower())
+
+
+CAND = {}  # candidateId -> dict
+used = set()
+next_uid, next_cid = 101, 1
+
+
+def new_candidate(name=None, female=None, username=None, email=None, status="Active", agreed=True,
+                  potential=False, created=None):
+    global next_uid, next_cid
+    if female is None:
+        female = random.random() < 0.4
+    if name is None:
+        name = f"{random.choice(HO)} {random.choice(DEM_NU if female else DEM_NAM)} {random.choice(TEN_NU if female else TEN_NAM)}"
+    if username is None:
+        parts = remove_accents(name).split()
+        base = f"{parts[-1]}.{parts[0]}"
+        username, i = base, 1
+        while username in used:
+            username, i = f"{base}{i}", i + 1
+        used.add(username)
+    email = email or f"{username}@gmail.com"
+    uid, cid = next_uid, next_cid
+    next_uid, next_cid = uid + 1, cid + 1
+    created = created if created is not None else at(-90, 10)
+    add("[User]", {"UserId": uid, "RoleId": 6, "Username": username, "PasswordHash": BCRYPT, "Email": email,
+                   "FullName": name, "PhoneNumber": f"09{random.randint(10000000, 99999999)}", "AvatarUrl": None,
+                   "DepartmentId": None, "AccountStatus": status, "CreatedAt": T(created), "UpdatedAt": None})
+    add("Candidate", {"CandidateId": cid, "UserId": uid,
+                      "DateOfBirth": f"{random.randint(1992, 2004)}-{random.randint(1, 12):02d}-{random.randint(1, 28):02d}",
+                      "Gender": "Nữ" if female else "Nam", "Address": random.choice(ADDR),
+                      "LinkedInUrl": f"https://linkedin.com/in/{username.replace('.', '-')}", "PortfolioUrl": None,
+                      "CandidateSource": random.choice(SOURCES), "IsPotential": potential,
+                      "PolicyAgreedAt": T(created + 1) if agreed else None, "CreatedAt": T(created), "UpdatedAt": None})
+    CAND[cid] = dict(uid=uid, name=name, female=female, row=tables["Candidate"][1][-1])
+    return cid
+
+
+DEMO = new_candidate("Nguyễn Văn An", False, "candidate_demo", "candidate.demo@gmail.com", created=at(-80, 20))
+NEW_ACC = new_candidate("Trần Thị Bích", True, "ung_vien_moi", "ung.vien.moi@gmail.com", agreed=False, created=at(-1, 21))
+INACTIVE_CAND = new_candidate("Lê Hoàng Phúc", False, "ung_vien_khoa", "ung.vien.khoa@gmail.com", status="Inactive", created=at(-100, 9))
+
+# =============================================================================
+# 6. ỨNG TUYỂN THEO KỊCH BẢN
+# =============================================================================
+CV = {"java": "sample_cv_java_backend", "react": "sample_cv_frontend_react", "qa": "sample_cv_qa_automation",
+      "bd": "sample_cv_business_development", "mkt": "sample_cv_business_development", "acc": "sample_cv_accountant",
+      "intern": "sample_cv_fresher_intern", "cs": "sample_cv_business_development"}
+INTERVIEWER = {1: IV_NAM, 2: IV_VIET, 3: IV_THAO, 4: IV_TRUNG, 5: IV_TRUNG, 6: IV_HOA, 7: IV_NAM, 8: IV_NAM, 9: IV_TRUNG}
+SALARY = {"java": (36e6, 32e6), "react": (26e6, 23e6), "qa": (22e6, 19.5e6), "bd": (20e6, 17.5e6),
+          "mkt": (17e6, 15e6), "acc": (18e6, 16e6), "intern": (4e6, 4e6), "cs": (11e6, 10e6)}
+ids = {"app": 0, "int": 0, "offer": 0}
+busy = set()  # (userId, minute) chống trùng lịch
+
+
+def slot(day, people):
+    # lịch quá khứ chỉ lùi về trước (không được trượt sang tương lai), lịch tương lai thì tiến lên
+    days = range(day, day - 6, -1) if day < 0 else range(day, day + 10)
+    for d in days:
+        for h in (8, 9, 10, 11, 13, 14, 15, 16, 17):
+            m = at(d, h)
+            if all((p, m) not in busy for p in people):
+                for p in people:
+                    busy.add((p, m))
+                return m
+    raise RuntimeError("hết slot phỏng vấn")
+
+
+def application(cid, pid, status, sub, updated=None, cv=None):
+    ids["app"] += 1
+    aid = ids["app"]
+    key = POST[pid]["key"]
+    sub_v = sub if isinstance(sub, Raw) else T(sub)
+    add("Application", {"ApplicationId": aid, "CandidateId": cid, "JobPostingId": pid,
+                        "AppliedCvUrl": cv or f"/samples/cv/{CV[key]}.pdf", "SubmissionDate": sub_v,
+                        "ApplicationStatus": status, "CreatedAt": sub_v, "UpdatedAt": T(updated) if updated is not None else None})
+    return aid
+
+
+def review(aid, reviewer, role, decision, when, comment=None):
+    comments = {"Pass": "Hồ sơ phù hợp yêu cầu vị trí, chuyển bước tiếp theo.",
+                "Fail": "Kinh nghiệm chưa đáp ứng yêu cầu tối thiểu.",
+                "Hold": "Tạm giữ, chờ đối chiếu thêm với các hồ sơ khác."}
+    add("ApplicationReview", {"ApplicationId": aid, "ReviewerId": reviewer, "ReviewerRole": role, "Decision": decision,
+                              "Comments": comment if comment is not None else comments[decision], "ReviewedAt": T(when)})
+
+
+def interview(aid, pid, cid, day, status, created, director=False, online=None):
+    ids["int"] += 1
+    iid = ids["int"]
+    hm, iv, hr = POST[pid]["hm"], INTERVIEWER[pid], HRS[iid % 2]
+    panel = [(hr, "HR"), (hm, "HM"), (iv, "Interviewer")] + ([(DIRECTOR, "Director")] if director else [])
+    start = slot(day, [p for p, _ in panel])
+    assert start > created, (aid, day, start, created)
+    assert (day < 0) == (start < 0), (aid, day, start)
+    online = (iid % 3 == 0) if online is None else online
+    add("InterviewSchedule", {"InterviewId": iid, "ApplicationId": aid,
+                              "InterviewFormat": "Online_GoogleMeet" if online else "Offline_Office",
+                              "StartTime": T(start), "EndTime": T(start + 60),
+                              "LocationOrLink": f"https://meet.google.com/rms-int-{iid:04d}" if online else "Phòng họp 802, Tầng 8 Tòa nhà RMS Tower",
+                              "InterviewStatus": status, "CreatedBy": hr, "CreatedAt": T(created)})
+    for p, role in panel:
+        add("InterviewPanel", {"InterviewId": iid, "InterviewerId": p, "RoleInPanel": role})
+    audit(hr, "UPDATE", "InterviewSchedule", iid, None, "MailSent:InterviewInvitation", created + 2)
+    for p, _ in panel:
+        notify(p, hr, "Lịch phỏng vấn mới", f"Bạn có lịch phỏng vấn ứng viên {CAND[cid]['name']} - {POST[pid]['title']}.",
+               "INTERVIEW_SCHEDULED", iid, "/interviews", f"INT_SCHED_{iid}", created)
+    notify(CAND[cid]["uid"], hr, "Lịch phỏng vấn mới", f"Bạn được mời phỏng vấn vị trí {POST[pid]['title']}.",
+           "INTERVIEW_SCHEDULED", iid, "/portal/interviews", f"INT_SCHED_{iid}", created)
+    return iid, start, hm, iv, hr
+
+
+def evaluate(iid, who, rec, when):
+    good = rec == "Hire"
+    add("InterviewEvaluation", {"InterviewId": iid, "InterviewerId": who,
+                                "TechnicalScore": random.randint(4, 5) if good else random.randint(2, 3) if rec == "No_Hire" else 3,
+                                "SoftSkillScore": random.randint(3, 5) if good else random.randint(2, 4),
+                                "CulturalFitScore": random.randint(4, 5) if good else random.randint(2, 4),
+                                "Strengths": "Nắm vững kiến thức nền tảng, trình bày mạch lạc." if good else "Thái độ cầu tiến.",
+                                "Weaknesses": "Cần thêm kinh nghiệm hệ thống lớn." if good else "Kiến thức chuyên môn còn hạn chế.",
+                                "Recommendation": rec, "Comments": "Đánh giá sau buổi phỏng vấn.", "EvaluatedAt": T(when)})
+
+
+def final(iid, pid, hm, decision, when, considered=None):
+    prop = SALARY[POST[pid]["key"]][0]
+    add("InterviewFinalResult", {"InterviewId": iid, "HiringManagerId": hm, "FinalDecision": decision,
+                                 "RecommendedSalary": Raw(f"{prop:.2f}") if decision == "Passed" else None,
+                                 "FinalSummaryComments": {"Passed": "Ứng viên đạt yêu cầu, đề xuất gửi thư mời nhận việc.",
+                                                          "Failed": "Ứng viên chưa đạt yêu cầu chuyên môn.",
+                                                          "Considering": "Cần cân nhắc thêm, so sánh với ứng viên khác."}[decision],
+                                 "ApprovedAt": T(when), "ConsideredAt": T(considered) if considered is not None else None})
+    for hr in HRS:
+        notify(hr, hm, "Đã có kết quả phỏng vấn", f"Kết quả phỏng vấn #{iid}: {decision}.", "INTERVIEW_RESULT_DECIDED",
+               iid, f"/interviews/{iid}/result", f"INT_RESULT_{iid}_{decision}", when)
+
+
+def offer(aid, pid, cid, status, created, approved=None, sent=None, answered=None, deleted=False, period=5):
+    ids["offer"] += 1
+    oid = ids["offer"]
+    prop, prob = SALARY[POST[pid]["key"]]
+    hr = HRS[oid % 2]
+    deadline = sent + period * 1440 if sent is not None else None
+    start_day = (deadline // 1440 + 10) if deadline is not None else (created // 1440 + 25)
+    add("OfferProposal", {"OfferId": oid, "ApplicationId": aid, "OfferedPositionTitle": POST[pid]["title"],
+                          "ProposedSalary": Raw(f"{prop:.2f}"), "ProbationSalary": Raw(f"{prob:.2f}"),
+                          "ProbationDays": 30 if POST[pid]["key"] in ("mkt", "cs") else 60,
+                          "ExpectedStartDate": DAY(start_day), "WorkLocation": REQ[POST[pid]["req"]]["loc"] or "Làm việc từ xa",
+                          "BenefitsPackage": "Bảo hiểm PVI, 12 ngày phép năm, thưởng dự án, xét lương 2 lần/năm",
+                          "OfferStatus": status,
+                          "DeclineReason": "Đã nhận được đề nghị khác phù hợp hơn về địa điểm làm việc." if status == "Declined" else None,
+                          "ResponsePeriodDays": period, "ResponseDeadline": T(deadline), "IsDeleted": deleted,
+                          "ProposedBy": hr, "CreatedAt": T(created),
+                          "UpdatedAt": T(answered or sent or approved) if (answered or sent or approved) else None})
+    if status == "Draft":
+        return oid
+    notify(DIRECTOR, hr, "Thư mời nhận việc chờ duyệt", f"Thư mời cho ứng viên {CAND[cid]['name']} chờ Giám đốc phê duyệt.",
+           "OFFER_PENDING_DIRECTOR", oid, f"/offers/{oid}", f"OFFER_PENDING_DIR_{oid}_{DIRECTOR}_1", created)
+    if approved is not None:
+        ok = status != "Director_Rejected"
+        add("OfferApproval", {"OfferId": oid, "DirectorId": DIRECTOR, "[Status]": "Approved" if ok else "Rejected",
+                              "DirectorComments": "Đồng ý mức đãi ngộ đề xuất." if ok else "Mức lương cao hơn khung, đề nghị HR thương lượng lại.",
+                              "ApprovedAt": T(approved)})
+        for r in (hr, POST[pid]["hm"]):
+            notify(r, DIRECTOR, "Giám đốc đã " + ("duyệt" if ok else "từ chối") + " thư mời",
+                   f"Thư mời cho ứng viên {CAND[cid]['name']} đã được xử lý.",
+                   "OFFER_DIRECTOR_APPROVED" if ok else "OFFER_DIRECTOR_REJECTED", oid, f"/offers/{oid}",
+                   f"{'OFFER_DEC_APPV_' if ok else 'OFFER_DEC_REJ_'}{oid}_{r}_1", approved)
+    if sent is not None:
+        notify(CAND[cid]["uid"], hr, f"Bạn có thư mời nhận việc mới: {POST[pid]['title']}",
+               f"Vui lòng phản hồi trước hạn {period} ngày.", "OFFER_LETTER_SENT", oid, f"/portal/offers/{oid}",
+               f"OFFER_SENT_{oid}_1", sent)
+    if answered is not None:
+        acc = status == "Accepted"
+        ev = "OFFER_ACCEPTED" if acc else "OFFER_DECLINED"
+        notify(hr, CAND[cid]["uid"], "Ứng viên đã " + ("chấp nhận" if acc else "từ chối") + " thư mời",
+               f"{CAND[cid]['name']} đã phản hồi thư mời.", ev, oid, f"/offers/{oid}",
+               f"OFFER_RESP_{'ACC' if acc else 'DEC'}_{oid}", answered)
+        notify(POST[pid]["hm"], CAND[cid]["uid"], "Ứng viên đã " + ("chấp nhận" if acc else "từ chối") + " thư mời",
+               f"{CAND[cid]['name']} đã phản hồi thư mời.", ev, oid, f"/applications/{aid}",
+               f"OFFER_RESP_HM_{'ACC' if acc else 'DEC'}_{oid}", answered)
+    return oid
+
+
+def screened(aid, pid, cid, S, hm_role="HiringManager"):
+    """HR Pass (S+1) rồi HM Pass (S+2)."""
+    review(aid, HRS[aid % 2], "HR", "Pass", S + 1440 + 60)
+    notify(POST[pid]["hm"], HRS[aid % 2], "Hồ sơ chờ trưởng bộ phận duyệt", f"Hồ sơ {CAND[cid]['name']} đã qua vòng HR.",
+           "APPLICATION_HR_PASSED", aid, f"/applications/{aid}", f"APP_HR_PASS_{aid}", S + 1440 + 60)
+    reviewer = DIRECTOR if hm_role == "Director" else POST[pid]["hm"]
+    review(aid, reviewer, hm_role, "Pass", S + 2 * 1440 + 120)
+    for hr in HRS:
+        notify(hr, reviewer, "Hồ sơ sẵn sàng phỏng vấn", f"Hồ sơ {CAND[cid]['name']} đã qua vòng chuyên môn.",
+               "APPLICATION_HM_PASSED", aid, f"/applications/{aid}", f"APP_HM_PASS_{aid}", S + 2 * 1440 + 120)
+
+
+def rejected_notice(aid, cid, when):
+    notify(CAND[cid]["uid"], None, "Kết quả ứng tuyển", "Rất tiếc hồ sơ của bạn chưa phù hợp với vị trí lần này.",
+           "APPLICATION_REJECTED", aid, f"/portal/applications/{aid}", f"APP_REJECTED_{aid}", when)
+
+
+def run(scn, pid, cid=None, S=None):
+    """Tạo một hồ sơ đi tới đúng trạng thái của kịch bản. S = ngày nộp (phút từ @D0)."""
+    if cid is None:
+        cid = new_candidate(female=True if REQ[POST[pid]["req"]]["gender"] == "Female" else None,
+                            created=(S if isinstance(S, int) else at(-1)) - 30)
+    hm = POST[pid]["hm"]
+    if scn == "A":
+        return application(cid, pid, "Applied", S)
+    if scn == "HR_HOLD":
+        aid = application(cid, pid, "Applied", S)
+        review(aid, HRS[0], "HR", "Hold", S + 1440)
+        return aid
+    if scn == "HR_PASS":
+        aid = application(cid, pid, "HR_Passed", S, S + 1440 + 60)
+        review(aid, HRS[aid % 2], "HR", "Pass", S + 1440 + 60)
+        notify(hm, HRS[aid % 2], "Hồ sơ chờ trưởng bộ phận duyệt", f"Hồ sơ {CAND[cid]['name']} đã qua vòng HR.",
+               "APPLICATION_HR_PASSED", aid, f"/applications/{aid}", f"APP_HR_PASS_{aid}", S + 1440 + 60)
+        return aid
+    if scn == "HR_FAIL":
+        aid = application(cid, pid, "Rejected", S, S + 1440)
+        review(aid, HRS[aid % 2], "HR", "Fail", S + 1440)
+        rejected_notice(aid, cid, S + 1440)
+        return aid
+    if scn in ("HM_PASS", "HM_PASS_DIRECTOR"):
+        aid = application(cid, pid, "HM_Passed", S, S + 2 * 1440 + 120)
+        screened(aid, pid, cid, S, "Director" if scn == "HM_PASS_DIRECTOR" else "HiringManager")
+        return aid
+    if scn == "HM_FAIL":
+        aid = application(cid, pid, "Rejected", S, S + 2 * 1440)
+        review(aid, HRS[aid % 2], "HR", "Pass", S + 1440)
+        review(aid, hm, "HiringManager", "Fail", S + 2 * 1440)
+        rejected_notice(aid, cid, S + 2 * 1440)
+        return aid
+    if scn == "HM_HOLD":
+        aid = application(cid, pid, "HR_Passed", S, S + 1440)
+        review(aid, HRS[aid % 2], "HR", "Pass", S + 1440)
+        review(aid, hm, "HiringManager", "Hold", S + 2 * 1440)
+        return aid
+    if scn == "WITHDRAWN":
+        aid = application(cid, pid, "Withdrawn", S, S + 1440 * 2)
+        audit(CAND[cid]["uid"], "UPDATE", "Application", aid, "Applied", "Withdrawn", S + 1440 * 2)
+        return aid
+
+    # ---- từ đây hồ sơ đã qua 2 vòng duyệt CV ----
+    aid = application(cid, pid, "Interviewing", S)
+    screened(aid, pid, cid, S)
+    created = S + 3 * 1440
+    app_row = tables["Application"][1][-1]
+    app_row["UpdatedAt"] = T(created)
+    director = pid == 1 and aid % 2 == 0
+
+    if scn == "INT_UPCOMING":
+        interview(aid, pid, cid, 1 + aid % 6, "Scheduled", created, director)
+    elif scn == "INT_RESCHEDULED":
+        iid, *_ = interview(aid, pid, cid, 2 + aid % 4, "Rescheduled", created, director)
+        hr = HRS[iid % 2]
+        notify(CAND[cid]["uid"], hr, "Lịch phỏng vấn đã thay đổi", "Lịch phỏng vấn của bạn đã được dời sang thời gian mới.",
+               "INTERVIEW_RESCHEDULED", iid, "/portal/interviews", f"INT_RESCHED_{iid}_1", at(-1, 15))
+    elif scn == "INT_CANCELLED_THEN_NEW":
+        iid, *_ = interview(aid, pid, cid, -2, "Cancelled", created)
+        notify(CAND[cid]["uid"], HRS[iid % 2], "Lịch phỏng vấn đã hủy", "Buổi phỏng vấn đã bị hủy, HR sẽ liên hệ xếp lịch mới.",
+               "INTERVIEW_CANCELLED", iid, "/portal/interviews", f"INT_CANCEL_{iid}", at(-3, 10))
+        interview(aid, pid, cid, 3, "Scheduled", at(-3, 11))
+    elif scn == "INT_AWAITING_EVAL":  # buổi đã diễn ra, chưa đủ phiếu
+        iid, start, hm_, iv, _ = interview(aid, pid, cid, -1, "Scheduled", created)
+        evaluate(iid, hm_, "Hire", start + 90)
+    elif scn == "INT_EVALUATED":  # đủ phiếu, chờ HM chốt
+        iid, start, hm_, iv, _ = interview(aid, pid, cid, -3, "Completed", created)
+        evaluate(iid, iv, "Hire", start + 120)
+        evaluate(iid, hm_, "Consider", start + 1440 + 600)  # nộp trễ hạn 24h
+    elif scn == "INT_CONSIDERING":
+        iid, start, hm_, iv, _ = interview(aid, pid, cid, -6, "Completed", created)
+        evaluate(iid, iv, "Consider", start + 120)
+        evaluate(iid, hm_, "Consider", start + 180)
+        final(iid, pid, hm_, "Considering", start + 1440, considered=start + 1440)
+    elif scn == "INT_FAILED":
+        iid, start, hm_, iv, _ = interview(aid, pid, cid, S // 1440 + 5, "Completed", created)
+        evaluate(iid, iv, "No_Hire", start + 120)
+        evaluate(iid, hm_, "No_Hire", start + 180)
+        final(iid, pid, hm_, "Failed", start + 1440)
+        app_row["ApplicationStatus"], app_row["UpdatedAt"] = "Rejected", T(start + 1440)
+        rejected_notice(aid, cid, start + 1440)
+    elif scn == "INT_CONSIDER_FAILED":  # cân nhắc rồi chốt Không đạt
+        iid, start, hm_, iv, _ = interview(aid, pid, cid, -15, "Completed", created)
+        evaluate(iid, iv, "Consider", start + 120)
+        evaluate(iid, hm_, "No_Hire", start + 180)
+        final(iid, pid, hm_, "Failed", start + 4 * 1440, considered=start + 1440)
+        app_row["ApplicationStatus"], app_row["UpdatedAt"] = "Rejected", T(start + 4 * 1440)
+        rejected_notice(aid, cid, start + 4 * 1440)
     else:
-        daily_counts.append(3)
+        # các kịch bản còn lại: phỏng vấn đạt -> offer
+        past = {"PASSED_NO_OFFER": -6, "OFFER_DRAFT": -9, "OFFER_DELETED": -9, "OFFER_PENDING": -8,
+                "OFFER_DIR_REJECTED": -10, "OFFER_DIR_APPROVED": -9, "OFFER_SENT": -10, "OFFER_EXPIRED": -16,
+                "OFFER_ACCEPTED": -14, "OFFER_DECLINED": -14, "OFFER_ACCEPTED_RECENT": -8}[scn]
+        iday = (S // 1440) + 5 if scn in ("OFFER_ACCEPTED", "OFFER_DECLINED") else max(past, (S // 1440) + 5)
+        iid, start, hm_, iv, _ = interview(aid, pid, cid, iday, "Completed", created, director)
+        evaluate(iid, iv, "Hire", start + 120)
+        evaluate(iid, hm_, "Hire", start + 180)
+        if director:
+            evaluate(iid, DIRECTOR, "Hire", start + 240)
+        decided = start + 1440
+        final(iid, pid, hm_, "Passed", decided)
+        app_row["UpdatedAt"] = T(decided)
+        c = decided + 1440  # HR lập offer
+        if scn == "OFFER_DRAFT":
+            offer(aid, pid, cid, "Draft", c)
+        elif scn == "OFFER_DELETED":
+            offer(aid, pid, cid, "Draft", c, deleted=True)
+        elif scn == "OFFER_PENDING":
+            offer(aid, pid, cid, "Pending_Director", c)
+        elif scn == "OFFER_DIR_REJECTED":
+            offer(aid, pid, cid, "Director_Rejected", c, approved=c + 1440)
+        elif scn == "OFFER_DIR_APPROVED":
+            offer(aid, pid, cid, "Director_Approved", c, approved=c + 1440)
+        elif scn == "OFFER_SENT":  # còn hạn phản hồi
+            sent = at(-2, 10)
+            offer(aid, pid, cid, "Sent_Candidate", c, approved=sent - 600, sent=sent)
+            app_row["ApplicationStatus"], app_row["UpdatedAt"] = "Offered", T(sent)
+        elif scn == "OFFER_EXPIRED":
+            sent = c + 2 * 1440
+            offer(aid, pid, cid, "Expired", c, approved=sent - 600, sent=sent, period=3)
+            app_row["ApplicationStatus"], app_row["UpdatedAt"] = "Offered", T(sent)
+        elif scn == "OFFER_ACCEPTED_RECENT":  # nhận việc hôm nay (KPI "trúng tuyển trong tháng")
+            sent, ans = at(-3, 10), at(0, 0, 1)
+            offer(aid, pid, cid, "Accepted", c, approved=sent - 600, sent=sent, answered=ans)
+            app_row["ApplicationStatus"], app_row["UpdatedAt"] = "Hired", T(ans)
+        elif scn in ("OFFER_ACCEPTED", "OFFER_DECLINED"):
+            sent = c + 2 * 1440
+            ans = sent + 2 * 1440
+            ok = scn == "OFFER_ACCEPTED"
+            offer(aid, pid, cid, "Accepted" if ok else "Declined", c, approved=sent - 600, sent=sent, answered=ans)
+            app_row["ApplicationStatus"], app_row["UpdatedAt"] = ("Hired" if ok else "Withdrawn"), T(ans)
+    return aid
 
-total_candidates = sum(daily_counts)
-print(f"Total days: {num_days}, Total candidates to generate: {total_candidates}")
 
-# We will collect downstream records and output them by logical day or batches
-# Let's generate all candidate metadata first
-all_candidates_data = []
+def close_posting(aid, pid, old_status, with_interview, close_at):
+    """Hồ sơ đang xử lý khi tin bị đóng -> Cancelled (+ hủy lịch phỏng vấn)."""
+    row = tables["Application"][1][aid - 1]
+    row["ApplicationStatus"], row["UpdatedAt"] = "Cancelled", T(close_at)
+    if with_interview:
+        audit(POSTINGS[pid - 1][6], "UPDATE", "Application", aid, None, "InterviewCancelledOnClose", close_at)
+    audit(POSTINGS[pid - 1][6], "UPDATE", "Application", aid, old_status, "PostingClosed", close_at)
+    audit(POSTINGS[pid - 1][6], "UPDATE", "Application", aid, None,
+          "MailSent:PostingClosed" if aid % 3 else "MailFailed:PostingClosed", close_at + 5)
 
-user_id_counter = 11  # Internal users take 1..10
-candidate_id_counter = 1
-app_id_counter = 1
 
-used_usernames = set()
-used_emails = set()
+# ---- Đợt tuyển đã đóng (tạo trước để làm nguồn CV cho talent pool) ----
+def past_sub(lo, hi):
+    return at(random.randint(lo, hi), random.randint(8, 21), random.randint(0, 59))
 
-for day_idx in range(num_days):
-    curr_date = start_date + datetime.timedelta(days=day_idx)
-    date_str = curr_date.strftime("%Y-%m-%d")
-    count_for_today = daily_counts[day_idx]
-    
-    for c_idx in range(count_for_today):
-        # Gender
-        is_female = random.random() < 0.35
-        ho = random.choice(ho_list)
-        if is_female:
-            dem = random.choice(dem_nu)
-            ten = random.choice(ten_nu)
-            gender_vn = "Nữ"
+
+CLOSE9 = at(-12, 17)
+pool_sources = []  # (candidateId, applicationId) - ứng viên tiềm năng có CV cũ
+for scn in ["OFFER_ACCEPTED", "OFFER_ACCEPTED", "OFFER_DECLINED", "INT_FAILED", "HR_FAIL", "WITHDRAWN"]:
+    run(scn, 9, S=past_sub(-60, -45))
+for old, with_int in [("Applied", False), ("HR_Passed", False), ("HM_Passed", False), ("Interviewing", True),
+                      ("Applied", False), ("HR_Passed", False), ("HM_Passed", False), ("Interviewing", True)]:
+    scn = {"Applied": "A", "HR_Passed": "HR_PASS", "HM_Passed": "HM_PASS", "Interviewing": "HM_PASS"}[old]
+    aid = run(scn, 9, S=past_sub(-40, -25))
+    if with_int:  # đã có lịch nhưng bị hủy khi đóng tin
+        interview(aid, 9, tables["Application"][1][aid - 1]["CandidateId"], -10, "Cancelled", at(-20, 9))
+    close_posting(aid, 9, old, with_int, CLOSE9)
+    pool_sources.append((tables["Application"][1][aid - 1]["CandidateId"], aid))
+# đợt 1 của thực tập sinh (đóng 50 ngày trước)
+for scn in ["OFFER_ACCEPTED", "INT_FAILED", "HM_FAIL", "HR_FAIL", "WITHDRAWN"]:
+    run(scn, 7, S=past_sub(-90, -70))
+for old in ["Applied", "HR_Passed"]:
+    aid = run("A" if old == "Applied" else "HR_PASS", 7, S=past_sub(-70, -60))
+    close_posting(aid, 7, old, False, at(-50, 17))
+    pool_sources.append((tables["Application"][1][aid - 1]["CandidateId"], aid))
+
+# ---- Ứng viên demo: mỗi đơn một trạng thái trên các tin khác nhau ----
+DEMO_APPS = {
+    "sent": run("OFFER_SENT", 2, DEMO, at(-24, 20)),          # có offer chờ phản hồi
+    "upcoming": run("INT_UPCOMING", 4, DEMO, at(-12, 21)),    # có lịch phỏng vấn sắp tới
+    "applied": run("A", 6, DEMO, at(-1, 22)),                 # rút đơn được
+    "rejected": run("INT_FAILED", 5, DEMO, at(-30, 19)),
+}
+aid = run("A", 7, DEMO, at(-75, 20))
+close_posting(aid, 7, "Applied", False, at(-50, 17))  # Cancelled do đóng tin
+run("HR_FAIL", 9, INACTIVE_CAND, at(-55, 10))
+
+# ---- Các tin đang tuyển: phủ mọi kịch bản + số lượng cho dashboard 8 tuần ----
+FULL = ["A", "A", "HR_HOLD", "HR_PASS", "HR_FAIL", "HM_PASS", "HM_PASS_DIRECTOR", "HM_FAIL", "HM_HOLD", "WITHDRAWN",
+        "INT_UPCOMING", "INT_UPCOMING", "INT_RESCHEDULED", "INT_CANCELLED_THEN_NEW", "INT_AWAITING_EVAL",
+        "INT_EVALUATED", "INT_CONSIDERING", "INT_FAILED", "INT_CONSIDER_FAILED", "PASSED_NO_OFFER", "OFFER_DRAFT",
+        "OFFER_DELETED", "OFFER_PENDING", "OFFER_DIR_REJECTED", "OFFER_DIR_APPROVED", "OFFER_SENT", "OFFER_EXPIRED",
+        "OFFER_ACCEPTED", "OFFER_ACCEPTED_RECENT", "OFFER_DECLINED"]
+PLAN = {
+    1: FULL,
+    2: ["A", "A", "HR_PASS", "HR_FAIL", "HM_PASS", "HM_FAIL", "WITHDRAWN", "INT_UPCOMING", "INT_AWAITING_EVAL",
+        "INT_EVALUATED", "INT_FAILED", "PASSED_NO_OFFER", "OFFER_PENDING", "OFFER_ACCEPTED", "OFFER_ACCEPTED_RECENT"],
+    3: ["A", "A", "HR_PASS", "HR_FAIL", "HM_PASS", "INT_FAILED", "OFFER_ACCEPTED"],  # tin đang tạm dừng
+    4: ["A", "A", "HR_HOLD", "HR_PASS", "HR_FAIL", "HM_PASS", "HM_FAIL", "WITHDRAWN", "INT_UPCOMING", "INT_RESCHEDULED",
+        "INT_EVALUATED", "INT_CONSIDERING", "INT_FAILED", "PASSED_NO_OFFER", "OFFER_DRAFT", "OFFER_PENDING",
+        "OFFER_DIR_REJECTED", "OFFER_SENT", "OFFER_EXPIRED", "OFFER_ACCEPTED", "OFFER_DECLINED"],
+    5: ["A", "HR_PASS", "HR_FAIL", "HM_PASS", "INT_FAILED", "OFFER_ACCEPTED", "OFFER_DECLINED"],  # tin quá hạn
+    6: ["A", "A", "HR_PASS", "HR_FAIL", "HM_PASS", "INT_UPCOMING", "INT_AWAITING_EVAL", "PASSED_NO_OFFER",
+        "OFFER_PENDING", "OFFER_SENT", "OFFER_ACCEPTED", "OFFER_ACCEPTED_RECENT"],
+    8: ["A", "A", "A"],  # tin vừa đăng lại hôm nay
+}
+EARLIEST = {"A": (-14, -1), "HR_HOLD": (-10, -3), "HR_PASS": (-12, -3), "HR_FAIL": (-50, -3), "HM_PASS": (-15, -4),
+            "HM_PASS_DIRECTOR": (-15, -4), "HM_FAIL": (-50, -4), "HM_HOLD": (-12, -4), "WITHDRAWN": (-50, -3),
+            "INT_UPCOMING": (-14, -5), "INT_RESCHEDULED": (-14, -6), "INT_CANCELLED_THEN_NEW": (-14, -8),
+            "INT_AWAITING_EVAL": (-14, -7), "INT_EVALUATED": (-16, -9), "INT_CONSIDERING": (-20, -12),
+            "INT_FAILED": (-45, -16), "INT_CONSIDER_FAILED": (-30, -21), "PASSED_NO_OFFER": (-25, -12),
+            "OFFER_DRAFT": (-28, -15), "OFFER_DELETED": (-28, -15), "OFFER_PENDING": (-26, -14),
+            "OFFER_DIR_REJECTED": (-30, -16), "OFFER_DIR_APPROVED": (-28, -15), "OFFER_SENT": (-30, -16),
+            "OFFER_EXPIRED": (-35, -22), "OFFER_ACCEPTED": (-56, -20), "OFFER_DECLINED": (-50, -20),
+            "OFFER_ACCEPTED_RECENT": (-20, -13)}
+for pid, plan in PLAN.items():
+    for scn in plan:
+        lo, hi = EARLIEST[scn]
+        if pid == 5:  # hết hạn 2 ngày trước: mọi đơn nộp trước hạn
+            hi = min(hi, -3)
+            lo = min(lo, hi)
+        if pid == 8:
+            run(scn, pid, S=ago(random.randint(10, 50)))
         else:
-            dem = random.choice(dem_nam)
-            ten = random.choice(ten_nam)
-            gender_vn = "Nam"
-        
-        full_name = f"{ho} {dem} {ten}"
-        
-        # Username & Email
-        ten_raw = remove_accents(ten).lower()
-        ho_raw = remove_accents(ho).lower()
-        dem_raw = remove_accents(dem).lower()
-        
-        uname_base = f"{ten_raw}.{ho_raw}"
-        uname = uname_base
-        u_suffix = 1
-        while uname in used_usernames:
-            uname = f"{uname_base}{u_suffix}"
-            u_suffix += 1
-        used_usernames.add(uname)
-        
-        domain = random.choice(email_domains)
-        email_base = f"{ten_raw}.{dem_raw}.{ho_raw}"
-        email = f"{email_base}@{domain}"
-        e_suffix = 1
-        while email in used_emails:
-            email = f"{email_base}{e_suffix}@{domain}"
-            e_suffix += 1
-        used_emails.add(email)
-        
-        # Phone
-        phone_prefixes = ["090", "091", "093", "097", "098", "086", "088", "038", "039", "070"]
-        phone = f"{random.choice(phone_prefixes)}{random.randint(1000000, 9999999)}"
-        
-        # DOB
-        birth_year = random.randint(1993, 2002)
-        birth_month = random.randint(1, 12)
-        birth_day = random.randint(1, 28)
-        dob_str = f"{birth_year:04d}-{birth_month:02d}-{birth_day:02d}"
-        
-        # Address
-        if random.random() < 0.75:
-            addr = random.choice(addresses_hn)
-        else:
-            addr = random.choice(addresses_hcm)
-            
-        # Time of application (between 08:15 and 21:45)
-        hour = random.randint(8, 21)
-        minute = random.randint(0, 59)
-        second = random.randint(0, 59)
-        sub_time_str = f"{date_str} {hour:02d}:{minute:02d}:{second:02d}"
-        
-        # Source & JobPosting
-        source = random.choice(sources)
-        job_posting_id = random.choice([1, 1, 2, 2, 3, 4])  # Weights towards Dev & React
-        
-        cv_slug = f"cand_{user_id_counter:03d}_{ten_raw}_{curr_date.strftime('%Y%m%d')}.pdf"
-        cv_url = f"https://rms-storage.s3.ap-southeast-1.amazonaws.com/cvs/2026/{curr_date.strftime('%m')}/{cv_slug}"
-        
-        # Funnel determination
-        # 10% Offer (Passed)
-        # 20% Interviewing
-        # 30% Review (HR/HM Passed or Rejected at review)
-        # 40% Applied (chờ HR sàng lọc)
-        funnel_rand = random.random()
-        
-        all_candidates_data.append({
-            "user_id": user_id_counter,
-            "candidate_id": candidate_id_counter,
-            "app_id": app_id_counter,
-            "full_name": full_name,
-            "username": uname,
-            "email": email,
-            "phone": phone,
-            "gender": gender_vn,
-            "dob": dob_str,
-            "address": addr,
-            "source": source,
-            "posting_id": job_posting_id,
-            "sub_time": sub_time_str,
-            "cv_url": cv_url,
-            "date_obj": curr_date,
-            "funnel_rand": funnel_rand
-        })
-        
-        user_id_counter += 1
-        candidate_id_counter += 1
-        app_id_counter += 1
+            run(scn, pid, S=past_sub(lo, hi))
+# đơn nộp hôm nay (KPI "hồ sơ mới hôm nay"), luôn ở quá khứ so với lúc chạy
+for pid in (1, 2, 4):
+    run("A", pid, S=ago(15 + pid * 7))
 
-# Now generate INSERT statements day by day
-# In each day block, we write:
-# - User INSERTs for the day's candidates
-# - Candidate INSERTs for the day's candidates
-# - Application INSERTs for the day's candidates
-# - Downstream tables (ApplicationReview, InterviewSchedule, InterviewPanel, InterviewEvaluation, InterviewFinalResult, OfferProposal, OfferApproval)
+# ---- Talent pool ----
+for cid, _ in pool_sources:
+    CAND[cid]["row"]["IsPotential"] = True
+for i, (cid, src) in enumerate(pool_sources):
+    marker = HRS[i % 2] if i % 3 else POST[9]["hm"]
+    audit(marker, "UPDATE", "Candidate", cid, "false", "TalentPoolMarked", at(-11, 9, i))
+    add("TalentPoolNote", {"CandidateId": cid, "UserId": marker,
+                           "NoteContent": ["Giao tiếp tốt, phù hợp vị trí chăm sóc khách hàng hoặc kinh doanh.",
+                                           "Ứng viên chủ động, nên liên hệ lại khi có vị trí mới.",
+                                           "Kỹ năng chuyên môn khá, cần thêm kinh nghiệm thực tế."][i % 3],
+                           "CreatedAt": T(at(-11, 10, i))})
+# một ứng viên đã từng được đánh dấu rồi bỏ đánh dấu
+unmarked = pool_sources[-1][0]
+CAND[unmarked]["row"]["IsPotential"] = False
+audit(HR_LAN, "UPDATE", "Candidate", unmarked, "true", "TalentPoolUnmarked", at(-4, 14))
+audit(HR_QUANG, "DELETE", "TalentPoolNote", 999, "Ghi chú nhập nhầm ứng viên", None, at(-9, 16))
 
-interview_id_counter = 1
-offer_id_counter = 1
 
-for day_idx in range(num_days):
-    curr_date = start_date + datetime.timedelta(days=day_idx)
-    date_str = curr_date.strftime("%Y-%m-%d")
-    day_cands = [c for c in all_candidates_data if c["date_obj"] == curr_date]
-    
-    lines.append(f"-- -----------------------------------------------------------------------------")
-    lines.append(f"-- DAY {day_idx + 1:02d} / {num_days:02d}: {date_str} ({len(day_cands)} Applications)")
-    lines.append(f"-- -----------------------------------------------------------------------------")
-    
-    # 1. User records
-    for c in day_cands:
-        avatar = f"https://ui-avatars.com/api/?name={c['full_name'].replace(' ', '+')}&background=random"
-        lines.append(
-            f"INSERT INTO [User] (RoleId, Username, PasswordHash, Email, FullName, PhoneNumber, AvatarUrl, DepartmentId, AccountStatus, CreatedAt) "
-            f"VALUES (6, N'{c['username']}', N'{bcrypt_hash}', N'{c['email']}', N'{c['full_name']}', N'{c['phone']}', N'{avatar}', NULL, N'Active', '{c['sub_time']}');"
-        )
-    
-    # 2. Candidate records
-    for c in day_cands:
-        linkedin = f"https://linkedin.com/in/{c['username'].replace('.', '-')}"
-        github = f"https://github.com/{c['username'].replace('.', '')}" if c['posting_id'] in [1, 2, 3] else "NULL"
-        gh_sql = f"N'{github}'" if github != "NULL" else "NULL"
-        # IsPotential: ứng viên vào được vòng phỏng vấn trở lên là potential
-        is_potential = 1 if c.get('funnel_rand', 1) < 0.30 else 0
-        lines.append(
-            f"INSERT INTO Candidate (UserId, DateOfBirth, Gender, Address, LinkedInUrl, PortfolioUrl, CandidateSource, IsPotential, CreatedAt) "
-            f"VALUES ({c['user_id']}, '{c['dob']}', N'{c['gender']}', N'{c['address']}', N'{linkedin}', {gh_sql}, N'{c['source']}', {is_potential}, '{c['sub_time']}');"
-        )
-        
-    # 3. Application records
-    for c in day_cands:
-        # Determine status based on funnel
-        fr = c["funnel_rand"]
-        if fr < 0.10: # Stage 4: Offer
-            status = "Offered" if c["date_obj"] > datetime.date(2026, 12, 1) else "Hired"
-        elif fr < 0.30: # Stage 3: Interviewing
-            status = "Interviewing" if c["date_obj"] > datetime.date(2026, 12, 5) else ("HM_Passed" if random.random() < 0.5 else "Rejected")
-        elif fr < 0.60: # Stage 2: Review (HR/HM)
-            status = "HM_Passed" if random.random() < 0.6 else "HR_Passed"
-        else: # Stage 1: chờ HR sàng lọc
-            status = "Applied"
+def tp(kind, pid, src_cid, src_aid):
+    hm = POST[pid]["hm"]
+    cv = tables["Application"][1][src_aid - 1]["AppliedCvUrl"]
+    created = at(-6, 10) if kind != "HR_RECO_PENDING" else at(-1, 9)
+    from_hr = kind.startswith("HR_")
+    actor = HR_LAN if from_hr else hm
+    aid = application(src_cid, pid, "HM_Suggested", created, None, cv)
+    if from_hr:
+        review(aid, HR_LAN, "HR", "Hold", created, "Gợi ý ứng viên tiềm năng từ đợt tuyển trước.")
+    audit(actor, "CREATE", "Application", aid, str(src_aid), "TalentPoolHrRecommended" if from_hr else "TalentPoolSuggested", created)
+    row = tables["Application"][1][aid - 1]
+    later = created + 1440
+    if kind == "HR_RECO_ACCEPTED":
+        review(aid, hm, "HiringManager", "Pass", later)
+        audit(hm, "UPDATE", "Application", aid, "HM_Suggested", "TalentPoolSuggested", later)
+    elif kind == "HR_RECO_REJECTED":
+        review(aid, hm, "HiringManager", "Fail", later)
+        audit(hm, "UPDATE", "Application", aid, "HM_Suggested", "TalentPoolCancelled", later)
+        row["ApplicationStatus"], row["UpdatedAt"] = "Rejected", T(later)
+    elif kind == "HR_RECO_WITHDRAWN":
+        audit(HR_LAN, "UPDATE", "Application", aid, "HM_Suggested", "TalentPoolCancelled", later)
+        audit(HR_LAN, "UPDATE", "Application", aid, "HM_Suggested", "TalentPoolHrWithdrawn", later)
+        row["ApplicationStatus"], row["UpdatedAt"] = "Rejected", T(later)
+    elif kind == "HM_ACTIVATED":
+        audit(HR_QUANG, "UPDATE", "Application", aid, "HM_Suggested", "TalentPoolActivated", later)
+        row["ApplicationStatus"], row["UpdatedAt"], row["SubmissionDate"] = "HM_Passed", T(later), T(later)
+    elif kind == "HM_CANDIDATE_SUBMITTED":
+        audit(CAND[src_cid]["uid"], "UPDATE", "Application", aid, "HM_Suggested", "TalentPoolCandidateSubmitted", later)
+        row["ApplicationStatus"], row["UpdatedAt"], row["SubmissionDate"] = "Applied", T(later), T(later)
+        row["AppliedCvUrl"] = "/samples/cv/sample_cv_business_development.pdf"
+    elif kind == "HM_HR_DECLINED":
+        audit(HR_QUANG, "UPDATE", "Application", aid, "HM_Suggested", "TalentPoolCancelled", later)
+        row["ApplicationStatus"], row["UpdatedAt"] = "Rejected", T(later)
+    return aid
 
-        c["computed_status"] = status
 
-        lines.append(
-            f"INSERT INTO Application (CandidateId, JobPostingId, AppliedCvUrl, SubmissionDate, ApplicationStatus, CreatedAt) "
-            f"VALUES ({c['candidate_id']}, {c['posting_id']}, N'{c['cv_url']}', '{c['sub_time']}', N'{status}', '{c['sub_time']}');"
-        )
+TP_PLAN = [("HM_PENDING", 4), ("HR_RECO_PENDING", 4), ("HR_RECO_ACCEPTED", 4), ("HR_RECO_REJECTED", 4),
+           ("HR_RECO_WITHDRAWN", 1), ("HM_ACTIVATED", 4), ("HM_CANDIDATE_SUBMITTED", 4), ("HM_HR_DECLINED", 1),
+           ("HM_PENDING", 1)]
+for (kind, pid), (cid, src) in zip(TP_PLAN, pool_sources):
+    tp(kind, pid, cid, src)
 
-    # 5. ApplicationReview (for Stage 2, 3, 4)
-    for c in day_cands:
-        if c["funnel_rand"] < 0.60: # Review stage or further
-            hr_rev_dt = (datetime.datetime.strptime(c["sub_time"], "%Y-%m-%d %H:%M:%S") + datetime.timedelta(days=1, hours=random.randint(1, 4))).strftime("%Y-%m-%d %H:%M:%S")
-            hr_id = random.choice([3, 4]) # lan.le or quang.pham
-            hr_dec = "Pass"
-            hr_comment = f"Hồ sơ ứng viên {c['full_name']} đáp ứng tốt tiêu chí cơ bản về học vấn và kinh nghiệm, liên hệ xếp lịch phỏng vấn chuyên môn."
-            lines.append(
-                f"INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) "
-                f"VALUES ({c['app_id']}, {hr_id}, N'HR', N'{hr_dec}', N'{hr_comment}', '{hr_rev_dt}');"
-            )
-            
-            # HM Review
-            hm_id = 6 if c["posting_id"] == 4 else 5 # hm_huong for Sales, hm_tuan for Tech
-            hm_rev_dt = (datetime.datetime.strptime(hr_rev_dt, "%Y-%m-%d %H:%M:%S") + datetime.timedelta(days=1, hours=random.randint(2, 5))).strftime("%Y-%m-%d %H:%M:%S")
-            hm_dec = "Pass" if c["funnel_rand"] < 0.30 else ("Pass" if random.random() < 0.5 else "Hold")
-            hm_comment = f"Đánh giá CV có kinh nghiệm thực chiến phù hợp với yêu cầu vị trí {c['posting_id']}, phê duyệt chuyển sang hội đồng phỏng vấn."
-            lines.append(
-                f"INSERT INTO ApplicationReview (ApplicationId, ReviewerId, ReviewerRole, Decision, Comments, ReviewedAt) "
-                f"VALUES ({c['app_id']}, {hm_id}, N'HiringManager', N'{hm_dec}', N'{hm_comment}', '{hm_rev_dt}');"
-            )
-            
-    # 6. Interview Flow (InterviewSchedule, InterviewPanel, InterviewEvaluation, InterviewFinalResult) (for Stage 3 & 4: ~30%)
-    # UserId mapping:
-    # HR: 3 (hr_lan), 4 (hr_quang)
-    # HM: 5 (hm_tuan - Kỹ thuật), 6 (hm_huong - Kinh doanh & Marketing)
-    # Interviewer: 7 (interviewer_nam - Java), 8 (interviewer_viet - Frontend), 9 (interviewer_thao - QA), 10 (interviewer_trung - Sales)
-    # Director: 2 (director)
-    for c in day_cands:
-        if c["funnel_rand"] < 0.30:
-            int_id = interview_id_counter
-            interview_id_counter += 1
-            
-            # Interview scheduled 3 - 6 days after submission
-            sub_dt = datetime.datetime.strptime(c["sub_time"], "%Y-%m-%d %H:%M:%S")
-            int_date = sub_dt + datetime.timedelta(days=random.randint(3, 6))
-            start_hour = random.choice([9, 10, 14, 15, 16])
-            int_start_dt = int_date.replace(hour=start_hour, minute=0, second=0)
-            int_end_dt = int_date.replace(hour=start_hour + 1, minute=0, second=0)
-            
-            start_str = int_start_dt.strftime("%Y-%m-%d %H:%M:%S")
-            end_str = int_end_dt.strftime("%Y-%m-%d %H:%M:%S")
-            
-            fmt = "Offline_Office" if random.random() < 0.6 else "Online_GoogleMeet"
-            loc = "Phòng họp 802, Tầng 8 Tòa nhà RMS Tower" if fmt == "Offline_Office" else f"https://meet.google.com/rms-int-{int_id:04d}"
-            # FIX: Trạng thái hợp lý theo thời gian thực (Giả định mốc ngày hiện tại hệ thống chạy seed là 2026-10-25)
-            # Các lịch trước mốc hiện tại -> Completed, các lịch sau mốc hiện tại -> Scheduled
-            today_cutoff = datetime.datetime(2026, 10, 25)
-            int_status = "Completed" if int_end_dt < today_cutoff else "Scheduled"
-            c["int_status"] = int_status
-            c["int_end_dt"] = int_end_dt
-            
-            lines.append(
-                f"INSERT INTO InterviewSchedule (ApplicationId, InterviewFormat, StartTime, EndTime, LocationOrLink, InterviewStatus, CreatedBy, CreatedAt) "
-                f"VALUES ({c['app_id']}, N'{fmt}', '{start_str}', '{end_str}', N'{loc}', N'{int_status}', 3, '{c['sub_time']}');"
-            )
-            
-            # InterviewPanel - 4 roles: HR, HM, Interviewer, Director
-            # RoleInPanel CHECK: IN (N'HR', N'HM', N'Interviewer', N'Director')
-            hr_member = random.choice([3, 4])  # HR role
-            lines.append(
-                f"INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) "
-                f"VALUES ({int_id}, {hr_member}, N'HR');"
-            )
-            
-            # HM role (theo department của vị trí)
-            hm_member = 6 if c["posting_id"] == 4 else 5
-            lines.append(
-                f"INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) "
-                f"VALUES ({int_id}, {hm_member}, N'HM');"
-            )
-            
-            # Interviewer role (chuyên môn theo vị trí)
-            if c["posting_id"] == 4:
-                interviewer_member = 10  # interviewer_trung - Sales specialist
-            elif c["posting_id"] == 1:
-                interviewer_member = 7   # interviewer_nam - Java specialist
-            elif c["posting_id"] == 2:
-                interviewer_member = 8   # interviewer_viet - Frontend specialist
-            else:
-                interviewer_member = 9   # interviewer_thao - QA specialist
-            lines.append(
-                f"INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) "
-                f"VALUES ({int_id}, {interviewer_member}, N'Interviewer');"
-            )
-            
-            # Director role - luôn có Director trong panel
-            lines.append(
-                f"INSERT INTO InterviewPanel (InterviewId, InterviewerId, RoleInPanel) "
-                f"VALUES ({int_id}, 2, N'Director');"
-            )
-            
-            # Alias để dùng trong evaluation block bên dưới
-            hr_interviewer = hr_member
-            tech_interviewer = interviewer_member
-            
-            # InterviewEvaluation - chỉ tạo khi đã hoàn thành
-            if int_status == "Completed":
-                eval_time = (int_end_dt + datetime.timedelta(minutes=30)).strftime("%Y-%m-%d %H:%M:%S")
-                # Cho 35% ứng viên hoàn thành được Đạt (Passed) để có dữ liệu OfferProposal & OfferApproval
-                is_passed = c["funnel_rand"] < 0.12 or random.random() < 0.25
-                
-                # Eval 1: HR
-                hr_rec = "Hire" if is_passed else ("Consider" if random.random() < 0.5 else "No_Hire")
-                hr_tech = random.randint(3, 5) if is_passed else random.randint(2, 4)
-                hr_soft = 5 if is_passed else random.randint(2, 4)
-                hr_cult = 5 if is_passed else random.randint(3, 4)
-                lines.append(
-                    f"INSERT INTO InterviewEvaluation (InterviewId, InterviewerId, TechnicalScore, SoftSkillScore, CulturalFitScore, Strengths, Weaknesses, Recommendation, Comments, EvaluatedAt) "
-                    f"VALUES ({int_id}, {hr_interviewer}, {hr_tech}, {hr_soft}, {hr_cult}, N'Tác phong tự tin, giao tiếp mạch lạc, gắn bó lâu dài', N'Cần tìm hiểu thêm về quy trình Agile nội bộ', N'{hr_rec}', N'Đánh giá ứng viên phù hợp với văn hóa SME công ty', '{eval_time}');"
-                )
-                
-                # Eval 2: Tech / HM
-                tech_rec = "Hire" if is_passed else ("No_Hire" if random.random() < 0.6 else "Consider")
-                tech_score = random.randint(4, 5) if is_passed else random.randint(2, 3)
-                lines.append(
-                    f"INSERT INTO InterviewEvaluation (InterviewId, InterviewerId, TechnicalScore, SoftSkillScore, CulturalFitScore, Strengths, Weaknesses, Recommendation, Comments, EvaluatedAt) "
-                    f"VALUES ({int_id}, {tech_interviewer}, {tech_score}, {hr_soft}, {hr_cult}, N'Nắm vững chuyên môn, giải quyết bài toán thuật toán/case study tốt', N'Cần đào tạo thêm về cloud architecture thực tế', N'{tech_rec}', N'Đồng thuận tiếp nhận ứng viên vào dự án', '{eval_time}');"
-                )
-                
-                # InterviewFinalResult (1-1 with InterviewSchedule)
-                final_decision = "Passed" if is_passed else "Failed"
-                hm_final_id = 6 if c["posting_id"] == 4 else 5
-                final_comments = f"Tổng hợp kết quả phỏng vấn ứng viên {c['full_name']}: Đạt yêu cầu đầu vào, đề xuất gửi thư mời nhận việc." if is_passed else f"Ứng viên {c['full_name']} chưa đạt yêu cầu về chiều sâu chuyên môn ở vòng phỏng vấn kỹ thuật."
-                
-                pos_titles = {
-                    1: "Senior Java Backend Engineer",
-                    2: "Frontend ReactJS Developer",
-                    3: "QA Automation Engineer",
-                    4: "Business Development Executive"
-                }
-                base_salaries = {
-                    1: (36000000.00, 32000000.00), # proposed, probation (32M / 36M = 88.8% >= 85%)
-                    2: (26000000.00, 23000000.00), # 23M / 26M = 88.4% >= 85%
-                    3: (22000000.00, 19500000.00), # 19.5M / 22M = 88.6% >= 85%
-                    4: (20000000.00, 17500000.00)  # 17.5M / 20M = 87.5% >= 85%
-                }
-                prop_sal, prob_sal = base_salaries[c["posting_id"]]
-                rec_sal_sql = f"{prop_sal:.2f}" if is_passed else "NULL"
+# =============================================================================
+# 7. XUẤT SQL
+# =============================================================================
+ORDER = ["[Role]", "Department", "[User]", "SystemConfig", "JobRequisition", "RequisitionApproval", "JobPosting",
+         "Candidate", "TalentPoolNote", "Application", "ApplicationReview", "InterviewSchedule", "InterviewPanel",
+         "InterviewEvaluation", "InterviewFinalResult", "OfferProposal", "OfferApproval", "[Notification]", "AuditLog"]
+IDENTITY = {"[Role]": "RoleId", "Department": "DepartmentId", "[User]": "UserId", "JobRequisition": "RequisitionId",
+            "JobPosting": "JobPostingId", "Candidate": "CandidateId", "Application": "ApplicationId",
+            "InterviewSchedule": "InterviewId", "OfferProposal": "OfferId"}
 
-                lines.append(
-                    f"INSERT INTO InterviewFinalResult (InterviewId, HiringManagerId, FinalDecision, RecommendedSalary, FinalSummaryComments, ApprovedAt) "
-                    f"VALUES ({int_id}, {hm_final_id}, N'{final_decision}', {rec_sal_sql}, N'{final_comments}', '{eval_time}');"
-                )
-                
-                # 7. Offer Proposal, Approval (Giữ lại 10 ứng viên Passed chưa có Offer để HR tạo mới)
-                if is_passed and offer_id_counter <= 7 and int_id in [3, 4, 6, 8, 12, 15, 17]:
-                    off_id = offer_id_counter
-                    offer_id_counter += 1
-                    off_title = pos_titles[c["posting_id"]]
-                    
-                    # Start date 2-3 weeks after interview
-                    exp_start_date = (int_date + datetime.timedelta(days=random.randint(14, 21))).strftime("%Y-%m-%d")
-                    offer_created_dt = (int_end_dt + datetime.timedelta(days=1)).strftime("%Y-%m-%d %H:%M:%S")
-                    
-                    off_status = random.choice(["Accepted", "Accepted", "Director_Approved", "Sent_Candidate", "Declined"])
-                    off_app_dt_obj = datetime.datetime.strptime(offer_created_dt, "%Y-%m-%d %H:%M:%S") + datetime.timedelta(hours=6)
-                    off_app_dt = off_app_dt_obj.strftime("%Y-%m-%d %H:%M:%S")
-                    resp_period_days = 5
-                    off_deadline_dt = (off_app_dt_obj + datetime.timedelta(days=resp_period_days)).strftime("%Y-%m-%d %H:%M:%S")
+app_rows = tables["Application"][1]
+status_count = {}
+for r in app_rows:
+    status_count[r["ApplicationStatus"]] = status_count.get(r["ApplicationStatus"], 0) + 1
 
-                    lines.append(
-                        f"INSERT INTO OfferProposal (ApplicationId, OfferedPositionTitle, ProposedSalary, ProbationSalary, ExpectedStartDate, WorkLocation, BenefitsPackage, OfferStatus, ResponsePeriodDays, ResponseDeadline, ProposedBy, CreatedAt) "
-                        f"VALUES ({c['app_id']}, N'{off_title}', {prop_sal:.2f}, {prob_sal:.2f}, '{exp_start_date}', N'Tầng 8, Tòa nhà RMS Tower, Duy Tân, Cầu Giấy, Hà Nội', N'Bảo hiểm PVI, 14 ngày phép năm, thưởng dự án, xét lương 2 lần/năm', N'{off_status}', {resp_period_days}, '{off_deadline_dt}', 3, '{offer_created_dt}');"
-                    )
-                    
-                    # OfferApproval (DirectorId = 2)
-                    lines.append(
-                        f"INSERT INTO OfferApproval (OfferId, DirectorId, [Status], DirectorComments, ApprovedAt) "
-                        f"VALUES ({off_id}, 2, N'Approved', N'Phê duyệt mức đãi ngộ theo đề xuất của HR và HM.', '{off_app_dt}');"
-                    )
+out = []
+w = out.append
+w("-- =============================================================================")
+w("-- RMS - SEED DATA (sinh bởi database/seeds/build_seed.py, đừng sửa tay: sửa script rồi chạy lại)")
+w("-- Chạy SAU database/schema/db.sql trên database RitirementManagement2 vừa tạo (bảng rỗng).")
+w("-- File này thay thế seed_data + seed_extra_jobs_and_pipeline + seed_application_flow_fix + seed_dashboard_demo.")
+w("-- Mọi mốc thời gian tính theo lúc chạy (@D0 = 00:00 hôm nay) nên dashboard / lịch sắp tới / hạn offer luôn mới.")
+w("-- Mật khẩu mọi tài khoản: 12345678")
+w("--")
+w("-- TÀI KHOẢN NỘI BỘ (UserId - username - vai trò)")
+for uid, role, uname, email, name, phone, dept, st, cday in INTERNAL:
+    w(f"--   {uid:>2} {uname:<18} {ROLES[role - 1][1]:<15} {DEPTS[dept - 1][1]}{' (Inactive)' if st != 'Active' else ''}")
+w("-- ỨNG VIÊN ĐẶC BIỆT")
+w(f"--   candidate_demo  ứng viên demo: đơn #{DEMO_APPS['sent']} có offer chờ phản hồi, #{DEMO_APPS['upcoming']} có lịch PV sắp tới,")
+w(f"--                   #{DEMO_APPS['applied']} Applied (rút được), #{DEMO_APPS['rejected']} Rejected, 1 đơn Cancelled do đóng tin")
+w("--   ung_vien_moi    chưa đồng ý điều khoản (PolicyAgreedAt NULL), chưa ứng tuyển")
+w("--   ung_vien_khoa   tài khoản Inactive")
+w("-- YÊU CẦU: 1-7,13,14 Approved (14 chưa có tin) | 8 Pending_Director | 9 Draft | 10 Rejected | 11 Cancelled | 12 Closed (13 là đợt 2 của 12)")
+w("-- TIN: 1,2,4,6,8 Published (5 Published nhưng quá hạn) | 3 Paused | 7,9 Closed | 10 Draft | 8 = lần đăng 2 của yêu cầu 7")
+w("-- SỐ HỒ SƠ THEO TRẠNG THÁI: " + ", ".join(f"{k} {v}" for k, v in sorted(status_count.items())))
+w("-- =============================================================================")
+w("USE RitirementManagement2;")
+w("GO")
+w("SET NOCOUNT ON;")
+w("SET QUOTED_IDENTIFIER ON; -- bảng có filtered index; sqlcmd mặc định tắt")
+w("SET XACT_ABORT ON;")
+w("GO")
+w("")
+w("IF EXISTS (SELECT 1 FROM [User])")
+w("    THROW 50000, N'Database đã có dữ liệu. Chạy lại database/schema/db.sql trước khi seed.', 1;")
+w("GO")
+w("")
+w("BEGIN TRY")
+w("BEGIN TRANSACTION;")
+w("DECLARE @Now DATETIME2 = SYSDATETIME();")
+w("DECLARE @D0 DATETIME2 = CAST(CAST(@Now AS DATE) AS DATETIME2);")
+w("")
+for t in ORDER:
+    cols, rows = tables.get(t, (None, []))
+    if not rows:
+        continue
+    w(f"-- {t} ({len(rows)} dòng)")
+    ident = IDENTITY.get(t)
+    insert_cols = cols if ident else [c for c in cols if c not in ("NoteId",)]
+    if ident:
+        w(f"SET IDENTITY_INSERT {t} ON;")
+    for i in range(0, len(rows), 50):
+        w(f"INSERT INTO {t} ({', '.join(insert_cols)}) VALUES")
+        chunk = rows[i:i + 50]
+        w(",\n".join("    (" + ", ".join(q(r[c]) for c in insert_cols) + ")" for r in chunk) + ";")
+    if ident:
+        w(f"SET IDENTITY_INSERT {t} OFF;")
+    w("")
+for did, _, mgr, _ in DEPTS:
+    if mgr:
+        w(f"UPDATE Department SET ManagerId = {mgr} WHERE DepartmentId = {did};")
+w("")
+w("COMMIT TRANSACTION;")
+w("PRINT N'>>> Seed thành công.';")
+w("END TRY")
+w("BEGIN CATCH")
+w("    IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;")
+w("    THROW;")
+w("END CATCH;")
+w("GO")
+w("")
+w("-- =============================================================================")
+w("-- TỰ KIỂM TRA: mọi giá trị trạng thái trong CHECK constraint phải có ít nhất 1 dòng")
+w("-- =============================================================================")
+CHECKS = [
+    ("Application", "ApplicationStatus", ["Applied", "HR_Passed", "HM_Passed", "HM_Suggested", "Interviewing", "Offered", "Hired", "Rejected", "Withdrawn", "Cancelled"]),
+    ("JobRequisition", "ApprovalStatus", ["Draft", "Pending_Director", "Approved", "Rejected", "Closed", "Cancelled"]),
+    ("JobPosting", "PostingStatus", ["Draft", "Published", "Paused", "Closed"]),
+    ("OfferProposal", "OfferStatus", ["Draft", "Pending_Director", "Director_Approved", "Director_Rejected", "Sent_Candidate", "Expired", "Accepted", "Declined"]),
+    ("InterviewSchedule", "InterviewStatus", ["Scheduled", "Completed", "Cancelled", "Rescheduled"]),
+    ("InterviewSchedule", "InterviewFormat", ["Online_GoogleMeet", "Offline_Office"]),
+    ("InterviewPanel", "RoleInPanel", ["HR", "HM", "Interviewer", "Director"]),
+    ("InterviewEvaluation", "Recommendation", ["Hire", "No_Hire", "Consider"]),
+    ("InterviewFinalResult", "FinalDecision", ["Passed", "Failed", "Considering"]),
+    ("ApplicationReview", "Decision", ["Pass", "Fail", "Hold"]),
+    ("ApplicationReview", "ReviewerRole", ["HR", "HiringManager", "Director"]),
+    ("RequisitionApproval", "[Status]", ["Approved", "Rejected"]),
+    ("OfferApproval", "[Status]", ["Approved", "Rejected"]),
+    ("[User]", "AccountStatus", ["Active", "Inactive"]),
+    ("Department", "DepartmentStatus", ["Active", "Inactive"]),
+    ("JobRequisition", "EmploymentType", ["Full-time", "Part-time", "Internship", "Contract"]),
+    ("JobRequisition", "WorkModel", ["On-site", "Remote", "Hybrid"]),
+    ("JobRequisition", "RequiredGender", ["Male", "Female", "Any"]),
+    ("AuditLog", "[Action]", ["CREATE", "UPDATE", "DELETE", "LOGIN"]),
+    ("AuditLog", "NewValue", ["Withdrawn", "PostingClosed", "InterviewCancelledOnClose", "TalentPoolMarked", "TalentPoolUnmarked",
+                              "TalentPoolSuggested", "TalentPoolHrRecommended", "TalentPoolHrWithdrawn", "TalentPoolCancelled",
+                              "TalentPoolActivated", "TalentPoolCandidateSubmitted", "MailSent:PostingClosed",
+                              "MailFailed:PostingClosed", "MailSent:InterviewInvitation"]),
+]
+w("DECLARE @Missing NVARCHAR(MAX) = N'';")
+for t, col, values in CHECKS:
+    for v in values:
+        w(f"IF NOT EXISTS (SELECT 1 FROM {t} WHERE {col} = N'{v}') SET @Missing += N'{t}.{col}={v}; ';")
+w("IF NOT EXISTS (SELECT 1 FROM OfferProposal WHERE IsDeleted = 1) SET @Missing += N'OfferProposal.IsDeleted=1; ';")
+w("IF NOT EXISTS (SELECT 1 FROM Candidate WHERE PolicyAgreedAt IS NULL) SET @Missing += N'Candidate.PolicyAgreedAt NULL; ';")
+w("IF NOT EXISTS (SELECT 1 FROM JobRequisition WHERE OriginalRequisitionId IS NOT NULL) SET @Missing += N'JobRequisition round 2; ';")
+w("IF NOT EXISTS (SELECT 1 FROM JobPosting WHERE PostingNo > 1) SET @Missing += N'JobPosting PostingNo 2; ';")
+w("IF NOT EXISTS (SELECT 1 FROM InterviewSchedule WHERE StartTime > SYSDATETIME() AND InterviewStatus = N'Scheduled') SET @Missing += N'lịch PV sắp tới; ';")
+w("IF NOT EXISTS (SELECT 1 FROM OfferProposal WHERE OfferStatus = N'Sent_Candidate' AND ResponseDeadline > SYSDATETIME()) SET @Missing += N'offer còn hạn; ';")
+w("IF NOT EXISTS (SELECT 1 FROM Application WHERE SubmissionDate >= CAST(CAST(SYSDATETIME() AS DATE) AS DATETIME2)) SET @Missing += N'hồ sơ hôm nay; ';")
+w("IF @Missing <> N'' THROW 50001, @Missing, 1;")
+w("PRINT N'>>> Tự kiểm tra: đủ mọi trạng thái.';")
+w("SELECT ApplicationStatus, COUNT(*) AS SoHoSo FROM Application GROUP BY ApplicationStatus ORDER BY ApplicationStatus;")
+w("GO")
 
-            c["int_status"] = int_status
-    lines.append("")
-
-lines.append("COMMIT TRANSACTION;")
-lines.append("PRINT N'>>> DỮ LIỆU ĐÃ ĐƯỢC COMMIT THÀNH CÔNG VÀO CƠ SỞ DỮ LIỆU!';")
-lines.append("END TRY")
-lines.append("BEGIN CATCH")
-lines.append("    IF @@TRANCOUNT > 0")
-lines.append("        ROLLBACK TRANSACTION;")
-lines.append("    DECLARE @ErrMsg NVARCHAR(4000) = ERROR_MESSAGE();")
-lines.append("    DECLARE @ErrSev INT = ERROR_SEVERITY();")
-lines.append("    DECLARE @ErrState INT = ERROR_STATE();")
-lines.append("    RAISERROR(@ErrMsg, @ErrSev, @ErrState);")
-lines.append("END CATCH;")
-lines.append("GO")
-lines.append("")
-
-# ASSERTION BLOCK
-lines.append("-- =============================================================================")
-lines.append("-- 🔍 KHỐI ĐỐI SOÁT & KIỂM TRA CHẤT LƯỢNG TỰ ĐỘNG (ASSERTION BLOCK)")
-lines.append("-- Schema v2: 19 bảng (OfferNegotiation đã bị DROP)")
-lines.append("-- =============================================================================")
-lines.append("PRINT N'';")
-lines.append("PRINT N'=============================================================================';")
-lines.append("PRINT N'               BÁO CÁO TỔNG SỐ BẢN GHI THEO TOÀN BỘ 19 BẢNG                   ';")
-lines.append("PRINT N'=============================================================================';")
-lines.append("SELECT 'Role' AS TableName, COUNT(*) AS TotalRecords FROM [Role]")
-lines.append("UNION ALL SELECT 'Department', COUNT(*) FROM Department")
-lines.append("UNION ALL SELECT '[User]', COUNT(*) FROM [User]")
-lines.append("UNION ALL SELECT 'AuditLog', COUNT(*) FROM AuditLog")
-lines.append("UNION ALL SELECT 'SystemConfig', COUNT(*) FROM SystemConfig")
-lines.append("UNION ALL SELECT 'JobRequisition', COUNT(*) FROM JobRequisition")
-lines.append("UNION ALL SELECT 'RequisitionApproval', COUNT(*) FROM RequisitionApproval")
-lines.append("UNION ALL SELECT 'JobPosting', COUNT(*) FROM JobPosting")
-lines.append("UNION ALL SELECT 'Candidate', COUNT(*) FROM Candidate")
-lines.append("UNION ALL SELECT 'Application', COUNT(*) FROM Application")
-lines.append("UNION ALL SELECT 'ApplicationReview', COUNT(*) FROM ApplicationReview")
-lines.append("UNION ALL SELECT 'InterviewSchedule', COUNT(*) FROM InterviewSchedule")
-lines.append("UNION ALL SELECT 'InterviewPanel', COUNT(*) FROM InterviewPanel")
-lines.append("UNION ALL SELECT 'InterviewEvaluation', COUNT(*) FROM InterviewEvaluation")
-lines.append("UNION ALL SELECT 'InterviewFinalResult', COUNT(*) FROM InterviewFinalResult")
-lines.append("UNION ALL SELECT 'OfferProposal', COUNT(*) FROM OfferProposal")
-lines.append("UNION ALL SELECT 'OfferApproval', COUNT(*) FROM OfferApproval;")
-lines.append("GO")
-lines.append("")
-lines.append("-- Kiểm tra không có bảng nào trong 19 bảng bị rỗng (COUNT = 0) - Schema v2: đã xóa OfferNegotiation")
-lines.append("BEGIN")
-lines.append("    DECLARE @EmptyTables INT = 0;")
-lines.append("    IF (SELECT COUNT(*) FROM [Role]) = 0 SET @EmptyTables = @EmptyTables + 1;")
-lines.append("    IF (SELECT COUNT(*) FROM Department) = 0 SET @EmptyTables = @EmptyTables + 1;")
-lines.append("    IF (SELECT COUNT(*) FROM [User]) = 0 SET @EmptyTables = @EmptyTables + 1;")
-lines.append("    IF (SELECT COUNT(*) FROM AuditLog) = 0 SET @EmptyTables = @EmptyTables + 1;")
-lines.append("    IF (SELECT COUNT(*) FROM SystemConfig) = 0 SET @EmptyTables = @EmptyTables + 1;")
-lines.append("    IF (SELECT COUNT(*) FROM JobRequisition) = 0 SET @EmptyTables = @EmptyTables + 1;")
-lines.append("    IF (SELECT COUNT(*) FROM RequisitionApproval) = 0 SET @EmptyTables = @EmptyTables + 1;")
-lines.append("    IF (SELECT COUNT(*) FROM JobPosting) = 0 SET @EmptyTables = @EmptyTables + 1;")
-lines.append("    IF (SELECT COUNT(*) FROM Candidate) = 0 SET @EmptyTables = @EmptyTables + 1;")
-lines.append("    IF (SELECT COUNT(*) FROM Application) = 0 SET @EmptyTables = @EmptyTables + 1;")
-lines.append("    IF (SELECT COUNT(*) FROM ApplicationReview) = 0 SET @EmptyTables = @EmptyTables + 1;")
-lines.append("    IF (SELECT COUNT(*) FROM InterviewSchedule) = 0 SET @EmptyTables = @EmptyTables + 1;")
-lines.append("    IF (SELECT COUNT(*) FROM InterviewPanel) = 0 SET @EmptyTables = @EmptyTables + 1;")
-lines.append("    IF (SELECT COUNT(*) FROM InterviewEvaluation) = 0 SET @EmptyTables = @EmptyTables + 1;")
-lines.append("    IF (SELECT COUNT(*) FROM InterviewFinalResult) = 0 SET @EmptyTables = @EmptyTables + 1;")
-lines.append("    IF (SELECT COUNT(*) FROM OfferProposal) = 0 SET @EmptyTables = @EmptyTables + 1;")
-lines.append("    IF (SELECT COUNT(*) FROM OfferApproval) = 0 SET @EmptyTables = @EmptyTables + 1;")
-# NOTE: OfferNegotiation đã bị DROP - không kiểm tra
-lines.append("")
-lines.append("    IF @EmptyTables > 0")
-lines.append("        RAISERROR(N'CẢNH BÁO: Phát hiện có bảng chưa có dữ liệu trong 19 bảng!', 16, 1);")
-lines.append("    ELSE")
-lines.append("        PRINT N'>>> XÁC NHẬN HOÀN TOÀN: ĐỦ 19/19 BẢNG ĐỀU ĐÃ ĐƯỢC NẠP DỮ LIỆU CHUẨN MỰC!';")
-lines.append("END;")
-lines.append("GO")
-lines.append("")
-lines.append("-- Kiểm tra số lượng đơn ứng tuyển theo từng ngày (Yêu cầu nghiêm ngặt: không dưới 3 và không quá 4 đơn/ngày)")
-lines.append("PRINT N'=============================================================================';")
-lines.append("PRINT N'   KIỂM TRA DÒNG THỜI GIAN ĐƠN ỨNG TUYỂN (3-4 ĐƠN/NGÀY TỪ 30/09 ĐẾN 15/12)     ';")
-lines.append("PRINT N'=============================================================================';")
-lines.append("SELECT CAST(SubmissionDate AS DATE) AS ApplyDate, COUNT(*) AS TotalApps")
-lines.append("FROM Application")
-lines.append("GROUP BY CAST(SubmissionDate AS DATE)")
-lines.append("HAVING COUNT(*) < 3 OR COUNT(*) > 4;")
-lines.append("GO")
-lines.append("")
-lines.append("PRINT N'>>> KẾT QUẢ: Nếu bảng trên rỗng (0 rows), toàn bộ 77 ngày đều đạt chuẩn 3-4 đơn/ngày!';")
-lines.append("PRINT N'>>> HOÀN TẤT: Script seed_data.sql sẵn sàng khởi chạy trên môi trường thử nghiệm / phát triển!';")
-lines.append("GO")
-
-output_content = "\n".join(lines)
 with open(OUT_FILE, "w", encoding="utf-8") as f:
-    f.write(output_content)
-
-print(f"Generated {len(lines)} lines of SQL successfully written to {OUT_FILE}.")
+    f.write("\n".join(out) + "\n")
+print(f"OK: {OUT_FILE} | " + ", ".join(f"{t} {len(r)}" for t, (c, r) in tables.items()))
+print("Application:", status_count)

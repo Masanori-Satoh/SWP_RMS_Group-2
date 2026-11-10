@@ -45,7 +45,6 @@ public class RequisitionServiceImpl implements RequisitionService {
     private final NotificationService notificationService;
     private final Clock clock;
 
-
     @Override
     @Transactional(readOnly = true)
     // Returns requisition details by ID.
@@ -60,7 +59,6 @@ public class RequisitionServiceImpl implements RequisitionService {
         return mapper.toDetail(jobRequisition, currentUser, latestPosting, hasLaterRound,
                 approvalHistory, auditLogger.history(id));
     }
-
 
     @Override
     @Transactional(readOnly = true)
@@ -90,7 +88,6 @@ public class RequisitionServiceImpl implements RequisitionService {
         return copiedRequest;
     }
 
-
     @Override
     // Creates a requisition.
     public Integer createRequisition(RequisitionRequest request) {
@@ -100,6 +97,8 @@ public class RequisitionServiceImpl implements RequisitionService {
         if (access.isDirector(currentUser)) {
             request.setDepartmentId(requireActiveDepartment(request.getDepartmentId()));
         } else {
+
+            // HM tự tạo phòng ban
             Department department = currentUser.getDepartment();
             if (department == null || !DEPARTMENT_ACTIVE.equals(department.getDepartmentStatus())) {
                 throw createValidationException("departmentId",
@@ -139,7 +138,6 @@ public class RequisitionServiceImpl implements RequisitionService {
 
         return jobRequisition.getRequisitionId();
     }
-
 
     @Override
     // Updates an existing requisition.
@@ -318,7 +316,6 @@ public class RequisitionServiceImpl implements RequisitionService {
         }
         return department.getDepartmentId();
     }
-
 
     // Applies the status selected by the form action.
     private void applySavedStatus(JobRequisition jobRequisition, String action, User currentUser) {

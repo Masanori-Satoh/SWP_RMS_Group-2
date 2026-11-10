@@ -403,7 +403,7 @@ Không cho chọn ngày đăng tương lai. Truy vấn trang công khai vẫn ki
 - Nguồn chân lý: `database/schema/db.sql` (+ `database/migrations/`, ERD `docs/database/model.md`). `ddl-auto=validate`: entity lệch `db.sql` thì app không khởi động.
 - Đổi bảng / cột: sửa `db.sql` + migration (+ `model.md` nếu đổi thiết kế) + entity + DTO + validator + test cùng lúc.
 - Chữ tiếng Việt: `NVARCHAR`. Giữ kiểu SQL Server sẵn có (`IDENTITY`, `DATETIME2`, `SYSDATETIME()`, `BIT`). Không chuyển sang MySQL.
-- Seed: `seed_data.sql` rồi `seed_extra_jobs_and_pipeline.sql`. Không sinh lại `seed_data.sql` bằng `build_seed.py` (có dữ liệu thêm tay).
+- Seed: chỉ `seed_data.sql` (sinh bởi `build_seed.py`; đổi dữ liệu thì sửa script rồi sinh lại).
 - `nullable = false` trên entity chỉ để mô tả; ràng buộc thật ở DB. Cột NOT NULL mà nháp được để trống → lưu chuỗi rỗng `""` (có comment `// Rule:` giải thích).
 
 ### 15.2. Repository

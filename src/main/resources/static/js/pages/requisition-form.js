@@ -157,7 +157,7 @@
         const SALARY_MAX = 1000000000;
         const salaryMessage = value => value === null ? ''
             : value <= 0 ? 'Mức lương phải lớn hơn 0.'
-            : value > SALARY_MAX ? 'Mức lương không được vượt quá 1.000.000.000 VND/tháng.' : '';
+                : value > SALARY_MAX ? 'Mức lương không được vượt quá 1.000.000.000 VND/tháng.' : '';
         minSalaryMessage = salaryMessage(minVal);
         maxSalaryMessage = salaryMessage(maxVal);
 
@@ -279,10 +279,12 @@
             confirmBox.querySelector('button[type=submit]').focus();
         }
     });
+
     document.getElementById('rqf-cancel-confirm').addEventListener('click', () => {
         confirmBox.hidden = true;
         buttons.hidden = false;
     });
+
 
     let submitting = false;
     form.addEventListener('submit', event => {
@@ -290,6 +292,7 @@
             event.preventDefault();
             return;
         }
+
         const action = event.submitter?.value === 'submit' ? 'submit' : 'draft';
         if (!validateAll(action)) {
             event.preventDefault();

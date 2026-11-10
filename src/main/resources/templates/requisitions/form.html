@@ -17,7 +17,8 @@
         <th:block th:replace="~{fragments/ui/admin-workspace :: scene}"></th:block>
 
         <header class="requisition-page-intro adw-heading">
-            <h1 class="adw-title" th:text="${isEdit ? 'Chỉnh sửa yêu cầu tuyển dụng' : 'Tạo yêu cầu tuyển dụng'}">Tạo yêu cầu tuyển dụng
+            <h1 class="adw-title" th:text="${isEdit ? 'Chỉnh sửa yêu cầu tuyển dụng' : 'Tạo yêu cầu tuyển dụng'}">Tạo
+                yêu cầu tuyển dụng
             </h1>
 
         </header>
@@ -158,8 +159,7 @@
                                         class="required-asterisk" id="workLocation-required"
                                         th:hidden="*{workModel == 'Remote'}">*</span></label>
                                 <input class="form-input" type="text" th:field="*{workLocation}" maxlength="255"
-                                    placeholder="Nhập địa điểm làm việc"
-                                    th:disabled="*{workModel == 'Remote'}"
+                                    placeholder="Nhập địa điểm làm việc" th:disabled="*{workModel == 'Remote'}"
                                     aria-describedby="workLocation-error"
                                     th:attr="aria-invalid=${#fields.hasErrors('workLocation')}">
                                 <small id="workLocation-error" class="field-error"
@@ -192,14 +192,15 @@
                                 <select class="form-select" id="probationChoice"
                                     th:with="p=*{probationPeriod}, presets=${ {'6 ngày làm việc','15 ngày','30 ngày'} },
                                              other=${p != null and !#strings.isEmpty(p) and !#lists.contains(presets, p)}">
-                                    <option value="" th:selected="${p == null or #strings.isEmpty(p)}">Không thử việc</option>
+                                    <option value="" th:selected="${p == null or #strings.isEmpty(p)}">Không thử việc
+                                    </option>
                                     <option th:each="preset : ${presets}" th:value="${preset}" th:text="${preset}"
                                         th:selected="${preset == p}">15 ngày</option>
                                     <option value="__other__" th:selected="${other}">Khác</option>
                                 </select>
-                                <input class="form-input" type="text" th:field="*{probationPeriod}" th:maxlength="${probationLimit}"
-                                    placeholder="Nhập thời gian thử việc (VD: 2 tháng)" aria-label="Thời gian thử việc khác"
-                                    aria-describedby="probationPeriod-error"
+                                <input class="form-input" type="text" th:field="*{probationPeriod}"
+                                    th:maxlength="${probationLimit}" placeholder="Nhập thời gian thử việc (VD: 2 tháng)"
+                                    aria-label="Thời gian thử việc khác" aria-describedby="probationPeriod-error"
                                     th:attr="aria-invalid=${#fields.hasErrors('probationPeriod')}">
                                 <small id="probationPeriod-error" class="field-error"
                                     th:text="${#fields.hasErrors('probationPeriod')} ? ${#strings.listJoin(#fields.errors('probationPeriod'), '; ')} : ''"></small>
@@ -273,6 +274,7 @@
                         <a class="btn btn--secondary rqf-cancel"
                             th:href="${isEdit} ? @{/requisitions/{id}(id=${requisitionId})} : @{/requisitions}">Hủy</a>
                     </div>
+
                     <div id="rqf-confirm" class="rqf-confirm" role="alertdialog" aria-labelledby="rqf-confirm-title"
                         hidden>
                         <th:block th:unless="${directApprove}">
