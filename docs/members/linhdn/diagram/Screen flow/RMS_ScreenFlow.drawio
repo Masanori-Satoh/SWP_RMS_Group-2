@@ -55,7 +55,7 @@
         <mxCell id="job_delete" value="&lt;b&gt;Delete Job Confirmation&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot; color=&quot;#555555&quot;&gt;HR&lt;/font&gt;" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FF9933;strokeColor=#A34700;strokeWidth=1.5;fontSize=12;" vertex="1" parent="1">
           <mxGeometry x="975" y="640" width="230" height="76" as="geometry" />
         </mxCell>
-        <mxCell id="n1" value="On Job Requisition Details the HM can also Withdraw a Pending_Director requisition (back to Draft) or Copy an Approved / Rejected one (opens the Create Requisition Screen, pre-filled)." style="shape=note;size=12;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=6;spacingTop=4;fillColor=#FFFFE0;strokeColor=#B3B300;fontSize=11;" vertex="1" parent="1">
+        <mxCell id="n1" value="On Job Requisition Details the HM can edit a Draft or Rejected requisition, or Copy an Approved one (opens the Create Requisition Screen, pre-filled). A Pending_Director requisition cannot be edited." style="shape=note;size=12;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=6;spacingTop=4;fillColor=#FFFFE0;strokeColor=#B3B300;fontSize=11;" vertex="1" parent="1">
           <mxGeometry x="670" y="400" width="330" height="74" as="geometry" />
         </mxCell>
         <mxCell id="e0" value="Requisitions menu" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeWidth=1.5;fontSize=11;labelBackgroundColor=#FFFFFF;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="dash" target="req_list">

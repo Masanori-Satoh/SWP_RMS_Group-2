@@ -54,29 +54,30 @@ public class DirectorDashboardService {
         return new DirectorDashboardResponse(
                 user.getRole().getRoleName(),
                 user.getFullName(),
-                kpis(requisitionRows, offerRows, now),
+                kpis(offerRows, now),
                 pendingRequisitions(shownRequisitions, now),
                 pendingOffers(shownOffers, now),
                 offerRows.size() - shownOffers.size(),
                 departments(lists.openRequisitionsByDepartment()));
     }
 
-    private List<DashboardMetricResponse> kpis(List<PendingRequisitionRow> requisitionRows,
-            List<PendingOfferRow> offerRows, LocalDateTime now) {
+    private List<DashboardMetricResponse> kpis(List<PendingOfferRow> offerRows, LocalDateTime now) {
         LocalDateTime monthStart = LocalDate.of(now.getYear(), now.getMonth(), 1).atStartOfDay();
         long hiredThisMonth = metrics.countHiredBetween(monthStart, now);
 
         return List.of(
-                requisitionMetric(requisitionRows),
+                requisitionMetric(lists.countPendingRequisitions()),
                 offerMetric(offerRows),
                 DashboardMetricResponse.backlog("userCheck", "Ứng viên trúng tuyển trong tháng", hiredThisMonth,
                         "Trong tháng này", "/applications?stage=HIRED", "neutral"));
     }
 
-    private DashboardMetricResponse requisitionMetric(List<PendingRequisitionRow> rows) {
-        return DashboardMetricResponse.backlog("clock", "Yêu cầu tuyển dụng chờ duyệt", rows.size(),
+    // Đếm cùng phạm vi với danh sách mà thẻ dẫn tới (gồm cả yêu cầu chính Giám đốc gửi); danh sách
+    // "chờ duyệt" bên dưới vẫn chỉ hiện yêu cầu Giám đốc được quyền quyết định.
+    private DashboardMetricResponse requisitionMetric(long pending) {
+        return DashboardMetricResponse.backlog("clock", "Yêu cầu tuyển dụng chờ duyệt", pending,
                 "Đang chờ phê duyệt", "/requisitions?status=" + RequisitionAccess.STATUS_PENDING_DIRECTOR,
-                rows.isEmpty() ? "neutral" : "warning");
+                pending == 0 ? "neutral" : "warning");
     }
 
     private DashboardMetricResponse offerMetric(List<PendingOfferRow> rows) {

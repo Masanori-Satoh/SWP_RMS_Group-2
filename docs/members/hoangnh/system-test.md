@@ -1,5 +1,7 @@
 # System test — phần HoangNH
 
+> Biên bản lịch sử: ca ST-REQ-03 đã chạy trên phiên bản còn chức năng rút Requisition. Chức năng đó đã bị gỡ; không chạy lại ca này trên phiên bản hiện tại. Dữ liệu và kết quả PASS bên dưới được giữ để truy vết lần chạy cũ.
+
 **Phạm vi:** Requisition (5.1.14–5.1.16), Job Posting nội bộ (5.1.18–5.1.19), BR-CAN-01, Thông báo in-app (sự kiện + chuông WebSocket). Dashboard nội bộ làm ở đợt sau. Không gồm chatbot.
 
 **Cách chạy:** app thật (`mvnw spring-boot:run`, cổng 8088) + SQL Server local `RitirementManagement2`, thao tác bằng trình duyệt. Khi cần hai người cùng lúc (xem chuông đổi ngay), người thứ hai thao tác bằng HTTP (curl, có đăng nhập + CSRF như trình duyệt). SQL chỉ dùng **đọc** để đối chiếu.

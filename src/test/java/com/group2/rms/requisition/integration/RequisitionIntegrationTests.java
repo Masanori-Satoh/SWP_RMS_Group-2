@@ -125,7 +125,7 @@ class RequisitionIntegrationTests {
 
         private List<RequisitionResponse> searchByKeyword(String keyword) {
                 return listService.getListPage(new RequisitionSearchRequest(
-                                keyword, null, null, null, null, null, null, "newest", 0, 10)).page().getContent();
+                                keyword, null, null, null, null, null, null, "newest", 0, 10, null)).page().getContent();
         }
 
         // ----- Tạo -----
@@ -279,7 +279,7 @@ class RequisitionIntegrationTests {
                 // Assert
                 assertEquals(RequisitionAccess.STATUS_APPROVED,
                                 requisitions.findById(requisition.getRequisitionId()).orElseThrow().getApprovalStatus());
-                var history = approvals.findByRequisition_RequisitionIdOrderByApprovalDateDesc(requisition.getRequisitionId());
+                var history = requisitions.findApprovalHistory(requisition.getRequisitionId());
                 assertEquals(1, history.size());
                 assertEquals(RequisitionAccess.STATUS_APPROVED, history.get(0).getStatus());
                 assertEquals("Approved for hiring", history.get(0).getComments());
@@ -305,25 +305,9 @@ class RequisitionIntegrationTests {
                 // Assert
                 assertEquals(RequisitionAccess.STATUS_REJECTED,
                                 requisitions.findById(requisition.getRequisitionId()).orElseThrow().getApprovalStatus());
-                var history = approvals.findByRequisition_RequisitionIdOrderByApprovalDateDesc(requisition.getRequisitionId());
+                var history = requisitions.findApprovalHistory(requisition.getRequisitionId());
                 assertEquals(1, history.size());
                 assertEquals("Need more budget details", history.get(0).getComments());
-        }
-
-        @Test
-        @WithMockUser(username = "it_hm", roles = "HIRING_MANAGER")
-        @DisplayName("Người tạo rút lại yêu cầu đang chờ -> Về Draft")
-        void withdraw_shouldReturnToDraft_whenOwnerWithdrawsPending() {
-                // Arrange
-                JobRequisition requisition = saveRequisition("Pending UX", hiringManager, department,
-                                RequisitionAccess.STATUS_PENDING_DIRECTOR);
-
-                // Act
-                service.withdraw(requisition.getRequisitionId());
-
-                // Assert
-                assertEquals(RequisitionAccess.STATUS_DRAFT,
-                                requisitions.findById(requisition.getRequisitionId()).orElseThrow().getApprovalStatus());
         }
 
         // ----- Sao chép, xóa -----

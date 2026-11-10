@@ -85,11 +85,11 @@ class RequisitionListServiceTests {
 
     /** Request chỉ có tham số status, các tham số khác để trống. */
     private RequisitionSearchRequest onlyStatus(List<String> status) {
-        return new RequisitionSearchRequest(null, status, null, null, null, null, null, null, null, null);
+        return new RequisitionSearchRequest(null, status, null, null, null, null, null, null, null, null, null);
     }
 
     private RequisitionSearchRequest onlyKeyword(String keyword) {
-        return new RequisitionSearchRequest(keyword, null, null, null, null, null, null, null, null, null);
+        return new RequisitionSearchRequest(keyword, null, null, null, null, null, null, null, null, null, null);
     }
 
     private JobRequisition row(int id) {
@@ -122,8 +122,8 @@ class RequisitionListServiceTests {
     // ----- Trạng thái duyệt -----
 
     @Test
-    @DisplayName("HR gửi ?status=Draft -> Bị bỏ qua, vì HR không có ô lọc trạng thái")
-    void getListPage_shouldIgnoreStatusFilter_whenViewerIsHr() {
+    @DisplayName("HR gửi ?status=Draft -> Báo lỗi, bảng trống, vì HR không có ô lọc trạng thái")
+    void getListPage_shouldRejectStatusFilter_whenViewerIsHr() {
         // Arrange
         loginAs(RequisitionAccess.ROLE_HR);
 
@@ -134,6 +134,8 @@ class RequisitionListServiceTests {
         assertFalse(list.options().showStatus());
         assertNull(list.filter().status());
         assertTrue(list.chips().isEmpty());
+        assertTrue(list.page().isEmpty());
+        assertEquals(List.of("Bộ lọc trạng thái không hợp lệ. Vui lòng chọn bộ lọc hợp lệ."), list.errors());
     }
 
     @Test
@@ -230,11 +232,11 @@ class RequisitionListServiceTests {
     }
 
     @Test
-    @DisplayName("Hiring Manager -> Không có ô Phòng ban / Người tạo; departmentId, creatorId trên URL bị bỏ qua")
+    @DisplayName("Hiring Manager -> Không có ô Phòng ban / Người tạo; departmentId, creatorId trên URL báo lỗi")
     void getListPage_shouldHideDepartmentAndCreator_whenViewerIsHiringManager() {
         // Arrange
         loginAs(RequisitionAccess.ROLE_HIRING_MANAGER);
-        RequisitionSearchRequest raw = new RequisitionSearchRequest(null, null, null, 1, 5, null, null, null, null, null);
+        RequisitionSearchRequest raw = new RequisitionSearchRequest(null, null, null, 1, 5, null, null, null, null, null, null);
 
         // Act
         RequisitionListResponse list = service.getListPage(raw);
@@ -243,14 +245,18 @@ class RequisitionListServiceTests {
         assertFalse(list.options().showDepartment());
         assertFalse(list.options().showCreator());
         assertTrue(list.options().showPosting());
-        assertTrue(list.options().showCreatedDate());
+        assertFalse(list.options().showCreatedDate());
+        assertTrue(list.options().showEmploymentType());
         assertNull(list.filter().departmentId());
         assertNull(list.filter().creatorId());
+        assertTrue(list.page().isEmpty());
+        assertEquals(List.of("Bộ lọc phòng ban không hợp lệ. Vui lòng chọn bộ lọc hợp lệ.",
+                "Bộ lọc người tạo yêu cầu không hợp lệ. Vui lòng chọn bộ lọc hợp lệ."), list.errors());
     }
 
     @Test
-    @DisplayName("Phòng ban không có trong danh sách lựa chọn (id giả) -> Bỏ qua; phòng ban hợp lệ được giữ")
-    void getListPage_shouldIgnoreUnknownDepartment_whenViewerIsDirector() {
+    @DisplayName("Phòng ban không có trong danh sách lựa chọn -> Báo lỗi, bảng trống; phòng ban hợp lệ được giữ")
+    void getListPage_shouldRejectUnknownDepartment_whenViewerIsDirector() {
         // Arrange
         loginAs(RequisitionAccess.ROLE_DIRECTOR);
         Department engineering = Department.builder().departmentId(1).departmentName("Engineering").build();
@@ -258,32 +264,76 @@ class RequisitionListServiceTests {
 
         // Act
         RequisitionListResponse unknown = service.getListPage(
-                new RequisitionSearchRequest(null, null, null, 99, null, null, null, null, null, null));
+                new RequisitionSearchRequest(null, null, null, 99, null, null, null, null, null, null, null));
         RequisitionListResponse known = service.getListPage(
-                new RequisitionSearchRequest(null, null, null, 1, null, null, null, null, null, null));
+                new RequisitionSearchRequest(null, null, null, 1, null, null, null, null, null, null, null));
 
         // Assert
         assertNull(unknown.filter().departmentId());
+        assertTrue(unknown.page().isEmpty());
+        assertEquals(List.of("Bộ lọc phòng ban không hợp lệ. Vui lòng chọn bộ lọc hợp lệ."), unknown.errors());
+        assertTrue(known.errors().isEmpty());
         assertEquals(1, known.filter().departmentId());
         assertEquals("Phòng ban: Engineering", known.chips().get(0).label());
     }
 
     @Test
-    @DisplayName("Ô lọc Tin tuyển dụng -> Chỉ nhận none / Published / Paused / Closed, giá trị lạ bị bỏ")
+    @DisplayName("Ô lọc Tin tuyển dụng -> Chỉ nhận none / Published / Paused / Closed, giá trị lạ báo lỗi, bảng trống")
     void getListPage_shouldIgnoreUnknownPostingValue_whenViewerIsHr() {
         // Arrange
         loginAs(RequisitionAccess.ROLE_HR);
 
         // Act
         RequisitionListResponse unknown = service.getListPage(
-                new RequisitionSearchRequest(null, null, "Deleted", null, null, null, null, null, null, null));
+                new RequisitionSearchRequest(null, null, "Deleted", null, null, null, null, null, null, null, null));
         RequisitionListResponse none = service.getListPage(
-                new RequisitionSearchRequest(null, null, "none", null, null, null, null, null, null, null));
+                new RequisitionSearchRequest(null, null, "none", null, null, null, null, null, null, null, null));
 
         // Assert
         assertNull(unknown.filter().posting());
+        assertTrue(unknown.page().isEmpty());
+        assertEquals(List.of("Bộ lọc tin tuyển dụng không hợp lệ. Vui lòng chọn bộ lọc hợp lệ."), unknown.errors());
+        assertTrue(none.errors().isEmpty());
         assertEquals(RequisitionLabels.POSTING_NONE, none.filter().posting());
         assertEquals("Tin tuyển dụng: Chưa có tin", none.chips().get(0).label());
+    }
+
+    @Test
+    @DisplayName("Ô lọc Hình thức -> HM chọn Part-time được giữ + có chip; giá trị lạ báo lỗi; Director không có ô này")
+    void getListPage_shouldFilterByEmploymentType_onlyForHiringManager() {
+        loginAs(RequisitionAccess.ROLE_HIRING_MANAGER);
+        RequisitionListResponse partTime = service.getListPage(
+                new RequisitionSearchRequest(null, null, null, null, null, null, null, null, null, null, "Part-time"));
+        RequisitionListResponse unknown = service.getListPage(
+                new RequisitionSearchRequest(null, null, null, null, null, null, null, null, null, null, "Freelance"));
+
+        assertTrue(partTime.errors().isEmpty());
+        assertEquals("Part-time", partTime.filter().employmentType());
+        assertEquals("Hình thức: Bán thời gian", partTime.chips().get(0).label());
+        assertNull(unknown.filter().employmentType());
+        assertEquals(List.of("Bộ lọc hình thức không hợp lệ. Vui lòng chọn bộ lọc hợp lệ."), unknown.errors());
+
+        loginAs(RequisitionAccess.ROLE_DIRECTOR);
+        RequisitionListResponse director = service.getListPage(
+                new RequisitionSearchRequest(null, null, null, null, null, null, null, null, null, null, "Part-time"));
+        assertFalse(director.options().showEmploymentType());
+        assertNull(director.filter().employmentType());
+    }
+
+    @Test
+    @DisplayName("departmentId=ooooooom sai kiểu -> Báo lỗi phòng ban, bảng trống")
+    void getListPage_shouldReportError_whenDepartmentIdIsNotANumber() {
+        // Arrange
+        loginAs(RequisitionAccess.ROLE_HR);
+
+        // Act
+        RequisitionListResponse list = service.getListPage(
+                new RequisitionSearchRequest(null, null, null, null, null, null, null, null, null, null, null),
+                List.of("departmentId"));
+
+        // Assert
+        assertTrue(list.page().isEmpty());
+        assertEquals(List.of("Bộ lọc phòng ban không hợp lệ. Vui lòng chọn bộ lọc hợp lệ."), list.errors());
     }
 
     // ----- Từ khóa -----
@@ -320,59 +370,69 @@ class RequisitionListServiceTests {
     // ----- Sắp xếp và phân trang -----
 
     @Test
-    @DisplayName("Sort lạ, page âm, size quá lớn -> Về mặc định an toàn: mới nhất, trang đầu, tối đa 50 dòng")
-    void getListPage_shouldFallBackToSafeDefaults_whenParamsAreInvalid() {
-        // Arrange
-        loginAs(RequisitionAccess.ROLE_HIRING_MANAGER);
-        RequisitionSearchRequest raw = new RequisitionSearchRequest(
-                "  java  ", null, null, null, null, null, null, "password", -3, 999);
-
-        // Act
-        RequisitionListResponse list = service.getListPage(raw);
-
-        // Assert
-        assertEquals("java", list.filter().q());
-        assertEquals(RequisitionSort.NEWEST.param(), list.filter().sort());
-        assertEquals(0, list.filter().page());
-        assertEquals(50, list.filter().size());
-
-        ArgumentCaptor<Pageable> pageable = ArgumentCaptor.forClass(Pageable.class);
-        verify(requisitions).findAll(any(Specification.class), pageable.capture());
-        assertEquals(0, pageable.getValue().getPageNumber());
-        assertEquals(50, pageable.getValue().getPageSize());
-        assertEquals(RequisitionSort.NEWEST.toSort(), pageable.getValue().getSort());
-    }
-
-    @Test
-    @DisplayName("Size = 0 (biên dưới) -> Tối thiểu 1 dòng mỗi trang")
-    void getListPage_shouldUseOneRowPerPage_whenSizeIsZero() {
-        // Arrange
+    @DisplayName("Sort lạ -> Bảng trống, báo lỗi sắp xếp, không truy vấn")
+    void getListPage_shouldReportError_whenSortIsUnknown() {
         loginAs(RequisitionAccess.ROLE_HIRING_MANAGER);
 
-        // Act
         RequisitionListResponse list = service.getListPage(
-                new RequisitionSearchRequest(null, null, null, null, null, null, null, null, null, 0));
+                new RequisitionSearchRequest(null, null, null, null, null, null, null, "abc' OR 1=1", null, null, null));
 
-        // Assert
-        assertEquals(1, list.filter().size());
+        assertTrue(list.page().isEmpty());
+        assertEquals(List.of("Giá trị sắp xếp không hợp lệ. Vui lòng chọn tùy chọn sắp xếp hợp lệ."), list.errors());
+        verify(requisitions, never()).findAll(any(Specification.class), any(Pageable.class));
     }
 
     @Test
-    @DisplayName("Gõ số trang vượt quá tổng số trang -> Tự lùi về trang cuối thay vì bảng trống")
-    void getListPage_shouldFallBackToLastPage_whenPageIsBeyondTotal() {
-        // Arrange
+    @DisplayName("Page âm + size quá lớn -> Hiện cả hai lỗi, bảng trống")
+    void getListPage_shouldReportBothErrors_whenPageNegativeAndSizeTooLarge() {
         loginAs(RequisitionAccess.ROLE_HIRING_MANAGER);
-        Page<JobRequisition> beyond = new PageImpl<>(List.of(), PageRequest.of(9, 10), 15);
-        Page<JobRequisition> lastPage = new PageImpl<>(List.of(), PageRequest.of(1, 10), 15);
-        when(requisitions.findAll(any(Specification.class), any(Pageable.class))).thenReturn(beyond, lastPage);
 
-        // Act
-        service.getListPage(new RequisitionSearchRequest(null, null, null, null, null, null, null, null, 9, null));
+        RequisitionListResponse list = service.getListPage(
+                new RequisitionSearchRequest(null, null, null, null, null, null, null, null, -3, 999, null));
 
-        // Assert
-        ArgumentCaptor<Pageable> pageable = ArgumentCaptor.forClass(Pageable.class);
-        verify(requisitions, times(2)).findAll(any(Specification.class), pageable.capture());
-        assertEquals(1, pageable.getAllValues().get(1).getPageNumber());
+        assertTrue(list.page().isEmpty());
+        assertEquals(List.of("Số trang phải lớn hơn hoặc bằng 1.", "Số dòng mỗi trang không được vượt quá 50."),
+                list.errors());
+    }
+
+    @Test
+    @DisplayName("Size = 0 -> Báo lỗi tối thiểu 1 dòng, bảng trống")
+    void getListPage_shouldReportError_whenSizeIsZero() {
+        loginAs(RequisitionAccess.ROLE_HIRING_MANAGER);
+
+        RequisitionListResponse list = service.getListPage(
+                new RequisitionSearchRequest(null, null, null, null, null, null, null, null, null, 0, null));
+
+        assertTrue(list.page().isEmpty());
+        assertEquals(List.of("Số dòng mỗi trang phải lớn hơn hoặc bằng 1."), list.errors());
+    }
+
+    @Test
+    @DisplayName("Size = 50 (biên trên) -> Hợp lệ, không lỗi")
+    void getListPage_shouldAcceptMaxSize() {
+        loginAs(RequisitionAccess.ROLE_HIRING_MANAGER);
+
+        RequisitionListResponse list = service.getListPage(
+                new RequisitionSearchRequest(null, null, null, null, null, null, null, null, null, 50, null));
+
+        assertTrue(list.errors().isEmpty());
+        assertEquals(50, list.filter().size());
+    }
+
+    @Test
+    @DisplayName("Số trang vượt quá tổng số trang -> Bảng trống kèm lỗi, không lùi về trang cuối")
+    void getListPage_shouldReportError_whenPageIsBeyondTotal() {
+        loginAs(RequisitionAccess.ROLE_HIRING_MANAGER);
+        Page<JobRequisition> beyond = new PageImpl<>(List.of(), PageRequest.of(998, 10), 15);
+        when(requisitions.findAll(any(Specification.class), any(Pageable.class))).thenReturn(beyond);
+
+        RequisitionListResponse list = service.getListPage(
+                new RequisitionSearchRequest(null, null, null, null, null, null, null, null, 998, null, null));
+
+        assertTrue(list.page().isEmpty());
+        assertEquals(0, list.page().getTotalElements());
+        assertEquals(List.of("Trang bạn yêu cầu không tồn tại."), list.errors());
+        verify(requisitions, times(1)).findAll(any(Specification.class), any(Pageable.class));
     }
 
     // ----- Số câu truy vấn (không N+1) -----

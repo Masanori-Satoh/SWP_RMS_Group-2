@@ -8,7 +8,7 @@
 <div th:fragment="flashToast(success, error)" class="flash-toasts" th:if="${success != null or error != null}">
     <div class="flash-toast flash-toast--success" role="status" th:if="${success}" data-flash-toast>
         <span class="flash-toast-progress" aria-hidden="true"></span>
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="flash-toast-icon"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        <svg th:if="${decisionRejectedToast != true}" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="flash-toast-icon"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
         <p class="flash-toast-text" th:text="${success}">Đã lưu thành công.</p>
         <button type="button" class="flash-toast-close" aria-label="Đóng thông báo" data-flash-close>&times;</button>
     </div>

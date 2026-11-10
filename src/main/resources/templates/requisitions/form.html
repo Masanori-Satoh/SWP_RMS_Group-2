@@ -1,15 +1,4 @@
 <!DOCTYPE html>
-<!--
-    REQUISITIONS/FORM.HTML: Tạo / Sửa / Sao chép Yêu cầu tuyển dụng
-    URL:   GET  /requisitions/create        → form trống (giá trị chọn sẵn do controller đặt)
-           GET  /requisitions/edit/{id}     → form có dữ liệu (chỉ khi được sửa: Draft / Rejected)
-           GET  /requisitions/copy/{id}     → form điền sẵn từ yêu cầu cũ (tạo đợt tuyển dụng mới)
-           POST /requisitions/create | /requisitions/edit/{id}
-                action=draft  → lưu nháp (Draft)
-                action=submit → gửi Giám đốc duyệt (Pending_Director)
-    Bố cục theo wireframe đã duyệt: form bên trái, cột "Sẵn sàng gửi duyệt" + nút thao tác bên phải.
-    Tên trường (th:field) giữ nguyên vì gắn với RequisitionRequest.
--->
 <html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
     layout:decorate="~{layout/internal}">
 
@@ -28,12 +17,12 @@
         <th:block th:replace="~{fragments/ui/admin-workspace :: scene}"></th:block>
 
         <header class="requisition-page-intro adw-heading">
-            <h1 class="adw-title" th:text="${isEdit ? 'Chỉnh sửa yêu cầu tuyển dụng' : 'Tạo yêu cầu tuyển dụng'}">Tạo yêu cầu tuyển dụng
+            <h1 class="adw-title" th:text="${isEdit ? 'Chỉnh sửa yêu cầu tuyển dụng' : 'Tạo yêu cầu tuyển dụng'}">Tạo
+                yêu cầu tuyển dụng
             </h1>
 
         </header>
 
-        <!-- Toast sau thao tác chuyển sang form (vd rút lại để chỉnh sửa) -->
         <th:block th:replace="~{fragments/ui/flash-toast :: flashToast(${successMessage}, ${failureMessage})}">
         </th:block>
 
@@ -42,15 +31,11 @@
         <form id="requisition-form" class="rqf-layout" th:object="${form}" method="post"
             th:action="${isEdit} ? @{/requisitions/edit/{id}(id=${requisitionId})} : @{/requisitions/create}">
 
-            <!-- Phòng ban (trừ Giám đốc) và đợt tuyển dụng do server tự xác định, form chỉ giữ lại để gửi kèm -->
             <input type="hidden" th:field="*{departmentId}" th:unless="${directApprove}">
             <input type="hidden" th:field="*{originalRequisitionId}">
             <input type="hidden" th:field="*{originalTitle}">
 
             <div class="rqf-main">
-                <!-- Lỗi từ server (RequisitionValidator) hiện thành danh sách ở đầu form.
-                 Mỗi ô còn có <small id="<trường>-error"> luôn được render (dùng th:text, không dùng th:errors
-                 vì th:errors bỏ hẳn thẻ khi không có lỗi) để JS cũng ghi lỗi vào được. -->
                 <section th:if="${#fields.hasAnyErrors()}" id="validation-summary" class="alert alert-danger"
                     role="alert" tabindex="-1">
                     <p>Vui lòng kiểm tra lại các thông tin sau:</p>
@@ -60,7 +45,6 @@
                 </section>
 
                 <div class="card rqf-card adw-surface">
-                    <!-- ===== 1. VỊ TRÍ CẦN TUYỂN ===== -->
                     <section class="rqf-section" id="rqf-position" aria-labelledby="rqf-h-position">
                         <h2 id="rqf-h-position">Vị trí cần tuyển</h2>
                         <div class="rqf-grid">
@@ -74,7 +58,6 @@
                                     th:text="${#fields.hasErrors('title')} ? ${#strings.listJoin(#fields.errors('title'), '; ')} : ''"></small>
                             </div>
 
-                            <!-- Giám đốc không thuộc phòng ban nào: tự chọn phòng ban (chỉ phòng ban đang hoạt động; server kiểm tra lại) -->
                             <div class="rqf-field" th:if="${directApprove}">
                                 <label class="form-label" for="departmentId">Phòng ban <span
                                         class="required-asterisk">*</span></label>
@@ -92,7 +75,6 @@
                             </div>
                             <div class="rqf-field" th:unless="${directApprove}">
                                 <span class="form-label">Phòng ban</span>
-                                <!-- Lấy theo phòng ban của tài khoản đang đăng nhập (service ghi đè departmentId khi lưu) -->
                                 <div class="rqf-readonly">
                                     <th:block th:each="department : ${departments}"
                                         th:if="${department.departmentId == form.departmentId}"
@@ -100,11 +82,9 @@
                                     <span th:if="${form.departmentId == null}">Chưa được gán phòng ban</span>
                                 </div>
                             </div>
-                            <!-- Đợt + Số lượng chung một nửa hàng, cạnh Phòng ban -->
                             <div class="rqf-pair">
                                 <div class="rqf-field">
                                     <label class="form-label" for="recruitmentRound">Đợt tuyển dụng</label>
-                                    <!-- Tạo mới gợi ý đợt 1, sao chép gợi ý đợt kế tiếp; HM sửa được -->
                                     <div class="rqf-stepper">
                                         <button type="button" data-step="-1" data-step-target="recruitmentRound"
                                             aria-label="Giảm đợt">−</button>
@@ -138,7 +118,6 @@
                         </div>
                     </section>
 
-                    <!-- ===== 2. ĐIỀU KIỆN LÀM VIỆC ===== -->
                     <section class="rqf-section" id="rqf-work" aria-labelledby="rqf-h-work">
                         <h2 id="rqf-h-work">Điều kiện làm việc</h2>
                         <div class="rqf-grid">
@@ -177,9 +156,10 @@
 
                             <div class="rqf-field rqf-full">
                                 <label class="form-label" for="workLocation">Địa điểm làm việc <span
-                                        class="required-asterisk">*</span></label>
+                                        class="required-asterisk" id="workLocation-required"
+                                        th:hidden="*{workModel == 'Remote'}">*</span></label>
                                 <input class="form-input" type="text" th:field="*{workLocation}" maxlength="255"
-                                    placeholder="Nhập địa điểm làm việc"
+                                    placeholder="Nhập địa điểm làm việc" th:disabled="*{workModel == 'Remote'}"
                                     aria-describedby="workLocation-error"
                                     th:attr="aria-invalid=${#fields.hasErrors('workLocation')}">
                                 <small id="workLocation-error" class="field-error"
@@ -207,12 +187,21 @@
                             <small id="salary-help" class="rqf-hint rqf-full">Để trống nếu lương thỏa thuận.</small>
 
                             <div class="rqf-field">
-                                <label class="form-label" for="probationPeriod">Thời gian thử việc</label>
-                                <input class="form-input" type="text" th:field="*{probationPeriod}" th:maxlength="${probationLimit}"
-                                    placeholder="Nhập thời gian thử việc"
-                                    aria-describedby="probationPeriod-help probationPeriod-error"
+                                <label class="form-label" for="probationChoice">Thời gian thử việc</label>
+                                <!-- Dropdown chỉ để chọn nhanh; giá trị gửi lên server vẫn là ô probationPeriod (chuỗi tự do). -->
+                                <select class="form-select" id="probationChoice"
+                                    th:with="p=*{probationPeriod}, presets=${ {'6 ngày làm việc','15 ngày','30 ngày'} },
+                                             other=${p != null and !#strings.isEmpty(p) and !#lists.contains(presets, p)}">
+                                    <option value="" th:selected="${p == null or #strings.isEmpty(p)}">Không thử việc
+                                    </option>
+                                    <option th:each="preset : ${presets}" th:value="${preset}" th:text="${preset}"
+                                        th:selected="${preset == p}">15 ngày</option>
+                                    <option value="__other__" th:selected="${other}">Khác</option>
+                                </select>
+                                <input class="form-input" type="text" th:field="*{probationPeriod}"
+                                    th:maxlength="${probationLimit}" placeholder="Nhập thời gian thử việc (VD: 2 tháng)"
+                                    aria-label="Thời gian thử việc khác" aria-describedby="probationPeriod-error"
                                     th:attr="aria-invalid=${#fields.hasErrors('probationPeriod')}">
-                                <small id="probationPeriod-help" class="rqf-hint">Để trống nếu không thử việc.</small>
                                 <small id="probationPeriod-error" class="field-error"
                                     th:text="${#fields.hasErrors('probationPeriod')} ? ${#strings.listJoin(#fields.errors('probationPeriod'), '; ')} : ''"></small>
                             </div>
@@ -227,7 +216,6 @@
                         </div>
                     </section>
 
-                    <!-- ===== 3. NỘI DUNG TUYỂN DỤNG ===== -->
                     <section class="rqf-section" id="rqf-content" aria-labelledby="rqf-h-content">
                         <h2 id="rqf-h-content">Nội dung tuyển dụng</h2>
                         <div class="rqf-field">
@@ -269,19 +257,15 @@
                 </div>
             </div>
 
-            <!-- ===== CỘT PHẢI: tiến độ + nút thao tác ===== -->
             <aside class="rqf-rail" aria-label="Tình trạng biểu mẫu">
                 <section class="card rqf-rail-card adw-surface">
                     <h2 class="rqf-rail-title">Sẵn sàng gửi duyệt</h2>
                     <p class="rqf-hint" id="rqf-progress">0/9 mục bắt buộc đã xong</p>
-                    <!-- JS điền danh sách: mỗi mục là link nhảy tới trường tương ứng -->
                     <ul class="rqf-checklist" id="rqf-checklist"></ul>
                 </section>
 
                 <section class="card rqf-rail-card rqf-actions adw-surface">
                     <div id="rqf-buttons" class="rqf-buttons">
-                        <!-- Bấm "Gửi Giám đốc duyệt" chỉ mở bước xác nhận; nút gửi thật nằm trong bước xác nhận.
-                         Giám đốc gửi thì phê duyệt luôn (service đặt Approved), nên nút đổi thành "Phê duyệt trực tiếp" -->
                         <button type="button" class="btn btn--primary" id="rqf-open-confirm"
                             th:text="${directApprove} ? 'Phê duyệt trực tiếp' : 'Gửi Giám đốc duyệt'">Gửi Giám đốc
                             duyệt</button>
@@ -290,11 +274,12 @@
                         <a class="btn btn--secondary rqf-cancel"
                             th:href="${isEdit} ? @{/requisitions/{id}(id=${requisitionId})} : @{/requisitions}">Hủy</a>
                     </div>
+
                     <div id="rqf-confirm" class="rqf-confirm" role="alertdialog" aria-labelledby="rqf-confirm-title"
                         hidden>
                         <th:block th:unless="${directApprove}">
                             <p id="rqf-confirm-title"><strong>Gửi cho Giám đốc duyệt?</strong></p>
-                            <p>Sau khi gửi, bạn không sửa được nữa trừ khi rút lại yêu cầu hoặc bị Giám đốc trả lại.</p>
+                            <p>Sau khi gửi, bạn chỉ có thể chỉnh sửa nếu Giám đốc trả lại yêu cầu.</p>
                         </th:block>
                         <th:block th:if="${directApprove}">
                             <p id="rqf-confirm-title"><strong>Phê duyệt yêu cầu này?</strong></p>
@@ -313,11 +298,8 @@
 
     <th:block layout:fragment="scripts">
         <th:block th:replace="~{fragments/ui/admin-workspace :: scripts}"></th:block>
-        <!-- text-limit.js: báo lỗi đỏ "Nội dung quá N ký tự" khi gõ / dán vượt maxlength -->
         <script th:src="@{/js/text-limit.js}" defer></script>
-        <!-- requisition-form.js: kiểm tra nhập liệu, checklist, bước xác nhận -->
         <script th:src="@{/js/pages/requisition-form.js}" defer></script>
-        <!-- flash-toast.js: thông báo sau thao tác tự tắt sau 3 giây -->
         <script th:src="@{/js/pages/flash-toast.js}" defer></script>
     </th:block>
 </body>

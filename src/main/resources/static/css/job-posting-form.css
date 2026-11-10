@@ -128,3 +128,6 @@
 
 /* Ô nhập quá số ký tự cho phép (js/text-limit.js gắn class is-too-long) */
 :is(input, textarea).is-too-long, :is(input, textarea).is-too-long:focus { border-color:var(--error); }
+
+/* Ô "Khác" của thời gian thử việc: .form-input đặt display:block nên cần ép [hidden] */
+.jp-form-page .jpf-field .form-input[hidden] { display:none; }

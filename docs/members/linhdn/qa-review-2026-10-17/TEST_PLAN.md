@@ -77,7 +77,7 @@ Kiểm kê bằng đọc source sau loại comment, không chạy test; số dư
 | `candidate/TalentPoolFlowIntegrationTests.java` | Full context + MockMvc + DB, 7 methods | HM suggest/HR consent/decline, HR recommend/HM review/withdraw, CV mới theo origin; phải đọc expected thực tế trước khi bổ sung trùng. |
 | `candidate/InterviewPotentialIntegrationTests.java` | Full context + MockMvc + DB, 2 methods | Bookmark sau Passed/Failed, HR shared notes; không có nghĩa toàn bộ Interview/Offer đã được nghiệm thu. |
 | `candidate/service/*Tests.java` | Unit Mockito | Submission, review, status, access, progress, bookmark, selection, recommendation đã có nhiều ca rule. Ưu tiên bổ sung integration boundaries. |
-| `requisition/integration/RequisitionIntegrationTest.java` | Full context + DB, 7 methods | Create, Unicode read, approve, reject, withdraw, copy, delete; thiếu race/unauthorized xuyên full stack trong suite này. |
+| `requisition/integration/RequisitionIntegrationTest.java` | Full context + DB | Create, Unicode read, approve, reject, copy, delete; thiếu race/unauthorized xuyên full stack trong suite này. |
 | `dashboard/AdminDashboardIntegrationTests.java` | Full context + DB, 7 methods | Query/model Admin; cần kiểm tra proposal không cộng vào số đơn chính thức và scope từng role. |
 | `offer/OfferIntegrationTest.java` | **WebMvcTest**, service mock, 21 methods | Tên Integration không có nghĩa DB integration. Offer service/query suites là các lớp khác. |
 | JS tại `src/test/js/` | Node tests | Selection/bookmark/recommendations/preview/account UI; không thay thế thao tác browser hoặc Spring security. |
@@ -96,7 +96,7 @@ Tất cả đường dẫn Java dưới `src/main/java/com/group2/rms/`. Catalog
 | Application | `CvFileValidator.validate`; `ApplicationReviewService.review`, `rescreen`; `ApplicationProgressResolver.resolve`; `MyApplicationService.withdraw` | `ApplicationSubmissionService.apply` + CvStorage + application repository + event; `ApplicationPipelineService.list`, `detail`, `cv`; `ApplicationStatusService.requireScheduleable`; `MyApplicationService.list`, `withdraw` |
 | Talent Pool | `TalentPoolService.reviewSelection`, `saveBookmark`, `removeBookmark`, `suggest`, `recommend`, `decideRecommendation`, `confirm`, `decline`, `withdrawRecommendation`, `closeJob`, `cv` | TalentPoolController → service thật → Application/Review/Candidate/Note/Audit; source CV file; interview eligibility; repository exclusion of drafts in all formal queries |
 | AI/mail | `AiScreeningService.screen`, `AiScreeningListener.onApplicationSubmitted`; email content/recipient rule | Commit thật → listener async; `RecruitmentEmailService.sendJobClosure`, `resendClosure`, `sendInterview`, `resendInterview` sau business commit; SMTP mock có kiểm soát, không gửi ra người thật |
-| Requisition | `RequisitionValidator.validate`; `RequisitionAccess.canCreate`, `canEdit`, `canDecide` | `RequisitionServiceImpl.createRequisition`, `updateRequisition`, `decide`, `withdraw`, `copy`, `deleteRequisition`, `getById`; Approval + WorkflowEvent + AuditLog + notification |
+| Requisition | `RequisitionValidator.validate`; `RequisitionAccess.canCreate`, `canEdit`, `canDecide` | `RequisitionServiceImpl.createRequisition`, `updateRequisition`, `decide`, `copy`, `deleteRequisition`, `getById`; Approval + WorkflowEvent + AuditLog + notification |
 | Phụ trợ | `DepartmentService`, `UserProfileService` validation/access rule | `DepartmentService.create`, `update`, `deactivate`, `activate`; `DashboardService.forUsername`; `DashboardMetricsRepository.applications`, `candidateApplications`; `AccountListService.findAccounts` |
 
 Đọc method signature trong source trước khi hiện thực test; danh sách không phải yêu cầu tạo method mới. Getter/setter Lombok, constant label và constructor DTO không cần test riêng chỉ để tăng coverage.
@@ -106,7 +106,7 @@ Tất cả đường dẫn Java dưới `src/main/java/com/group2/rms/`. Catalog
 - **EP**: role hợp lệ/sai role; owner/khác owner; job mở/đóng; CV hợp lệ/rỗng/sai header; proposal pending/đã xử lý. Mỗi ca âm chỉ làm sai một điều kiện để tránh lỗi này che lỗi khác.
 - **BVA**: password 7/8/9 và 31/32/33; OTP 5/6/7 chữ số; sai OTP lần 4/5; hết hạn tại 899/900/901 giây; resend tại 299/300/301 giây; note 999/1000/1001; source selection 0/1/20/21; CV 5,242,879/5,242,880/5,242,881 bytes.
 - **Decision Table**: login (Active + đúng password); HM approval (đúng role + khác owner + Pending_Director); old-CV activation (HR + đã HM chấp nhận + consent + job mở + không trùng); new CV (proposal đã HM chấp nhận / đang chờ / không có proposal).
-- **State Transition**: Applied → AI_Screened → HR_Passed → HM_Passed; Fail → Rejected; Hold giữ nguyên; Requisition Draft → Pending_Director → Approved/Rejected, withdraw về Draft; proposal giữ `HM_Suggested` sau HM Pass, activation mới `HM_Passed`.
+- **State Transition**: Applied → AI_Screened → HR_Passed → HM_Passed; Fail → Rejected; Hold giữ nguyên; Requisition Draft → Pending_Director → Approved/Rejected, Rejected có thể sửa và gửi lại; proposal giữ `HM_Suggested` sau HM Pass, activation mới `HM_Passed`.
 
 Các biến thể trong một ca BVA/decision table phải ghi kết quả riêng bằng hậu tố `.v1`, `.v2` khi thực hiện; một biến thể đạt không làm cả nhóm Passed. Vì đây là thiết kế, tất cả biến thể đều chưa thực hiện.
 

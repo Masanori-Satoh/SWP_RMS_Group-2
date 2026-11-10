@@ -3,24 +3,26 @@ package com.group2.rms.requisition.service;
 import com.group2.rms.requisition.dto.RequisitionRequest;
 import com.group2.rms.requisition.dto.RequisitionResponse;
 
-/**
- * Nghiệp vụ một Yêu cầu tuyển dụng: xem chi tiết, form, tạo, sửa, xóa, duyệt, rút lại.
- * Màn danh sách (lọc, tìm kiếm, phân trang) nằm ở RequisitionListService.
- */
 public interface RequisitionService {
+    // Returns requisition details by ID.
     RequisitionResponse getById(Integer id);
 
+    // Prepares the requisition edit form.
     RequisitionRequest prepareEditForm(Integer id);
 
+    // Prepares a copy of the source requisition.
     RequisitionRequest copy(Integer id);
 
+    // Creates a requisition.
     Integer createRequisition(RequisitionRequest request);
 
+    // Updates an existing requisition.
     void updateRequisition(Integer id, RequisitionRequest request);
 
+    // Deletes an eligible requisition.
     void deleteRequisition(Integer id);
 
+    // Processes the approval decision.
     void decide(Integer id, boolean approved, String comment);
 
-    void withdraw(Integer id);
 }

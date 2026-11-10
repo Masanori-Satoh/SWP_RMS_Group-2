@@ -44,7 +44,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 /*
- * UNIT TEST SERVICE: RequisitionServiceImpl (tạo, sửa, xóa, duyệt, rút lại, sao chép, xem chi tiết).
+ * UNIT TEST SERVICE: RequisitionServiceImpl (tạo, sửa, xóa, duyệt, sao chép, xem chi tiết).
  * Không Spring context, không SQL Server: repository, quyền, thông báo là mock (Mockito).
  *
  * Service được tạo bằng tay trong setUp() để thấy rõ nó cần những gì:
@@ -126,7 +126,7 @@ class RequisitionServiceTests {
 
     private RequisitionRequest draft(String title) {
         return RequisitionRequest.builder().action(RequisitionValidator.ACTION_DRAFT).title(title).recruitmentRound(1)
-                .build();
+                .gender("Any").build();
     }
 
     private RequisitionRequest submit(String title) {
@@ -817,62 +817,19 @@ class RequisitionServiceTests {
     }
 
     // =========================================================================
-    // withdraw, deleteRequisition
+    // deleteRequisition
     // =========================================================================
 
     @Nested
-    @DisplayName("withdraw và deleteRequisition")
-    class WithdrawAndDelete {
-
-        @Test
-        @DisplayName("Người tạo rút lại yêu cầu đang chờ duyệt -> Về Draft, ghi audit")
-        void withdraw_shouldReturnToDraft_whenOwnerWithdrawsPending() {
-            // Arrange
-            JobRequisition requisition = requisitionWithStatus(55, RequisitionAccess.STATUS_PENDING_DIRECTOR);
-
-            // Act
-            service.withdraw(55);
-
-            // Assert
-            verify(access).requireWithdraw(manager, requisition);
-            assertEquals(RequisitionAccess.STATUS_DRAFT, requisition.getApprovalStatus());
-            assertEquals("Status: Pending_Director → Draft (rút lại)", savedAudit().getNewValue());
-            verify(notificationService).markRequisitionPendingRead(55);
-            verify(notificationService).notifyRequisitionWithdrawn(requisition, manager);
-        }
-
-        @Test
-        @DisplayName("Không phải người tạo -> AccessDenied, không đổi trạng thái")
-        void withdraw_shouldThrowAccessDenied_whenViewerCannotWithdraw() {
-            // Arrange
-            JobRequisition requisition = requisitionWithStatus(56, RequisitionAccess.STATUS_PENDING_DIRECTOR);
-            doThrow(new AccessDeniedException("no")).when(access).requireWithdraw(manager, requisition);
-
-            // Act + Assert
-            assertThrows(AccessDeniedException.class, () -> service.withdraw(56));
-            assertEquals(RequisitionAccess.STATUS_PENDING_DIRECTOR, requisition.getApprovalStatus());
-            verifyNoInteractions(audit, notificationService);
-        }
-
-        @Test
-        @DisplayName("Yêu cầu không còn chờ duyệt -> RequisitionStateException, không đổi trạng thái")
-        void withdraw_shouldThrowStateException_whenRequisitionIsNotPending() {
-            // Arrange
-            JobRequisition requisition = requisitionWithStatus(57, RequisitionAccess.STATUS_APPROVED);
-            doThrow(new RequisitionStateException()).when(access).requireWithdraw(manager, requisition);
-
-            // Act + Assert
-            assertThrows(RequisitionStateException.class, () -> service.withdraw(57));
-            assertEquals(RequisitionAccess.STATUS_APPROVED, requisition.getApprovalStatus());
-            verifyNoInteractions(audit, notificationService);
-        }
+    @DisplayName("deleteRequisition")
+    class DeleteRequisition {
 
         @Test
         @DisplayName("Không có tin tuyển dụng, không có đợt sau -> Xóa lịch sử duyệt rồi xóa phiếu, ghi audit DELETE")
         void deleteRequisition_shouldDelete_whenNothingDependsOnIt() {
             // Arrange
             JobRequisition requisition = requisitionWithStatus(60, RequisitionAccess.STATUS_REJECTED);
-            when(approvals.findByRequisition_RequisitionIdOrderByApprovalDateDesc(60)).thenReturn(List.of());
+            when(requisitions.findApprovalHistory(60)).thenReturn(List.of());
 
             // Act
             service.deleteRequisition(60);

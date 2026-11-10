@@ -12,7 +12,7 @@ Theo bảng phân công SRS và tài liệu `docs/members/hoangnh/checklist.md`:
 | :--- | :--- | :--- | :--- |
 | **Job Requisition** | **5.1.14** | Requisition List Screen | Danh sách, tìm kiếm, lọc, phân trang, phân quyền dữ liệu chặt chẽ theo Role |
 | | **5.1.15** | Create / Update / Copy Requisition | Form tạo mới, lưu Draft, Submit duyệt, quản lý tiêu chí AI động, sao chép |
-| | **5.1.16** | Requisition Details & Decision | Xem chi tiết, tiêu chí AI, Giám đốc Approve / Reject (bắt buộc lý do), Rút đơn (Withdraw), Xóa |
+| | **5.1.16** | Requisition Details & Decision | Xem chi tiết, tiêu chí AI, Giám đốc Approve / Reject (bắt buộc lý do), Xóa |
 | **Internal Job Posting** | **5.1.18** | Internal Job Management | Quản lý tin tuyển dụng nội bộ cho HR/HM: Dashboard, tìm kiếm, lọc, chi tiết |
 | | **5.1.19** | Post / Update Job Screen | Kế thừa dữ liệu từ Requisition đã Approved, tạo nháp, chỉnh sửa, đăng tuyển (Publish), tạm dừng (Pause), đóng đợt (Close) |
 | **In-App Notification** | **Cross-cutting** | Notification System | Xây dựng hệ thống thông báo in-app dùng chung: bắn thông báo khi Director Reject, khi HR Publish tin, đánh dấu đã đọc, chống trùng lặp sự kiện |
@@ -110,7 +110,6 @@ sequenceDiagram
   * Khi từ chối, bắt buộc phải có `comment` (lý do).
   * Lưu vào bảng [RequisitionApproval](file:///d:/FA%2026/SWP391/SWP-iter1/SWP_RMS_Group-2/src/main/java/com/group2/rms/requisition/entity/RequisitionApproval.java).
   * **Kích hoạt Notification:** Nếu là Reject, gọi `notificationService.notifyRequisitionRejected()`.
-* **`withdraw(id)`:** Hiring Manager rút đơn `Pending_Director` quay về `Draft` để tự sửa đổi.
 * **`copy(id)`:** Nhân bản đơn cũ (chỉ cho phép sao chép đơn `Approved` hoặc `Rejected`); reset toàn bộ `criteriaId` về null; tự động gán `RecruitmentRound` kế tiếp.
 * **`deleteRequisition(id)`:** Chỉ xóa được đơn `Draft`/`Rejected`; chặn xóa tuyệt đối nếu đơn đã được liên kết với `JobPosting`.
 
@@ -182,7 +181,7 @@ Dưới đây là bảng tổng hợp các đầu mục công việc mà Hoàng 
 - [x] **Bộ lọc & Phân trang:** Xây dựng `JobRequisitionRepository` kết hợp `JpaSpecificationExecutor` hỗ trợ tìm kiếm theo từ khóa, lọc theo phòng ban, chức danh, hình thức, trạng thái và sắp xếp đa chiều.
 - [x] **Quy chuẩn Validation Server-side:** Hoàn thiện `RequisitionValidator` phân biệt rõ ràng 2 luồng: Lưu nháp (`draft`) và Nộp duyệt (`submit` - kiểm tra tổng trọng số AI đúng 100%).
 - [x] **Phân quyền P0:** Khóa chặt phạm vi truy cập: HR **chỉ được xem đơn `Approved`** (ở cả danh sách, đếm số lượng, phân trang và chặn 403 Forbidden khi gõ trực tiếp URL).
-- [x] **Các thao tác nghiệp vụ:** Hoàn thiện Create, Update, Submit, Withdraw, Approve, Reject (kèm phản hồi bắt buộc), Copy (reset ID tiêu chí, tăng đợt), Delete (chặn xóa nếu đã có Job Posting).
+- [x] **Các thao tác nghiệp vụ:** Hoàn thiện Create, Update, Submit, Approve, Reject (kèm phản hồi bắt buộc), Copy (reset ID tiêu chí, tăng đợt), Delete (chặn xóa nếu đã có Job Posting).
 - [x] **Giao diện người dùng:** 
   - `requisitions/list.html`: Bảng danh sách, phân trang, bộ lọc, menu thao tác floating dropdown không bị che khuất.
   - `requisitions/form.html`: Form nhập liệu đầy đủ trường, hỗ trợ JS thêm/xóa/đánh số thứ tự dòng tiêu chí AI động.

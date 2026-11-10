@@ -19,7 +19,8 @@ public record RequisitionSearchRequest(
         @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate createdTo,
         String sort,
         Integer page,
-        Integer size) {
+        Integer size,
+        String employmentType) {
 
     /** Đếm số bộ lọc đang bật để hiện con số trên nút "Bộ lọc" (không tính từ khóa và sắp xếp). */
     public int activeFilterCount() {
@@ -34,6 +35,9 @@ public record RequisitionSearchRequest(
             count++;
         }
         if (creatorId != null) {
+            count++;
+        }
+        if (employmentType != null && !employmentType.isBlank()) {
             count++;
         }
         if (createdFrom != null || createdTo != null) {

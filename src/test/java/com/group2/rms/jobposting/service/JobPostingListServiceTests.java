@@ -153,7 +153,7 @@ class JobPostingListServiceTests {
     }
 
     @Test
-    @DisplayName("Ô Hạn nộp chỉ còn 'Còn hạn' / 'Đã quá hạn'; link cũ deadline=soon bị bỏ qua")
+    @DisplayName("Ô Hạn nộp chỉ còn 'Còn hạn' / 'Đã quá hạn'; link cũ deadline=soon báo lỗi, bảng trống")
     void getListPage_shouldOfferOnlyOpenAndPastDeadlines() {
         // Arrange
         JobPostingSearchRequest raw = new JobPostingSearchRequest(null, null, null, null,
@@ -166,55 +166,105 @@ class JobPostingListServiceTests {
         List<String> labels = list.options().deadlines().stream().map(FilterOption::label).toList();
         assertEquals(List.of("Còn hạn", "Đã quá hạn"), labels);
         assertNull(list.filter().deadline());
+        assertTrue(list.page().isEmpty());
+        assertEquals(List.of("Bộ lọc hạn nộp không hợp lệ. Vui lòng chọn bộ lọc hợp lệ."), list.errors());
     }
 
     // ----- Bước 2: làm sạch bộ lọc -----
 
     @Test
-    @DisplayName("Director gửi status=Draft, creatorId, deadline lạ, sort lạ, page âm, size quá lớn -> Bỏ qua / về mặc định")
-    void getListPage_shouldDropValuesOutsideRole_whenUrlIsTampered() {
+    @DisplayName("Director gửi status=Draft, creatorId, deadline lạ, sort lạ, page âm, size quá lớn -> Báo đủ lỗi, không truy vấn")
+    void getListPage_shouldReportErrors_whenUrlIsTampered() {
         JobPostingSearchRequest raw = new JobPostingSearchRequest("  java  ", List.of("Draft", "Published"), null, 99,
                 "tomorrow", null, null, "hack", -3, 999);
 
         JobPostingListResponse list = service.getListPage(raw, userWithRole(RequisitionAccess.ROLE_DIRECTOR));
 
         assertEquals("java", list.filter().q());
-        assertEquals(List.of(JobPostingAccess.STATUS_PUBLISHED), list.filter().status());
+        assertTrue(list.filter().status().isEmpty());
         assertNull(list.filter().creatorId(), "Director không có ô Người tạo");
         assertNull(list.filter().deadline());
-        assertEquals(JobPostingSort.NEWEST.param(), list.filter().sort());
-        assertEquals(0, list.filter().page());
-        assertEquals(JobPostingListService.MAX_PAGE_SIZE, list.filter().size());
+        assertTrue(list.page().isEmpty());
+        assertEquals(List.of(
+                "Bộ lọc trạng thái không hợp lệ. Vui lòng chọn bộ lọc hợp lệ.",
+                "Bộ lọc người tạo không hợp lệ. Vui lòng chọn bộ lọc hợp lệ.",
+                "Bộ lọc hạn nộp không hợp lệ. Vui lòng chọn bộ lọc hợp lệ.",
+                "Giá trị sắp xếp không hợp lệ. Vui lòng chọn tùy chọn sắp xếp hợp lệ.",
+                "Số trang phải lớn hơn hoặc bằng 1.",
+                "Số dòng mỗi trang không được vượt quá " + JobPostingListService.MAX_PAGE_SIZE + "."), list.errors());
+        verify(postings, never()).findAll(any(Specification.class), any(Pageable.class));
     }
 
     @Test
-    @DisplayName("size = 0 -> Kẹp về 1; thiếu size -> DEFAULT_PAGE_SIZE")
-    void getListPage_shouldClampPageSize() {
+    @DisplayName("TC-JP-LIST-12: HR gõ link sai -> mỗi giá trị sai báo một lỗi riêng, bảng trống (giống màn yêu cầu)")
+    void getListPage_shouldReportEachInvalidLinkValue_whenHrTypesUnsupportedValues() {
+        User hr = userWithRole(RequisitionAccess.ROLE_HR);
+
+        // 1. status=Deleted, deadline=abc
+        JobPostingListResponse step1 = service.getListPage(new JobPostingSearchRequest(
+                null, List.of("Deleted"), null, null, "abc", null, null, null, null, null), hr);
+        assertEquals(List.of(
+                "Bộ lọc trạng thái không hợp lệ. Vui lòng chọn bộ lọc hợp lệ.",
+                "Bộ lọc hạn nộp không hợp lệ. Vui lòng chọn bộ lọc hợp lệ."), step1.errors());
+        assertTrue(step1.page().isEmpty());
+
+        // 2. sort=abc' OR 1=1 -> lỗi sắp xếp, filter quay về mặc định
+        JobPostingListResponse step2 = service.getListPage(new JobPostingSearchRequest(
+                null, null, null, null, null, null, null, "abc' OR 1=1", null, null), hr);
+        assertEquals(List.of("Giá trị sắp xếp không hợp lệ. Vui lòng chọn tùy chọn sắp xếp hợp lệ."), step2.errors());
+        assertEquals(JobPostingSort.NEWEST.param(), step2.filter().sort());
+
+        // 3. page=999 khi chỉ có 1 trang (DB trả trang rỗng, tổng 1 tin)
+        when(postings.findAll(any(Specification.class), any(Pageable.class)))
+                .thenAnswer(invocation -> new PageImpl<>(List.of(), invocation.getArgument(1), 1));
+        JobPostingListResponse step3 = service.getListPage(new JobPostingSearchRequest(
+                null, null, null, null, null, null, null, null, 999, null), hr);
+        assertEquals(List.of("Trang bạn yêu cầu không tồn tại."), step3.errors());
+        assertTrue(step3.page().isEmpty());
+
+        // 4. page=-1, size=999 -> hai lỗi riêng
+        JobPostingListResponse step4 = service.getListPage(new JobPostingSearchRequest(
+                null, null, null, null, null, null, null, null, -1, 999), hr);
+        assertEquals(List.of(
+                "Số trang phải lớn hơn hoặc bằng 1.",
+                "Số dòng mỗi trang không được vượt quá " + JobPostingListService.MAX_PAGE_SIZE + "."), step4.errors());
+        assertTrue(step4.page().isEmpty());
+    }
+
+    @Test
+    @DisplayName("size = 0 -> Báo lỗi; thiếu size -> DEFAULT_PAGE_SIZE")
+    void getListPage_shouldRejectZeroPageSize() {
         User hr = userWithRole(RequisitionAccess.ROLE_HR);
         JobPostingSearchRequest zero = new JobPostingSearchRequest(null, null, null, null, null, null, null, null, 0, 0);
 
-        assertEquals(1, service.getListPage(zero, hr).filter().size());
+        assertEquals(List.of("Số dòng mỗi trang phải lớn hơn hoặc bằng 1."), service.getListPage(zero, hr).errors());
         assertEquals(JobPostingListService.DEFAULT_PAGE_SIZE, service.getListPage(emptyFilter(), hr).filter().size());
     }
 
     @Test
-    @DisplayName("Trang 5 trong khi chỉ có 1 trang -> Tự lùi về trang cuối (truy vấn lại trang 0)")
-    void getListPage_shouldFallBackToLastPage_whenPageIsBeyondTotal() {
+    @DisplayName("departmentId=abc sai kiểu -> Báo lỗi phòng ban, bảng trống")
+    void getListPage_shouldReportError_whenDepartmentIdIsNotANumber() {
+        JobPostingListResponse list = service.getListPage(emptyFilter(), userWithRole(RequisitionAccess.ROLE_HR),
+                List.of("departmentId"));
+
+        assertTrue(list.page().isEmpty());
+        assertEquals(List.of("Bộ lọc phòng ban không hợp lệ. Vui lòng chọn bộ lọc hợp lệ."), list.errors());
+    }
+
+    @Test
+    @DisplayName("Trang 5 trong khi chỉ có 1 trang -> Báo trang không tồn tại, bảng trống")
+    void getListPage_shouldReportError_whenPageIsBeyondTotal() {
         // Arrange
-        addRow(11, JobPostingAccess.STATUS_PUBLISHED, 0, 0);
         when(postings.findAll(any(Specification.class), any(Pageable.class)))
-                .thenAnswer(invocation -> new PageImpl<>(List.of(), invocation.getArgument(1), 1))
-                .thenAnswer(invocation -> new PageImpl<>(rows, invocation.getArgument(1), 1));
+                .thenAnswer(invocation -> new PageImpl<>(List.of(), invocation.getArgument(1), 1));
         JobPostingSearchRequest raw = new JobPostingSearchRequest(null, null, null, null, null, null, null, null, 5, 10);
 
         // Act
         JobPostingListResponse list = service.getListPage(raw, userWithRole(RequisitionAccess.ROLE_HR));
 
         // Assert
-        ArgumentCaptor<Pageable> pageable = ArgumentCaptor.forClass(Pageable.class);
-        verify(postings, times(2)).findAll(any(Specification.class), pageable.capture());
-        assertEquals(PageRequest.of(0, 10, JobPostingSort.NEWEST.toSort()), pageable.getAllValues().get(1));
-        assertEquals(1, list.page().getContent().size());
+        assertTrue(list.page().isEmpty());
+        assertEquals(List.of("Trang bạn yêu cầu không tồn tại."), list.errors());
     }
 
     // ----- Bước 3 + 4: truy vấn, chip -----

@@ -177,6 +177,9 @@ public class JobPostingValidator {
         request.setWorkingHours(RequisitionValidator.cleanString(request.getWorkingHours()));
         request.setEmploymentType(RequisitionValidator.cleanString(request.getEmploymentType()));
         request.setWorkModel(RequisitionValidator.cleanString(request.getWorkModel()));
+        if ("Remote".equals(request.getWorkModel())) {
+            request.setWorkLocation(null);
+        }
         request.setGender(RequisitionValidator.cleanString(request.getGender()));
         request.setProbationPeriod(RequisitionValidator.cleanString(request.getProbationPeriod()));
         request.setSalaryCustom(RequisitionValidator.cleanString(request.getSalaryCustom()));

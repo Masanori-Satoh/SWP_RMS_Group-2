@@ -24,9 +24,6 @@ public interface NotificationService {
     /** Báo cho chủ requisition khi Giám đốc từ chối; {@code rejection} là bản ghi phê duyệt vừa lưu. */
     void notifyRequisitionRejected(RequisitionApproval rejection);
 
-    /** Báo cho Giám đốc khi HM rút yêu cầu đang chờ duyệt về bản nháp. */
-    void notifyRequisitionWithdrawn(JobRequisition requisition, User actor);
-
     void notifyJobPostingPublished(JobPosting posting, User hr);
 
     /** Báo cho HM chủ yêu cầu nguồn khi tin được mở lại (tin tạm dừng đăng lại, hoặc đăng lại sau khi đã đóng). */
@@ -53,6 +50,9 @@ public interface NotificationService {
     /** Lịch đổi giờ / địa điểm / hội đồng: báo hội đồng hiện tại và ứng viên. */
     void notifyInterviewRescheduled(InterviewSchedule schedule, User actor);
 
+    /** Đổi lịch mà gỡ người khỏi hội đồng: báo riêng những người bị gỡ (TC-NOTIF-INT-01). */
+    void notifyInterviewersRemoved(InterviewSchedule schedule, java.util.Collection<User> removed, User actor);
+
     /** Lịch bị hủy: báo hội đồng và ứng viên kèm lý do. */
     void notifyInterviewCancelled(InterviewSchedule schedule, User actor, String reason);
 
@@ -77,9 +77,6 @@ public interface NotificationService {
     NotificationResponse markAsRead(Long notificationId, User user);
 
     void markOfferNotificationRead(Integer userId, Integer offerId);
-
-    /** Yêu cầu bị rút lại: thông báo "chờ duyệt" của Giám đốc không còn việc để làm. */
-    void markRequisitionPendingRead(Integer requisitionId);
 
     void markAllAsRead(User user);
 }
