@@ -60,3 +60,14 @@ Tests: `OfferServiceTests.java`, `OfferIntegrationTests.java`, `offer-frontend.t
 ## Kiểm tra tiếp trên ứng dụng thật
 
 Sau restart, HR/Director tìm thử tên không dấu, email, phòng ban, `#ID`; đổi trang và xác nhận URL giữ bộ lọc. HR gõ keyword khác nhưng chưa áp dụng rồi export FILTERED, so sánh dữ liệu với danh sách đang áp dụng. Nếu cần đánh giá dữ liệu lớn, đo execution plan và SQL Hibernate trên database kiểm thử riêng trước khi đề xuất index hoặc cơ chế tìm kiếm khác.
+
+## Bổ sung tìm lương — 11/11/2026
+
+- Nhận `36.000.000 VNĐ`, `36.000.000 VND`, `36.000.000` và số có đơn vị như `36000000 VNĐ`; không phân biệt hoa/thường, hỗ trợ khoảng trắng khi copy từ bảng.
+- So sánh BigDecimal chính xác với `proposedSalary` HOẶC `probationSalary`, không chuyển cột tiền thành chuỗi để LIKE. Dùng nhánh chung cho HR, Director và Excel FILTERED; giữ các điều kiện phân quyền/trạng thái/xóa mềm hiện có.
+- Số trần `36000000` vẫn là keyword; định dạng sai hoặc câu trộn chữ vẫn tìm văn bản. Giá trị tiền vượt decimal(18,2) trả rỗng trước khi tạo điều kiện SQL.
+- Production chỉ sửa `OfferProposalRepository.java` (+9 dòng), không thêm file production, không đổi HTML/CSS/JS, schema hoặc cấu hình kết nối.
+- Bổ sung 14 tình huống kiểm thử keyword/lương trong `OfferServiceTests.java`; mở rộng kiểm thử workbook FILTERED sang ba định dạng tiền trong `OfferExportServiceTests.java`.
+- Kết quả: 307/307 test Java thuộc 5 lớp Offer đã nêu ở trên và 23/23 test frontend đạt; `git diff --check` đạt. Log lưu tại `scratch/offer-search-upgrade-20261110/salary-search-final.log` và `salary-search-node.log`, không stage scratch.
+- Giới hạn: đợt bổ sung này kiểm thử bằng mock Criteria và workbook thực trong bộ test; chưa xác minh end-to-end tìm lương trên ứng dụng đang đăng nhập hoặc benchmark SQL thực. Không kết nối/ghi database khi chạy bộ test này.
+- Kiểm tra thủ công sau restart: tìm `36.000.000 VNĐ`, đối chiếu cả hai cột lương; thử `17.000.000` để khớp lương thử việc; giữ status/sort rồi export FILTERED và so sánh danh sách.

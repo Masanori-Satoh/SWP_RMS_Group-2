@@ -20,6 +20,7 @@ import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.JoinType;
 import java.util.ArrayList;
 import java.util.Locale;
+import java.math.BigDecimal;
 
 import java.util.List;
 import java.util.Optional;
@@ -83,6 +84,14 @@ public interface OfferProposalRepository extends JpaRepository<OfferProposal, In
             if (keyword.matches("#[0-9]+")) {
                 try { return builder.equal(root.get("offerId"), Integer.parseInt(keyword.substring(1))); }
                 catch (NumberFormatException overflow) { return builder.disjunction(); }
+            }
+            // Nhận số tiền như trên bảng; số trần vẫn là keyword, không tự đổi thành lương.
+            if (keyword.matches("(?iu)(?:[0-9]{1,3}(?:\\.[0-9]{3})+(?:\\s*VN[ĐD])?|[0-9]+\\s*VN[ĐD])")) {
+                BigDecimal salary = new BigDecimal(keyword.replaceFirst("(?iu)\\s*VN[ĐD]$", "").replace(".", ""));
+                // Hai cột lương là decimal(18,2): vượt 16 chữ số nguyên không thể có kết quả.
+                if (salary.precision() > 16) return builder.disjunction();
+                return builder.or(builder.equal(root.get("proposedSalary"), salary),
+                        builder.equal(root.get("probationSalary"), salary));
             }
             var application = root.join("application", JoinType.LEFT);
             var account = application.join("candidate", JoinType.LEFT).join("account", JoinType.LEFT);
