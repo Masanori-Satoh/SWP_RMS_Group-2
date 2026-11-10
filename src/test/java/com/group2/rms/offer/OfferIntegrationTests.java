@@ -311,12 +311,12 @@ class OfferIntegrationTests {
                 const fs = require('fs'), vm = require('vm');
                 const scope = process.argv[1];
                 const context = {
-                  window: {}, console,
+                  window: {location: {search: '?search=Java&status=Sent_Candidate&timeSort=LATEST'}}, console, URLSearchParams,
                   document: {
                     readyState: 'loading', addEventListener() {},
                     getElementById(id) {
-                      return {searchInput: {value: 'Java'}, statusFilter: {value: 'Sent_Candidate'},
-                              timeSortFilter: {value: 'LATEST'}}[id] || null;
+                      return {searchInput: {value: 'Unsubmitted'}, statusFilter: {value: 'Accepted'},
+                              timeSortFilter: {value: 'EARLIEST'}}[id] || null;
                     },
                     querySelector() { return {value: scope}; },
                     querySelectorAll(selector) {
@@ -351,6 +351,44 @@ class OfferIntegrationTests {
             org.mockito.Mockito.verify(offerExportService).exportOffersToExcel(eq(expected), eq("hr_specialist"));
         } finally {
             process.destroyForcibly();
+        }
+    }
+
+    @ParameterizedTest
+    @CsvSource({"hr_specialist,HR,Draft", "director_user,DIRECTOR,Pending_Director"})
+    void keywordSearchKeepsTheExistingToolbarAndRoleFilters(String username, String role, String offerStatus) throws Exception {
+        OfferResponse offer = OfferResponse.builder().offerId(12).candidateName("Ứng viên kiểm thử")
+                .candidateEmail("offer.search@example.test").offeredPositionTitle("Java Backend")
+                .proposedSalary(new BigDecimal("20000000")).probationSalary(new BigDecimal("17000000"))
+                .probationDays(60).offerStatus(offerStatus).createdAt(java.time.LocalDateTime.of(2026, 11, 10, 10, 0)).build();
+        var page = new PageImpl<>(List.of(offer), org.springframework.data.domain.PageRequest.of(0, 10), 25);
+        when(offerService.getAllOffersForHr(any(), any(), any(), any())).thenReturn(page);
+        when(offerService.getDirectorOffers(any(), any(), any(), any())).thenReturn(page);
+        when(offerService.getOfferStats()).thenReturn(Map.of());
+        when(offerService.getDirectorOfferStats()).thenReturn(Map.of());
+        when(offerService.getDirectorStatusCounts()).thenReturn(Map.of());
+        String keyword = "offer.search@example.test";
+        String html = mvc.perform(get("/offers").with(user(username).roles(role))
+                        .queryParam("search", keyword).queryParam("status", offerStatus).queryParam("timeSort", "LATEST"))
+                .andExpect(status().isOk()).andExpect(model().attribute("search", keyword))
+                .andReturn().getResponse().getContentAsString(java.nio.charset.StandardCharsets.UTF_8);
+        org.junit.jupiter.api.Assertions.assertTrue(html.contains("maxlength=\"120\""));
+        org.junit.jupiter.api.Assertions.assertTrue(html.contains("Tìm #mã thư mời, ứng viên, email, vị trí, phòng ban…"));
+        org.junit.jupiter.api.Assertions.assertEquals(1, html.split("id=\"offerFilters\"", -1).length - 1);
+        org.junit.jupiter.api.Assertions.assertEquals("HR".equals(role), html.contains("id=\"offerExportModal\""));
+        var nextPage = java.util.regex.Pattern.compile("href=\"([^\"]*page=1[^\"]*)\"").matcher(html);
+        org.junit.jupiter.api.Assertions.assertTrue(nextPage.find(), "A second page link must be available");
+        org.junit.jupiter.api.Assertions.assertTrue(nextPage.group(1).contains("search=offer.search"));
+        org.junit.jupiter.api.Assertions.assertTrue(nextPage.group(1).contains("status=" + offerStatus));
+        org.junit.jupiter.api.Assertions.assertTrue(nextPage.group(1).contains("timeSort=LATEST"));
+        if ("HR".equals(role)) org.mockito.Mockito.verify(offerService).getAllOffersForHr(eq(keyword), eq(offerStatus), eq("LATEST"), any());
+        else org.mockito.Mockito.verify(offerService).getDirectorOffers(eq(keyword), eq(offerStatus), eq("LATEST"), any());
+        // Tùy chọn xuất HTML do Thymeleaf render để kiểm tra browser; không tạo dữ liệu database.
+        String evidenceDirectory = System.getProperty("offer.search.evidence.dir");
+        if (evidenceDirectory != null) {
+            var directory = java.nio.file.Path.of(evidenceDirectory);
+            java.nio.file.Files.createDirectories(directory);
+            java.nio.file.Files.writeString(directory.resolve(role.toLowerCase() + ".html"), html);
         }
     }
 

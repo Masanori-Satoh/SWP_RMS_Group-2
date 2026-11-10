@@ -19,6 +19,8 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -213,13 +215,14 @@ class OfferExportServiceTests {
                 .hasMessageContaining("Vui lòng chọn ít nhất một thư mời");
     }
 
-    @Test
+    @ParameterizedTest
+    @ValueSource(strings = {"Java", "36.000.000 VNĐ", "36.000.000 VND", "36.000.000"})
     @DisplayName("Export FILTERED scope: Lấy toàn bộ bản ghi lọc không bị giới hạn trang")
-    void testExportFilteredScope_Success() throws Exception {
+    void testExportFilteredScope_Success(String keyword) throws Exception {
         when(offerProposalRepository.findAll(any(Specification.class), any(Sort.class)))
                 .thenReturn(List.of(mockOffer1));
 
-        OfferExportFilterRequest filters = new OfferExportFilterRequest("Java", "Sent_Candidate", "LATEST");
+        OfferExportFilterRequest filters = new OfferExportFilterRequest(keyword, "Sent_Candidate", "LATEST");
         OfferExportRequest request = new OfferExportRequest(
                 OfferExportScope.FILTERED,
                 null,
@@ -236,7 +239,7 @@ class OfferExportServiceTests {
             assertThat(sheet.getRow(1).getCell(3).getStringCellValue()).isEqualTo("Đã gửi thư mời");
 
             Sheet summary = wb.getSheet("Summary");
-            assertThat(summary.getRow(5).getCell(1).getStringCellValue()).contains("Java");
+            assertThat(summary.getRow(5).getCell(1).getStringCellValue()).contains(keyword);
         }
     }
 
