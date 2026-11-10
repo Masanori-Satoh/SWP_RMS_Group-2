@@ -805,7 +805,32 @@ for (kind, pid), (cid, src) in zip(TP_PLAN, pool_sources):
     tp(kind, pid, cid, src)
 
 # =============================================================================
-# 7. XUẤT SQL
+# 7. NHÓM DEMO OFFER: thêm cuối để không đổi ID/dữ liệu các kịch bản cũ
+# =============================================================================
+OFFER_DEMO_PLAN = [
+    ("Draft", "draft", "OFFER_DRAFT", ("Nguyễn Minh Khang", "Trần Ngọc Mai")),
+    ("Pending_Director", "pending", "OFFER_PENDING", ("Lê Quốc Bảo", "Phạm Thanh Hà")),
+    ("Director_Approved", "approved", "OFFER_DIR_APPROVED", ("Hoàng Đức Anh", "Vũ Thu Trang")),
+    ("Expired", "expired", "OFFER_EXPIRED", ("Đặng Hải Nam", "Bùi Khánh Linh")),
+    ("Director_Rejected", "rejected", "OFFER_DIR_REJECTED", ("Đỗ Tuấn Kiệt", "Hồ Minh Thư")),
+    ("Sent_Candidate", "sent", "OFFER_SENT", ("Ngô Gia Huy", "Dương Bảo Ngọc")),
+    ("Accepted", "accepted", "OFFER_ACCEPTED_RECENT", ("Đinh Quang Minh", "Mai Phương Anh")),
+    ("Declined", "declined", "OFFER_DECLINED", ("Tạ Thành Đạt", "Cao Thảo Vy")),
+]
+OFFER_DEMO = []
+for status, key, scenario, names in OFFER_DEMO_PLAN:
+    for number, name in enumerate(names, 1):
+        username = f"offer_{key}_{number:02d}"
+        cid = new_candidate(name, female=number == 2, username=username,
+                            email=f"{username}@example.test", created=at(-45))
+        aid = run(scenario, 1 if number == 1 else 4, cid, S=at(-40))
+        oid = ids["offer"]
+        row = tables["OfferProposal"][1][-1]
+        assert row["ApplicationId"] == aid and row["OfferStatus"] == status and not row["IsDeleted"]
+        OFFER_DEMO.append((status, username, cid, aid, oid))
+
+# =============================================================================
+# 8. XUẤT SQL
 # =============================================================================
 ORDER = ["[Role]", "Department", "[User]", "SystemConfig", "JobRequisition", "RequisitionApproval", "JobPosting",
          "Candidate", "TalentPoolNote", "Application", "ApplicationReview", "InterviewSchedule", "InterviewPanel",
@@ -839,6 +864,9 @@ w("--   ung_vien_khoa   tài khoản Inactive")
 w("-- YÊU CẦU: 1-7,13,14 Approved (14 chưa có tin) | 8 Pending_Director | 9 Draft | 10 Rejected | 11 Cancelled | 12 Closed (13 là đợt 2 của 12)")
 w("-- TIN: 1,2,4,6,8 Published (5 Published nhưng quá hạn) | 3 Paused | 7,9 Closed | 10 Draft | 8 = lần đăng 2 của yêu cầu 7")
 w("-- SỐ HỒ SƠ THEO TRẠNG THÁI: " + ", ".join(f"{k} {v}" for k, v in sorted(status_count.items())))
+w("-- OFFER DEMO BỔ SUNG: mỗi trạng thái 2 tài khoản Active riêng (Status | Username | CandidateId | ApplicationId | OfferId)")
+for status, username, cid, aid, oid in OFFER_DEMO:
+    w(f"--   {status} | {username} | {cid} | {aid} | {oid}")
 w("-- =============================================================================")
 w("USE RitirementManagement2;")
 w("GO")
@@ -914,6 +942,12 @@ CHECKS = [
                               "MailFailed:PostingClosed", "MailSent:InterviewInvitation"]),
 ]
 w("DECLARE @Missing NVARCHAR(MAX) = N'';")
+for status, username, cid, aid, oid in OFFER_DEMO:
+    w(f"IF NOT EXISTS (SELECT 1 FROM OfferProposal o JOIN Application a ON a.ApplicationId = o.ApplicationId "
+      f"JOIN Candidate c ON c.CandidateId = a.CandidateId JOIN [User] u ON u.UserId = c.UserId "
+      f"WHERE o.OfferId = {oid} AND a.ApplicationId = {aid} AND c.CandidateId = {cid} "
+      f"AND u.Username = N'{username}' AND u.AccountStatus = N'Active' "
+      f"AND o.OfferStatus = N'{status}' AND o.IsDeleted = 0) SET @Missing += N'Offer demo {username}; ';")
 for t, col, values in CHECKS:
     for v in values:
         w(f"IF NOT EXISTS (SELECT 1 FROM {t} WHERE {col} = N'{v}') SET @Missing += N'{t}.{col}={v}; ';")

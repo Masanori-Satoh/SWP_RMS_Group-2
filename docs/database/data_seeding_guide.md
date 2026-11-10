@@ -28,6 +28,19 @@
 > nếu thiếu bất kỳ trạng thái nào trong CHECK constraint. Đầu file SQL liệt kê tài khoản và ID dùng cho test case.
 > Chạy bằng sqlcmd thì thêm `-I` (bật QUOTED_IDENTIFIER cho filtered index): `sqlcmd -S localhost -E -I -f 65001 -i ...`.
 
+## Nhóm demo Offer bổ sung — 11/11/2026
+
+- Generator thêm **16 Candidate Active độc lập**, mỗi trạng thái Offer 2 người; mỗi người có tài khoản, hồ sơ, HR/HM review Pass và phỏng vấn Completed với kết quả Passed. Dùng lại hàm seed hiện có, không đổi schema hoặc mã xử lý nghiệp vụ.
+- CandidateId **123–138**, ApplicationId **135–150**, OfferId **33–48**. Bảng tra cứu nằm ở đầu SQL và [tài liệu fixture Offer](../members/huyenpt/offer-demo-fixtures.md).
+- Tổng seed: **48 OfferProposal**, gồm 47 bản hiển thị và 1 Draft xóa mềm. Theo trạng thái hiển thị: Draft 4, Pending_Director 6, Director_Approved 3, Expired 4, Director_Rejected 4, Sent_Candidate 6, Accepted 14, Declined 6.
+- Tài khoản mới có username `offer_<nhóm>_01/02`; mật khẩu demo dùng cùng quy ước đã ghi ở đầu seed. Email `example.test` là dữ liệu giả phục vụ kiểm thử, không dùng để xác minh gửi email ra ngoài.
+- Thời gian tính theo lúc chạy seed: Sent_Candidate còn hạn; Expired đã quá hạn. Trước gửi, ResponseDeadline là NULL. Accepted đi với Application Hired, Declined đi với Withdrawn; Expired vẫn Offered.
+- Bổ sung cuối quá trình tạo dữ liệu để giữ nguyên ID và nội dung tất cả bản ghi cũ. Khối tự kiểm tra SQL có đối chiếu đủ 16 tài khoản/hồ sơ/thư mời theo đúng trạng thái.
+- **Cập nhật file seed không tự cập nhật database.** Không chạy seed chung trên database đang có dữ liệu. Việc chạy schema để tạo lại database sẽ xóa dữ liệu và cần được duyệt riêng; không phải bước tự động của đợt bổ sung này.
+- Khi nạp nhóm mới, số liệu danh sách/dashboard tăng theo dữ liệu bổ sung; đây là ảnh hưởng dữ liệu mẫu dự kiến, không phải thay đổi logic các module khác.
+
+---
+
 > **Dự án**: Hệ thống Quản lý Tuyển dụng (Recruitment Management System - RMS)  
 > **Nhóm thực hiện**: SWP391 - Group 2  
 > **Công nghệ sử dụng**: Java 21, Spring Boot 3, Spring Data JPA, Hibernate 6, MS SQL Server, Spring Security (BCrypt)
