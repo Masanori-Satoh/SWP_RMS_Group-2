@@ -16,7 +16,6 @@ public final class NotificationLabels {
             case "REQUISITION_PENDING_DIRECTOR" -> "Chờ phê duyệt";
             case "REQUISITION_APPROVED" -> "Yêu cầu đã được duyệt";
             case "REQUISITION_REJECTED" -> "Yêu cầu bị từ chối";
-            case "REQUISITION_WITHDRAWN" -> "Yêu cầu đã rút lại";
             case "JOB_POSTING_PUBLISHED" -> "Tin tuyển dụng đã phát hành";
             case "JOB_POSTING_REOPENED" -> "Tin tuyển dụng đã mở lại";
             case "JOB_POSTING_PAUSED" -> "Tin tạm dừng";

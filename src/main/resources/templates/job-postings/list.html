@@ -176,7 +176,7 @@
                                 <td class="jp-muted" th:text="${list.page.number * list.page.size + row.count}">1</td>
                                 <td class="jp-title">
                                     <a th:href="@{/internal/job-postings/{id}(id=${post.jobPostingId})}"
-                                        th:text="${post.postingTitle}">Senior Java Backend Engineer</a>
+                                        th:text="${post.postingTitle}"></a>
                                 </td>
                                 <td th:text="${post.departmentName}">Engineering</td>
                                 <td class="num">
@@ -191,7 +191,6 @@
                                 </td>
                                 <td class="nowrap">
                                     <th:block th:if="${post.applicationDeadline != null}">
-                                        <!-- deadlineState: open / soon / past; tin đã đóng thì null (không cần nhắc còn / quá hạn) -->
                                         <span
                                             th:classappend="${post.deadlineState != null} ? |jp-dl-${post.deadlineState}|"
                                             th:text="${#temporals.format(post.applicationDeadline, 'dd/MM/yyyy')}">31/12/2026</span>
@@ -206,8 +205,6 @@
                                         th:text="${post.statusLabel}">Đang đăng</span></td>
                                 <td th:if="${showCreator}" th:text="${post.createdByName}">Lê Thị Mai Lan</td>
                                 <td class="action-cell">
-                                    <!-- Menu ⋯ của catalog (<details>). Mục nào hiện là do cờ service tính sẵn.
-                             Thao tác ghi (đăng, tạm dừng, đóng, xóa) đều mở hộp xác nhận trước khi gửi POST. -->
                                     <details class="more-menu more-menu--floating">
                                         <summary class="more-menu__toggle"
                                             th:aria-label="|Thao tác cho ${post.postingTitle}|" title="Thao tác">⋯
@@ -257,13 +254,18 @@
                                     </details>
                                 </td>
                             </tr>
-                            <tr th:if="${list.page.empty}">
+                            <tr th:if="${list.page.empty and #lists.isEmpty(list.errors)}">
                                 <td th:colspan="${columns}" class="empty-state">Không có tin nào khớp bộ lọc.
                                     <a th:href="@{/internal/job-postings}">Đặt lại mặc định</a>
                                 </td>
                             </tr>
                         </tbody>
                     </table>
+                    <!-- Tham số URL sai: bảng trống, lỗi hiện ngay dưới bảng -->
+                    <div th:unless="${#lists.isEmpty(list.errors)}" role="alert">
+                        <p class="field-error" th:each="error : ${list.errors}" th:text="${error}"></p>
+                        <a th:href="@{/internal/job-postings}">Đặt lại mặc định</a>
+                    </div>
                 </div>
             </div>
         </section>

@@ -42,6 +42,9 @@ function fixture() {
     };
     const feedback = {
         value: '',
+        dataset: { limit: '1000' },
+        classList: { toggle() {} },
+        setAttribute() {},
         setCustomValidity(value) { this.validationMessage = value; },
         reportValidity() { this.reported = true; },
         addEventListener: (event, callback) => listen('feedback', event, callback),
@@ -52,7 +55,7 @@ function fixture() {
         getElementById: id => ids[id] ?? null,
         querySelectorAll: selector => {
             if (selector === '[data-delete-requisition]') return [button];
-            if (selector === '#delete-form,#decision-form,.withdraw-form') return [form, decision];
+            if (selector === '#delete-form,#decision-form') return [form, decision];
             if (selector === '[data-submitting]') return [form, decision].filter(item => item.dataset.submitting);
             return [];
         },

@@ -66,6 +66,21 @@ class RequisitionMapperTests {
                 .build();
     }
 
+    @Test
+    @DisplayName("TC-DECIDE-08: nhật ký duyệt / từ chối lưu UPDATE nhưng lịch sử hiện APPROVE / REJECT; sửa thường vẫn UPDATE")
+    void displayAction_shouldRecognizeDirectorDecision() {
+        AuditLog approve = AuditLog.builder().action("UPDATE").newValue("Status: Pending_Director → Approved").build();
+        AuditLog reject = AuditLog.builder().action("UPDATE")
+                .newValue("Status: Pending_Director → Rejected\nÝ kiến Giám đốc: Thiếu ngân sách").build();
+        AuditLog edit = AuditLog.builder().action("UPDATE").newValue("Tên vị trí: A → B").build();
+        AuditLog create = AuditLog.builder().action("CREATE").newValue("Tạo yêu cầu: A · Draft").build();
+
+        assertEquals("APPROVE", RequisitionMapper.displayAction(approve));
+        assertEquals("REJECT", RequisitionMapper.displayAction(reject));
+        assertEquals("UPDATE", RequisitionMapper.displayAction(edit));
+        assertEquals("CREATE", RequisitionMapper.displayAction(create));
+    }
+
     // ----- Dòng danh sách -----
 
     @Test
@@ -171,7 +186,6 @@ class RequisitionMapperTests {
 
         // Assert
         assertEquals(3L, detail.waitingDays());
-        assertTrue(detail.withdrawable());
     }
 
     @Test

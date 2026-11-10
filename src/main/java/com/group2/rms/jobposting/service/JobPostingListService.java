@@ -26,6 +26,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -52,15 +53,36 @@ public class JobPostingListService {
     private final JobPostingMapper mapper;
     private final Clock clock;
 
+    private static final Map<String, String> PARAM_LABELS = Map.of(
+            "departmentId", "phòng ban",
+            "creatorId", "người tạo",
+            "postedFrom", "ngày đăng từ",
+            "postedTo", "ngày đăng đến",
+            "page", "số trang",
+            "size", "số dòng mỗi trang");
+
     @Transactional(readOnly = true)
     public JobPostingListResponse getListPage(JobPostingSearchRequest rawFilter, User viewer) {
+        return getListPage(rawFilter, viewer, List.of());
+    }
+
+    /** unparsableParams: tham số URL sai kiểu (departmentId=abc) do controller gom từ BindingResult. */
+    @Transactional(readOnly = true)
+    public JobPostingListResponse getListPage(JobPostingSearchRequest rawFilter, User viewer,
+            Collection<String> unparsableParams) {
         access.requireAccessPostings(viewer);
         LocalDateTime now = LocalDateTime.now(clock);
         JobPostingFilterOptions options = buildFilterOptions(viewer);
-        JobPostingSearchRequest filter = normalizeFilter(rawFilter, options);
-        Page<InternalJobPostingResponse> page = search(filter, viewer, now);
+        List<String> errors = new ArrayList<>();
+        for (String param : unparsableParams) {
+            errors.add(ListFilters.invalidFilterMessage(PARAM_LABELS.getOrDefault(param, param)));
+        }
+        JobPostingSearchRequest filter = normalizeFilter(rawFilter, options, errors);
+        Page<InternalJobPostingResponse> page = errors.isEmpty()
+                ? search(filter, viewer, now, errors)
+                : Page.empty(PageRequest.of(filter.page(), filter.size()));
         List<FilterChip> chips = describeActiveFilters(filter, options);
-        return new JobPostingListResponse(page, filter, options, chips, access.canManage(viewer));
+        return new JobPostingListResponse(page, filter, options, chips, access.canManage(viewer), errors);
     }
 
     /** Phạm vi theo vai trò, khớp JobPostingAccess#canView: HR mọi tin; HM tin phòng mình; HM, Director không thấy nháp. */
@@ -98,37 +120,69 @@ public class JobPostingListService {
         throw new org.springframework.security.access.AccessDeniedException("Vai trò không có quyền xem tin tuyển dụng.");
     }
 
-    /** Bước 2: giá trị nào vai trò không được dùng, hoặc không có trong danh sách lựa chọn, thì bỏ qua. */
-    private JobPostingSearchRequest normalizeFilter(JobPostingSearchRequest raw, JobPostingFilterOptions options) {
+    /** Bước 2: giá trị vai trò không được dùng, hoặc không có trong danh sách lựa chọn, thì báo lỗi; rỗng = không lọc. */
+    private JobPostingSearchRequest normalizeFilter(JobPostingSearchRequest raw, JobPostingFilterOptions options,
+            List<String> errors) {
         String keyword = ListFilters.cleanKeyword(raw.q());
-        List<String> statuses = ListFilters.keepAllowedValues(raw.status(), options.statuses()).stream().limit(1).toList();
-
+        if (raw.q() != null && raw.q().length() > ListFilters.MAX_KEYWORD_LENGTH) {
+            errors.add("Từ khóa tìm kiếm không được vượt quá " + ListFilters.MAX_KEYWORD_LENGTH + " ký tự.");
+        }
+        List<String> statuses = List.of();
+        if (ListFilters.hasInvalidChoice(raw.status(), true, options.statuses())) {
+            errors.add(ListFilters.invalidFilterMessage("trạng thái"));
+        } else {
+            statuses = ListFilters.keepAllowedValues(raw.status(), options.statuses()).stream().limit(1).toList();
+        }
         Integer departmentId = null;
-        if (options.showDepartment() && ListFilters.isAllowedValue(raw.departmentId(), options.departments())) {
+        if (ListFilters.isInvalidChoice(raw.departmentId(), options.showDepartment(), options.departments())) {
+            errors.add(ListFilters.invalidFilterMessage("phòng ban"));
+        } else {
             departmentId = raw.departmentId();
         }
         Integer creatorId = null;
-        if (options.showCreator() && ListFilters.isAllowedValue(raw.creatorId(), options.creators())) {
+        if (ListFilters.isInvalidChoice(raw.creatorId(), options.showCreator(), options.creators())) {
+            errors.add(ListFilters.invalidFilterMessage("người tạo"));
+        } else {
             creatorId = raw.creatorId();
         }
         String deadline = null;
-        if (options.showDeadline() && ListFilters.isAllowedValue(raw.deadline(), options.deadlines())) {
+        if (ListFilters.isInvalidChoice(raw.deadline(), options.showDeadline(), options.deadlines())) {
+            errors.add(ListFilters.invalidFilterMessage("hạn nộp"));
+        } else if (raw.deadline() != null && !raw.deadline().isBlank()) {
             deadline = raw.deadline();
         }
-        LocalDate postedFrom = null;
-        LocalDate postedTo = null;
-        if (options.showPostedDate()) {
-            postedFrom = raw.postedFrom();
-            postedTo = raw.postedTo();
+        // Ngày đăng không có ô trên form nhưng vẫn nhận, vì link "Tin mới đăng trong ngày" ở dashboard HR dùng nó
+        LocalDate postedFrom = raw.postedFrom();
+        LocalDate postedTo = raw.postedTo();
+        if (postedFrom != null && postedTo != null && postedFrom.isAfter(postedTo)) {
+            errors.add("Ngày đăng từ không được sau ngày đăng đến.");
         }
 
         String sort = JobPostingSort.fromParam(raw.sort()).param();
+        if (raw.sort() != null && !raw.sort().isBlank() && !sort.equals(raw.sort())) {
+            errors.add("Giá trị sắp xếp không hợp lệ. Vui lòng chọn tùy chọn sắp xếp hợp lệ.");
+        }
+        int page = 0;
+        if (raw.page() != null && raw.page() < 0) {
+            errors.add("Số trang phải lớn hơn hoặc bằng 1.");
+        } else if (raw.page() != null) {
+            page = raw.page();
+        }
+        int size = DEFAULT_PAGE_SIZE;
+        if (raw.size() != null && raw.size() < 1) {
+            errors.add("Số dòng mỗi trang phải lớn hơn hoặc bằng 1.");
+        } else if (raw.size() != null && raw.size() > MAX_PAGE_SIZE) {
+            errors.add("Số dòng mỗi trang không được vượt quá " + MAX_PAGE_SIZE + ".");
+        } else if (raw.size() != null) {
+            size = raw.size();
+        }
         return new JobPostingSearchRequest(keyword, statuses, departmentId, creatorId, deadline,
-                postedFrom, postedTo, sort, pageNumber(raw.page()), pageSize(raw.size()));
+                postedFrom, postedTo, sort, page, size);
     }
 
     /** Bước 3: ghép điều kiện WHERE, truy vấn một trang, rồi đếm hồ sơ cho cả trang bằng 1 câu. */
-    private Page<InternalJobPostingResponse> search(JobPostingSearchRequest filter, User viewer, LocalDateTime now) {
+    private Page<InternalJobPostingResponse> search(JobPostingSearchRequest filter, User viewer, LocalDateTime now,
+            List<String> errors) {
         Specification<JobPosting> where = scope(viewer);
         if (!filter.q().isEmpty()) {
             where = where.and(JobPostingSpecifications.titleOrDepartmentContains(filter.q()));
@@ -158,10 +212,9 @@ public class JobPostingListService {
 
         Page<JobPosting> result = postings.findAll(where,
                 PageRequest.of(filter.page(), filter.size(), sortOption.toSort()));
-        // Rule: số trang vượt quá tổng số trang thì lùi về trang cuối
-        if (result.getTotalPages() > 0 && result.getNumber() >= result.getTotalPages()) {
-            result = postings.findAll(where,
-                    PageRequest.of(result.getTotalPages() - 1, filter.size(), sortOption.toSort()));
+        if (filter.page() > 0 && filter.page() >= result.getTotalPages()) {
+            errors.add("Trang bạn yêu cầu không tồn tại.");
+            return Page.empty(result.getPageable());
         }
 
         Map<Integer, long[]> counts = countApplications(result.getContent());
@@ -223,22 +276,6 @@ public class JobPostingListService {
     }
 
     // ----- Các hàm nhỏ -----
-
-    /** Rule: page âm hoặc thiếu → trang đầu. */
-    private static int pageNumber(Integer page) {
-        if (page == null || page < 0) {
-            return 0;
-        }
-        return page;
-    }
-
-    /** Rule: size thiếu → mặc định; kẹp trong [1, MAX_PAGE_SIZE]. */
-    private static int pageSize(Integer size) {
-        if (size == null) {
-            return DEFAULT_PAGE_SIZE;
-        }
-        return Math.max(1, Math.min(size, MAX_PAGE_SIZE));
-    }
 
     private static String formatDate(LocalDate date) {
         if (date == null) {

@@ -1,6 +1,6 @@
 # BÁO CÁO CÔNG VIỆC ITERATION 1 — MODULE JOB REQUISITION
 
-> **Ghi chú 06/11/2026:** Chấm CV bằng AI (`AI_Screened`, `AIScreeningResult`, `OverallScore`) và tiêu chí sàng lọc (`ScreeningCriteria`) đã gỡ khỏi hệ thống (migration `013`, `014`). Phần nhắc tới chúng bên dưới là nội dung tại thời điểm viết, không còn đúng với hệ thống.
+> **Ghi chú 06/11/2026:** Chấm CV bằng AI (`AI_Screened`, `AIScreeningResult`, `OverallScore`) và tiêu chí sàng lọc (`ScreeningCriteria`) đã gỡ khỏi hệ thống (migration `013`, `014`). Phần nhắc tới chúng bên dưới là nội dung tại thời điểm viết, không còn đúng với hệ thống. Các mục có ngày và số test là nhật ký lịch sử; các kết quả cũ chỉ dùng để truy vết.
 
 - **Thành viên phụ trách:** Nguyễn Huy Hoàng (hoangnh)
 - **Module:** Yêu cầu Tuyển dụng (Job Requisition)
@@ -18,7 +18,7 @@ Căn cứ theo bảng phân công công việc (Task Assignment) của Iteration
 | :--- | :--- | :--- | :---: |
 | **Requisition List Screen** | Screen | - View Job Requisition<br>- View Approved Requisition (Lọc, tìm kiếm, phân trang) | **Hoàn thành** |
 | **Create/Update Requisition Screen** | Screen | - Create Job Requisition (Lưu Draft / Submit duyệt)<br>- Update Job Requisition (Chỉnh sửa đơn nháp / bị từ chối) | **Hoàn thành** |
-| **Job Requisition Details** | Screen | - View Job Requisition (Xem chi tiết, tiêu chí AI, lịch sử duyệt, timeline)<br>- Duyệt (Approve/Reject), Rút đơn (Withdraw), Sao chép (Copy), Xóa (Delete) | **Hoàn thành** |
+| **Job Requisition Details** | Screen | - View Job Requisition (Xem chi tiết, tiêu chí AI, lịch sử duyệt, timeline)<br>- Duyệt (Approve/Reject), Sao chép (Copy), Xóa (Delete) | **Hoàn thành** |
 
 ---
 
@@ -30,7 +30,7 @@ Hệ thống được xây dựng theo kiến trúc phân tầng chuẩn của *
 - **`JobRequisition.java`**: Thực thể chính lưu trữ thông tin yêu cầu tuyển dụng (Tiêu đề, Phòng ban, Số lượng tuyển, Hình thức làm việc, Mức lương min/max, Địa điểm, Mô hình on-site/hybrid/remote, Hạn thử việc, Ngày bắt đầu dự kiến, Lý do tuyển, Mô tả công việc, Yêu cầu ứng viên, Trạng thái phê duyệt).
 - **`ScreeningCriteria.java`**: Quan hệ 1-N với `JobRequisition`, đại diện cho tiêu chí sàng lọc hồ sơ tự động của AI (Tên tiêu chí, Loại tiêu chí: Skill/Education/Experience/Knockout, Giá trị yêu cầu, Trọng số điểm Weight, Cờ bắt buộc isMandatory).
 - **`RequisitionApproval.java`**: Lưu trữ lịch sử duyệt/từ chối của Giám đốc (Director) kèm ý kiến nhận xét (Feedback/Comments).
-- Dòng thời gian (Timeline) của yêu cầu được ghép từ `RequisitionApproval` (duyệt/từ chối) và `AuditLog` (tạo, gửi duyệt, rút lại, chỉnh sửa). Không có bảng riêng cho sự kiện luân chuyển.
+- Dòng thời gian (Timeline) của yêu cầu được ghép từ `RequisitionApproval` (duyệt/từ chối) và `AuditLog` (tạo, gửi duyệt, chỉnh sửa). Không có bảng riêng cho sự kiện luân chuyển.
 
 ### 2. Tầng Truy cập Dữ liệu (Repository Layer)
 - **`JobRequisitionRepository.java`**: Kế thừa `JpaRepository` và `JpaSpecificationExecutor`, hỗ trợ truy vấn lọc động, tìm kiếm toàn văn theo từ khóa, lọc theo phòng ban, hình thức, trạng thái và phân trang/sắp xếp linh hoạt.
@@ -50,7 +50,7 @@ Hệ thống được xây dựng theo kiến trúc phân tầng chuẩn của *
 
 ### 5. Tầng Bảo mật & Phân quyền (Security & Access Layer)
 - **`RequisitionAccess.java`**: Kiểm soát quyền truy cập chi tiết theo vai trò người dùng:
-  - **Hiring Manager**: Chỉ được xem/sửa đơn của chính mình; chỉ được tạo mới, lưu draft, submit và rút đơn (withdraw) khi đang chờ duyệt.
+  - **Hiring Manager**: Chỉ được sửa đơn của chính mình khi Draft hoặc Rejected; được tạo mới, lưu draft và submit.
   - **Director**: Được xem các đơn không phải Draft; có thẩm quyền duyệt (`Approved`) hoặc từ chối (`Rejected`) kèm lý do đối với đơn `Pending_Director`.
   - **HR**: Yêu cầu đã chốt là chỉ xem Requisition `Approved`. Code hiện tại còn cho xem các đơn không phải `Draft`; cần sửa cả truy vấn danh sách và kiểm tra quyền xem chi tiết theo mục VI.2.
   - **System Admin**: Toàn quyền quản trị.
@@ -61,7 +61,6 @@ Hệ thống được xây dựng theo kiến trúc phân tầng chuẩn của *
   - `createRequisition()`: Tạo mới đơn yêu cầu, map dữ liệu, tự động gán tiêu đề `"Untitled requisition"` nếu để trống, ghi `AuditLog` hành động `CREATE`.
   - `updateRequisition()`: Cập nhật đơn nháp/bị từ chối, đồng bộ danh sách tiêu chí AI (thêm/sửa/xóa/đổi tên an toàn), kiểm tra quyền/trạng thái dưới khóa ghi trong transaction.
   - `decide()`: Giám đốc phê duyệt hoặc từ chối kèm phản hồi bắt buộc.
-  - `withdraw()`: Hiring Manager rút lại đơn đang chờ duyệt về trạng thái nháp.
   - `copy()`: Nhân bản đơn cũ sang form mới (xóa ID để tạo bản ghi độc lập).
   - `deleteRequisition()`: Xóa đơn nháp, kiểm tra bảo vệ chặn xóa nếu đơn đã được liên kết với Tin tuyển dụng (`JobPosting`).
 
@@ -104,7 +103,7 @@ Hệ thống được xây dựng theo kiến trúc phân tầng chuẩn của *
 - [x] Hiển thị đầy đủ thông tin chi tiết: Chức danh, Phòng ban, Lương min/max, Số lượng, Mô tả, Yêu cầu,...
 - [x] Hiển thị bảng tiêu chí sàng lọc hồ sơ CV (kèm trọng số điểm và cờ bắt buộc).
 - [x] Tích hợp các nút điều hướng theo quyền hạn người dùng:
-  - **Hiring Manager**: Nút Sửa, Xóa (nếu là Draft/Rejected), nút Rút đơn (nếu đang Pending_Director).
+  - **Hiring Manager**: Nút Sửa, Xóa (nếu là Draft/Rejected).
   - **Director**: Nút Duyệt (`Approve`), nút Từ chối (`Reject` kèm form nhập phản hồi lý do bắt buộc).
 - [x] Hiển thị danh sách lịch sử phê duyệt (`Approvals`) và dòng sự kiện (`Timeline`).
 
@@ -138,7 +137,7 @@ Nhằm đảm bảo chất lượng code và phòng ngừa lỗi hồi quy (regr
 ### 4. Stage 3 — Controller / MVC Test (`JobRequisitionControllerTests.java`)
 - Kiểm thử tầng Web với `@WebMvcTest(controllers = RequisitionController.class)` và `MockMvc`:
   - **GET**: Kiểm tra các endpoint `GET /requisitions` (trả về view list, model phân trang), `GET /requisitions/create` (trả về form), `GET /requisitions/{id}` (trả về chi tiết).
-  - **POST**: Kiểm tra `POST /requisitions/create`, `POST /requisitions/edit/{id}`, `POST /requisitions/delete/{id}`, `POST /requisitions/{id}/decision`, `POST /requisitions/{id}/withdraw` thực hiện đúng redirect và nạp Flash Message.
+  - **POST**: Kiểm tra `POST /requisitions/create`, `POST /requisitions/edit/{id}`, `POST /requisitions/delete/{id}`, `POST /requisitions/{id}/decision` thực hiện đúng redirect và nạp Flash Message.
   - **Lỗi Form**: Bắt lỗi `RequisitionValidationException` trả lại giao diện form và hiển thị field error tương ứng.
   - **Bảo mật**: Kiểm tra chặn request POST thiếu token CSRF (`403 Forbidden`) và chặn quyền của tài khoản `CANDIDATE` truy cập vào module Requisition.
 
@@ -147,7 +146,6 @@ Nhằm đảm bảo chất lượng code và phòng ngừa lỗi hồi quy (regr
   - **`it01_createDraft_persistsRelationships`**: Kiểm tra lưu Draft thật vào database, đảm bảo tính toàn vẹn quan hệ giữa Requisition, Hiring Manager, Department và ScreeningCriteria.
   - **`it04_directorApprove_createsApprovalAndEvent`**: Kiểm tra luồng Director duyệt đơn, chuyển trạng thái `Approved`, lưu bản ghi `RequisitionApproval` và ghi `AuditLog`.
   - **`it05_directorReject_recordsFeedback`**: Kiểm tra luồng Director từ chối đơn kèm lưu nhận xét lý do từ chối.
-  - **`it06_withdraw_revertsToDraft`**: Kiểm tra Hiring Manager rút đơn `Pending_Director` về lại `Draft`.
   - **`it08_copy_clearsIdentifiers`**: Kiểm tra sao chép đơn trả về DTO sạch (xóa criteriaId).
   - **`it10_delete_removesEntity`**: Kiểm tra xóa Requisition khỏi database thành công.
 
@@ -158,12 +156,12 @@ Nhằm đảm bảo chất lượng code và phòng ngừa lỗi hồi quy (regr
 - [x] **Entity & Database**: Thiết kế bảng `JobRequisition`, `ScreeningCriteria`, `RequisitionApproval` (lịch sử thao tác dùng `AuditLog` có sẵn).
 - [x] **Repository Layer**: Viết các Repository với Specification tìm kiếm động.
 - [x] **DTO & Validator**: Tạo DTO Request/Response và hoàn thiện quy tắc validate (Draft vs Submit).
-- [x] **Service Layer**: Cài đặt trọn vẹn CRUD, luồng duyệt/từ chối, rút đơn, sao chép, phân quyền và ghi Audit Log.
+- [x] **Service Layer**: Cài đặt CRUD, luồng duyệt/từ chối, sao chép, phân quyền và ghi Audit Log.
 - [x] **Controller Layer**: Xây dựng controller đón nhận GET/POST, xử lý lỗi binding, flash message.
 - [x] **UI Frontend (Thymeleaf/CSS/JS)**:
   - [x] Requisition List Screen (Bảng danh sách, phân trang, lọc, search, dropdown action).
   - [x] Create/Update Screen (Form nhập liệu, thêm xóa tiêu chí AI động).
-  - [x] Requisition Detail Screen (Xem chi tiết, tiêu chí, lịch sử phê duyệt, nút duyệt/rút đơn).
+  - [x] Requisition Detail Screen (Xem chi tiết, tiêu chí, lịch sử phê duyệt, nút duyệt).
 - [x] **Bộ Test Cases hoàn chỉnh**:
   - [x] `RequisitionValidatorTests.java` (Stage 1 - Validator Test).
   - [x] `JobRequisitionServiceTest.java` (Stage 2 - Service Unit Test).
@@ -341,7 +339,7 @@ Nhằm đảm bảo chất lượng code và phòng ngừa lỗi hồi quy (regr
 
 - [x] Dùng chung trong `core` (không chứa nghiệp vụ, không đụng `core/web` Lead-only): `config/ClockConfig` (bean `Clock`), `dto/FilterOption` + `FilterChip` (chuyển từ `requisition.dto`), `util/ListFilters` (làm sạch bộ lọc, escape LIKE, từ khóa ≤ 120), `util/FilterLinks` (thay `RequisitionListLinks`), `util/FieldChanges` (so sánh snapshot cho audit). Job posting bỏ 3 hàm chép lại, dùng `ListFilters`. Cập nhật `ARCHITECTURE_GUIDE.md` §1. **Cần báo nhóm / Lead vì thêm file vào `core`.**
 - [x] Hằng số thay chuỗi cứng: `RequisitionValidator.ACTION_DRAFT / ACTION_SUBMIT / isSubmit`, `COMMENT_CHAR_LIMIT`, `CRITERIA_NAME_CHAR_LIMIT`, `PLACEHOLDER_TITLE`; trạng thái dùng `RequisitionAccess.STATUS_*`. Controller `decide` có ngoặc nhọn, hằng `DECISION_APPROVE / REJECT`.
-- [x] Cờ quyền chuyển vào `RequisitionAccess`: `canWithdraw`, `canDelete`, `canCopy`, `canCreatePostingFrom`, `canOpenPosting`, `isFinishedStatus`.
+- [x] Cờ quyền chuyển vào `RequisitionAccess`: `canDelete`, `canCopy`, `canCreatePostingFrom`, `canOpenPosting`, `isFinishedStatus`.
 - [x] `Clock` thay `LocalDate.now()` ở validator, service, mapper; form lấy min / max ngày bắt đầu từ `validator.earliestStartDate() / latestStartDate()`.
 - [x] Tách `RequisitionServiceImpl` (999 → ~480 dòng): `RequisitionListService` (màn danh sách, controller gọi trực tiếp), `RequisitionMapper` (entity → DTO, không truy vấn DB), `RequisitionAuditLogger` (snapshot + ghi / đọc audit). Gộp kiểm tra trùng bản nháp (`requireNoOtherDraft`), kiểm tra nguồn sao chép (`requireCopyableSource`).
 - [x] Sửa N+1 màn danh sách: `JobPostingRepository.findLatestByRequisitionIds`, `JobRequisitionRepository.findIdsWithLaterRounds` (1 câu cho cả trang), `@EntityGraph(department, hiringManager)` cho `findAll(spec, pageable)`.

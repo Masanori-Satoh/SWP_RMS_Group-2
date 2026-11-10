@@ -36,7 +36,6 @@ Chỉ giữ các message có câu tương ứng trong code; {…} là tham số 
 | 30 | MSG55 | Toast | A user updates a profile photo. | Đã cập nhật ảnh đại diện. |
 | 31 | MSG56 | Toast | A user changes a password. | Đã đổi mật khẩu. |
 | 32 | MSG57 | Toast | An authorized user saves a Job Requisition as Draft. | Đã lưu bản nháp thành công. |
-| 33 | MSG58 | Toast | The creator withdraws a Requisition pending approval for revision. | Đã rút lại yêu cầu thành công. Bạn có thể chỉnh sửa lại bản nháp. |
 | 34 | MSG60 | Inline validation | A Director omits a decision or required rejection feedback. | Vui lòng chọn quyết định phê duyệt. |
 | 35 | MSG61 | Toast | HR saves a Job Posting draft or changes to an existing posting. | Đã lưu bản nháp tin tuyển dụng. |
 | 36 | MSG64 | Toast | HR pauses a published Job Posting. | Đã tạm dừng tin tuyển dụng. |

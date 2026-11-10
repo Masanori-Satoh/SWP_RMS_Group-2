@@ -37,6 +37,7 @@
     };
     const today = form.dataset.today || isoDate(new Date());
     const radioValue = name => form.querySelector(`input[name="${name}"]:checked`)?.value || '';
+    const isRemote = () => $('workModel').value === 'Remote';
 
     // Đổi yêu cầu nguồn: chọn xong thì mở lại form với yêu cầu đó
     document.querySelectorAll('[data-auto-submit]').forEach(select =>
@@ -48,6 +49,9 @@
      * --------------------------------------------------------------------- */
     function renderFromMarkers() {
         document.querySelectorAll('[data-from]').forEach(marker => {
+            if (marker.dataset.from === 'workLocation') {
+                marker.hidden = isRemote();
+            }
             const field = $(marker.dataset.from);
             if (!field) return;
             const same = field.value.trim() === (marker.dataset.source || '').trim();
@@ -62,7 +66,32 @@
         const field = $(restore.dataset.restore);
         field.value = form.querySelector(`[data-from="${restore.dataset.restore}"]`).dataset.source || '';
         field.dispatchEvent(new Event('input', { bubbles: true }));
+        if (field.id === 'probationPeriod') {
+            syncProbationChoice();
+            (field.hidden ? $('probationChoice') : field).focus();
+            return;
+        }
         field.focus();
+    });
+
+    /* Thời gian thử việc: chọn mẫu thì ghi thẳng vào ô probationPeriod (ẩn); "Khác" thì hiện ô để nhập tay. */
+    const PROBATION_OTHER = '__other__';
+    function syncProbationChoice() {
+        const choice = $('probationChoice');
+        const input = $('probationPeriod');
+        if (!choice || !input) return;
+        const value = input.value.trim();
+        const preset = [...choice.options].some(o => o.value === value && o.value !== PROBATION_OTHER);
+        choice.value = preset ? value : PROBATION_OTHER;
+        input.hidden = choice.value !== PROBATION_OTHER;
+    }
+    $('probationChoice')?.addEventListener('change', event => {
+        const input = $('probationPeriod');
+        const isOther = event.target.value === PROBATION_OTHER;
+        input.hidden = !isOther;
+        input.value = isOther ? '' : event.target.value;
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        if (isOther) input.focus();
     });
 
     /* ---------------------------------------------------------------------
@@ -70,6 +99,18 @@
      *    (cần mạng) + link mở Google Maps làm dự phòng
      * --------------------------------------------------------------------- */
     const mapToggle = $('jpf-map-toggle');
+    function syncWorkLocation() {
+        const remote = isRemote();
+        $('workLocation').disabled = remote;
+        if (remote) {
+            $('workLocation').value = '';
+            mapToggle.open = false;
+            lastMapAddress = null;
+            $('jpf-map').replaceChildren();
+            showError('workLocation', '');
+        }
+        mapToggle.hidden = remote;
+    }
     const mapsLink = address => 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(address);
     const mapsEmbed = address => 'https://www.google.com/maps?q=' + encodeURIComponent(address) + '&output=embed';
     function mapHtml(address) {
@@ -85,7 +126,7 @@
     function renderMap() {
         // Khung bản đồ đang thu gọn thì không tải Google Maps
         if (!mapToggle.open) return;
-        const address = $('workLocation').value.trim();
+        const address = isRemote() ? '' : $('workLocation').value.trim();
         if (address === lastMapAddress) return;
         lastMapAddress = address;
         $('jpf-map').innerHTML = mapHtml(address);
@@ -153,7 +194,7 @@
     }
     function renderPreview() {
         const title = $('postingTitle').value.trim();
-        const address = $('workLocation').value.trim();
+        const address = isRemote() ? '' : $('workLocation').value.trim();
         // Nhãn đang chọn ở ô Hình thức / Mô hình (HR đổi được), cộng phòng ban của yêu cầu
         const selectedLabel = id => $(id).selectedOptions[0]?.textContent.trim();
         const tags = [selectedLabel('employmentType'), selectedLabel('workModel'), form.dataset.department].filter(Boolean);
@@ -297,6 +338,7 @@
      * Cập nhật mọi phần phụ thuộc khi người dùng gõ / chọn
      * --------------------------------------------------------------------- */
     function refresh() {
+        syncWorkLocation();
         renderFromMarkers();
         syncBenefitChips();
         renderPreview();
@@ -305,6 +347,7 @@
     form.addEventListener('change', refresh);
 
     form.dataset.tab = 'edit';
+    syncProbationChoice();
     syncPositions();
     renderMap();
     refresh();

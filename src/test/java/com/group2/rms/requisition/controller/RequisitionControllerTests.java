@@ -106,8 +106,8 @@ class RequisitionControllerTests {
 
         private RequisitionListResponse listWith(RequisitionResponse row, RequisitionFilterOptions options) {
                 RequisitionSearchRequest filter = new RequisitionSearchRequest(
-                                "", List.of(), null, null, null, null, null, "newest", 0, 10);
-                return new RequisitionListResponse(new PageImpl<>(List.of(row)), filter, options, List.of());
+                                "", List.of(), null, null, null, null, null, "newest", 0, 10, null);
+                return new RequisitionListResponse(new PageImpl<>(List.of(row)), filter, options, List.of(), List.of());
         }
 
         // =========================================================================
@@ -122,10 +122,10 @@ class RequisitionControllerTests {
                 RequisitionResponse row = RequisitionResponse.builder().requisitionId(1).title("Backend Engineer")
                                 .approvalStatus(RequisitionAccess.STATUS_DRAFT).createdAt(LocalDateTime.now())
                                 .editable(true).deletable(true).build();
-                RequisitionFilterOptions options = new RequisitionFilterOptions(true, true, false, false, true,
+                RequisitionFilterOptions options = new RequisitionFilterOptions(true, true, false, false, true, false,
                                 List.of(new FilterOption("Draft", "Bản nháp")), List.of(new FilterOption("none", "Chưa có tin")),
                                 List.of(), List.of(), List.of(new FilterOption("newest", "Mới nhất trước")));
-                when(listService.getListPage(any())).thenReturn(listWith(row, options));
+                when(listService.getListPage(any(), any())).thenReturn(listWith(row, options));
 
                 // Act + Assert
                 mvc.perform(get("/requisitions"))
@@ -147,10 +147,10 @@ class RequisitionControllerTests {
                 RequisitionResponse row = RequisitionResponse.builder().requisitionId(6).title("Backend Engineer")
                                 .approvalStatus(RequisitionAccess.STATUS_APPROVED).statusLabel("Đã duyệt")
                                 .createdAt(LocalDateTime.now()).build();
-                RequisitionFilterOptions options = new RequisitionFilterOptions(false, true, true, true, false,
+                RequisitionFilterOptions options = new RequisitionFilterOptions(false, true, true, true, false, false,
                                 List.of(), List.of(new FilterOption("none", "Chưa có tin")), List.of(), List.of(),
                                 List.of(new FilterOption("newest", "Mới nhất trước")));
-                when(listService.getListPage(any())).thenReturn(listWith(row, options));
+                when(listService.getListPage(any(), any())).thenReturn(listWith(row, options));
 
                 mvc.perform(get("/requisitions"))
                                 .andExpect(status().isOk())
@@ -167,15 +167,50 @@ class RequisitionControllerTests {
                                 .approvalStatus(RequisitionAccess.STATUS_APPROVED).statusLabel("Đã duyệt").statusTone("success")
                                 .jobPostingId(16).postingStatus("Paused").postingLabel("Tạm dừng").postingTone("warning")
                                 .postingViewable(false).createdAt(LocalDateTime.now()).build();
-                RequisitionFilterOptions options = new RequisitionFilterOptions(true, false, true, true, false,
+                RequisitionFilterOptions options = new RequisitionFilterOptions(true, false, true, true, false, false,
                                 List.of(), List.of(), List.of(), List.of(), List.of(new FilterOption("newest", "Mới nhất trước")));
-                when(listService.getListPage(any())).thenReturn(listWith(row, options));
+                when(listService.getListPage(any(), any())).thenReturn(listWith(row, options));
 
                 // Act + Assert
                 mvc.perform(get("/requisitions"))
                                 .andExpect(status().isOk())
                                 .andExpect(content().string(containsString("Tạm dừng")))
                                 .andExpect(content().string(not(containsString("/internal/job-postings/16"))));
+        }
+
+        @Test
+        @WithMockUser(username = "hm", roles = "HIRING_MANAGER")
+        @DisplayName("Form sửa -> Dropdown thử việc chọn sẵn đúng mục: rỗng = Không thử việc, mẫu = mục đó, chữ lạ = Khác")
+        void editForm_shouldPreselectProbationChoice_fromSavedValue() throws Exception {
+                String[][] cases = {
+                                { null, "Không thử việc" },
+                                { "15 ngày", "15 ngày" },
+                                { "6 ngày làm việc", "6 ngày làm việc" },
+                                { "2 tháng", "Khác" } };
+                for (String[] c : cases) {
+                        RequisitionRequest form = new RequisitionRequest();
+                        form.setProbationPeriod(c[0]);
+                        when(service.prepareEditForm(77)).thenReturn(form);
+
+                        String html = mvc.perform(get("/requisitions/edit/77"))
+                                        .andExpect(status().isOk())
+                                        .andReturn().getResponse().getContentAsString();
+
+                        String select = html.substring(html.indexOf("id=\"probationChoice\""));
+                        select = select.substring(0, select.indexOf("</select>"));
+                        java.util.regex.Matcher selected = java.util.regex.Pattern
+                                        .compile("<option[^>]*selected=\"selected\"[^>]*>([^<]*)</option>").matcher(select);
+                        org.junit.jupiter.api.Assertions.assertTrue(selected.find(), "không có mục nào được chọn: " + c[0]);
+                        assertEquals(c[1], selected.group(1).trim(), "giá trị lưu: " + c[0]);
+                        org.junit.jupiter.api.Assertions.assertFalse(selected.find(), "chọn nhiều hơn 1 mục: " + c[0]);
+                        if (c[0] != null) {
+                                int at = html.indexOf("id=\"probationPeriod\"");
+                                String input = org.springframework.web.util.HtmlUtils.htmlUnescape(
+                                                html.substring(html.lastIndexOf('<', at), html.indexOf('>', at)));
+                                org.junit.jupiter.api.Assertions.assertTrue(input.contains("value=\"" + c[0] + "\""),
+                                                "ô probationPeriod phải giữ giá trị đã lưu: " + c[0] + " | " + input);
+                        }
+                }
         }
 
         @Test
@@ -207,7 +242,7 @@ class RequisitionControllerTests {
         @DisplayName("Chính trang danh sách bị chặn quyền -> Về dashboard kèm toast, không lặp chuyển trang")
         void list_shouldRedirectToDashboard_whenListIsDenied() throws Exception {
                 // Arrange
-                when(listService.getListPage(any())).thenThrow(new AccessDeniedException("Không có quyền xem."));
+                when(listService.getListPage(any(), any())).thenThrow(new AccessDeniedException("Không có quyền xem."));
 
                 // Act + Assert
                 mvc.perform(get("/requisitions"))
@@ -230,7 +265,8 @@ class RequisitionControllerTests {
                                 .andExpect(status().isOk())
                                 .andExpect(view().name("requisitions/detail"))
                                 .andExpect(model().attributeExists("req"))
-                                .andExpect(content().string(containsString("Backend Engineer")));
+                                .andExpect(content().string(containsString("Backend Engineer")))
+                                .andExpect(content().string(not(containsString("/requisitions/1/withdraw"))));
         }
 
         @Test
@@ -509,7 +545,7 @@ class RequisitionControllerTests {
         }
 
         // =========================================================================
-        // POST: duyệt, rút lại
+        // POST: duyệt
         // =========================================================================
 
         @Test
@@ -522,6 +558,18 @@ class RequisitionControllerTests {
                                 .andExpect(redirectedUrl("/requisitions/10"))
                                 .andExpect(flash().attribute("successMessage", "Đã lưu quyết định thành công."));
                 verify(service).decide(10, true, "Looks good");
+        }
+
+        @Test
+        @WithMockUser(username = "director", roles = "DIRECTOR")
+        @DisplayName("POST /requisitions/{id}/decision (reject) -> Thông báo từ chối không có biểu tượng thành công")
+        void decide_shouldShowTextOnlyRejectionToast_whenDecisionIsReject() throws Exception {
+                mvc.perform(post("/requisitions/10/decision").with(csrf())
+                                .param("decision", "reject").param("comment", "Chưa đủ thông tin"))
+                                .andExpect(redirectedUrl("/requisitions/10"))
+                                .andExpect(flash().attribute("successMessage", "Đã từ chối yêu cầu tuyển dụng."))
+                                .andExpect(flash().attribute("decisionRejectedToast", true));
+                verify(service).decide(10, false, "Chưa đủ thông tin");
         }
 
         @Test
@@ -550,21 +598,27 @@ class RequisitionControllerTests {
                                 .andExpect(flash().attribute("decisionComment", "   "));
         }
 
-        @Test
-        @WithMockUser(username = "hm", roles = "HIRING_MANAGER")
-        @DisplayName("POST /requisitions/{id}/withdraw -> Rút lại xong mở thẳng form sửa")
-        void withdraw_shouldRedirectToEditForm_whenWithdrawn() throws Exception {
-                mvc.perform(post("/requisitions/10/withdraw").with(csrf()))
-                                .andExpect(status().is3xxRedirection())
-                                .andExpect(redirectedUrl("/requisitions/edit/10"))
-                                .andExpect(flash().attribute("successMessage",
-                                                "Đã rút lại yêu cầu thành công. Bạn có thể chỉnh sửa lại bản nháp."));
-                verify(service).withdraw(10);
-        }
-
         // =========================================================================
         // Chặn theo trạng thái (gõ URL): về trang chi tiết kèm toast lỗi, không ra trang lỗi
         // =========================================================================
+
+        @Test
+        @WithMockUser(username = "hm", roles = "HIRING_MANAGER")
+        @DisplayName("TC-DETAIL-19: URL không tồn tại khi đăng nhập nội bộ -> 404 trong khung nội bộ (có sidebar)")
+        void unknownUrl_shouldRender404InsideInternalLayout() throws Exception {
+                mvc.perform(get("/requisitions/khong/ton/tai"))
+                                .andExpect(status().isNotFound())
+                                .andExpect(content().string(containsString("Không tìm thấy trang")))
+                                .andExpect(content().string(containsString("workspace-sidebar")));
+        }
+
+        @Test
+        @WithMockUser(username = "hm", roles = "HIRING_MANAGER")
+        @DisplayName("POST /requisitions/{id}/withdraw không còn endpoint")
+        void withdrawnRoute_shouldNotExist() throws Exception {
+                mvc.perform(post("/requisitions/10/withdraw").with(csrf()))
+                                .andExpect(status().isNotFound());
+        }
 
         @Test
         @WithMockUser(username = "hm", roles = "HIRING_MANAGER")
@@ -584,9 +638,9 @@ class RequisitionControllerTests {
         @WithMockUser(username = "hm", roles = "HIRING_MANAGER")
         @DisplayName("Gõ URL sửa sai trạng thái từ danh sách -> Giữ trang danh sách và bộ lọc, hiện thông báo")
         void edit_shouldReturnToLastListPage_whenStatusIsLocked() throws Exception {
-                RequisitionFilterOptions options = new RequisitionFilterOptions(true, true, false, false, true,
+                RequisitionFilterOptions options = new RequisitionFilterOptions(true, true, false, false, true, false,
                                 List.of(), List.of(), List.of(), List.of(), List.of());
-                when(listService.getListPage(any())).thenReturn(listWith(
+                when(listService.getListPage(any(), any())).thenReturn(listWith(
                                 RequisitionResponse.builder().requisitionId(2796).title("Backend Engineer")
                                                 .approvalStatus(RequisitionAccess.STATUS_PENDING_DIRECTOR)
                                                 .createdAt(LocalDateTime.now()).build(), options));
@@ -648,17 +702,13 @@ class RequisitionControllerTests {
 
         @Test
         @WithMockUser(username = "hm", roles = "HIRING_MANAGER")
-        @DisplayName("POST delete / withdraw khi sai trạng thái -> Về chi tiết, flash 'không có quyền'")
-        void deleteAndWithdraw_shouldRedirectToDetailWithError_whenStatusIsLocked() throws Exception {
+        @DisplayName("POST delete khi sai trạng thái -> Về chi tiết, flash 'không có quyền'")
+        void delete_shouldRedirectToDetailWithError_whenStatusIsLocked() throws Exception {
                 // Arrange
                 doThrow(new RequisitionStateException()).when(service).deleteRequisition(2793);
-                doThrow(new RequisitionStateException()).when(service).withdraw(2793);
 
                 // Act + Assert
                 mvc.perform(post("/requisitions/delete/2793").with(csrf()))
-                                .andExpect(redirectedUrl("/requisitions/2793"))
-                                .andExpect(flash().attribute("failureMessage", RequisitionStateException.NO_ACCESS_MESSAGE));
-                mvc.perform(post("/requisitions/2793/withdraw").with(csrf()))
                                 .andExpect(redirectedUrl("/requisitions/2793"))
                                 .andExpect(flash().attribute("failureMessage", RequisitionStateException.NO_ACCESS_MESSAGE));
         }

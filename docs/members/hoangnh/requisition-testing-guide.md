@@ -176,10 +176,9 @@ assertSame(itDepartment, saved.getDepartment());
 | `updateRequisition` | ✅ giữ phòng ban cũ; ✅ Giám đốc phê duyệt trực tiếp; ✅ đổi tên bản đợt 2 → đợt 1; ✅ không đổi gì thì không lưu / không audit; ✅ `criteriaId` của yêu cầu khác; ✅ không có quyền sửa; ✅ id không tồn tại |
 | `copy`, `getById` | ✅ bỏ `criteriaId`, gợi ý đợt sau; ✅ nguồn chưa xong vòng duyệt; ✅ id không tồn tại; ✅ không có quyền xem |
 | `decide` | ✅ duyệt → Approved, không thông báo; ✅ duyệt không cần ý kiến; ✅ trả lại → Rejected + thông báo cho HM; ✅ lý do null / rỗng / chỉ khoảng trắng; ✅ lý do đúng 1000 ký tự; ✅ 1001 ký tự; ✅ người không được duyệt |
-| `withdraw` | ✅ chủ phiếu rút lại → Draft; ✅ người khác / sai trạng thái |
 | `deleteRequisition` | ✅ xóa thành công; ✅ chặn khi có tin tuyển dụng; ✅ chặn khi có đợt sau |
 | `RequisitionListService.getListPage` | ✅ bộ lọc theo role (HR, Director, HM, Admin); ✅ HR chỉ Approved; ✅ trạng thái trùng; ✅ từ khóa khoảng trắng / biên 120; ✅ size = 0; ✅ trang vượt tổng; ✅ tra tin 1 câu cho cả trang (không N+1) |
-| `RequisitionAccess` | ✅ bảng `requireView` 5 người xem × 4 trạng thái; ✅ các cờ `canEdit`, `canDelete`, `canWithdraw`, `canDecide`, `canCopy`, `canCreatePostingFrom`, `canOpenPosting` |
+| `RequisitionAccess` | ✅ bảng `requireView` 5 người xem × 4 trạng thái; ✅ các cờ `canEdit`, `canDelete`, `canDecide`, `canCopy`, `canCreatePostingFrom`, `canOpenPosting` |
 | `RequisitionMapper` | ✅ cờ quyền dòng danh sách; ✅ `incomplete`; ✅ số ngày chờ / còn lại theo Clock; ✅ lý do trả lại; ✅ escape HTML (XSS) |
 
 ---

@@ -178,25 +178,6 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     @Transactional
-    public void notifyRequisitionWithdrawn(JobRequisition requisition, User actor) {
-        if (requisition == null) {
-            log.warn("Cannot send requisition withdrawn notification: Requisition is null");
-            return;
-        }
-        LocalDateTime now = LocalDateTime.now(clock);
-        String content = NotificationMessages.requisitionWithdrawnContent(requisition,
-                NotificationMessages.nameOr(actor, "Hiring Manager"), now);
-        notifyEach(userRepository.findAllActiveDirectors(), actor, Notification.builder()
-                .title("Yêu cầu tuyển dụng đã được rút lại: " + requisition.getTitle())
-                .content(content)
-                .eventType("REQUISITION_WITHDRAWN")
-                .referenceId(String.valueOf(requisition.getRequisitionId()))
-                .linkUrl("/requisitions/" + requisition.getRequisitionId())
-                .eventId("REQ_WITHDRAW_" + requisition.getRequisitionId() + "_" + NotificationMessages.eventTime(now)));
-    }
-
-    @Override
-    @Transactional
     public void notifyJobPostingPublished(JobPosting posting, User hr) {
         if (!hasPostingOwner(posting)) {
             log.warn("Cannot send job posting published notification: Posting or Requisition owner is null");
@@ -352,6 +333,22 @@ public class NotificationServiceImpl implements NotificationService {
         String timeKey = NotificationMessages.eventTime(LocalDateTime.now(clock));
         notifyInterviewChange(schedule, actor, "INTERVIEW_RESCHEDULED", "Lịch phỏng vấn đã thay đổi",
                 "INT_RESCHED_" + interviewId(schedule) + "_" + timeKey, "");
+    }
+
+    @Override
+    @Transactional
+    public void notifyInterviewersRemoved(InterviewSchedule schedule, Collection<User> removed, User actor) {
+        Application application = schedule == null ? null : schedule.getApplication();
+        if (removed == null || removed.isEmpty() || NotificationMessages.requisitionOf(application) == null) {
+            return;
+        }
+        String timeKey = NotificationMessages.eventTime(LocalDateTime.now(clock));
+        notifyEach(removed, actor, Notification.builder()
+                .title("Bạn đã được gỡ khỏi hội đồng phỏng vấn: " + NotificationMessages.candidateName(application))
+                .content(NotificationMessages.interviewPanelRemovedContent(schedule))
+                .eventType("INTERVIEW_PANEL_REMOVED")
+                .referenceId(String.valueOf(schedule.getInterviewId()))
+                .eventId("INT_REMOVED_" + interviewId(schedule) + "_" + timeKey));
     }
 
     // ducnm bổ sung: hủy lịch chỉ báo ứng viên; hội đồng là người trong công ty, HR tự báo trực tiếp cho họ
@@ -633,15 +630,6 @@ public class NotificationServiceImpl implements NotificationService {
     public void markOfferNotificationRead(Integer userId, Integer offerId) {
         if (userId != null && offerId != null) {
             notificationRepository.markOfferNotificationRead(userId, String.valueOf(offerId), LocalDateTime.now(clock));
-        }
-    }
-
-    @Override
-    @Transactional
-    public void markRequisitionPendingRead(Integer requisitionId) {
-        if (requisitionId != null) {
-            notificationRepository.markReadByEvent("REQUISITION_PENDING_DIRECTOR", String.valueOf(requisitionId),
-                    LocalDateTime.now(clock));
         }
     }
 

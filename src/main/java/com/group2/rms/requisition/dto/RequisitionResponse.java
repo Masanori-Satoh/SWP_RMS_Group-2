@@ -18,7 +18,6 @@ public record RequisitionResponse(
         boolean editable,
         boolean deletable,
         boolean decidable,
-        boolean withdrawable,
         boolean incomplete,
         String rejectionReason,
         String departmentName,

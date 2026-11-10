@@ -84,6 +84,15 @@ class JobPostingMapperTests {
                 List.of(), List.of());
     }
 
+    @Test
+    void toDetail_shouldHideOldLocation_whenPostingIsRemote() {
+        JobPosting remote = posting(JobPostingAccess.STATUS_DRAFT, NOW, NOW.plusDays(30));
+        remote.setWorkModel("Remote");
+        remote.setWorkLocation("Old office");
+
+        assertNull(detail(remote, hr).workLocation());
+    }
+
     // =========================================================================
     // toListRow
     // =========================================================================

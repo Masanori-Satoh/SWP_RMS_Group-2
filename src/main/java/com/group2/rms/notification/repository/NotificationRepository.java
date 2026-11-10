@@ -34,8 +34,4 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     @Query("UPDATE Notification n SET n.isRead = true, n.readAt = :readAt WHERE n.recipient.userId = :userId AND n.referenceId = :referenceId AND n.eventType = 'OFFER_LETTER_SENT' AND n.isRead = false")
     int markOfferNotificationRead(@Param("userId") Integer userId, @Param("referenceId") String referenceId, @Param("readAt") LocalDateTime readAt);
 
-    /** Đánh dấu đã đọc mọi thông báo chưa đọc của một sự kiện (mọi người nhận). */
-    @Modifying
-    @Query("UPDATE Notification n SET n.isRead = true, n.readAt = :readAt WHERE n.eventType = :eventType AND n.referenceId = :referenceId AND n.isRead = false")
-    int markReadByEvent(@Param("eventType") String eventType, @Param("referenceId") String referenceId, @Param("readAt") LocalDateTime readAt);
 }

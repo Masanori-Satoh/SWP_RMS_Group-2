@@ -125,13 +125,23 @@
 
                         <div class="jpf-pair">
                             <div class="jpf-field">
-                                <div class="jpf-lblrow"><label class="form-label" for="probationPeriod">Thời gian thử
+                                <div class="jpf-lblrow"><label class="form-label" for="probationChoice">Thời gian thử
                                         việc</label>
                                     <span class="jpf-from" data-from="probationPeriod"
                                         th:data-source="*{sourceProbationPeriod}"></span>
                                 </div>
+                                <!-- Dropdown chỉ để chọn nhanh; giá trị gửi lên server vẫn là ô probationPeriod (chuỗi tự do). -->
+                                <select class="form-select" id="probationChoice"
+                                    th:with="p=*{probationPeriod}, presets=${ {'6 ngày làm việc','15 ngày','30 ngày'} },
+                                             other=${p != null and !#strings.isEmpty(p) and !#lists.contains(presets, p)}">
+                                    <option value="" th:selected="${p == null or #strings.isEmpty(p)}">Không thử việc</option>
+                                    <option th:each="preset : ${presets}" th:value="${preset}" th:text="${preset}"
+                                        th:selected="${preset == p}">15 ngày</option>
+                                    <option value="__other__" th:selected="${other}">Khác</option>
+                                </select>
                                 <input class="form-input" th:field="*{probationPeriod}" th:maxlength="${probationLimit}"
-                                    placeholder="Nhập thời gian thử việc" aria-describedby="probationPeriod-error">
+                                    placeholder="Nhập thời gian thử việc (VD: 2 tháng)" aria-label="Thời gian thử việc khác"
+                                    aria-describedby="probationPeriod-error">
                                 <small id="probationPeriod-error" class="field-error"
                                     th:text="${#fields.hasErrors('probationPeriod')} ? ${#fields.errors('probationPeriod')[0]} : ''"></small>
                             </div>
@@ -252,6 +262,7 @@
                             </div>
                             <input class="form-input" th:field="*{workLocation}" th:maxlength="${locationLimit}"
                                 placeholder="Nhập địa điểm làm việc"
+                                th:disabled="*{workModel == 'Remote'}"
                                 aria-describedby="workLocation-help workLocation-error">
                             <!-- Bản đồ thu gọn (D3): chỉ bung ra khi bấm "Xem bản đồ"; job-posting-form.js chỉ tải Google Maps khi đang mở -->
                             <details class="jpf-map-toggle" id="jpf-map-toggle">

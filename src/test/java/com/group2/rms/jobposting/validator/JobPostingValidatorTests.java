@@ -73,6 +73,27 @@ class JobPostingValidatorTests {
     class TextFields {
 
         @Test
+        void normalizeAndValidate_shouldClearRemoteLocation_evenWhenFormSendsOldAddress() {
+            JobPostingRequest form = validForm(JobPostingValidator.ACTION_PUBLISH);
+            form.setWorkModel("Remote");
+            form.setWorkLocation("Old office");
+
+            validator.normalizeAndValidate(form, true);
+
+            assertNull(form.getWorkLocation());
+        }
+
+        @Test
+        void normalizeAndValidate_shouldKeepHybridLocation() {
+            JobPostingRequest form = validForm(JobPostingValidator.ACTION_PUBLISH);
+            form.setWorkLocation("  Hà Nội  ");
+
+            validator.normalizeAndValidate(form, true);
+
+            assertEquals("Hà Nội", form.getWorkLocation());
+        }
+
+        @Test
         @DisplayName("Form hợp lệ -> Không lỗi; tiêu đề được trim, \\r\\n đổi thành \\n")
         void normalizeAndValidate_shouldCleanText_whenFormIsValid() {
             // Arrange

@@ -48,9 +48,8 @@ Thực hiện lần lượt các bước sau khi `git clone`:
 1. Mở file [`database/schema/db.sql`](database/schema/db.sql) bằng SSMS.
 2. Thực thi toàn bộ script để tạo database `RitirementManagement2`.
    > ⚠️ **Lưu ý:** Script này sẽ xóa và tạo mới database. Không chạy lại nếu DB đang có dữ liệu cần giữ.
-3. Nếu cần dữ liệu mẫu thử nghiệm, mở và chạy file [`database/seeds/seed_data.sql`](database/seeds/seed_data.sql).
-4. Chạy tiếp [`database/seeds/seed_extra_jobs_and_pipeline.sql`](database/seeds/seed_extra_jobs_and_pipeline.sql): thêm phòng ban, requisition đủ trạng thái, tin tuyển dụng đa dạng, đơn ứng tuyển trên tin mới và trỏ CV về file mẫu trong `static/samples/cv/`. Chạy lại nhiều lần vẫn an toàn.
-   > ⚠️ **Không chạy `build_seed.py` để sinh lại `seed_data.sql`:** từ commit `71149e1`, `seed_data.sql` có dữ liệu không còn nằm trong script; sinh lại sẽ mất dữ liệu test Offer.
+3. Nếu cần dữ liệu mẫu, chạy [`database/seeds/seed_data.sql`](database/seeds/seed_data.sql) ngay sau `db.sql` (DB rỗng). File này phủ mọi trạng thái của code, ngày tháng tính theo lúc chạy; tài khoản và ID test liệt kê ở đầu file (mật khẩu `12345678`).
+   > Muốn đổi dữ liệu mẫu: sửa `database/seeds/build_seed.py` rồi chạy `python database/seeds/build_seed.py`, không sửa tay file SQL.
 
 ### 2.3 Cấu hình Môi trường Local (`application-local.properties`)
 Dự án áp dụng cơ chế cấu hình tách biệt để **không bao giờ lộ mật khẩu cá nhân lên Git**:

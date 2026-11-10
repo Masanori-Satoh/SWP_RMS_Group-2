@@ -20,12 +20,13 @@
 > | # | File | Việc làm | Chạy lại |
 > |---|---|---|---|
 > | 1 | `database/schema/db.sql` | Xóa và tạo lại database + schema | Xóa toàn bộ dữ liệu |
-> | 2 | `database/seeds/seed_data.sql` | Dữ liệu mẫu nền | Không chạy lại (trùng khóa) |
-> | 3 | `database/seeds/seed_extra_jobs_and_pipeline.sql` | Phòng ban, tin tuyển dụng, hồ sơ bổ sung | An toàn (tự bỏ qua nếu đã chạy) |
-> | 4 | `database/seeds/seed_application_flow_fix.sql` | Đưa `Application.ApplicationStatus` về đúng luồng theo dữ liệu phỏng vấn và offer | An toàn (chỉ sửa hồ sơ còn lệch) |
-> | 5 | `database/seeds/seed_dashboard_demo.sql` | Dời ngày theo hôm nay để dashboard nội bộ đủ số: hồ sơ 8 tuần qua, 3 offer chờ Giám đốc duyệt, Hired trong tháng, tin đăng hôm nay | An toàn (bước nào đủ thì bỏ qua); chạy lại trước buổi demo |
+> | 2 | `database/seeds/seed_data.sql` | Toàn bộ dữ liệu mẫu: mọi trạng thái yêu cầu, tin, hồ sơ, phỏng vấn, offer, talent pool, thông báo | Chỉ chạy trên DB rỗng (script tự chặn nếu đã có dữ liệu) |
 >
-> Không chạy lại `build_seed.py`: script này không còn sinh đúng `seed_data.sql`.
+> `seed_data.sql` do `python database/seeds/build_seed.py` sinh ra; muốn đổi dữ liệu thì sửa script rồi chạy lại,
+> không sửa tay file SQL. Mọi mốc thời gian tính theo lúc chạy seed (dashboard, lịch phỏng vấn sắp tới, hạn phản
+> hồi offer luôn "mới"), nên trước buổi demo chỉ cần chạy lại bước 1 và 2. Cuối file có khối tự kiểm tra: báo lỗi
+> nếu thiếu bất kỳ trạng thái nào trong CHECK constraint. Đầu file SQL liệt kê tài khoản và ID dùng cho test case.
+> Chạy bằng sqlcmd thì thêm `-I` (bật QUOTED_IDENTIFIER cho filtered index): `sqlcmd -S localhost -E -I -f 65001 -i ...`.
 
 > **Dự án**: Hệ thống Quản lý Tuyển dụng (Recruitment Management System - RMS)  
 > **Nhóm thực hiện**: SWP391 - Group 2  

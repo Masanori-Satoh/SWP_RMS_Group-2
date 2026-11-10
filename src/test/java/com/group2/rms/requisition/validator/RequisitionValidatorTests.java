@@ -125,6 +125,33 @@ class RequisitionValidatorTests {
         var d = valid();
         d.setWorkModel("Remote");
         expectPass(d);
+        assertNull(d.getWorkLocation());
+    }
+
+    @Test
+    void validate_shouldPass_whenRemoteHasNoLocation() {
+        var d = valid();
+        d.setWorkModel("Remote");
+        d.setWorkLocation(null);
+        expectPass(d);
+    }
+
+    @Test
+    void validate_shouldClearStaleRemoteLocationInDraft() {
+        var d = valid();
+        d.setAction("draft");
+        d.setWorkModel("Remote");
+        d.setWorkLocation("Old office");
+        expectPass(d);
+        assertNull(d.getWorkLocation());
+    }
+
+    @Test
+    void validate_shouldRejectSubmitWithoutHybridLocation() {
+        var d = valid();
+        d.setWorkModel("Hybrid");
+        d.setWorkLocation(null);
+        assertTrue(expectFail(d).getErrors().containsKey("workLocation"));
     }
 
     // VAL-002 — Draft: chỉ bắt buộc các trường NOT NULL trong DB, còn lại được để

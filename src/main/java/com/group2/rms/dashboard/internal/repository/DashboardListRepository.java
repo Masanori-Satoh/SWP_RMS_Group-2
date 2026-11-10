@@ -180,6 +180,14 @@ public class DashboardListRepository {
 
     // ===== Director =====
 
+    /** Mọi yêu cầu đang chờ Giám đốc duyệt, cùng phạm vi với /requisitions?status=Pending_Director. */
+    public long countPendingRequisitions() {
+        return entityManager.createQuery(
+                        "select count(r) from JobRequisition r where r.approvalStatus = :pending", Long.class)
+                .setParameter("pending", RequisitionAccess.STATUS_PENDING_DIRECTOR)
+                .getSingleResult();
+    }
+
     /** Yêu cầu Giám đốc đang xem được quyền duyệt, loại yêu cầu do chính người đó tạo. */
     public List<PendingRequisitionRow> pendingRequisitions(int viewerId) {
         List<Object[]> rows = entityManager.createQuery("select r.requisitionId, r.requisitionCode, r.title, "

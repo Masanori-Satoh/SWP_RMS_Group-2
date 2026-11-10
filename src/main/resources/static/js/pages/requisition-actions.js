@@ -4,6 +4,33 @@
    ============================================================================= */
 document.addEventListener('DOMContentLoaded', () => {
 
+    // Báo ngay khi người dùng thử nhập vượt quá 120 ký tự ở ô tìm kiếm.
+    const requisitionSearch = document.getElementById('requisition-search');
+    const requisitionSearchError = document.getElementById('requisition-search-error');
+    if (requisitionSearch && requisitionSearchError) {
+        requisitionSearch.addEventListener('beforeinput', event => {
+            const insertsText = event.inputType?.startsWith('insert') && event.data;
+            const selectedLength = requisitionSearch.value.length - (requisitionSearch.selectionEnd - requisitionSearch.selectionStart);
+            if (insertsText && selectedLength + event.data.length > 120) {
+                requisitionSearchError.textContent = 'Từ khóa tìm kiếm không được vượt quá 120 ký tự.';
+                requisitionSearchError.style.display = '';
+            }
+        });
+        requisitionSearch.addEventListener('input', () => {
+            if (requisitionSearch.value.length <= 120) {
+                requisitionSearchError.style.display = 'none';
+            }
+        });
+        requisitionSearch.addEventListener('paste', event => {
+            const pastedText = event.clipboardData?.getData('text') || '';
+            const selectedLength = requisitionSearch.value.length - (requisitionSearch.selectionEnd - requisitionSearch.selectionStart);
+            if (selectedLength + pastedText.length > 120) {
+                requisitionSearchError.textContent = 'Từ khóa tìm kiếm không được vượt quá 120 ký tự.';
+                requisitionSearchError.style.display = '';
+            }
+        });
+    }
+
     /* -------------------------------------------------------------------------
      * 1. HỘP THOẠI XÁC NHẬN XÓA (DELETE CONFIRMATION DIALOG)
      * ------------------------------------------------------------------------- */
@@ -89,7 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
     /* -------------------------------------------------------------------------
      * 3. CHỐNG GỬI FORM LẶP LẠI (DOUBLE-SUBMIT PREVENTION)
      * ------------------------------------------------------------------------- */
-    document.querySelectorAll('#delete-form,#decision-form,.withdraw-form').forEach(target => target.addEventListener('submit', event => {
+    document.querySelectorAll('#delete-form,#decision-form').forEach(target => target.addEventListener('submit', event => {
         if (event.defaultPrevented) return;
         if (target.dataset.submitting === 'true') {
             event.preventDefault();

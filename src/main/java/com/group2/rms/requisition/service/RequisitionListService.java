@@ -11,6 +11,7 @@ import com.group2.rms.requisition.dto.RequisitionResponse;
 import com.group2.rms.requisition.dto.RequisitionSearchRequest;
 import com.group2.rms.requisition.entity.JobRequisition;
 import com.group2.rms.requisition.repository.JobRequisitionRepository;
+import com.group2.rms.requisition.validator.RequisitionValidator;
 import com.group2.rms.user.entity.Department;
 import com.group2.rms.user.entity.User;
 import com.group2.rms.user.repository.DepartmentRepository;
@@ -29,39 +30,46 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/*
- * SERVICE: màn danh sách yêu cầu theo 4 bước (ô lọc, làm sạch bộ lọc, truy vấn, chip); chỉ đọc.
- */
+
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class RequisitionListService {
 
-    /** Tất cả trạng thái duyệt có thể lọc ở màn danh sách. */
+
     private static final List<String> ALL_STATUSES = List.of(
             RequisitionAccess.STATUS_DRAFT,
             RequisitionAccess.STATUS_PENDING_DIRECTOR,
             RequisitionAccess.STATUS_APPROVED,
             RequisitionAccess.STATUS_REJECTED);
 
-    /** Trạng thái dùng cho ô "Người tạo" của Director (không lộ người chỉ có bản nháp). */
+
     private static final List<String> STATUSES_WITHOUT_DRAFT = List.of(
             RequisitionAccess.STATUS_PENDING_DIRECTOR,
             RequisitionAccess.STATUS_APPROVED,
             RequisitionAccess.STATUS_REJECTED);
 
-    /** Các lựa chọn của ô lọc "Tin tuyển dụng" (theo trạng thái tin mới nhất). */
+
     private static final List<String> POSTING_FILTER_VALUES = List.of(
             RequisitionLabels.POSTING_NONE,
             RequisitionLabels.POSTING_PUBLISHED,
             RequisitionLabels.POSTING_PAUSED,
             RequisitionLabels.POSTING_CLOSED);
+
+    private static final Map<String, String> PARAM_LABELS = Map.of(
+            "departmentId", "phòng ban",
+            "creatorId", "người tạo yêu cầu",
+            "createdFrom", "ngày tạo từ",
+            "createdTo", "ngày tạo đến",
+            "page", "số trang",
+            "size", "số dòng mỗi trang");
 
     private static final int DEFAULT_PAGE_SIZE = 10;
     private static final int MAX_PAGE_SIZE = 50;
@@ -73,22 +81,30 @@ public class RequisitionListService {
     private final RequisitionAccess access;
     private final RequisitionMapper mapper;
 
-    /**
-     * Màn danh sách theo 4 bước: ô lọc theo role → làm sạch bộ lọc → truy vấn →
-     * chip bộ lọc.
-     */
+
+    // Returns the filtered requisition list page.
     public RequisitionListResponse getListPage(RequisitionSearchRequest rawFilter) {
-        User currentUser = access.actor();
-        RequisitionFilterOptions options = buildFilterOptions(currentUser);
-        RequisitionSearchRequest filter = normalizeFilter(rawFilter, options);
-        Page<RequisitionResponse> page = search(filter, currentUser);
-        List<FilterChip> chips = describeActiveFilters(filter, options);
-        return new RequisitionListResponse(page, filter, options, chips);
+        return getListPage(rawFilter, List.of());
     }
 
-    /**
-     * Rule: phạm vi theo role, khớp requireView; mọi bộ lọc khác nối AND vào đây.
-     */
+    // unparsableParams: tham số URL sai kiểu (departmentId=abc, createdFrom=xyz) do controller gom từ BindingResult.
+    public RequisitionListResponse getListPage(RequisitionSearchRequest rawFilter, Collection<String> unparsableParams) {
+        User currentUser = access.actor();
+        RequisitionFilterOptions options = buildFilterOptions(currentUser);
+        List<String> errors = new ArrayList<>();
+        for (String param : unparsableParams) {
+            errors.add(ListFilters.invalidFilterMessage(PARAM_LABELS.getOrDefault(param, param)));
+        }
+        RequisitionSearchRequest filter = normalizeFilter(rawFilter, options, errors);
+        Page<RequisitionResponse> page = errors.isEmpty()
+                ? search(filter, currentUser, errors)
+                : Page.empty(PageRequest.of(filter.page(), filter.size()));
+        List<FilterChip> chips = describeActiveFilters(filter, options);
+        return new RequisitionListResponse(page, filter, options, chips, errors);
+    }
+
+
+    // Builds the visibility scope for the current user.
     private Specification<JobRequisition> scope(User currentUser) {
         String role = access.role(currentUser);
         if (RequisitionAccess.ROLE_HIRING_MANAGER.equals(role)) {
@@ -106,7 +122,6 @@ public class RequisitionListService {
             };
         }
         if (RequisitionAccess.ROLE_DIRECTOR.equals(role)) {
-            // Director không xem nháp của người khác, nhưng thấy nháp do chính mình tạo
             return (root, query, cb) -> cb.or(
                     cb.notEqual(root.get("approvalStatus"), RequisitionAccess.STATUS_DRAFT),
                     cb.equal(root.get("hiringManager").get("userId"), currentUser.getUserId()));
@@ -118,90 +133,103 @@ public class RequisitionListService {
                 "Vai trò không có quyền xem yêu cầu tuyển dụng.");
     }
 
-    /**
-     * Bước 1: mỗi role được thấy những ô lọc nào (đúng bảng đã chốt trong
-     * wireframe).
-     */
+
+    // Builds the filter options available to the current user.
     private RequisitionFilterOptions buildFilterOptions(User currentUser) {
         String role = access.role(currentUser);
-        List<FilterOption> sorts = sortOptions();
 
+        // Mỗi role chỉ 2 ô lọc trong popover (vừa 1 hàng): HM = tin + hình thức, Director = phòng ban + người tạo,
+        // HR = tin + phòng ban.
         if (RequisitionAccess.ROLE_HIRING_MANAGER.equals(role)) {
-            // HM không có ô phòng ban và ô "Người tạo" (danh sách người tạo sẽ lộ tên người
-            // ngoài phạm vi)
-            return new RequisitionFilterOptions(true, true, false, false, true,
-                    statusOptions(ALL_STATUSES), postingOptions(), List.of(), List.of(), sorts);
+            return new RequisitionFilterOptions(true, true, false, false, false, true,
+                    statusOptions(ALL_STATUSES), postingOptions(), List.of(), List.of(), employmentTypeOptions());
         }
         if (RequisitionAccess.ROLE_DIRECTOR.equals(role)) {
-            // Có "Bản nháp" để lọc nháp của chính mình; ô "Người tạo" vẫn bỏ người chỉ có nháp
-            return new RequisitionFilterOptions(true, false, true, true, false,
+            return new RequisitionFilterOptions(true, false, true, true, false, false,
                     statusOptions(ALL_STATUSES), List.of(), departmentOptions(),
-                    creatorOptions(STATUSES_WITHOUT_DRAFT), sorts);
+                    creatorOptions(STATUSES_WITHOUT_DRAFT), List.of());
         }
         if (RequisitionAccess.ROLE_HR.equals(role)) {
-            // HR chỉ thấy yêu cầu Đã duyệt nên lọc trạng thái là thừa; HR cần lọc theo tin
-            // tuyển dụng
-            List<String> approvedOnly = List.of(RequisitionAccess.STATUS_APPROVED);
-            return new RequisitionFilterOptions(false, true, true, true, false,
-                    List.of(), postingOptions(), departmentOptions(), creatorOptions(approvedOnly), sorts);
+            return new RequisitionFilterOptions(false, true, true, false, false, false,
+                    List.of(), postingOptions(), departmentOptions(), List.of(), List.of());
         }
         throw new org.springframework.security.access.AccessDeniedException(
                 "Vai trò không có quyền xem yêu cầu tuyển dụng.");
     }
 
-    /**
-     * Bước 2: giá trị trên URL mà role không được dùng hoặc không có trong lựa chọn
-     * thì bỏ qua.
-     */
-    private RequisitionSearchRequest normalizeFilter(RequisitionSearchRequest raw, RequisitionFilterOptions options) {
-        String keyword = ListFilters.cleanKeyword(raw.q());
 
-        // Trạng thái duyệt: không lọc sẵn cho role nào (Director vào trang cũng thấy
-        // tất cả)
+    // Validates and normalizes the requisition list filters.
+    private RequisitionSearchRequest normalizeFilter(RequisitionSearchRequest raw, RequisitionFilterOptions options,
+            List<String> errors) {
+        String keyword = ListFilters.cleanKeyword(raw.q());
+        if (raw.q() != null && raw.q().length() > 120) {
+            errors.add("Từ khóa tìm kiếm không được vượt quá 120 ký tự.");
+        }
         List<String> statuses = null;
-        if (options.showStatus()) {
+        if (ListFilters.hasInvalidChoice(raw.status(), options.showStatus(), options.statuses())) {
+            errors.add(ListFilters.invalidFilterMessage("trạng thái"));
+        } else if (options.showStatus()) {
             statuses = ListFilters.keepAllowedValues(raw.status(), options.statuses()).stream().limit(1).toList();
         }
-
-        // Các ô lọc một giá trị: chỉ giữ khi role có ô đó và giá trị nằm trong danh
-        // sách lựa chọn
         String posting = null;
-        if (options.showPosting() && ListFilters.isAllowedValue(raw.posting(), options.postings())) {
+        if (ListFilters.isInvalidChoice(raw.posting(), options.showPosting(), options.postings())) {
+            errors.add(ListFilters.invalidFilterMessage("tin tuyển dụng"));
+        } else if (raw.posting() != null && !raw.posting().isBlank()) {
             posting = raw.posting();
         }
         Integer departmentId = null;
-        if (options.showDepartment() && ListFilters.isAllowedValue(raw.departmentId(), options.departments())) {
+        if (ListFilters.isInvalidChoice(raw.departmentId(), options.showDepartment(), options.departments())) {
+            errors.add(ListFilters.invalidFilterMessage("phòng ban"));
+        } else {
             departmentId = raw.departmentId();
         }
         Integer creatorId = null;
-        if (options.showCreator() && ListFilters.isAllowedValue(raw.creatorId(), options.creators())) {
+        if (ListFilters.isInvalidChoice(raw.creatorId(), options.showCreator(), options.creators())) {
+            errors.add(ListFilters.invalidFilterMessage("người tạo yêu cầu"));
+        } else {
             creatorId = raw.creatorId();
         }
-        LocalDate createdFrom = null;
-        LocalDate createdTo = null;
-        if (options.showCreatedDate()) {
-            createdFrom = raw.createdFrom();
-            createdTo = raw.createdTo();
+        String employmentType = null;
+        if (ListFilters.isInvalidChoice(raw.employmentType(), options.showEmploymentType(), options.employmentTypes())) {
+            errors.add(ListFilters.invalidFilterMessage("hình thức"));
+        } else if (raw.employmentType() != null && !raw.employmentType().isBlank()) {
+            employmentType = raw.employmentType();
         }
-
-        // Sắp xếp và phân trang
+        LocalDate createdFrom = raw.createdFrom();
+        LocalDate createdTo = raw.createdTo();
+        if (!options.showCreatedDate() && (createdFrom != null || createdTo != null)) {
+            errors.add(ListFilters.invalidFilterMessage("ngày tạo"));
+            createdFrom = null;
+            createdTo = null;
+        } else if (createdFrom != null && createdTo != null && createdFrom.isAfter(createdTo)) {
+            errors.add("Ngày tạo từ không được sau ngày tạo đến.");
+        }
         String sort = RequisitionSort.fromParam(raw.sort()).param();
+        if (raw.sort() != null && !raw.sort().isBlank() && !sort.equalsIgnoreCase(raw.sort())) {
+            errors.add("Giá trị sắp xếp không hợp lệ. Vui lòng chọn tùy chọn sắp xếp hợp lệ.");
+        }
         int page = 0;
-        if (raw.page() != null && raw.page() > 0) {
+        if (raw.page() != null && raw.page() < 0) {
+            errors.add("Số trang phải lớn hơn hoặc bằng 1.");
+        } else if (raw.page() != null) {
             page = raw.page();
         }
         int size = DEFAULT_PAGE_SIZE;
-        if (raw.size() != null) {
-            size = Math.max(1, Math.min(raw.size(), MAX_PAGE_SIZE));
+        if (raw.size() != null && raw.size() < 1) {
+            errors.add("Số dòng mỗi trang phải lớn hơn hoặc bằng 1.");
+        } else if (raw.size() != null && raw.size() > MAX_PAGE_SIZE) {
+            errors.add("Số dòng mỗi trang không được vượt quá " + MAX_PAGE_SIZE + ".");
+        } else if (raw.size() != null) {
+            size = raw.size();
         }
 
         return new RequisitionSearchRequest(keyword, statuses, posting, departmentId, creatorId,
-                createdFrom, createdTo, sort, page, size);
+                createdFrom, createdTo, sort, page, size, employmentType);
     }
 
-    /** Bước 3: ghép điều kiện WHERE rồi truy vấn một trang. */
-    private Page<RequisitionResponse> search(RequisitionSearchRequest filter, User currentUser) {
-        // Luôn bắt đầu từ phạm vi theo role, sau đó nối thêm từng bộ lọc
+
+    // Searches requisitions using the normalized filters.
+    private Page<RequisitionResponse> search(RequisitionSearchRequest filter, User currentUser, List<String> errors) {
         Specification<JobRequisition> where = scope(currentUser);
 
         if (!filter.q().isEmpty()) {
@@ -221,6 +249,9 @@ public class RequisitionListService {
         if (filter.creatorId() != null) {
             where = where.and(RequisitionSpecifications.creatorIs(filter.creatorId()));
         }
+        if (filter.employmentType() != null) {
+            where = where.and(RequisitionSpecifications.employmentTypeIs(filter.employmentType()));
+        }
         if (filter.createdFrom() != null) {
             where = where.and(RequisitionSpecifications.createdOnOrAfter(filter.createdFrom()));
         }
@@ -228,17 +259,18 @@ public class RequisitionListService {
             where = where.and(RequisitionSpecifications.createdOnOrBefore(filter.createdTo()));
         }
 
-        Sort sort = RequisitionSort.fromParam(filter.sort()).toSort();
-        Page<JobRequisition> result = requisitions.findAll(where, PageRequest.of(filter.page(), filter.size(), sort));
-
-        // Rule: gõ số trang vượt quá tổng số trang thì tự lùi về trang cuối thay vì
-        // hiện bảng trống
-        if (result.getTotalPages() > 0 && result.getNumber() >= result.getTotalPages()) {
-            result = requisitions.findAll(where, PageRequest.of(result.getTotalPages() - 1, filter.size(), sort));
+        RequisitionSort sortOption = RequisitionSort.fromParam(filter.sort());
+        Sort sort = sortOption.toSort();
+        if (sortOption == RequisitionSort.NEWEST) {
+            // CASE ordering can't be expressed with Sort; the spec sets ORDER BY, so pass unsorted.
+            where = where.and(RequisitionSpecifications.pendingFirstThenNewest());
+            sort = Sort.unsorted();
         }
-
-        // Tránh N+1: tra tin mới nhất và "đã có đợt sau" cho CẢ TRANG bằng 2 câu, thay
-        // vì vài câu cho mỗi dòng
+        Page<JobRequisition> result = requisitions.findAll(where, PageRequest.of(filter.page(), filter.size(), sort));
+        if (filter.page() > 0 && filter.page() >= result.getTotalPages()) {
+            errors.add("Trang bạn yêu cầu không tồn tại.");
+            return Page.empty(result.getPageable());
+        }
         List<Integer> ids = new ArrayList<>();
         for (JobRequisition jobRequisition : result.getContent()) {
             ids.add(jobRequisition.getRequisitionId());
@@ -251,10 +283,8 @@ public class RequisitionListService {
                 idsWithLaterRounds.contains(jobRequisition.getRequisitionId())));
     }
 
-    /**
-     * RequisitionId → tin tuyển dụng mới nhất của yêu cầu đó (yêu cầu chưa có tin
-     * thì không có trong map).
-     */
+
+    // Returns the latest posting for each requisition.
     private Map<Integer, JobPosting> latestPostingsOf(List<Integer> requisitionIds) {
         Map<Integer, JobPosting> latestByRequisition = new HashMap<>();
         if (requisitionIds.isEmpty()) {
@@ -266,7 +296,8 @@ public class RequisitionListService {
         return latestByRequisition;
     }
 
-    /** Các id (trong trang hiện tại) đã có đợt tuyển sau sao chép từ nó. */
+
+    // Returns requisition IDs that have later rounds.
     private Set<Integer> idsWithLaterRounds(List<Integer> requisitionIds) {
         if (requisitionIds.isEmpty()) {
             return new HashSet<>();
@@ -274,7 +305,8 @@ public class RequisitionListService {
         return new HashSet<>(requisitions.findIdsWithLaterRounds(requisitionIds));
     }
 
-    /** Bước 4: mô tả các bộ lọc đang bật bằng chữ, để hiện thành chip có nút ✕. */
+
+    // Builds labels for the active filters.
     private List<FilterChip> describeActiveFilters(RequisitionSearchRequest filter, RequisitionFilterOptions options) {
         List<FilterChip> chips = new ArrayList<>();
 
@@ -299,6 +331,11 @@ public class RequisitionListService {
                     "Người tạo yêu cầu: " + ListFilters.labelOf(filter.creatorId(), options.creators()),
                     List.of("creatorId")));
         }
+        if (filter.employmentType() != null) {
+            chips.add(new FilterChip(
+                    "Hình thức: " + RequisitionLabels.employmentType(filter.employmentType()),
+                    List.of("employmentType")));
+        }
         if (filter.createdFrom() != null || filter.createdTo() != null) {
             String from = "…";
             if (filter.createdFrom() != null) {
@@ -317,8 +354,7 @@ public class RequisitionListService {
         return chips;
     }
 
-    // ----- Các hàm nhỏ tạo danh sách lựa chọn cho ô lọc -----
-
+    // Builds the available status options.
     private List<FilterOption> statusOptions(List<String> statuses) {
         List<FilterOption> options = new ArrayList<>();
         for (String status : statuses) {
@@ -327,6 +363,7 @@ public class RequisitionListService {
         return options;
     }
 
+    // Builds the available posting options.
     private List<FilterOption> postingOptions() {
         List<FilterOption> options = new ArrayList<>();
         for (String posting : POSTING_FILTER_VALUES) {
@@ -335,6 +372,7 @@ public class RequisitionListService {
         return options;
     }
 
+    // Builds the available department options.
     private List<FilterOption> departmentOptions() {
         List<FilterOption> options = new ArrayList<>();
         for (Department department : departments.findAll(Sort.by("departmentName"))) {
@@ -343,10 +381,8 @@ public class RequisitionListService {
         return options;
     }
 
-    /**
-     * Chỉ liệt kê HM có yêu cầu ở các trạng thái người xem được thấy, không lộ tên
-     * người ngoài phạm vi.
-     */
+
+    // Builds the available creator options.
     private List<FilterOption> creatorOptions(List<String> visibleStatuses) {
         List<FilterOption> options = new ArrayList<>();
         for (User creator : requisitions.findCreatorsWithStatusIn(visibleStatuses)) {
@@ -355,10 +391,11 @@ public class RequisitionListService {
         return options;
     }
 
-    private List<FilterOption> sortOptions() {
+    // Builds the available employment type options.
+    private List<FilterOption> employmentTypeOptions() {
         List<FilterOption> options = new ArrayList<>();
-        for (RequisitionSort sort : RequisitionSort.values()) {
-            options.add(new FilterOption(sort.param(), sort.label()));
+        for (String type : RequisitionValidator.EMPLOYMENT_TYPES) {
+            options.add(new FilterOption(type, RequisitionLabels.employmentType(type)));
         }
         return options;
     }

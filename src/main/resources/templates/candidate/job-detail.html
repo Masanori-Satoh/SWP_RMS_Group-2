@@ -40,7 +40,7 @@
                     <div class="job-header-badges">
                         <span class="badge badge--neutral" th:text="${job.departmentName}">Phòng Engineering</span>
                         <span class="badge badge--neutral" th:text="${job.employmentType}">Full-time</span>
-                        <span class="badge badge--neutral" th:text="${job.workLocation}">Hà Nội</span>
+                        <span class="badge badge--neutral" th:text="${job.workModel == 'Từ xa' ? 'Từ xa' : job.workLocation}">Hà Nội</span>
                         <span th:if="${job.isAcceptingApplications}" class="badge badge--success">Đang nhận hồ sơ</span>
                         <span th:unless="${job.isAcceptingApplications}" class="badge badge--danger">Đã đóng tuyển dụng</span>
                     </div>
@@ -104,8 +104,16 @@
                     <h2 class="summary-card__title">Tóm tắt vị trí</h2>
                     <ul class="summary-list">
                         <li>
-                            <span class="summary-label">Địa điểm</span>
-                            <span class="summary-value" th:text="${job.workLocation}">Hà Nội</span>
+                            <span class="summary-label" th:text="${job.workModel == 'Từ xa' ? 'Mô hình làm việc' : 'Địa điểm'}">Địa điểm</span>
+                            <span class="summary-value" th:text="${job.workModel == 'Từ xa' ? 'Từ xa' : job.workLocation}">Hà Nội</span>
+                        </li>
+                        <li th:unless="${#strings.isEmpty(job.workingHours)}">
+                            <span class="summary-label">Thời gian làm việc</span>
+                            <span class="summary-value" th:text="${job.workingHours}">Thứ 2 - Thứ 6 (09:00 - 18:00)</span>
+                        </li>
+                        <li th:unless="${#strings.isEmpty(job.probationPeriod)}">
+                            <span class="summary-label">Thời gian thử việc</span>
+                            <span class="summary-value" th:text="${job.probationPeriod}">2 tháng</span>
                         </li>
                         <li th:unless="${#strings.isEmpty(job.workingHours)}">
                             <span class="summary-label">Thời gian làm việc</span>

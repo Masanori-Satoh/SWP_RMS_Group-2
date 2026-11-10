@@ -145,7 +145,7 @@ public class JobPostingAccess {
 
     public void requireManage(User user) {
         if (!canManage(user)) {
-            throw new AccessDeniedException("Chỉ HR hoặc Quản trị viên hệ thống mới có quyền quản lý tin tuyển dụng.");
+            throw new AccessDeniedException("Chỉ HR mới có quyền quản lý tin tuyển dụng.");
         }
     }
 

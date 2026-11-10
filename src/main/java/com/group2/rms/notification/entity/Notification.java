@@ -42,9 +42,7 @@ public class Notification {
     @JoinColumn(name = "RecipientId", nullable = false, referencedColumnName = "UserId")
     private User recipient;
 
-    /**
-     * Người gây ra sự kiện; NULL = hệ thống tự sinh.
-     */
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ActorId", referencedColumnName = "UserId")
     private User actor;
@@ -80,7 +78,7 @@ public class Notification {
     @Column(name = "CreatedAt", nullable = false)
     private LocalDateTime createdAt;
 
-    /** Đánh dấu đã đọc, giữ nguyên thời điểm đọc đầu tiên. */
+
     public void markRead(LocalDateTime now) {
         if (!Boolean.TRUE.equals(isRead)) {
             isRead = true;

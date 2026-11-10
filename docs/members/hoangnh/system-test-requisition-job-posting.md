@@ -39,16 +39,15 @@
 
 **Actual:** …  **Status:** NOT RUN  **Evidence:** …
 
-## ST-RJ-03 — Rút yêu cầu đang chờ, sửa bản nháp rồi xóa
+## ST-RJ-03 — Sửa và xóa bản nháp
 
-**Vai trò:** HM-A, D. **Tiền điều kiện:** yêu cầu `Pending_Director` mới của HM-A.
+**Vai trò:** HM-A. **Tiền điều kiện:** yêu cầu `Draft` mới của HM-A.
 
 | Bước | Thao tác | Kết quả mong đợi |
 |---|---|---|
-| 1 | HM-A bấm **Rút lại** tại trang chi tiết. | Yêu cầu trở về `Draft`, có lịch sử rút; HM-A có quyền sửa. |
-| 2 | D thử mở URL quyết định cũ hoặc gửi lại quyết định cho ID này. | Không có quyết định mới; trạng thái vẫn `Draft`. |
-| 3 | HM-A sửa một trường, lưu nháp, mở lại chi tiết. | Giá trị mới được giữ; trạng thái vẫn `Draft`. |
-| 4 | HM-A xóa bản nháp. | Không còn trong danh sách; mở lại URL cũ không thấy yêu cầu. |
+| 1 | HM-A mở trang chi tiết bản nháp. | Có quyền sửa và xóa. |
+| 2 | HM-A sửa một trường, lưu nháp, mở lại chi tiết. | Giá trị mới được giữ; trạng thái vẫn `Draft`. |
+| 3 | HM-A xóa bản nháp. | Không còn trong danh sách; mở lại URL cũ không thấy yêu cầu. |
 
 **Actual:** …  **Status:** NOT RUN  **Evidence:** …
 

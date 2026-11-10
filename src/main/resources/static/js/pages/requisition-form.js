@@ -1,15 +1,3 @@
-/* =============================================================================
-   REQUISITION-FORM.JS — Form Tạo / Sửa / Sao chép yêu cầu tuyển dụng (requisitions/form.html)
-
-   JS chỉ giúp người dùng thấy lỗi SỚM. Server (RequisitionValidator) luôn kiểm tra lại,
-   nên mọi quy tắc ở đây phải GIỐNG quy tắc ở server, không được thêm quy tắc riêng.
-
-   Các phần:
-     1. Quy tắc kiểm tra từng trường (FIELD_RULES)
-     2. Ô tăng/giảm số (stepper), bộ đếm ký tự
-     3. Cột "Sẵn sàng gửi duyệt" (checklist)
-     4. Lưu nháp / Gửi duyệt + bước xác nhận
-   ============================================================================= */
 (() => {
     'use strict';
 
@@ -18,14 +6,6 @@
         return;
     }
 
-    /* -------------------------------------------------------------------------
-     * 1. QUY TẮC KIỂM TRA TỪNG TRƯỜNG
-     *    requiredForDraft: bắt buộc cả khi lưu nháp (cột NOT NULL trong DB)
-     *    requiredForSubmit: bắt buộc khi gửi duyệt
-     *    errorOf(value): kiểm tra định dạng, trả về câu lỗi hoặc '' nếu hợp lệ
-     * ------------------------------------------------------------------------- */
-    // Ngày hôm nay dạng yyyy-MM-dd theo giờ máy người dùng.
-    // Không dùng toISOString(): hàm đó trả ngày theo giờ UTC, từ 0h đến 7h sáng ở Việt Nam sẽ ra ngày hôm qua.
     const today = () => {
         const now = new Date();
         const pad = number => String(number).padStart(2, '0');
@@ -36,7 +16,6 @@
         { id: 'title', label: 'Tên vị trí', section: 'rqf-position', requiredForDraft: true },
         {
             id: 'numberOfPositions', label: 'Số lượng', section: 'rqf-position', requiredForDraft: true,
-            // Giới hạn đọc từ min/max của ô nhập (server truyền xuống từ RequisitionValidator.POSITIONS_MIN/MAX)
             errorOf: value => {
                 const input = document.getElementById('numberOfPositions');
                 const min = Number(input.min) || 1;
@@ -54,13 +33,26 @@
         { id: 'requirementDetails', label: 'Yêu cầu ứng viên', section: 'rqf-content', requiredForSubmit: true }
     ];
 
-    // Ô chọn phòng ban chỉ có trên form của Giám đốc (vai trò khác là ô ẩn).
-    // Khớp RequisitionServiceImpl.requireActiveDepartment: bắt buộc cả khi lưu nháp
     if (document.getElementById('departmentId')?.tagName === 'SELECT') {
         FIELD_RULES.splice(1, 0, { id: 'departmentId', label: 'Phòng ban', section: 'rqf-position', requiredForDraft: true });
     }
 
-    /** Lấy giá trị một trường; với nhóm radio thì lấy ô đang được chọn. */
+    const workLocation = document.getElementById('workLocation');
+    function isRemote() {
+        return form.querySelector('input[name="workModel"]:checked')?.value === 'Remote';
+    }
+
+    function syncWorkLocation() {
+        const remote = isRemote();
+        workLocation.disabled = remote;
+        if (remote) {
+            workLocation.value = '';
+            showError('workLocation', '');
+        }
+        document.getElementById('workLocation-required').hidden = remote;
+        refreshChecklist();
+    }
+
     function readFieldValue(rule) {
         if (rule.radio) {
             const checked = form.querySelector(`input[name="${rule.id}"]:checked`);
@@ -70,7 +62,6 @@
         return input ? input.value.trim() : '';
     }
 
-    /** Hiện hoặc xóa lỗi của một trường (ô nhập + dòng chữ đỏ có id "<trường>-error"). */
     function showError(fieldId, message) {
         const input = document.getElementById(fieldId) || document.getElementById(fieldId + '-group');
         const errorEl = document.getElementById(fieldId + '-error');
@@ -83,8 +74,11 @@
         }
     }
 
-    /** Kiểm tra một trường theo hành động (draft / submit). Trả về true nếu hợp lệ. */
     function validateField(rule, action) {
+        if (rule.id === 'workLocation' && isRemote()) {
+            showError(rule.id, '');
+            return true;
+        }
         const value = readFieldValue(rule);
         const required = rule.requiredForDraft || (action === 'submit' && rule.requiredForSubmit);
         let message = '';
@@ -102,7 +96,6 @@
                 message = 'Vui lòng nhập trường này.';
             }
         } else if (value) {
-            // errorOf: luôn kiểm tra; submitErrorOf: chỉ kiểm tra khi gửi duyệt
             message = (rule.errorOf ? rule.errorOf(value) : '')
                 || (action === 'submit' && rule.submitErrorOf ? rule.submitErrorOf(value) : '');
         }
@@ -110,7 +103,6 @@
         return !message;
     }
 
-    /** Định dạng số tiền kiểu 20.000.000 khi nhập (cứ 3 số lại có dấu chấm ngăn cách), giữ đúng vị trí con trỏ */
     function formatCurrencyInput(input) {
         if (!input) return;
         const raw = input.value;
@@ -145,14 +137,12 @@
 
     function parseSalary(text) {
         if (!text) return null;
-        // Bỏ dấu chấm ngăn cách hàng nghìn: "20.000.000" → 20000000
         const cleaned = String(text).replace(/\./g, '').trim();
         if (!cleaned) return null;
         const num = Number(cleaned);
         return isNaN(num) ? null : num;
     }
 
-    /** Quy tắc lương (tối thiểu ≤ tối đa). Khớp RequisitionValidator; thử việc là chữ tự do nên chỉ giới hạn bằng maxlength. */
     function validateNumbers() {
         let valid = true;
 
@@ -164,11 +154,10 @@
         let minSalaryMessage = '';
         let maxSalaryMessage = '';
 
-        // Khớp RequisitionValidator.SALARY_MAX
         const SALARY_MAX = 1000000000;
         const salaryMessage = value => value === null ? ''
             : value <= 0 ? 'Mức lương phải lớn hơn 0.'
-            : value > SALARY_MAX ? 'Mức lương không được vượt quá 1.000.000.000 VND/tháng.' : '';
+                : value > SALARY_MAX ? 'Mức lương không được vượt quá 1.000.000.000 VND/tháng.' : '';
         minSalaryMessage = salaryMessage(minVal);
         maxSalaryMessage = salaryMessage(maxVal);
 
@@ -185,16 +174,15 @@
         return valid && salariesOk;
     }
 
-    // Kiểm tra lại ngay khi người dùng sửa một ô đang báo lỗi.
-    // Rời ô (blur) thì kiểm tra theo luật gửi duyệt, để người dùng biết sớm ô nào còn thiếu
-    // (lưu nháp vẫn được, vì nút Lưu bản nháp kiểm tra lại toàn bộ theo luật nháp).
     FIELD_RULES.forEach(rule => {
         const target = rule.radio ? document.getElementById(rule.id + '-group') : document.getElementById(rule.id);
         target?.addEventListener('change', () => validateField(rule, 'draft'));
         target?.addEventListener('blur', () => validateField(rule, 'submit'), true);
     });
+    form.querySelectorAll('input[name="workModel"]').forEach(input => {
+        input.addEventListener('change', syncWorkLocation);
+    });
 
-    // Xử lý ô lương: định dạng hàng nghìn kiểu 20.000.000 khi gõ và kiểm tra > 0, ≤ 1 tỷ, tối đa ≥ tối thiểu
     ['minSalary', 'maxSalary'].forEach(id => {
         const input = document.getElementById(id);
         if (input) {
@@ -209,16 +197,12 @@
         }
     });
 
-    /* -------------------------------------------------------------------------
-     * 2. Ô TĂNG/GIẢM SỐ VÀ BỘ ĐẾM KÝ TỰ
-     * ------------------------------------------------------------------------- */
     form.querySelectorAll('[data-step]').forEach(button => button.addEventListener('click', () => {
         const input = document.getElementById(button.dataset.stepTarget);
         if (!input) return;
         const min = input.min === '' ? 1 : Number(input.min);
         const max = input.max === '' ? Infinity : Number(input.max);
         if (input.value === '' && input.dataset.stepStart) {
-            // Ô đang trống (ví dụ chưa nhập thử việc): bấm nút thì điền giá trị khởi đầu gợi ý
             input.value = input.dataset.stepStart;
         } else {
             const current = input.value === '' ? min - Number(button.dataset.step) : Number(input.value);
@@ -227,7 +211,6 @@
         input.dispatchEvent(new Event('input', { bubbles: true }));
     }));
 
-    // Báo lỗi "Nội dung quá N ký tự" do js/text-limit.js lo; ở đây chỉ cập nhật bộ đếm
     form.querySelectorAll('textarea[maxlength]').forEach(textarea => {
         const counter = document.getElementById(textarea.id + '-count');
         if (!counter) return;
@@ -242,10 +225,6 @@
         updateCounter();
     });
 
-    /* -------------------------------------------------------------------------
-     * 3. CỘT "SẴN SÀNG GỬI DUYỆT"
-     *    Mỗi mục bắt buộc khi gửi duyệt là một dòng ✓ / chưa xong, bấm vào thì nhảy tới trường đó.
-     * ------------------------------------------------------------------------- */
     function refreshChecklist() {
         const isFieldDone = rule => {
             const value = readFieldValue(rule);
@@ -253,7 +232,8 @@
             if (rule.errorOf) return !rule.errorOf(value);
             return true;
         };
-        const items = FIELD_RULES.map(rule => ({ label: rule.label, target: rule.radio ? rule.id + '-group' : rule.id, done: isFieldDone(rule) }));
+        const items = FIELD_RULES.filter(rule => rule.id !== 'workLocation' || !isRemote())
+            .map(rule => ({ label: rule.label, target: rule.radio ? rule.id + '-group' : rule.id, done: isFieldDone(rule) }));
 
         const doneCount = items.filter(item => item.done).length;
         document.getElementById('rqf-progress').textContent = `${doneCount}/${items.length} mục bắt buộc đã xong`;
@@ -264,8 +244,6 @@
             li.className = item.done ? 'is-done' : '';
             const link = document.createElement('a');
             link.href = '#' + item.target;
-            // Vòng tròn trạng thái: dấu tick vẽ bằng SVG (viewBox 16x16) nên luôn nằm chính giữa,
-            // không lệch như ký tự "✓" (mỗi font đặt ký tự cao thấp khác nhau)
             const dot = document.createElement('span');
             dot.className = 'rqf-dot';
             dot.setAttribute('aria-hidden', 'true');
@@ -279,10 +257,6 @@
     form.addEventListener('input', refreshChecklist);
     form.addEventListener('change', refreshChecklist);
 
-    /* -------------------------------------------------------------------------
-     * 4. LƯU NHÁP / GỬI DUYỆT
-     * ------------------------------------------------------------------------- */
-    /** Kiểm tra toàn bộ form; trả về true nếu được phép gửi lên server. */
     function validateAll(action) {
         const fieldsOk = FIELD_RULES.map(rule => validateField(rule, action)).every(Boolean);
         const numbersOk = validateNumbers();
@@ -298,7 +272,6 @@
     const buttons = document.getElementById('rqf-buttons');
     const confirmBox = document.getElementById('rqf-confirm');
 
-    // Bước 1: bấm "Gửi Giám đốc duyệt" → kiểm tra đủ điều kiện → hiện hộp xác nhận
     document.getElementById('rqf-open-confirm').addEventListener('click', () => {
         if (validateAll('submit')) {
             buttons.hidden = true;
@@ -306,19 +279,20 @@
             confirmBox.querySelector('button[type=submit]').focus();
         }
     });
+
     document.getElementById('rqf-cancel-confirm').addEventListener('click', () => {
         confirmBox.hidden = true;
         buttons.hidden = false;
     });
 
-    // Bước 2: form thật sự được gửi (Lưu nháp hoặc nút "Gửi duyệt" trong hộp xác nhận)
+
     let submitting = false;
     form.addEventListener('submit', event => {
-        // Chặn bấm 2 lần khi form đang gửi (tránh tạo 2 yêu cầu giống nhau)
         if (submitting) {
             event.preventDefault();
             return;
         }
+
         const action = event.submitter?.value === 'submit' ? 'submit' : 'draft';
         if (!validateAll(action)) {
             event.preventDefault();
@@ -327,17 +301,31 @@
             return;
         }
         submitting = true;
-        // Khóa nút sau khi trình duyệt đã lấy giá trị nút được bấm (action=draft/submit),
-        // nếu khóa ngay thì nút bị khóa không được gửi kèm form
         setTimeout(() => form.querySelectorAll('button[type=submit]').forEach(button => { button.disabled = true; }), 0);
     });
-    // Quay lại trang bằng nút Back: trình duyệt có thể khôi phục trang cũ, mở khóa lại các nút
     window.addEventListener('pageshow', () => {
         submitting = false;
         form.querySelectorAll('button[type=submit]').forEach(button => { button.disabled = false; });
     });
 
-    // Khởi tạo trạng thái ban đầu.
-    refreshChecklist();
+    // Thời gian thử việc: chọn mẫu thì ghi thẳng vào ô probationPeriod (ẩn); "Khác" thì hiện ô để nhập tay.
+    const probationChoice = document.getElementById('probationChoice');
+    const probationInput = document.getElementById('probationPeriod');
+    if (probationChoice && probationInput) {
+        const syncProbation = userChanged => {
+            const isOther = probationChoice.value === '__other__';
+            probationInput.hidden = !isOther;
+            if (!isOther) {
+                probationInput.value = probationChoice.value;
+            } else if (userChanged) {
+                probationInput.value = '';
+                probationInput.focus();
+            }
+        };
+        probationChoice.addEventListener('change', () => syncProbation(true));
+        syncProbation(false);
+    }
+
+    syncWorkLocation();
     document.getElementById('validation-summary')?.focus();
 })();

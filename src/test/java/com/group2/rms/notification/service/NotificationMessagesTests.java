@@ -47,6 +47,19 @@ class NotificationMessagesTests {
     }
 
     @Test
+    @DisplayName("TC-NOTIF-DECIDE-02: lý do đã có dấu chấm -> chỉ còn một dấu chấm; lý do toàn dấu câu -> câu mặc định")
+    void requisitionRejectedContent_shouldNotDoublePunctuation() {
+        String content = NotificationMessages.requisitionRejectedContent(longTitleRequisition(), "Giám đốc",
+                DECIDED_AT, "Thiếu ngân sách.");
+        assertTrue(content.contains("Lý do: Thiếu ngân sách.\n"), content);
+        assertTrue(!content.contains(".."), content);
+
+        String onlyDots = NotificationMessages.requisitionRejectedContent(longTitleRequisition(), "Giám đốc",
+                DECIDED_AT, "...");
+        assertTrue(onlyDots.contains("Lý do: Không có lý do cụ thể.\n"), onlyDots);
+    }
+
+    @Test
     @DisplayName("Phê duyệt với ý kiến 1000 ký tự -> Nội dung thông báo vẫn <= 1000 ký tự")
     void requisitionApprovedContent_shouldFitContentColumn_whenCommentIsAtLimit() {
         String content = NotificationMessages.requisitionApprovedContent(longTitleRequisition(), "Giám đốc",

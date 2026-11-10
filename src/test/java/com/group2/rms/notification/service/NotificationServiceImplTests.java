@@ -827,23 +827,12 @@ class NotificationServiceImplTests {
         verify(notificationRepository, times(2)).existsByRecipient_UserIdAndEventId(15, "OFFER_RESP_ACC_3");
     }
 
-    @Test
-    @DisplayName("markRequisitionPendingRead: rút lại yêu cầu -> Đánh dấu đã đọc thông báo chờ duyệt của yêu cầu đó")
-    void markRequisitionPendingRead_shouldMarkPendingDirectorNotifications() {
-        // Act
-        notificationService.markRequisitionPendingRead(101);
-
-        // Assert
-        verify(notificationRepository).markReadByEvent("REQUISITION_PENDING_DIRECTOR", "101",
-                LocalDateTime.of(2026, 10, 30, 8, 0));
-    }
-
     // =========================================================================
-    // N1–N7: rút yêu cầu, tạm dừng / đóng tin, duyệt hồ sơ, lịch và kết quả phỏng vấn
+    // N2–N7: tạm dừng / đóng tin, duyệt hồ sơ, lịch và kết quả phỏng vấn
     // =========================================================================
 
     @Nested
-    @DisplayName("Thông báo luồng bổ sung N1–N7")
+    @DisplayName("Thông báo luồng bổ sung N2–N7")
     class WorkflowNotifications {
 
         private final User hr = User.builder().userId(30).fullName("Lan HR").build();
@@ -876,37 +865,6 @@ class NotificationServiceImplTests {
             ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
             verify(notificationRepository, times(count)).save(captor.capture());
             return captor.getAllValues();
-        }
-
-        @Test
-        @DisplayName("notifyRequisitionWithdrawn: HM rút yêu cầu -> Mọi Giám đốc nhận thông báo, link về yêu cầu")
-        void notifyRequisitionWithdrawn_shouldNotifyAllDirectors_whenManagerWithdraws() {
-            // Arrange
-            User otherDirector = User.builder().userId(21).fullName("Director C").build();
-            when(userRepository.findAllActiveDirectors()).thenReturn(List.of(director, otherDirector));
-
-            // Act
-            notificationService.notifyRequisitionWithdrawn(requisition, manager);
-
-            // Assert
-            List<Notification> saved = savedNotifications(2);
-            assertEquals(List.of(director, otherDirector), saved.stream().map(Notification::getRecipient).toList());
-            assertEquals("REQUISITION_WITHDRAWN", saved.get(0).getEventType());
-            assertEquals("/requisitions/101", saved.get(0).getLinkUrl());
-            assertTrue(saved.get(0).getContent().contains("Hiring Manager A"));
-        }
-
-        @Test
-        @DisplayName("notifyRequisitionWithdrawn: Giám đốc tự rút yêu cầu của mình -> Không báo cho chính mình")
-        void notifyRequisitionWithdrawn_shouldSkipActor_whenDirectorWithdraws() {
-            // Arrange
-            when(userRepository.findAllActiveDirectors()).thenReturn(List.of(director));
-
-            // Act
-            notificationService.notifyRequisitionWithdrawn(requisition, director);
-
-            // Assert
-            verify(notificationRepository, never()).save(any());
         }
 
         @Test
