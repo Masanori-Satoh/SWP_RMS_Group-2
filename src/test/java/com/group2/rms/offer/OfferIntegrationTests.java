@@ -378,6 +378,21 @@ class OfferIntegrationTests {
                 .andExpect(content().bytes(mockBytes));
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {"ALL", "FILTERED", "SELECTED"})
+    @WithMockUser(username = "director_user", roles = {"DIRECTOR"})
+    void directorCannotExportOffers(String scope) throws Exception {
+        OfferExportRequest request = new OfferExportRequest(
+                OfferExportScope.valueOf(scope), List.of(1),
+                new OfferExportFilterRequest("", "ALL", "DEFAULT"), List.of("offerId"));
+
+        mvc.perform(post("/offers/export").with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isForbidden());
+        org.mockito.Mockito.verifyNoInteractions(offerExportService);
+    }
+
     @Test
     @DisplayName("IT-07 POST /offers/export: Candidate bị chặn truy cập (403 Forbidden)")
     @WithMockUser(username = "cand_user", roles = {"CANDIDATE"})

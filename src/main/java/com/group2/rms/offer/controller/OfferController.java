@@ -457,22 +457,19 @@ public class OfferController {
     }
 
     /**
-     * 10. EXPORT EXCEL: Xuất dữ liệu Offer theo phạm vi và bộ cột được chọn (Screen
+     * 10. EXPORT EXCEL: Chỉ HR được xuất dữ liệu Offer theo phạm vi và bộ cột được chọn (Screen
      * 30)
      */
     @PostMapping("/export")
     public org.springframework.http.ResponseEntity<byte[]> exportOffers(
             @Valid @RequestBody com.group2.rms.offer.dto.OfferExportRequest request,
             Principal principal) {
-        if (principal instanceof org.springframework.security.core.Authentication auth) {
-            boolean isAuthorized = auth.getAuthorities().stream().anyMatch(a -> "ROLE_HR".equals(a.getAuthority())
-                    || "ROLE_DIRECTOR".equals(a.getAuthority()));
-            if (!isAuthorized) {
-                return org.springframework.http.ResponseEntity.status(org.springframework.http.HttpStatus.FORBIDDEN)
-                        .build();
-            }
+        if (!(principal instanceof org.springframework.security.core.Authentication auth)
+                || !auth.isAuthenticated()
+                || auth.getAuthorities().stream().noneMatch(a -> "ROLE_HR".equals(a.getAuthority()))) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
-        String exportedBy = principal != null ? principal.getName() : "HR";
+        String exportedBy = principal.getName();
         byte[] excelBytes = offerExportService.exportOffersToExcel(request, exportedBy);
         String filename = offerExportService.generateExportFilename(request);
 
