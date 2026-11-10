@@ -852,20 +852,9 @@ public class OfferServiceImpl implements OfferService {
             // 2. Không hiển thị bản nháp cho Director (chỉ các đề xuất đã được HR trình lên)
             predicates.add(builder.notEqual(builder.lower(root.get("offerStatus")), "draft"));
 
-            // 3. Tìm kiếm theo tên ứng viên, vị trí tuyển dụng, hoặc mã Offer ID
+            // 3. Dùng chung keyword với HR/Excel; giữ phạm vi trạng thái riêng của Giám đốc.
             if (hasSearch) {
-                String term = search.trim();
-                List<Predicate> searchPredicates = new ArrayList<>();
-                searchPredicates.add(OfferProposalRepository.matchingKeyword(search).toPredicate(root, query, builder));
-
-                try {
-                    Integer searchId = Integer.parseInt(term);
-                    searchPredicates.add(builder.equal(root.get("offerId"), searchId));
-                } catch (NumberFormatException ignored) {
-                    // Không phải số thì bỏ qua tìm kiếm theo ID
-                }
-
-                predicates.add(builder.or(searchPredicates.toArray(new Predicate[0])));
+                predicates.add(OfferProposalRepository.matchingKeyword(search).toPredicate(root, query, builder));
             }
 
             // 4. Lọc theo trạng thái

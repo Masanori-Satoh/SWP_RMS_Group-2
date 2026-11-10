@@ -14,6 +14,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.domain.Sort;
+import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import com.group2.rms.core.util.ListFilters;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.JoinType;
@@ -52,7 +53,7 @@ public interface OfferProposalRepository extends JpaRepository<OfferProposal, In
     long countExpired();
 
     /**
-     * Bộ lọc HR/Excel: luôn loại bản ghi xóa mềm, chuẩn hóa tên trạng thái cũ/mới và tìm theo tên/vị trí.
+     * Bộ lọc HR/Excel: loại bản ghi xóa mềm, chuẩn hóa trạng thái và dùng cùng tìm kiếm với Giám đốc.
      * ListFilters escape các ký tự %, _ và [ để tìm đúng ký tự người dùng nhập, không coi chúng là mẫu LIKE.
      */
     static Specification<OfferProposal> matchingFilters(String search, String status) {
@@ -75,14 +76,25 @@ public interface OfferProposalRepository extends JpaRepository<OfferProposal, In
 
     /** Dùng cùng quy tắc keyword cho HR, Giám đốc và Excel; không quyết định phạm vi quyền/trạng thái. */
     static Specification<OfferProposal> matchingKeyword(String search) {
-        String keyword = ListFilters.cleanKeyword(search == null ? null : search.replaceAll("\\s+", " "));
+        String keyword = ListFilters.cleanKeyword(search == null ? null : search.replaceAll("(?U)\\s+", " "));
         return (root, query, builder) -> {
             if (keyword.isEmpty()) return builder.conjunction();
-            var account = root.join("application", JoinType.LEFT).join("candidate", JoinType.LEFT).join("account", JoinType.LEFT);
+            // #ID là tra mã chính xác; số không có # vẫn là keyword thông thường.
+            if (keyword.matches("#[0-9]+")) {
+                try { return builder.equal(root.get("offerId"), Integer.parseInt(keyword.substring(1))); }
+                catch (NumberFormatException overflow) { return builder.disjunction(); }
+            }
+            var application = root.join("application", JoinType.LEFT);
+            var account = application.join("candidate", JoinType.LEFT).join("account", JoinType.LEFT);
+            var department = application.join("jobPosting", JoinType.LEFT).join("requisition", JoinType.LEFT)
+                    .join("department", JoinType.LEFT);
             String pattern = ListFilters.containsPattern(keyword);
-            return builder.or(
-                    builder.like(builder.lower(root.get("offeredPositionTitle")), pattern, '\\'),
-                    builder.like(builder.lower(account.get("fullName")), pattern, '\\'));
+            var hibernate = (HibernateCriteriaBuilder) builder;
+            // Collation chỉ áp dụng cho query, không sửa schema; theo cách dùng chung của dự án.
+            return builder.or(List.of(root.<String>get("offeredPositionTitle"), account.<String>get("fullName"),
+                            account.<String>get("email"), department.<String>get("departmentName")).stream()
+                    .map(field -> builder.like(hibernate.collate(field, ListFilters.ACCENT_INSENSITIVE), pattern, '\\'))
+                    .toArray(Predicate[]::new));
         };
     }
 
