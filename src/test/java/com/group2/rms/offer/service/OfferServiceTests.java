@@ -66,6 +66,35 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class OfferServiceTests {
 
+    @ParameterizedTest
+    @CsvSource({"'  JaVa   %_[  ','%java \\%\\_\\[%'", "'   ','EMPTY'"})
+    @SuppressWarnings("unchecked")
+    void keywordSearchNormalizesSpacesAndTreatsWildcardsLiterally(String input, String expected) {
+        var root = (jakarta.persistence.criteria.Root<OfferProposal>) mock(jakarta.persistence.criteria.Root.class, RETURNS_DEEP_STUBS);
+        var builder = mock(jakarta.persistence.criteria.CriteriaBuilder.class);
+        if ("EMPTY".equals(expected)) {
+            OfferProposalRepository.matchingKeyword(input).toPredicate(root, null, builder);
+            verify(builder).conjunction();
+            verifyNoInteractions(root);
+        } else {
+            var expression = (jakarta.persistence.criteria.Expression<String>) mock(jakarta.persistence.criteria.Expression.class);
+            when(builder.lower(any())).thenReturn(expression);
+            OfferProposalRepository.matchingKeyword(input).toPredicate(root, null, builder);
+            verify(builder, times(2)).like(expression, expected, '\\');
+        }
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void keywordSearchCapsTheDatabasePatternAtOneHundredTwentyCharacters() {
+        var root = (jakarta.persistence.criteria.Root<OfferProposal>) mock(jakarta.persistence.criteria.Root.class, RETURNS_DEEP_STUBS);
+        var builder = mock(jakarta.persistence.criteria.CriteriaBuilder.class);
+        var expression = (jakarta.persistence.criteria.Expression<String>) mock(jakarta.persistence.criteria.Expression.class);
+        when(builder.lower(any())).thenReturn(expression);
+        OfferProposalRepository.matchingKeyword("x".repeat(140)).toPredicate(root, null, builder);
+        verify(builder, times(2)).like(expression, "%" + "x".repeat(120) + "%", '\\');
+    }
+
     @Mock
     private OfferProposalRepository offerProposalRepository;
 

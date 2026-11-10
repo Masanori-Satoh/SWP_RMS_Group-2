@@ -65,6 +65,30 @@ function response(status, data, type = 'application/json') {
         headers: { get: () => type }, json: async () => data };
 }
 
+for (const scope of ['FILTERED', 'SELECTED', 'ALL']) {
+    test(`export ${scope} uses applied URL filters, not unfinished toolbar edits`, async () => {
+        let payload;
+        const context = load(async (url, options) => {
+            payload = JSON.parse(options.body);
+            return response(400, { message: 'Stop after recording request' });
+        });
+        context.URLSearchParams = URLSearchParams;
+        context.location = { search: '?search=Java%20%26%20API&status=Draft&timeSort=LATEST&page=2' };
+        context.document.getElementById = id => ({ searchInput: { value: 'Unsubmitted keyword' },
+            statusFilter: { value: 'Accepted' }, timeSortFilter: { value: 'EARLIEST' } })[id] || null;
+        context.document.querySelector = selector => selector.includes('exportScope') ? { value: scope } : null;
+        context.document.querySelectorAll = selector => selector.includes('exportCol')
+            ? [{ value: 'offerId' }] : [{ value: '42' }];
+        vm.runInContext(fs.readFileSync('src/main/resources/static/js/pages/offers/offer-hr.js', 'utf8'), context);
+        context.executeOfferExport();
+        await new Promise(setImmediate);
+        assert.equal(payload.scope, scope);
+        assert.deepEqual(payload.filters, scope === 'FILTERED'
+            ? { keyword: 'Java & API', status: 'Draft', sort: 'LATEST' } : null);
+        assert.deepEqual(payload.offerIds, scope === 'SELECTED' ? [42] : []);
+    });
+}
+
 test('JSON actions preserve custom CSRF header, body and returned data', async () => {
     let request;
     const context = load(async (url, options) => {

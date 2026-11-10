@@ -222,16 +222,17 @@ function executeOfferExport() {
         return;
     }
 
-    // 2. Thu thập bộ lọc hiện tại nếu là FILTERED
+    // 2. Xuất theo URL đã áp dụng, không lấy giá trị đang gõ dở trong toolbar.
     let search = null;
     let status = null;
     let timeSort = null;
 
     if (scope === 'FILTERED') {
-        search = (document.getElementById('searchInput')?.value || '').trim() || null;
-        const statusVal = document.getElementById('statusFilter')?.value;
+        const applied = new URLSearchParams(window.location.search);
+        search = applied.get('search')?.trim() || null;
+        const statusVal = applied.get('status');
         status = (statusVal && statusVal !== 'ALL') ? statusVal : null;
-        const timeSortVal = document.getElementById('timeSortFilter')?.value;
+        const timeSortVal = applied.get('timeSort');
         timeSort = (timeSortVal && timeSortVal !== 'DEFAULT') ? timeSortVal : null;
     }
 

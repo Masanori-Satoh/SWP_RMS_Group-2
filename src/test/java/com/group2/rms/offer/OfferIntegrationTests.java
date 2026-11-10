@@ -311,12 +311,12 @@ class OfferIntegrationTests {
                 const fs = require('fs'), vm = require('vm');
                 const scope = process.argv[1];
                 const context = {
-                  window: {}, console,
+                  window: {location: {search: '?search=Java&status=Sent_Candidate&timeSort=LATEST'}}, console, URLSearchParams,
                   document: {
                     readyState: 'loading', addEventListener() {},
                     getElementById(id) {
-                      return {searchInput: {value: 'Java'}, statusFilter: {value: 'Sent_Candidate'},
-                              timeSortFilter: {value: 'LATEST'}}[id] || null;
+                      return {searchInput: {value: 'Unsubmitted'}, statusFilter: {value: 'Accepted'},
+                              timeSortFilter: {value: 'EARLIEST'}}[id] || null;
                     },
                     querySelector() { return {value: scope}; },
                     querySelectorAll(selector) {

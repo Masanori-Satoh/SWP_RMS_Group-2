@@ -56,18 +56,11 @@ public interface OfferProposalRepository extends JpaRepository<OfferProposal, In
      * ListFilters escape các ký tự %, _ và [ để tìm đúng ký tự người dùng nhập, không coi chúng là mẫu LIKE.
      */
     static Specification<OfferProposal> matchingFilters(String search, String status) {
-        String keyword = ListFilters.cleanKeyword(search);
         String normalized = status == null ? "" : status.trim().toLowerCase(Locale.ROOT);
         return (root, query, builder) -> {
             var predicates = new ArrayList<Predicate>();
             predicates.add(builder.or(builder.isNull(root.get("isDeleted")), builder.isFalse(root.get("isDeleted"))));
-            if (!keyword.isEmpty()) {
-                var account = root.join("application", JoinType.LEFT).join("candidate", JoinType.LEFT).join("account", JoinType.LEFT);
-                String pattern = ListFilters.containsPattern(keyword);
-                predicates.add(builder.or(
-                        builder.like(builder.lower(root.get("offeredPositionTitle")), pattern, '\\'),
-                        builder.like(builder.lower(account.get("fullName")), pattern, '\\')));
-            }
+            predicates.add(matchingKeyword(search).toPredicate(root, query, builder));
             if (!normalized.isEmpty() && !"all".equals(normalized)) {
                 var statuses = switch (normalized) {
                     case "approved", "director_approved" -> List.of("approved", "director_approved");
@@ -77,6 +70,19 @@ public interface OfferProposalRepository extends JpaRepository<OfferProposal, In
                 predicates.add(builder.lower(root.get("offerStatus")).in(statuses));
             }
             return builder.and(predicates.toArray(new Predicate[0]));
+        };
+    }
+
+    /** Dùng cùng quy tắc keyword cho HR, Giám đốc và Excel; không quyết định phạm vi quyền/trạng thái. */
+    static Specification<OfferProposal> matchingKeyword(String search) {
+        String keyword = ListFilters.cleanKeyword(search == null ? null : search.replaceAll("\\s+", " "));
+        return (root, query, builder) -> {
+            if (keyword.isEmpty()) return builder.conjunction();
+            var account = root.join("application", JoinType.LEFT).join("candidate", JoinType.LEFT).join("account", JoinType.LEFT);
+            String pattern = ListFilters.containsPattern(keyword);
+            return builder.or(
+                    builder.like(builder.lower(root.get("offeredPositionTitle")), pattern, '\\'),
+                    builder.like(builder.lower(account.get("fullName")), pattern, '\\'));
         };
     }
 
