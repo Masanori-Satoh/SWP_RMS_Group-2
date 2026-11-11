@@ -140,7 +140,7 @@
             <table class="table offers-table adw-data-table ofw-data-table">
                 <thead>
                     <tr>
-                        <th class="ofw-col-id">Mã thư mời</th>
+                        <th class="ofw-col-id ofw-id-cell">Mã thư mời</th>
                         <th>Ứng viên</th>
                         <th>Vị trí đề xuất</th>
                         <th>Lương chính thức</th>
@@ -161,7 +161,7 @@
                         </td>
                     </tr>
                     <tr th:each="o : ${offers}">
-                        <td class="ofw-col-id">
+                        <td class="ofw-col-id ofw-id-cell">
                             <a th:href="@{/offers/{id}(id=${o.offerId})}" class="offer-id-link" th:text="${o.offerId}">1</a>
                         </td>
                         <td>

@@ -168,6 +168,11 @@ Kiểm tra thực tế phát hiện dữ liệu demo đã được nạp vào da
 - Đạt **121/121 test MVC Offer**. Edge kiểm tra 6 trường hợp (HR/Director × 1440/768/390px): khoảng cách hai bên bằng nhau và khớp lề tiêu đề, một nav chung, không tràn ngang, link trang tiếp theo giữ keyword/status/timeSort. Kiểm tra ảnh desktop; browser dùng HTML Thymeleaf fixture và CSS thật, không ghi database.
 - Log pagination-inset-mvc.log, pagination-inset-browser.log và ảnh/số đo tại scratch/offer-search-upgrade-20261110/pagination-inset. Không chạy lại service/Node vì chỉ thay wrapper và padding; cảnh báo JaCoCo Notification cũ vẫn còn. Phạm vi commit: hai template, CSS Offer và báo cáo này.
 
+### 2.18. Căn giữa cột mã thư mời
+
+- Thêm class riêng .ofw-id-cell vào th/td cột mã trên HR/Director, căn text-align center trong phạm vi bảng Offer. Giữ độ rộng cột, dữ liệu, href, thứ tự và checkbox; không sửa CSS chung/backend.
+- Đạt **121/121 test MVC Offer**, 6 kiểm tra Edge (2 vai trò × 1440/768/390px). Đo tâm tiêu đề và các mã 1/9/10/1234 khớp tâm ô trong sai số dưới 1px; href vẫn /offers/12 của fixture. Log offer-id-center-mvc.log, offer-id-center-browser.log; ảnh/số đo tại scratch/offer-search-upgrade-20261110/offer-id-center. Không ghi DB.
+
 ## 3. Các commit công việc mới
 
 | Commit | Nội dung | Diff riêng commit |

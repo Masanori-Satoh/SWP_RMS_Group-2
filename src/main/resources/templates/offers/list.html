@@ -167,7 +167,7 @@
                         <th class="offer-col-w-44 offer-text-center">
                             <input type="checkbox" id="selectAllOffers" class="offer-checkbox" data-offer-change="selection-all" title="Chọn tất cả trên trang này">
                         </th>
-                        <th class="offer-col-w-70">Mã thư mời</th>
+                        <th class="offer-col-w-70 ofw-id-cell">Mã thư mời</th>
                         <th>Ứng viên</th>
                         <th>Vị trí đề xuất</th>
                         <th>Lương chính thức</th>
@@ -188,7 +188,7 @@
                         <td class="offer-text-center">
                             <input type="checkbox" class="offer-checkbox offer-row-checkbox" th:attr="aria-label=|Chọn thư mời số ${o.offerId}|" th:value="${o.offerId}" data-offer-change="selection-row">
                         </td>
-                        <td>
+                        <td class="ofw-id-cell">
                             <a th:href="@{/offers/{id}(id=${o.offerId})}" class="offer-id-link" th:text="${o.offerId}">1</a>
                         </td>
                         <td>
