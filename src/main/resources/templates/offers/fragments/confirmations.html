@@ -19,13 +19,14 @@
         </div>
     </div>
 </dialog>
-<dialog th:fragment="delete(formId)" id="deleteOfferDialog" class="confirm-dialog" aria-labelledby="deleteOfferTitle">
+<dialog th:fragment="delete(successUrl)" id="deleteOfferDialog" class="confirm-dialog" aria-labelledby="deleteOfferTitle"
+        th:attr="data-success-url=${successUrl}">
     <div class="dialog-content">
         <div class="dialog-header"><h3 id="deleteOfferTitle" class="dialog-title">Xóa bản nháp?</h3></div>
         <div class="dialog-body"><p>Bạn có chắc chắn muốn xóa bản nháp thư mời nhận việc này?</p></div>
         <div class="dialog-actions">
             <button type="button" class="btn btn--secondary" autofocus onclick="this.closest('dialog').close()">Hủy</button>
-            <button th:type="${formId == null ? 'button' : 'submit'}" th:attr="form=${formId},onclick=${formId == null ? 'executeDeleteOffer(this)' : null}"
+            <button type="button" onclick="executeDeleteOffer(this)"
                     class="btn btn--danger">Xóa bản nháp</button>
         </div>
     </div>

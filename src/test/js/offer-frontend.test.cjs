@@ -138,6 +138,23 @@ test('network errors return a Vietnamese recovery message', async () => {
     await assert.rejects(context.offerRequest('/offers/42/send'), /Không thể kết nối/);
 });
 
+for (const success of [true, false]) {
+    test(`detail delete ${success ? 'returns to list' : 'stays on detail after failure'}`, async () => {
+        let calls = 0;
+        const context = load(async () => { calls++; return response(success ? 200 : 400, { success, message: 'Result' }); });
+        const dialog = { dataset: { offerId: '42', successUrl: '/offers' } };
+        const button = { disabled: false, closest: () => dialog };
+        context.location = { href: '/offers/42', reload() { assert.fail('Do not reload deleted detail'); } };
+        context.queueOfferToast = context.showFlashToast = () => {};
+        context.executeDeleteOffer(button);
+        context.executeDeleteOffer(button);
+        await new Promise(setImmediate);
+        assert.equal(calls, 1);
+        assert.equal(context.location.href, success ? '/offers' : '/offers/42');
+        assert.equal(button.disabled, false);
+    });
+}
+
 for (const action of ['send', 'delete', 'approve']) {
     for (const success of [true, false]) {
         test(`${action}: ${success ? 'success reloads once' : 'failure keeps the page and unlocks the button'}`, async () => {

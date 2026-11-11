@@ -11,41 +11,6 @@
 // =========================================================================
 
 /**
- * Xác nhận và gọi API xóa bản nháp đề xuất (Chỉ áp dụng cho trạng thái Draft)
- */
-function confirmDeleteOffer(offerId) {
-    const dialog = document.getElementById('deleteOfferDialog');
-    if (!offerId || !dialog || dialog.open) return;
-    dialog.dataset.offerId = offerId;
-    dialog.showModal();
-}
-
-/**
- * Xóa nháp bằng DELETE sau khi người dùng xác nhận; server mới quyết định bản ghi có được xóa hay không.
- * Khóa nút trong lúc chờ, mở lại khi hoàn tất; chỉ reload khi ApiResponse báo thành công.
- */
-function executeDeleteOffer(button) {
-    const dialog = button.closest('dialog');
-    const offerId = dialog.dataset.offerId;
-    if (!offerId || button.disabled) return;
-    button.disabled = true;
-
-    offerRequest(`/offers/${offerId}`, { method: 'DELETE' })
-        .then(res => {
-            queueOfferToast(res.message || 'Đã xóa bản nháp thư mời thành công.');
-            window.location.reload();
-        })
-        .catch(err => {
-            if (typeof showFlashToast === 'function') {
-                showFlashToast(err.message, 'error');
-            }
-        })
-        .finally(() => {
-            button.disabled = false;
-        });
-}
-
-/**
  * Lấy danh sách ID các Offer đang được chọn qua checkbox
  */
 function getSelectedOfferIds() {
@@ -327,8 +292,6 @@ if (document.readyState === 'loading') {
 // =========================================================================
 // SECTION E — WINDOW GLOBAL EXPORTS
 // =========================================================================
-window.confirmDeleteOffer = confirmDeleteOffer;
-window.executeDeleteOffer = executeDeleteOffer;
 window.getSelectedOfferIds = getSelectedOfferIds;
 window.toggleSelectAllOffers = toggleSelectAllOffers;
 window.handleOfferRowSelectionChange = handleOfferRowSelectionChange;

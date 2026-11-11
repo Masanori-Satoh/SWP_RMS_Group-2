@@ -122,6 +122,13 @@ Kiểm tra thực tế phát hiện dữ liệu demo đã được nạp vào da
 - Kiểm thử đạt **379/379 Java Offer, 25/25 Node**. Ma trận lỗi mô phỏng kiểm tra 9 đường nội bộ và 3 đường Candidate cho từng mã 403/404/500, không có flash thành công và không lộ thông tin kỹ thuật; kiểm tra riêng JSON nghiệp vụ 400/409 và giữ form tạo/sửa. Các GET HTML bị cấm vẫn theo cơ chế điều hướng chung, ma trận GET dùng Accept JSON để xác minh mã lỗi gốc.
 - Log `phase4-exception-handling.log` / `phase4-frontend.log` trong scratch/offer-search-upgrade-20261110. Test dùng service mock hoặc unit test, không phải E2E database; không ghi DB. Giữ cảnh báo JaCoCo Notification cũ.
 
+### 2.12. Rà soát cuối — Phase 5: một endpoint cho mỗi thao tác xóa/phát hành
+
+- Bỏ POST /offers/{id}/delete và handler form phát hành trùng POST /offers/{id}/send. Giữ DELETE /offers/{id} và một handler phát hành trả JSON; form tạo/sửa giữ nguyên. Không sửa SecurityConfig dùng chung; rule bảo vệ URL cũ còn lại không tạo endpoint thực thi mới.
+- Chuyển logic xác nhận/xóa từ offer-hr.js sang offer-common.js để cả danh sách và chi tiết dùng cùng API, CSRF, toast, khóa nút. Fragment xóa dùng button thống nhất, không còn form xóa riêng. Xóa ở chi tiết thành công về /offers để không reload bản ghi đã xóa; danh sách reload giữ bộ lọc, thất bại ở lại trang và mở khóa nút.
+- Đạt **379/379 Java Offer và 27/27 Node**, log `phase5-single-endpoints.log` / `phase5-frontend.log` trong scratch/offer-search-upgrade-20261110. Test URL xóa form cũ trả 404, không gọi service; gửi không có Accept vẫn trả JSON từ đúng một handler; quyền và ma trận lỗi tiếp tục đạt. Hai test Node thêm kiểm tra xóa tại chi tiết và chặn bấm lặp.
+- Không thay trạng thái nghiệp vụ, database hoặc module khác; kiểm chứng bằng MockMvc/service mock và Node, chưa là E2E trình duyệt/database. Các tài liệu/test manual dùng POST xóa cũ cần chuyển sang DELETE; lịch sử báo cáo trước đây giữ nguyên.
+
 ## 3. Các commit công việc mới
 
 | Commit | Nội dung | Diff riêng commit |

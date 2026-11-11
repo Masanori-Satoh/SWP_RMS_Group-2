@@ -335,20 +335,6 @@ public class OfferController {
     }
 
     /**
-     * 7b. DELETE: Xóa bản thảo Offer (Chỉ cho phép khi Draft)
-     */
-    @PostMapping("/{id}/delete")
-    public String deleteOffer(@PathVariable Integer id, RedirectAttributes flash) {
-        try {
-            offerService.deleteDraftOfferByHr(id);
-            flash.addFlashAttribute("successMessage", "Đã xóa bản nháp thư mời nhận việc thành công.");
-        } catch (OfferValidationException e) {
-            flash.addFlashAttribute("errorMessage", e.getMessage());
-        }
-        return "redirect:/offers";
-    }
-
-    /**
      * 8a. SEND OFFER VIA AJAX (JSON): Phát hành Offer Letter tới ứng viên từ pop-up
      * Modal
      */
@@ -362,23 +348,6 @@ public class OfferController {
         } catch (OfferValidationException e) {
             return ResponseEntity.badRequest().body(new ApiResponse<>(false, e.getMessage()));
         }
-    }
-
-    /**
-     * 8b. SEND OFFER: HR phát hành thư mời làm việc cho Candidate (Khi Status ==
-     * Director_Approved)
-     */
-    @PostMapping("/{id}/send")
-    public String sendOfferToCandidate(@PathVariable Integer id, RedirectAttributes flash) {
-        try {
-            OfferResponse sentOffer = offerService.sendOfferToCandidate(id);
-            String flashType = sentOffer.getEmailStatus() == OfferResponse.EmailStatus.SENT
-                    ? "successMessage" : "offerWarningMessage";
-            flash.addFlashAttribute(flashType, offerPublicationMessage(sentOffer));
-        } catch (OfferValidationException e) {
-            flash.addFlashAttribute("errorMessage", e.getMessage());
-        }
-        return "redirect:/offers/" + id;
     }
 
     private String offerPublicationMessage(OfferResponse offer) {

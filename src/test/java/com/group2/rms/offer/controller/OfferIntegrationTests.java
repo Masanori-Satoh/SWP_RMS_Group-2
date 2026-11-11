@@ -70,13 +70,11 @@ class OfferIntegrationTests {
                 validSalaryForm("/offers/1/edit", "20000000", "18000000"),
                 get("/offers/1/edit").accept(MediaType.APPLICATION_JSON),
                 delete("/offers/1").with(csrf()).accept(MediaType.APPLICATION_JSON),
-                post("/offers/1/delete").with(csrf()).accept(MediaType.TEXT_HTML),
                 post("/offers/1/send").with(csrf()).accept(MediaType.APPLICATION_JSON),
-                post("/offers/1/send").with(csrf()).accept(MediaType.TEXT_HTML),
                 post("/offers/1/approve").with(csrf()).contentType(MediaType.APPLICATION_JSON).content("{\"comments\":\"OK\"}"),
                 post("/offers/1/reject").with(csrf()).contentType(MediaType.APPLICATION_JSON).content("{\"comments\":\"Reason\"}"));
         for (int i = 0; i < requests.size(); i++) {
-            var actor = i >= 7 ? user("director_user").roles("DIRECTOR") : user("hr_specialist").roles("HR");
+            var actor = i >= 5 ? user("director_user").roles("DIRECTOR") : user("hr_specialist").roles("HR");
             mvc.perform(requests.get(i).with(actor)).andExpect(status().is(expected))
                     .andExpect(view().name("error/" + expected))
                     .andExpect(flash().attributeCount(0))
@@ -411,7 +409,7 @@ class OfferIntegrationTests {
         org.junit.jupiter.api.Assertions.assertEquals(deleteVisible, html.contains("id=\"deleteOfferDialog\""));
         org.junit.jupiter.api.Assertions.assertEquals(sendVisible, html.contains("id=\"sendOfferConfirmDialog\""));
         if (deleteVisible) {
-            org.junit.jupiter.api.Assertions.assertTrue(html.contains("form=\"deleteOfferForm\""));
+            org.junit.jupiter.api.Assertions.assertTrue(html.contains("data-success-url=\"/offers\""));
         }
         if (sendVisible) {
             org.junit.jupiter.api.Assertions.assertTrue(html.contains("aria-labelledby=\"sendOfferTitle\""));
@@ -434,25 +432,21 @@ class OfferIntegrationTests {
     }
 
     @Test
-    @DisplayName("IT-04 POST /offers/{id}/delete: Xóa bản thảo Offer điều hướng về /offers")
-    @WithMockUser(username = "hr_specialist", roles = {"HR"})
-    void it04_deleteDraftOffer_redirectsToList() throws Exception {
-        mvc.perform(post("/offers/1/delete").with(csrf()))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/offers"));
+    @WithMockUser(username = "hr_specialist", roles = "HR")
+    void removedDeleteFormEndpointCannotWrite() throws Exception {
+        mvc.perform(post("/offers/1/delete").with(csrf())).andExpect(status().isNotFound());
+        org.mockito.Mockito.verify(offerService, org.mockito.Mockito.never()).deleteDraftOfferByHr(any());
     }
 
     @Test
-    @DisplayName("IT-05 POST /offers/{id}/send: Phát hành Offer Letter điều hướng về /offers/{id}")
-    @WithMockUser(username = "hr_specialist", roles = {"HR"})
-    void it05_sendOffer_redirectsToDetail() throws Exception {
+    @WithMockUser(username = "hr_specialist", roles = "HR")
+    void sendWithoutAcceptHeaderUsesTheSingleJsonHandler() throws Exception {
         when(offerService.sendOfferToCandidate(1)).thenReturn(OfferResponse.builder()
                 .emailStatus(OfferResponse.EmailStatus.NOT_SENT).build());
-        mvc.perform(post("/offers/1/send").with(csrf()))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/offers/1"))
-                .andExpect(flash().attribute("offerWarningMessage",
-                        "Đã phát hành thư mời nhận việc trên cổng ứng viên. Chưa gửi được email thông báo."));
+        mvc.perform(post("/offers/1/send").with(csrf())).andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.emailStatus").value("NOT_SENT"));
+        org.mockito.Mockito.verify(offerService).sendOfferToCandidate(1);
     }
 
     @Test
@@ -1002,7 +996,7 @@ class OfferIntegrationTests {
                 .expectedStartDate(LocalDate.now().plusDays(14)).build());
         String html = mvc.perform(get("/offers/1").with(user(username).roles(role)))
                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
-        org.junit.jupiter.api.Assertions.assertEquals(deleteVisible, html.contains("action=\"/offers/1/delete\""));
+        org.junit.jupiter.api.Assertions.assertEquals(deleteVisible, html.contains("onclick=\"confirmDeleteOffer(1)\""));
         org.junit.jupiter.api.Assertions.assertEquals(sendVisible, html.contains("onclick=\"confirmSendOffer(1)\""));
     }
 
