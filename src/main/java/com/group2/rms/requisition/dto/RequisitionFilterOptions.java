@@ -13,9 +13,10 @@ public record RequisitionFilterOptions(
         boolean showDepartment,
         boolean showCreator,
         boolean showCreatedDate,
+        boolean showEmploymentType,
         List<FilterOption> statuses,
         List<FilterOption> postings,
         List<FilterOption> departments,
         List<FilterOption> creators,
-        List<FilterOption> sorts) {
+        List<FilterOption> employmentTypes) {
 }

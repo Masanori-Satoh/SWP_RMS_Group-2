@@ -12,16 +12,14 @@ import org.springframework.data.jpa.domain.Specification;
 import java.time.LocalDate;
 import java.util.List;
 
-/*
- * SPECIFICATIONS: điều kiện WHERE của màn danh sách yêu cầu; service ghép bằng .and(...).
- */
+
 public final class RequisitionSpecifications {
 
     private RequisitionSpecifications() {
-        // Chỉ chứa hàm static, không tạo đối tượng
     }
 
-    /** Tên vị trí HOẶC tên phòng ban có chứa từ khóa (không phân biệt hoa thường). */
+
+    // Builds a title or department search condition.
     public static Specification<JobRequisition> titleOrDepartmentContains(String keyword) {
         String pattern = ListFilters.containsPattern(keyword);
         return (root, query, cb) -> cb.or(
@@ -29,32 +27,44 @@ public final class RequisitionSpecifications {
                 cb.like(cb.lower(root.join("department", JoinType.LEFT).get("departmentName")), pattern, '\\'));
     }
 
-    /** Trạng thái duyệt nằm trong danh sách đã chọn. */
+
+    // Builds a status filter condition.
     public static Specification<JobRequisition> statusIn(List<String> statuses) {
         return (root, query, cb) -> root.get("approvalStatus").in(statuses);
     }
 
-    /** Thuộc phòng ban đã chọn. */
+
+    // Builds a department filter condition.
     public static Specification<JobRequisition> departmentIs(Integer departmentId) {
         return (root, query, cb) -> cb.equal(root.get("department").get("departmentId"), departmentId);
     }
 
-    /** Do Hiring Manager đã chọn tạo. */
+
+    // Builds a creator filter condition.
     public static Specification<JobRequisition> creatorIs(Integer userId) {
         return (root, query, cb) -> cb.equal(root.get("hiringManager").get("userId"), userId);
     }
 
-    /** Ngày tạo từ đầu ngày "from" trở đi. */
+
+    // Builds an employment type filter condition.
+    public static Specification<JobRequisition> employmentTypeIs(String employmentType) {
+        return (root, query, cb) -> cb.equal(root.get("employmentType"), employmentType);
+    }
+
+
+    // Builds a lower creation date condition.
     public static Specification<JobRequisition> createdOnOrAfter(LocalDate from) {
         return (root, query, cb) -> cb.greaterThanOrEqualTo(root.get("createdAt"), from.atStartOfDay());
     }
 
-    /** Ngày tạo đến hết ngày "to" (tức là trước 00:00 của ngày hôm sau). */
+
+    // Builds an upper creation date condition.
     public static Specification<JobRequisition> createdOnOrBefore(LocalDate to) {
         return (root, query, cb) -> cb.lessThan(root.get("createdAt"), to.plusDays(1).atStartOfDay());
     }
 
-    /** Yêu cầu chưa có tin tuyển dụng nào (NOT EXISTS trong bảng JobPosting). */
+
+    // Builds a condition for requisitions without postings.
     public static Specification<JobRequisition> hasNoPosting() {
         return (root, query, cb) -> {
             Subquery<Integer> postingIds = query.subquery(Integer.class);
@@ -64,22 +74,36 @@ public final class RequisitionSpecifications {
         };
     }
 
-    /** Tin mới nhất (JobPostingId lớn nhất) của yêu cầu đang ở trạng thái đã chọn. */
+
+    // Builds a latest posting status condition.
     public static Specification<JobRequisition> latestPostingStatusIs(String postingStatus) {
         return (root, query, cb) -> {
-            // Bước 1: tìm id tin mới nhất của yêu cầu đang xét
             Subquery<Integer> latestId = query.subquery(Integer.class);
             Root<JobPosting> latest = latestId.from(JobPosting.class);
             latestId.select(cb.max(latest.get("jobPostingId")))
                     .where(cb.equal(latest.get("requisition"), root));
-
-            // Bước 2: tin có id đó phải đang ở trạng thái được chọn
             Subquery<Integer> match = query.subquery(Integer.class);
             Root<JobPosting> posting = match.from(JobPosting.class);
             match.select(posting.get("jobPostingId"))
                     .where(cb.equal(posting.get("jobPostingId"), latestId),
                             cb.equal(posting.get("postingStatus"), postingStatus));
             return cb.exists(match);
+        };
+    }
+
+    // Orders pending-approval requisitions first, then newest. Only applies when the Pageable is unsorted.
+    public static Specification<JobRequisition> pendingFirstThenNewest() {
+        return (root, query, cb) -> {
+            if (query != null && !Long.class.equals(query.getResultType())) {
+                query.orderBy(
+                        cb.asc(cb.selectCase()
+                                .when(cb.equal(root.get("approvalStatus"),
+                                        RequisitionAccess.STATUS_PENDING_DIRECTOR), 0)
+                                .otherwise(1)),
+                        cb.desc(root.get("createdAt")),
+                        cb.desc(root.get("requisitionId")));
+            }
+            return null;
         };
     }
 }

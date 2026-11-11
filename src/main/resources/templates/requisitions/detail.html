@@ -4,7 +4,7 @@
     Dữ liệu: biến "req" (RequisitionResponse) do RequisitionServiceImpl#getById chuẩn bị:
       - quyền xem đã kiểm ở service (RequisitionAccess.requireView)
       - nhãn tiếng Việt, số ngày, nội dung nhiều dòng (…Html) đã tính sẵn
-      - cờ quyền cho nút: editable, withdrawable, deletable, decidable, copyable, postable, postingViewable
+      - cờ quyền cho nút: editable, deletable, decidable, copyable, postable, postingViewable
     Bố cục theo wireframe: đầu trang + nút → dải thông báo → thanh tiến trình → nội dung (trái) + cột phải.
 -->
 <html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
@@ -42,16 +42,16 @@
             <div class="rqd-actions" role="group" aria-label="Thao tác với yêu cầu">
                 <!-- Luôn hiện với mọi vai trò: quay về màn danh sách yêu cầu -->
                 <a class="btn btn--outline" th:href="@{/requisitions}">← Quay về danh sách</a>
+
                 <a class="btn btn--primary" th:if="${req.postable}"
                     th:href="@{/internal/job-postings/create(requisitionId=${req.requisitionId})}">Tạo tin tuyển
                     dụng</a>
+
+                <!-- Opens the edit form for a requisition owned by the current user. -->
                 <a class="btn btn--primary" th:if="${req.editable}"
                     th:href="@{/requisitions/edit/{id}(id=${req.requisitionId})}"
                     th:text="${isRejected ? 'Sửa &amp; gửi lại' : 'Chỉnh sửa'}">Chỉnh sửa</a>
-                <form class="withdraw-form" th:if="${req.withdrawable}" method="post"
-                    th:action="@{/requisitions/{id}/withdraw(id=${req.requisitionId})}">
-                    <button type="submit" class="btn btn--secondary">Rút lại để chỉnh sửa</button>
-                </form>
+
                 <a class="btn btn--secondary" th:if="${req.postingViewable}"
                     th:href="@{/internal/job-postings/{id}(id=${req.jobPostingId})}">Xem tin tuyển dụng</a>
                 <a class="btn btn--secondary" th:if="${req.copyable}"
@@ -167,7 +167,7 @@
                     <form id="decision-form" method="post"
                         th:action="@{/requisitions/{id}/decision(id=${req.requisitionId})}">
                         <label class="form-label" for="decision-comment">Ý kiến gửi Hiring Manager
-                            <span class="rqd-sub">(bắt buộc khi trả lại)</span></label>
+                             <span class="rqd-sub">(bắt buộc khi từ chối)</span></label>
                         <!-- Không dùng maxlength để chữ dán vào không bị cắt; quá giới hạn thì JS báo lỗi và khóa 2 nút -->
                         <textarea class="form-textarea" id="decision-comment" name="comment" rows="4"
                             th:attr="data-limit=${commentLimit}" th:text="${decisionComment}"
@@ -177,8 +177,7 @@
                             th:text="|0/${commentLimit}|">0/1000</div>
                         <small class="field-error" id="decision-comment-error" role="alert"></small>
                         <div class="rqd-decision-buttons">
-                            <button type="submit" name="decision" value="reject" class="btn btn--danger">Trả
-                                lại</button>
+                            <button type="submit" name="decision" value="reject" class="btn btn--danger">Từ chối</button>
                             <button type="submit" name="decision" value="approve" class="btn btn--primary">Phê
                                 duyệt</button>
                         </div>
@@ -239,7 +238,7 @@
                     <ol class="rqd-timeline" th:unless="${#lists.isEmpty(req.activityLog)}">
                         <li th:each="log : ${req.activityLog}">
                             <strong
-                                th:text="${log.action == 'CREATE' ? 'Tạo yêu cầu' : (log.action == 'UPDATE' ? 'Cập nhật' : (log.action == 'DELETE' ? 'Xóa' : log.action))}">Tạo
+                                th:text="${log.action == 'CREATE' ? 'Tạo yêu cầu' : (log.action == 'UPDATE' ? 'Cập nhật' : (log.action == 'DELETE' ? 'Xóa' : (log.action == 'APPROVE' ? 'Duyệt yêu cầu' : (log.action == 'REJECT' ? 'Từ chối yêu cầu' : log.action))))}">Tạo
                                 yêu cầu</strong>
                             <span class="rqd-sub"
                                 th:text="|${log.performedBy} · ${#temporals.format(log.timestamp, 'HH:mm dd/MM/yyyy')}|">Đỗ

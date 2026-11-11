@@ -128,6 +128,10 @@ public class JobPosting extends BaseEntity {
         return requisition.getWorkModel();
     }
 
+    public String effectiveWorkLocation() {
+        return "Remote".equals(effectiveWorkModel()) ? null : workLocation;
+    }
+
     public String effectiveGender() {
         if (gender != null || requisition == null) {
             return gender;

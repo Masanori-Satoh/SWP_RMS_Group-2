@@ -208,24 +208,6 @@ class NotificationIntegrationTests {
         }
 
         @Test
-        @DisplayName("Một Giám đốc đã xử lý yêu cầu -> Thông báo chờ duyệt của mọi Giám đốc cho yêu cầu đó thành đã đọc")
-        void markRequisitionPendingRead_shouldMarkEveryRecipient_whenRequisitionDecided() {
-            // Arrange
-            String pendingEventType = "REQUISITION_PENDING_DIRECTOR";
-            Notification pendingForA = saveNotification(unreadNotification(userA, "Chờ duyệt A").eventType(pendingEventType).referenceId("987654"));
-            Notification pendingForB = saveNotification(unreadNotification(userB, "Chờ duyệt B").eventType(pendingEventType).referenceId("987654"));
-            Notification otherRequisition = saveNotification(unreadNotification(userA, "Chờ duyệt khác").eventType(pendingEventType).referenceId("987655"));
-
-            // Act
-            service.markRequisitionPendingRead(987654);
-
-            // Assert
-            assertTrue(reload(pendingForA).getIsRead());
-            assertTrue(reload(pendingForB).getIsRead());
-            assertFalse(reload(otherRequisition).getIsRead());
-        }
-
-        @Test
         @DisplayName("Tiêu đề / nội dung tiếng Việt -> Đọc lại từ DB giữ nguyên dấu")
         void save_shouldKeepVietnameseText_whenTextHasDiacritics() {
             // Arrange

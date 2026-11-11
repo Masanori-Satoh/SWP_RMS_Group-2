@@ -137,7 +137,7 @@ class JobPostingControllerTests {
         JobPostingFilterOptions options = new JobPostingFilterOptions(true, true, false, false,
                 List.of(new FilterOption("Published", "Đang đăng")), List.of(), List.of(),
                 List.of(new FilterOption("soon", "Sắp hết hạn")), List.of(new FilterOption("newest", "Mới đăng nhất")));
-        return new JobPostingListResponse(new PageImpl<>(List.of(row)), filter, options, List.of(), canManage);
+        return new JobPostingListResponse(new PageImpl<>(List.of(row)), filter, options, List.of(), canManage, List.of());
     }
 
     private static InternalJobPostingResponse publishedRow() {
@@ -182,7 +182,7 @@ class JobPostingControllerTests {
     @WithMockUser(username = "hr_officer", roles = "HR")
     @DisplayName("GET danh sách (HR) -> View list, có model list + filterLinks, sáng menu Tin tuyển dụng")
     void listJobPostings_shouldRenderListView_whenViewerIsHr() throws Exception {
-        when(listService.getListPage(any(JobPostingSearchRequest.class), eq(hrUser))).thenReturn(listOf(publishedRow(), true));
+        when(listService.getListPage(any(JobPostingSearchRequest.class), eq(hrUser), any())).thenReturn(listOf(publishedRow(), true));
 
         mvc.perform(get(BASE))
                 .andExpect(status().isOk())
@@ -197,7 +197,7 @@ class JobPostingControllerTests {
     void listJobPostings_shouldHideCreateButton_whenViewerIsDirector() throws Exception {
         User director = account("director", RequisitionAccess.ROLE_DIRECTOR);
         when(access.actor()).thenReturn(director);
-        when(listService.getListPage(any(JobPostingSearchRequest.class), eq(director))).thenReturn(listOf(publishedRow(), false));
+        when(listService.getListPage(any(JobPostingSearchRequest.class), eq(director), any())).thenReturn(listOf(publishedRow(), false));
 
         mvc.perform(get(BASE))
                 .andExpect(status().isOk())
@@ -248,6 +248,28 @@ class JobPostingControllerTests {
                 .andExpect(model().attributeExists("form", "requisitionChoices"))
                 .andExpect(model().attribute("titleLimit", JobPostingValidator.TITLE_LIMIT))
                 .andExpect(model().attribute("today", LocalDate.of(2026, 10, 18)));
+    }
+
+    @Test
+    @WithMockUser(username = "hm_user", roles = "HIRING_MANAGER")
+    @DisplayName("TC-JP-CREATE-26: HM mở form tạo tin -> Về danh sách tin, flash lỗi chỉ HR được quản lý tin")
+    void showCreateForm_shouldRedirectToListWithError_whenViewerIsHiringManager() throws Exception {
+        String message = "Chỉ HR mới có quyền quản lý tin tuyển dụng.";
+        when(service.prepareCreateForm(eq(101), any(User.class))).thenThrow(new AccessDeniedException(message));
+
+        mvc.perform(get(BASE + "/create").param("requisitionId", "101"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl(BASE))
+                .andExpect(flash().attribute("errorMessage", message));
+    }
+
+    @Test
+    @WithMockUser(username = "hm_user", roles = "HIRING_MANAGER")
+    @DisplayName("HM gửi POST tạo tin -> 403 theo SecurityConfig, không gọi service")
+    void createJobPosting_shouldReturnForbidden_whenViewerIsHiringManager() throws Exception {
+        mvc.perform(post(BASE + "/create").with(csrf())).andExpect(status().isForbidden());
+
+        verifyNoInteractions(service);
     }
 
     @Test
@@ -349,14 +371,14 @@ class JobPostingControllerTests {
 
     @Test
     @WithMockUser(username = "hr_officer", roles = "HR")
-    @DisplayName("POST tạo và đăng -> Flash thông báo ứng viên có thể nộp ngay")
+    @DisplayName("POST tạo và đăng -> Flash thông báo đăng tin thành công")
     void createJobPosting_shouldShowPublishedMessage() throws Exception {
         when(service.createAndPublishJobPosting(any(JobPostingRequest.class), any(User.class))).thenReturn(56);
 
         mvc.perform(post(BASE + "/create").with(csrf())
                         .param("requisitionId", "101").param("action", JobPostingValidator.ACTION_PUBLISH))
                 .andExpect(redirectedUrl(BASE + "/56"))
-                .andExpect(flash().attribute("successMessage", "Đã đăng tin. Ứng viên có thể nộp hồ sơ ngay."));
+                .andExpect(flash().attribute("successMessage", "Đã đăng tin thành công lên trang tuyển dụng"));
     }
 
     @Test
@@ -499,7 +521,7 @@ class JobPostingControllerTests {
     @WithMockUser(username = "hr_officer", roles = "HR")
     @DisplayName("Chính trang danh sách bị chặn quyền -> Về dashboard kèm toast, không lặp chuyển trang")
     void listJobPostings_shouldRedirectToDashboard_whenListIsDenied() throws Exception {
-        when(listService.getListPage(any(), any(User.class)))
+        when(listService.getListPage(any(), any(User.class), any()))
                 .thenThrow(new AccessDeniedException("Vai trò không có quyền xem tin tuyển dụng."));
 
         mvc.perform(get(BASE))

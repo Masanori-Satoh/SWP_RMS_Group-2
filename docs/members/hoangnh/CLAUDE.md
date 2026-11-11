@@ -178,11 +178,8 @@ Application Deadline → Hạn nộp hồ sơ
 - **Guard clause** trước, luồng chính sau:
 
   ```java
-  // Rule: Chỉ người tạo yêu cầu mới được rút lại yêu cầu đang chờ duyệt
-  if (!access.canWithdraw(currentUser, jobRequisition)) {
-      throw new AccessDeniedException("Chỉ người tạo yêu cầu mới có quyền rút lại yêu cầu đang chờ duyệt.");
-  }
-  jobRequisition.setApprovalStatus(RequisitionAccess.STATUS_DRAFT);
+  // Rule: Chỉ người tạo mới được sửa yêu cầu ở trạng thái Draft hoặc Rejected.
+  access.requireEdit(currentUser, jobRequisition);
   ```
 
 - **`if / else` rõ ràng thay cho ternary lồng nhau.** Ternary chỉ dùng cho một phép chọn đơn giản trên một dòng.
@@ -383,7 +380,6 @@ Draft            → Pending_Director   (HM gửi duyệt)
 Draft            → Approved           (NGOẠI LỆ: Giám đốc tự tạo bấm "Phê duyệt trực tiếp";
                                         vẫn lưu RequisitionApproval người duyệt = chính Giám đốc + audit)
 Pending_Director → Approved | Rejected (Giám đốc, không tự duyệt yêu cầu của mình; trả lại bắt buộc lý do)
-Pending_Director → Draft              (người tạo rút lại)
 Rejected         → Pending_Director   (sửa rồi gửi lại)
 ```
 
@@ -407,7 +403,7 @@ Không cho chọn ngày đăng tương lai. Truy vấn trang công khai vẫn ki
 - Nguồn chân lý: `database/schema/db.sql` (+ `database/migrations/`, ERD `docs/database/model.md`). `ddl-auto=validate`: entity lệch `db.sql` thì app không khởi động.
 - Đổi bảng / cột: sửa `db.sql` + migration (+ `model.md` nếu đổi thiết kế) + entity + DTO + validator + test cùng lúc.
 - Chữ tiếng Việt: `NVARCHAR`. Giữ kiểu SQL Server sẵn có (`IDENTITY`, `DATETIME2`, `SYSDATETIME()`, `BIT`). Không chuyển sang MySQL.
-- Seed: `seed_data.sql` rồi `seed_extra_jobs_and_pipeline.sql`. Không sinh lại `seed_data.sql` bằng `build_seed.py` (có dữ liệu thêm tay).
+- Seed: chỉ `seed_data.sql` (sinh bởi `build_seed.py`; đổi dữ liệu thì sửa script rồi sinh lại).
 - `nullable = false` trên entity chỉ để mô tả; ràng buộc thật ở DB. Cột NOT NULL mà nháp được để trống → lưu chuỗi rỗng `""` (có comment `// Rule:` giải thích).
 
 ### 15.2. Repository

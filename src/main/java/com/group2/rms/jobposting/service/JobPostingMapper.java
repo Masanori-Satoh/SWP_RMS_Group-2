@@ -110,7 +110,7 @@ public class JobPostingMapper {
                         .workModelLabel(workModelLabel(posting))
                         .genderLabel(RequisitionLabels.gender(posting.effectiveGender()))
                         .probationPeriod(posting.getProbationPeriod())
-                        .workLocation(posting.getWorkLocation())
+                        .workLocation(posting.effectiveWorkLocation())
                         .workingHours(posting.getWorkingHours())
                         .salaryDisplay(salaryDisplay)
                         .numberOfPositionsDisplay(posting.getNumberOfPositionsDisplay())

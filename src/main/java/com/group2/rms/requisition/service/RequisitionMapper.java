@@ -21,9 +21,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
-/*
- * MAPPER: entity yêu cầu → DTO cho form, danh sách, chi tiết; không truy vấn DB.
- */
+
 @Component
 @RequiredArgsConstructor
 public class RequisitionMapper {
@@ -32,8 +30,7 @@ public class RequisitionMapper {
     private final RequisitionValidator validator;
     private final Clock clock;
 
-    // ----- Form tạo / sửa / sao chép -----
-
+    // Maps a requisition to its edit form.
     public RequisitionRequest toEditForm(JobRequisition jobRequisition) {
         String originalTitle = null;
         if (jobRequisition.getOriginalRequisition() != null) {
@@ -63,9 +60,8 @@ public class RequisitionMapper {
                 .build();
     }
 
-    // ----- Màn danh sách -----
 
-    /** Một dòng danh sách kèm cờ quyền cho menu ⋯; latestPosting null = chưa có tin. */
+    // Maps a requisition to a list row.
     public RequisitionResponse toListRow(JobRequisition jobRequisition, User viewer,
             JobPosting latestPosting, boolean hasLaterRound) {
         String approvalStatus = jobRequisition.getApprovalStatus();
@@ -89,8 +85,6 @@ public class RequisitionMapper {
                 .requisitionCode(requisitionCode)
                 .createdAt(jobRequisition.getCreatedAt())
                 .workLocation(jobRequisition.getWorkLocation());
-
-        // Tin tuyển dụng mới nhất (nếu có)
         String postingStatus = null;
         if (hasPosting) {
             postingStatus = latestPosting.getPostingStatus();
@@ -102,44 +96,34 @@ public class RequisitionMapper {
         }
 
         return row
-                // Nhãn tiếng Việt + tông màu badge (dịch ở một chỗ duy nhất: RequisitionLabels)
                 .statusLabel(RequisitionLabels.approvalStatus(approvalStatus))
                 .statusTone(RequisitionLabels.approvalTone(approvalStatus))
                 .postingLabel(RequisitionLabels.postingStatus(postingStatus))
                 .postingTone(RequisitionLabels.postingTone(postingStatus))
                 .employmentTypeLabel(RequisitionLabels.employmentType(jobRequisition.getEmploymentType()))
-                // Cờ quyền cho nút / menu ⋯ (luật nằm ở RequisitionAccess, template chỉ đọc cờ)
                 .editable(access.canEdit(viewer, jobRequisition))
                 .deletable(access.canDelete(viewer, jobRequisition, hasPosting, hasLaterRound))
                 .decidable(access.canDecide(viewer, jobRequisition))
-                .withdrawable(access.canWithdraw(viewer, jobRequisition))
                 .copyable(access.canCopy(viewer, jobRequisition))
                 .postable(access.canCreatePostingFrom(viewer, jobRequisition, hasPosting))
                 .postingViewable(access.canOpenPosting(viewer, postingStatus))
                 .build();
     }
 
-    // ----- Màn chi tiết -----
 
-    /** Trang chi tiết; lịch sử duyệt và audit đều mới nhất trước. */
+    // Maps a requisition to its detail response.
     public RequisitionResponse toDetail(JobRequisition jobRequisition, User viewer, JobPosting latestPosting,
             boolean hasLaterRound, List<RequisitionApproval> approvalHistory, List<AuditLog> activityLogs) {
         String approvalStatus = jobRequisition.getApprovalStatus();
-
-        // Bản nháp: đã điền đủ thông tin để gửi duyệt chưa
         boolean incomplete = false;
         if (RequisitionAccess.STATUS_DRAFT.equals(approvalStatus)) {
             incomplete = !isReadyToSubmit(jobRequisition);
         }
-
-        // Mốc thời gian: số ngày đã chờ duyệt, còn bao nhiêu ngày tới ngày bắt đầu
         LocalDate today = LocalDate.now(clock);
         Long waitingDays = null;
         if (RequisitionAccess.STATUS_PENDING_DIRECTOR.equals(approvalStatus) && jobRequisition.getSubmittedAt() != null) {
             waitingDays = ChronoUnit.DAYS.between(jobRequisition.getSubmittedAt().toLocalDate(), today);
         }
-
-        // Bị trả lại: lý do là ý kiến của lần duyệt mới nhất
         List<ApprovalResponse> approvals = toApprovalResponses(approvalHistory);
         String rejectionReason = null;
         if (RequisitionAccess.STATUS_REJECTED.equals(approvalStatus) && !approvals.isEmpty()) {
@@ -148,7 +132,6 @@ public class RequisitionMapper {
 
         return toListRow(jobRequisition, viewer, latestPosting, hasLaterRound).toBuilder()
                 .incomplete(incomplete)
-                // Nhãn tiếng Việt cho các trường thông tin cơ bản
                 .salaryLabel(RequisitionLabels.salary(jobRequisition.getMinSalary(), jobRequisition.getMaxSalary()))
                 .probationLabel(RequisitionLabels.probation(jobRequisition.getProbationPeriod()))
                 .genderLabel(RequisitionLabels.gender(jobRequisition.getGender()))
@@ -165,9 +148,8 @@ public class RequisitionMapper {
                 .build();
     }
 
-    // ----- Các hàm nhỏ cho màn chi tiết -----
 
-    /** Chạy thử validator như lúc bấm "Gửi duyệt": không có lỗi nghĩa là bản nháp đã đủ thông tin. */
+    // Checks whether the requisition is ready for submission.
     private boolean isReadyToSubmit(JobRequisition jobRequisition) {
         RequisitionRequest submissionCheck = toEditForm(jobRequisition);
         submissionCheck.setAction(RequisitionValidator.ACTION_SUBMIT);
@@ -179,6 +161,7 @@ public class RequisitionMapper {
         }
     }
 
+    // Maps approval history to response objects.
     private List<ApprovalResponse> toApprovalResponses(List<RequisitionApproval> approvalHistory) {
         List<ApprovalResponse> responses = new ArrayList<>();
         for (RequisitionApproval approval : approvalHistory) {
@@ -192,17 +175,34 @@ public class RequisitionMapper {
         return responses;
     }
 
+    // Maps audit history to activity responses.
     private List<ActivityLogResponse> toActivityResponses(List<AuditLog> activityLogs) {
         List<ActivityLogResponse> responses = new ArrayList<>();
         for (AuditLog log : activityLogs) {
             responses.add(ActivityLogResponse.builder()
                     .auditLogId(log.getAuditLogId())
-                    .action(log.getAction())
+                    .action(displayAction(log))
                     .performedBy(log.getUser().getFullName())
                     .description(log.getNewValue())
                     .timestamp(log.getTimestamp())
                     .build());
         }
         return responses;
+    }
+
+    // Quyết định của Giám đốc được lưu là UPDATE (CHECK của AuditLog chỉ nhận CREATE/UPDATE/DELETE/LOGIN);
+    // nhận ra qua nội dung "Status: Pending_Director → Approved/Rejected" để lịch sử hiện Duyệt / Từ chối.
+    static String displayAction(AuditLog log) {
+        String change = log.getNewValue();
+        String decided = "Status: " + RequisitionAccess.STATUS_PENDING_DIRECTOR + " → ";
+        if (RequisitionAuditLogger.ACTION_UPDATE.equals(log.getAction()) && change != null && change.startsWith(decided)) {
+            if (change.startsWith(decided + RequisitionAccess.STATUS_APPROVED)) {
+                return "APPROVE";
+            }
+            if (change.startsWith(decided + RequisitionAccess.STATUS_REJECTED)) {
+                return "REJECT";
+            }
+        }
+        return log.getAction();
     }
 }

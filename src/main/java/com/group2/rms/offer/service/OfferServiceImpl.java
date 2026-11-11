@@ -20,9 +20,6 @@ import com.group2.rms.user.entity.User;
 import com.group2.rms.core.security.CurrentUserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import com.group2.rms.candidate.domain.entity.Candidate;
-import jakarta.persistence.criteria.Join;
-import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -855,26 +852,9 @@ public class OfferServiceImpl implements OfferService {
             // 2. Không hiển thị bản nháp cho Director (chỉ các đề xuất đã được HR trình lên)
             predicates.add(builder.notEqual(builder.lower(root.get("offerStatus")), "draft"));
 
-            // 3. Tìm kiếm theo tên ứng viên, vị trí tuyển dụng, hoặc mã Offer ID
+            // 3. Dùng chung keyword với HR/Excel; giữ phạm vi trạng thái riêng của Giám đốc.
             if (hasSearch) {
-                String term = search.trim();
-                String pattern = "%" + term.toLowerCase(Locale.ROOT) + "%";
-                Join<OfferProposal, Application> appJoin = root.join("application", JoinType.LEFT);
-                Join<Application, Candidate> candJoin = appJoin.join("candidate", JoinType.LEFT);
-                Join<Candidate, User> userJoin = candJoin.join("account", JoinType.LEFT);
-
-                List<Predicate> searchPredicates = new ArrayList<>();
-                searchPredicates.add(builder.like(builder.lower(root.get("offeredPositionTitle")), pattern));
-                searchPredicates.add(builder.like(builder.lower(userJoin.get("fullName")), pattern));
-
-                try {
-                    Integer searchId = Integer.parseInt(term);
-                    searchPredicates.add(builder.equal(root.get("offerId"), searchId));
-                } catch (NumberFormatException ignored) {
-                    // Không phải số thì bỏ qua tìm kiếm theo ID
-                }
-
-                predicates.add(builder.or(searchPredicates.toArray(new Predicate[0])));
+                predicates.add(OfferProposalRepository.matchingKeyword(search).toPredicate(root, query, builder));
             }
 
             // 4. Lọc theo trạng thái

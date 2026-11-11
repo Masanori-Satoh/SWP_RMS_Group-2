@@ -197,15 +197,6 @@ class RequisitionAccessTests {
         }
 
         @Test
-        @DisplayName("Người tạo rút lại yêu cầu đã duyệt -> Báo lỗi trạng thái; Giám đốc rút lại -> AccessDenied")
-        void requireWithdraw_shouldSeparateStateFromPermission_whenRequisitionIsNotPending() {
-            assertThrows(RequisitionStateException.class,
-                    () -> access.requireWithdraw(manager, ownedByManager(RequisitionAccess.STATUS_APPROVED)));
-            assertThrows(AccessDeniedException.class,
-                    () -> access.requireWithdraw(director, ownedByManager(RequisitionAccess.STATUS_PENDING_DIRECTOR)));
-        }
-
-        @Test
         @DisplayName("Sao chép yêu cầu chưa duyệt -> Báo lỗi trạng thái; HR sao chép -> AccessDenied")
         void requireCopy_shouldSeparateStateFromPermission_whenSourceIsNotApproved() {
             assertThrows(RequisitionStateException.class,
@@ -249,19 +240,6 @@ class RequisitionAccessTests {
         @DisplayName("Yêu cầu đã duyệt (không sửa được) -> Không xóa được dù chưa có tin")
         void canDelete_shouldReturnFalse_whenRequisitionIsApproved() {
             assertFalse(access.canDelete(manager, ownedByManager(RequisitionAccess.STATUS_APPROVED), false, false));
-        }
-
-        @ParameterizedTest(name = "trạng thái {0} -> rút lại được = {1}")
-        @CsvSource({"Pending_Director, true", "Draft, false", "Approved, false", "Rejected, false"})
-        @DisplayName("Người tạo chỉ rút lại được yêu cầu đang chờ duyệt")
-        void canWithdraw_shouldOnlyAllowPending_whenViewerIsOwner(String status, boolean expected) {
-            assertEquals(expected, access.canWithdraw(manager, ownedByManager(status)));
-        }
-
-        @Test
-        @DisplayName("Người khác (kể cả Giám đốc) rút lại yêu cầu đang chờ -> Không được")
-        void canWithdraw_shouldReturnFalse_whenViewerIsNotOwner() {
-            assertFalse(access.canWithdraw(director, ownedByManager(RequisitionAccess.STATUS_PENDING_DIRECTOR)));
         }
 
         @Test

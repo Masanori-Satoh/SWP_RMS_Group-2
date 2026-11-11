@@ -66,6 +66,102 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class OfferServiceTests {
 
+    @ParameterizedTest
+    @CsvSource({"36.000.000 VNĐ,36000000", "36.000.000 VND,36000000", "36.000.000,36000000",
+            "36000000 VNĐ,36000000", "36.000.000vnd,36000000", "'  36.000.000   vnđ  ',36000000",
+            "'36.000.000\u00a0VNĐ',36000000", "0 VND,0", "9.999.999.999.999.999 VNĐ,9999999999999999"})
+    @SuppressWarnings("unchecked")
+    void formattedSalaryMatchesEitherSalaryExactlyWithoutTextJoins(String input, String amount) {
+        var root = (jakarta.persistence.criteria.Root<OfferProposal>) mock(jakarta.persistence.criteria.Root.class, RETURNS_DEEP_STUBS);
+        var builder = mock(org.hibernate.query.criteria.HibernateCriteriaBuilder.class);
+        var official = mock(org.hibernate.query.criteria.JpaPredicate.class);
+        var probation = mock(org.hibernate.query.criteria.JpaPredicate.class);
+        when(builder.equal(root.get("proposedSalary"), new BigDecimal(amount))).thenReturn(official);
+        when(builder.equal(root.get("probationSalary"), new BigDecimal(amount))).thenReturn(probation);
+
+        OfferProposalRepository.matchingKeyword(input).toPredicate(root, null, builder);
+
+        verify(builder).equal(root.get("proposedSalary"), new BigDecimal(amount));
+        verify(builder).equal(root.get("probationSalary"), new BigDecimal(amount));
+        verify(builder).or(official, probation);
+        verify(root, never()).join(anyString(), any(jakarta.persistence.criteria.JoinType.class));
+        verify(builder, never()).collate(any(), anyString());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"10.000.000.000.000.000", "999999999999999999999 VNĐ"})
+    @SuppressWarnings("unchecked")
+    void salaryOutsideDatabasePrecisionReturnsNoMatches(String input) {
+        var root = (jakarta.persistence.criteria.Root<OfferProposal>) mock(jakarta.persistence.criteria.Root.class);
+        var builder = mock(org.hibernate.query.criteria.HibernateCriteriaBuilder.class);
+        OfferProposalRepository.matchingKeyword(input).toPredicate(root, null, builder);
+        verify(builder).disjunction();
+        verifyNoInteractions(root);
+    }
+
+    @ParameterizedTest
+    @CsvSource({"'  JaVa   %_[  ','%java \\%\\_\\[%'", "'12','%12%'", "'   ','EMPTY'",
+            "'36000000','%36000000%'", "'36.00.000 VNĐ','%36.00.000 vnđ%'", "'Java 36.000.000','%java 36.000.000%'"})
+    @SuppressWarnings("unchecked")
+    void keywordSearchNormalizesSpacesAndTreatsWildcardsLiterally(String input, String expected) {
+        var root = (jakarta.persistence.criteria.Root<OfferProposal>) mock(jakarta.persistence.criteria.Root.class, RETURNS_DEEP_STUBS);
+        var builder = mock(org.hibernate.query.criteria.HibernateCriteriaBuilder.class);
+        if ("EMPTY".equals(expected)) {
+            OfferProposalRepository.matchingKeyword(input).toPredicate(root, null, builder);
+            verify(builder).conjunction();
+            verifyNoInteractions(root);
+        } else {
+            var expression = (org.hibernate.query.criteria.JpaFunction<String>) mock(org.hibernate.query.criteria.JpaFunction.class);
+            when(builder.collate(any(), eq(com.group2.rms.core.util.ListFilters.ACCENT_INSENSITIVE))).thenReturn(expression);
+            OfferProposalRepository.matchingKeyword(input).toPredicate(root, null, builder);
+            verify(builder, times(4)).like(expression, expected, '\\');
+            verify(root).get("offeredPositionTitle");
+            var application = root.join("application", jakarta.persistence.criteria.JoinType.LEFT);
+            var account = application.join("candidate", jakarta.persistence.criteria.JoinType.LEFT)
+                    .join("account", jakarta.persistence.criteria.JoinType.LEFT);
+            verify(account).get("fullName");
+            verify(account).get("email");
+            verify(application.join("jobPosting", jakarta.persistence.criteria.JoinType.LEFT)
+                    .join("requisition", jakarta.persistence.criteria.JoinType.LEFT)
+                    .join("department", jakarta.persistence.criteria.JoinType.LEFT)).get("departmentName");
+        }
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void keywordSearchCapsTheDatabasePatternAtOneHundredTwentyCharacters() {
+        var root = (jakarta.persistence.criteria.Root<OfferProposal>) mock(jakarta.persistence.criteria.Root.class, RETURNS_DEEP_STUBS);
+        var builder = mock(org.hibernate.query.criteria.HibernateCriteriaBuilder.class);
+        var expression = (org.hibernate.query.criteria.JpaFunction<String>) mock(org.hibernate.query.criteria.JpaFunction.class);
+        when(builder.collate(any(), eq(com.group2.rms.core.util.ListFilters.ACCENT_INSENSITIVE))).thenReturn(expression);
+        OfferProposalRepository.matchingKeyword("x".repeat(140)).toPredicate(root, null, builder);
+        verify(builder, times(4)).like(expression, "%" + "x".repeat(120) + "%", '\\');
+    }
+
+    @ParameterizedTest
+    @CsvSource({"'#12',12", "'  #00012  ',12"})
+    @SuppressWarnings("unchecked")
+    void hashKeywordLooksUpTheExactOfferIdWithoutJoiningPersonalData(String keyword, int id) {
+        var root = (jakarta.persistence.criteria.Root<OfferProposal>) mock(jakarta.persistence.criteria.Root.class);
+        var path = mock(jakarta.persistence.criteria.Path.class);
+        var builder = mock(jakarta.persistence.criteria.CriteriaBuilder.class);
+        when(root.get("offerId")).thenReturn(path);
+        OfferProposalRepository.matchingKeyword(keyword).toPredicate(root, null, builder);
+        verify(builder).equal(path, id);
+        verifyNoMoreInteractions(builder);
+        verify(root).get("offerId");
+        verifyNoMoreInteractions(root);
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void overflowingHashIdMatchesNothingInsteadOfThrowingOrBroadeningTheSearch() {
+        var root = (jakarta.persistence.criteria.Root<OfferProposal>) mock(jakarta.persistence.criteria.Root.class);
+        var builder = mock(jakarta.persistence.criteria.CriteriaBuilder.class);
+        OfferProposalRepository.matchingKeyword("#99999999999999999999999").toPredicate(root, null, builder);
+        verify(builder).disjunction();
+    }
+
     @Mock
     private OfferProposalRepository offerProposalRepository;
 
