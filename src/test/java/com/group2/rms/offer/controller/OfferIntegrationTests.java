@@ -54,6 +54,33 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class OfferIntegrationTests {
 
     @ParameterizedTest
+    @CsvSource({"-1,50,0,false", "0,10,0,false", "3,10,3,false", "42949672,50,42949672,false",
+            "42949673,50,0,true", "2147483647,50,0,true", "2147483647,10,0,true", "2147483647,1,2147483647,false"})
+    void pageOffsetIsBoundedForBothRolesWithoutLosingFilters(int requestedPage, int size, int expectedPage,
+                                                           boolean warned) throws Exception {
+        when(offerService.getAllOffersForHr(any(), any(), any(), any())).thenReturn(org.springframework.data.domain.Page.empty());
+        when(offerService.getDirectorOffers(any(), any(), any(), any())).thenReturn(org.springframework.data.domain.Page.empty());
+        for (String role : List.of("HR", "DIRECTOR")) {
+            var result = mvc.perform(get("/offers").with(user(role.equals("HR") ? "hr_specialist" : "director_user").roles(role))
+                            .param("page", String.valueOf(requestedPage)).param("size", String.valueOf(size))
+                            .param("search", "Java").param("status", "Sent_Candidate").param("timeSort", "LATEST"))
+                    .andExpect(status().isOk()).andExpect(model().attribute("currentPage", expectedPage))
+                    .andExpect(model().attribute("search", "Java")).andExpect(model().attribute("currentStatus", "Sent_Candidate"))
+                    .andExpect(model().attribute("currentTimeSort", "LATEST"));
+            if (warned) result.andExpect(content().string(org.hamcrest.Matchers.containsString("Đã chuyển về trang đầu.")));
+            else result.andExpect(model().attributeDoesNotExist("errorMessage"));
+        }
+        var pageable = org.mockito.ArgumentCaptor.forClass(org.springframework.data.domain.Pageable.class);
+        org.mockito.Mockito.verify(offerService).getAllOffersForHr(eq("Java"), eq("Sent_Candidate"), eq("LATEST"), pageable.capture());
+        org.mockito.Mockito.verify(offerService).getDirectorOffers(eq("Java"), eq("Sent_Candidate"), eq("LATEST"), pageable.capture());
+        for (var value : pageable.getAllValues()) {
+            org.junit.jupiter.api.Assertions.assertEquals(expectedPage, value.getPageNumber());
+            org.junit.jupiter.api.Assertions.assertEquals(size, value.getPageSize());
+            org.junit.jupiter.api.Assertions.assertTrue(value.getOffset() <= Integer.MAX_VALUE);
+        }
+    }
+
+    @ParameterizedTest
     @ValueSource(ints = {403, 404, 500})
     void internalOperationFailuresReachGlobalHandlerWithoutSuccessFeedback(int expected) throws Exception {
         RuntimeException error = expected == 403 ? new org.springframework.security.access.AccessDeniedException("Denied")

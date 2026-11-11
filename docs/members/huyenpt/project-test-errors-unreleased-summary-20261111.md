@@ -148,6 +148,12 @@ Kiểm tra thực tế phát hiện dữ liệu demo đã được nạp vào da
 - JPA/SQL Server chỉ đọc với CTE VALUES: **88 đối chiếu, 22 tình huống**, so khớp helper query với isResponseExpiredAt trước/sau mô phỏng job; không tạo bảng hoặc UPDATE. Probe dữ liệu local với Clock vượt một deadline: HR/Director/counts/Excel khớp, Sent còn 1, Expired 6 trong snapshot kiểm tra. Scope Director và chặn Draft tiếp tục đạt.
 - Log: p2-phase1-complete.log, p2-phase1-sql-pass.log, p2-phase1-live-readonly.log tại scratch/offer-search-upgrade-20261110. Helper CTE/probe ngoài Git; không khởi động job, không đổi đồng hồ máy, schema hoặc dữ liệu. Chưa kiểm thử E2E thao tác ghi; JaCoCo vẫn cảnh báo dữ liệu cũ Notification.
 
+### 2.15. Sửa P2 — Phase 2: chặn offset phân trang vượt giới hạn JPA
+
+- Sau khi chuẩn hóa size 1–50/page âm, Controller nhân page × size bằng long. Offset vượt Integer.MAX_VALUE được đưa về page 0, báo bằng flash-toast error hiện có qua model errorMessage; không tạo truy vấn offset vượt giới hạn. Không sửa layout/component hoặc thêm UI mới.
+- Giữ keyword, trạng thái, sort và size đã chuẩn hóa. Các page/offset còn hợp lệ không bị đổi, kể cả giá trị sát giới hạn. Thêm 8 trường hợp tham số, mỗi trường hợp kiểm cả HR/Director: âm, 0, bình thường, sát/vượt ngưỡng và Integer.MAX_VALUE với các size khác nhau.
+- Đạt **400/400 Java Offer**, log p2-phase2-pagination.log tại scratch/offer-search-upgrade-20261110; kiểm tra thông báo thực trong HTML, model bộ lọc và Pageable tới service đều đúng. Không ghi database, không đổi lifecycle/quyền hoặc module khác; không tuyên bố E2E thao tác ghi.
+
 ## 3. Các commit công việc mới
 
 | Commit | Nội dung | Diff riêng commit |

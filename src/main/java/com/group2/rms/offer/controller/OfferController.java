@@ -77,6 +77,10 @@ public class OfferController {
         int validPage = Math.max(0, page);
         // Không để URL yêu cầu trang rỗng hoặc tải quá nhiều bản ghi trong một lần.
         int validSize = Math.max(1, Math.min(size, 50));
+        if ((long) validPage * validSize > Integer.MAX_VALUE) {
+            validPage = 0;
+            model.addAttribute("errorMessage", "Số trang yêu cầu vượt giới hạn. Đã chuyển về trang đầu.");
+        }
         if ("Director".equals(userRole)) {
             Map<String, Long> statusCounts = offerService.getDirectorStatusCounts();
             Map<String, Long> directorStats = offerService.getDirectorOfferStats();
