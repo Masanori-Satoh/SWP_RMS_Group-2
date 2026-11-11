@@ -100,6 +100,14 @@ Kiểm tra thực tế phát hiện dữ liệu demo đã được nạp vào da
 - Log nằm tại `scratch/offer-search-upgrade-20261110/phase1-director-access-verified.log` và `phase1-director-sql-verified.log`; probe/helper giữ ngoài Git. Không kết luận toàn bộ test dự án đều đạt.
 - Phạm vi commit Phase 1: repository/service Offer, hai file test Offer và báo cáo này. Phase 2–6 chưa thuộc lần chỉnh sửa này: phân trang/lương, giới hạn nhận xét, xử lý exception, endpoint trùng và chuẩn hóa frontend.
 
+### 2.9. Rà soát cuối — Phase 2: phân trang và độ chính xác lương
+
+- Chuẩn hóa `size` về 1–50 trước khi tạo PageRequest ở cả danh sách HR và Director; mặc định vẫn là 10, page âm vẫn về 0. Mức trần 50 phù hợp giới hạn các màn danh sách Requisition/Job Posting hiện có, không sửa code dùng chung.
+- Bổ sung `@Digits(integer = 16, fraction = 2)` cho lương chính thức và thử việc trong cả CreateOfferRequest/UpdateOfferRequest, khớp cột decimal(18,2) hiện tại. Giữ kiểm tra số dương và tỷ lệ 85%–100%; từ chối độ chính xác vượt giới hạn thay vì để database làm tròn hoặc báo tràn số.
+- Validation sai trả lại form cùng dữ liệu đã nhập và lỗi tiếng Việt; không gọi service tạo/sửa. Không thay bố cục, HTML/CSS/JS, schema hoặc dữ liệu database; không sửa Application hay module khác.
+- Bổ sung 20 trường hợp MockMvc: 8 giá trị size từ Integer.MIN_VALUE đến Integer.MAX_VALUE cho cả hai vai trò, 8 trường hợp lương vượt độ chính xác qua form tạo/sửa, 4 trường hợp lương có hai chữ số thập phân hoặc đạt giới hạn tối đa được truyền nguyên vẹn tới service.
+- Kiểm thử đạt **357/357** thuộc 5 lớp Offer, không failure/error/skipped (94 Web/MVC, 183 service Offer, 46 service Candidate, 19 web Candidate, 15 export). Log: `scratch/offer-search-upgrade-20261110/phase2-pagination-salary-verified.log`. Đây là MockMvc/Bean Validation và hồi quy service, không phải E2E đăng nhập/database; không lưu lương biên vào database thực. Lần Maven sandbox đầu dừng khi truy cập dependency jboss-logging trước test; lần chạy lại có quyền truy cập cache đạt BUILD SUCCESS. JaCoCo vẫn có cảnh báo dữ liệu cũ Notification, không dùng coverage làm bằng chứng. Không cần chạy lại Node vì không đổi frontend. Phase 3–6 chưa thực hiện trong lần này.
+
 ## 3. Các commit công việc mới
 
 | Commit | Nội dung | Diff riêng commit |

@@ -790,6 +790,78 @@ class OfferIntegrationTests {
                 .andExpect(model().attribute("currentPage", 0));
     }
 
+    @ParameterizedTest
+    @CsvSource({"-2147483648,1", "-1,1", "0,1", "1,1", "10,10", "50,50", "51,50", "2147483647,50"})
+    void listBoundsPageSizeForHrAndDirector(int requested, int expected) throws Exception {
+        when(offerService.getAllOffersForHr(any(), any(), any(), any())).thenReturn(org.springframework.data.domain.Page.empty());
+        when(offerService.getDirectorOffers(any(), any(), any(), any())).thenReturn(org.springframework.data.domain.Page.empty());
+        for (String role : List.of("HR", "DIRECTOR")) {
+            String username = "HR".equals(role) ? "hr_specialist" : "director_user";
+            mvc.perform(get("/offers").with(user(username).roles(role))
+                            .param("page", "-1").param("size", String.valueOf(requested)))
+                    .andExpect(status().isOk()).andExpect(model().attribute("currentPage", 0));
+        }
+        var pageable = org.mockito.ArgumentCaptor.forClass(org.springframework.data.domain.Pageable.class);
+        org.mockito.Mockito.verify(offerService).getAllOffersForHr(any(), any(), any(), pageable.capture());
+        org.mockito.Mockito.verify(offerService).getDirectorOffers(any(), any(), any(), pageable.capture());
+        for (var value : pageable.getAllValues()) {
+            org.junit.jupiter.api.Assertions.assertEquals(0, value.getPageNumber());
+            org.junit.jupiter.api.Assertions.assertEquals(expected, value.getPageSize());
+        }
+    }
+
+    @ParameterizedTest
+    @CsvSource({"/offers/create,proposedSalary,10000000000000000,9000000000000000",
+            "/offers/create,probationSalary,10000000000000000,10000000000000000",
+            "/offers/create,proposedSalary,20000000.001,18000000",
+            "/offers/create,probationSalary,20000000,18000000.001",
+            "/offers/1/edit,proposedSalary,10000000000000000,9000000000000000",
+            "/offers/1/edit,probationSalary,10000000000000000,10000000000000000",
+            "/offers/1/edit,proposedSalary,20000000.001,18000000",
+            "/offers/1/edit,probationSalary,20000000,18000000.001"})
+    @WithMockUser(username = "hr_specialist", roles = "HR")
+    void salaryOutsideDatabasePrecisionReturnsFormWithoutWriting(String endpoint, String field,
+                                                                 String proposed, String probation) throws Exception {
+        when(offerService.getOfferDetailForHr(1)).thenReturn(OfferDetailResponse.builder()
+                .offerId(1).offerStatus("Draft").build());
+        mvc.perform(validSalaryForm(endpoint, proposed, probation))
+                .andExpect(status().isOk()).andExpect(view().name("offers/form"))
+                .andExpect(model().attributeHasFieldErrors("offerDto", field))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("16 chữ số phần nguyên và 2 chữ số thập phân")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Entered salary test")));
+        org.mockito.Mockito.verify(offerService, org.mockito.Mockito.never()).createOfferByHr(any());
+        org.mockito.Mockito.verify(offerService, org.mockito.Mockito.never()).updateOfferByHr(any(), any());
+    }
+
+    @ParameterizedTest
+    @CsvSource({"/offers/create,20000000.12,18000000.11", "/offers/1/edit,20000000.12,18000000.11",
+            "/offers/create,9999999999999999.99,9999999999999999.99",
+            "/offers/1/edit,9999999999999999.99,9999999999999999.99"})
+    @WithMockUser(username = "hr_specialist", roles = "HR")
+    void validSalaryPrecisionReachesServiceWithoutRounding(String endpoint, String proposed, String probation) throws Exception {
+        mvc.perform(validSalaryForm(endpoint, proposed, probation)).andExpect(status().is3xxRedirection());
+        if (endpoint.endsWith("create")) {
+            var request = org.mockito.ArgumentCaptor.forClass(CreateOfferRequest.class);
+            org.mockito.Mockito.verify(offerService).createOfferByHr(request.capture());
+            org.junit.jupiter.api.Assertions.assertEquals(new BigDecimal(proposed), request.getValue().getProposedSalary());
+            org.junit.jupiter.api.Assertions.assertEquals(new BigDecimal(probation), request.getValue().getProbationSalary());
+        } else {
+            var request = org.mockito.ArgumentCaptor.forClass(UpdateOfferRequest.class);
+            org.mockito.Mockito.verify(offerService).updateOfferByHr(eq(1), request.capture());
+            org.junit.jupiter.api.Assertions.assertEquals(new BigDecimal(proposed), request.getValue().getProposedSalary());
+            org.junit.jupiter.api.Assertions.assertEquals(new BigDecimal(probation), request.getValue().getProbationSalary());
+        }
+    }
+
+    private org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder validSalaryForm(
+            String endpoint, String proposed, String probation) {
+        return post(endpoint).with(csrf()).contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .param("applicationId", "1").param("offeredPositionTitle", "Entered salary test")
+                .param("proposedSalary", proposed).param("probationSalary", probation)
+                .param("probationDays", "60").param("responsePeriodDays", "5").param("isDraft", "true")
+                .param("workLocation", "Hà Nội").param("expectedStartDate", LocalDate.now().plusDays(14).toString());
+    }
+
     @Test
     @DisplayName("IT-25 GET /offers/{id}/edit: HR xem form chỉnh sửa Offer thành công (view offers/form, HTTP 200)")
     @WithMockUser(username = "hr_specialist", roles = {"HR"})

@@ -78,6 +78,8 @@ public class OfferController {
             Model model) {
 
         int validPage = Math.max(0, page);
+        // Không để URL yêu cầu trang rỗng hoặc tải quá nhiều bản ghi trong một lần.
+        int validSize = Math.max(1, Math.min(size, 50));
         if ("Director".equals(userRole)) {
             Map<String, Long> statusCounts = offerService.getDirectorStatusCounts();
             Map<String, Long> directorStats = offerService.getDirectorOfferStats();
@@ -100,7 +102,7 @@ public class OfferController {
             }
 
             Page<OfferResponse> directorOffers = offerService.getDirectorOffers(search, currentStatus, timeSort,
-                    PageRequest.of(validPage, size));
+                    PageRequest.of(validPage, validSize));
 
             model.addAttribute("offersPage", directorOffers);
             model.addAttribute("offers", directorOffers.getContent());
@@ -123,7 +125,7 @@ public class OfferController {
         }
 
         Page<OfferResponse> pagedData = offerService.getAllOffersForHr(search, status, timeSort,
-                PageRequest.of(validPage, size));
+                PageRequest.of(validPage, validSize));
         model.addAttribute("activeMenu", "offers");
 
         Map<String, Long> stats = offerService.getOfferStats();

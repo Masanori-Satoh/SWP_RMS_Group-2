@@ -1,6 +1,7 @@
 package com.group2.rms.offer.dto;
 
 import jakarta.validation.constraints.AssertTrue;
+import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -32,10 +33,12 @@ public class UpdateOfferRequest {
 
     @NotNull(message = "Mức lương chính thức không được để trống.")
     @Positive(message = "Mức lương chính thức phải lớn hơn 0.")
+    @Digits(integer = 16, fraction = 2, message = "Mức lương chính thức chỉ được có tối đa 16 chữ số phần nguyên và 2 chữ số thập phân.")
     private BigDecimal proposedSalary;
 
     @NotNull(message = "Mức lương thử việc không được để trống.")
     @Positive(message = "Mức lương thử việc phải lớn hơn 0.")
+    @Digits(integer = 16, fraction = 2, message = "Mức lương thử việc chỉ được có tối đa 16 chữ số phần nguyên và 2 chữ số thập phân.")
     private BigDecimal probationSalary;
 
     @NotNull(message = "Thời gian thử việc không được để trống.")
