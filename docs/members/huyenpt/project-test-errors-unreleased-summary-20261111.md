@@ -178,6 +178,11 @@ Kiểm tra thực tế phát hiện dữ liệu demo đã được nạp vào da
 - Thêm .ofw-action-cell cho th/td cột thao tác HR/Director, dùng quy tắc căn giữa riêng bảng Offer; nhóm .ofw-actions-cell đổi justify-content từ flex-end sang center. Giữ độ rộng cột, gap/kích thước nút, href, data-action và điều kiện theo trạng thái/quyền.
 - Đạt **121/121 test MVC Offer**, **18 phép đo browser** (2 vai trò × 3 viewport × nhóm 1/2/3 nút) với độ lệch tâm dưới 1px; tiêu đề căn giữa và dữ liệu hành động giữ nguyên. Việc ẩn bớt nút chỉ dùng trong DOM fixture để đo layout, không sửa quyền production. Log offer-action-center-mvc.log, offer-action-center-browser.log, ảnh/số đo tại scratch/offer-search-upgrade-20261110/offer-action-center. Không ghi database hoặc sửa module khác.
 
+### 2.20. Dùng card chung cho khung bảng HR
+
+- Thêm class card vào section danh sách HR để nhận padding var(--s6) từ components chung, giống Application/Director; không thêm hoặc ghi đè padding CSS. Giữ template/biến dữ liệu, checkbox, độ rộng/căn giữa cột và fragment phân trang.
+- Đạt **121/121 test MVC**, 6 kiểm tra Edge (HR/Director × 1440/768/390px): padding card 24px, lề bảng đối xứng 25px kể cả border, tiêu đề/phân trang khớp 49px; HR và Director cùng số đo, không tràn ngang, cột mã/nút vẫn căn giữa và link giữ bộ lọc. Ảnh desktop được kiểm tra trực quan; fixture không ghi DB. Log offer-list-card-mvc.log, offer-list-card-browser.log; ảnh/số đo tại scratch/offer-search-upgrade-20261110/offer-list-card.
+
 ## 3. Các commit công việc mới
 
 | Commit | Nội dung | Diff riêng commit |
