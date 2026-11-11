@@ -1,3 +1,5 @@
+> Ghi chú 11/11/2026: đường dẫn và package test đã được cập nhật theo tầng kiểm thử; kết quả Task/PR lịch sử giữ nguyên.
+
 > Ghi chú 11/11/2026: đường dẫn CSS trong tài liệu đã được cập nhật theo vị trí hiện hành; các kết quả Task/PR lịch sử được giữ nguyên.
 
 # BÁO CÁO KỸ THUẬT TASK 15: TÁCH CSS VAI TRÒ HR, BẢO TOÀN CASCADE VÀ KIỂM CHỨNG BẰNG SO SÁNH PIXEL THỰC TẾ
@@ -146,7 +148,7 @@ Trong `form.html` và `list.html`, tệp `offer-hr.css` được nhúng vào v�
 
 ### 6.1. Kiểm thử Tự động Maven (Backend & Integration Contracts)
 Toàn bộ 7 bộ kiểm thử đặc thù của phân hệ Offer chạy thành công tuyệt đối:
-- `com.group2.rms.offer.CandidateOfferWebTests`: 14 tests PASS.
+- `com.group2.rms.offer.controller.CandidateOfferWebTests`: 14 tests PASS.
 - `com.group2.rms.offer.controller.OfferControllerBugTests`: 10 tests PASS.
 - `com.group2.rms.offer.controller.OfferExportServiceTests`: 15 tests PASS.
 - `com.group2.rms.offer.integration.OfferIntegrationTests`: 30 tests PASS.

@@ -1,3 +1,5 @@
+> Ghi chú 11/11/2026: đường dẫn và package test đã được cập nhật theo tầng kiểm thử; kết quả Task/PR lịch sử giữ nguyên.
+
 > Ghi chú 11/11/2026: đường dẫn JavaScript đã được cập nhật theo vị trí hiện hành; kết quả thực hiện lịch sử không thay đổi.
 
 > Ghi chú 11/11/2026: đường dẫn CSS trong tài liệu đã được cập nhật theo vị trí hiện hành; các kết quả Task/PR lịch sử được giữ nguyên.
@@ -13,7 +15,7 @@
 - **HEAD Commit:** `10031e68e5a1cb3a9d8ee98df8beee2b77185b10` (`refactor(offer): eliminate obsolete detail modal generators and redundant JS statements`)
 - **Upstream Status:** `ahead 1` of `origin/refactor/huyenpt/offer-ui-js-to-html-css` (`5e4e1fd87a4e40f252369c92074284e57fd6d3aa`)
 - **Audit Date:** 2026-11-04
-- **Final Verdict:** **READY FOR HUMAN-APPROVED COMMIT** (with `src/test/java/com/group2/rms/offer/OfferExportServiceTests.java` included via `git add -f` in the explicit staging plan)
+- **Final Verdict:** **READY FOR HUMAN-APPROVED COMMIT** (with `src/test/java/com/group2/rms/offer/service/OfferExportServiceTests.java` included via `git add -f` in the explicit staging plan)
 
 ---
 
@@ -35,7 +37,7 @@
 | ` M` (Unstaged) | `src/main/resources/templates/offers/director-list.html` | HuyenPT Offer Template (Director Workspace — Include) |
 | `??` (Untracked) | `src/main/resources/static/css/pages/` (`offer-common.css`, `offer-hr.css`, `offer-director.css`) | HuyenPT Offer Frontend (3 Active Internal CSS Files — Include) |
 | `??` (Untracked) | `src/main/resources/static/js/pages/` (`offer-common.js`, `offer-hr.js`, `offer-director.js`) | HuyenPT Offer Frontend (3 Active Internal JS Files — Include) |
-| `!!` (Ignored) | `src/test/java/com/group2/rms/offer/OfferExportServiceTests.java` | HuyenPT Offer Unit Test (10 tests, ignored by `.git/info/exclude:9` — Force-Add in Commit Plan) |
+| `!!` (Ignored) | `src/test/java/com/group2/rms/offer/service/OfferExportServiceTests.java` | HuyenPT Offer Unit Test (10 tests, ignored by `.git/info/exclude:9` — Force-Add in Commit Plan) |
 | `??` (Untracked) | `docs/members/huyenpt/html-css-refactor/17-*.md` through `33-*.md` | HuyenPT Offer Technical Documentation (17 Reports — Include) |
 | `??` (Untracked) | `scratch/` | Local Scratch Verification Scripts (**EXCLUDE — Do Not Stage**) |
 | `!!` (Ignored) | `src/main/resources/application-local.properties` | Local DB Credentials Ignored by `.gitignore` (**EXCLUDE — Never Stage**) |
@@ -50,15 +52,15 @@
 
 1. **Tracking Check (`git ls-files --error-unmatch`):**
    ```text
-   $ git ls-files --error-unmatch -- src/test/java/com/group2/rms/offer/OfferExportServiceTests.java
-   error: pathspec 'src/test/java/com/group2/rms/offer/OfferExportServiceTests.java' did not match any file(s) known to git
+   $ git ls-files --error-unmatch -- src/test/java/com/group2/rms/offer/service/OfferExportServiceTests.java
+   error: pathspec 'src/test/java/com/group2/rms/offer/service/OfferExportServiceTests.java' did not match any file(s) known to git
    Did you forget to 'git add'?
    EXIT_CODE=1
    ```
 2. **Ignore Rule Check (`git check-ignore -v --no-index`):**
    ```text
-   $ git check-ignore -v --no-index -- src/test/java/com/group2/rms/offer/OfferExportServiceTests.java
-   .git/info/exclude:9:src/test/java/com/group2/rms/offer/	src/test/java/com/group2/rms/offer/OfferExportServiceTests.java
+   $ git check-ignore -v --no-index -- src/test/java/com/group2/rms/offer/service/OfferExportServiceTests.java
+   .git/info/exclude:9:src/test/java/com/group2/rms/offer/	src/test/java/com/group2/rms/offer/service/OfferExportServiceTests.java
    EXIT_CODE=0
    ```
 3. **Full `.git/info/exclude` Audit:**
@@ -67,7 +69,7 @@
 4. **Full Scan for Any Other Ignored Tests (`git status --ignored --porcelain=v1 -- src/`):**
    ```text
    !! src/main/resources/application-local.properties
-   !! src/test/java/com/group2/rms/offer/OfferExportServiceTests.java
+   !! src/test/java/com/group2/rms/offer/service/OfferExportServiceTests.java
    ```
    No other test file anywhere under `src/test/` is ignored.
 
@@ -79,10 +81,10 @@
 
 ### 2.3 Ownership, Purpose & Security Inspection of `OfferExportServiceTests.java`
 
-- **Path:** `src/test/java/com/group2/rms/offer/OfferExportServiceTests.java` (319 lines, 10 `@Test` methods).
+- **Path:** `src/test/java/com/group2/rms/offer/service/OfferExportServiceTests.java` (319 lines, 10 `@Test` methods).
 - **Module & Ownership:** Pure unit test suite (`@ExtendWith(MockitoExtension.class)`) for HuyenPT's `OfferExportServiceImpl` (`exportOffersToExcel`, `exportOffersToCsv`, null-safety, formula-injection sanitization, salary formatting, and 10,000-row streaming export).
 - **Sensitive Data / Credentials Check:** Inspected all 319 lines. Contains **zero** database credentials, API keys, secrets, or machine-specific paths.
-- **Recommendation:** Include `src/test/java/com/group2/rms/offer/OfferExportServiceTests.java` in the final commit using `git add -f src/test/java/com/group2/rms/offer/OfferExportServiceTests.java` so that any fresh clone reproduces all **7 Offer test classes (223 tests)**.
+- **Recommendation:** Include `src/test/java/com/group2/rms/offer/service/OfferExportServiceTests.java` in the final commit using `git add -f src/test/java/com/group2/rms/offer/service/OfferExportServiceTests.java` so that any fresh clone reproduces all **7 Offer test classes (223 tests)**.
 
 ---
 
@@ -90,14 +92,14 @@
 
 | Test Class | Git Tracked Status | Test Count | Clean Build Status |
 | :--- | :--- | ---: | :--- |
-| `src/test/java/com/group2/rms/offer/OfferIntegrationTests.java` | Tracked in `HEAD` | 34 | PASS (`0` failures, `0` errors) |
+| `src/test/java/com/group2/rms/offer/controller/OfferIntegrationTests.java` | Tracked in `HEAD` | 34 | PASS (`0` failures, `0` errors) |
 | `src/test/java/com/group2/rms/offer/service/OfferServiceTests.java` | Tracked in `HEAD` | 114 | PASS (`0` failures, `0` errors) |
-| `src/test/java/com/group2/rms/offer/CandidateOfferWebTests.java` | Tracked in `HEAD` | 19 | PASS (`0` failures, `0` errors) |
+| `src/test/java/com/group2/rms/offer/controller/CandidateOfferWebTests.java` | Tracked in `HEAD` | 19 | PASS (`0` failures, `0` errors) |
 | `src/test/java/com/group2/rms/offer/service/CandidateOfferServiceTests.java` | Tracked in `HEAD` | 35 | PASS (`0` failures, `0` errors) |
 | `src/test/java/com/group2/rms/offer/controller/OfferControllerBugTests.java` | Tracked in `HEAD` | 6 | PASS (`0` failures, `0` errors) |
 | `src/test/java/com/group2/rms/offer/repository/CandidateOfferQueryTests.java` | Tracked in `HEAD` | 5 | PASS (`0` failures, `0` errors) |
 | **Subtotal (Currently Tracked in Git)** | **6 Tracked Classes** | **213** | **PASS (213/213)** |
-| `src/test/java/com/group2/rms/offer/OfferExportServiceTests.java` | Untracked & Ignored by `.git/info/exclude:9` | 10 | PASS (`0` failures, `0` errors) |
+| `src/test/java/com/group2/rms/offer/service/OfferExportServiceTests.java` | Untracked & Ignored by `.git/info/exclude:9` | 10 | PASS (`0` failures, `0` errors) |
 | **Total (With `OfferExportServiceTests.java` Force-Added)** | **7 Offer Test Classes** | **223** | **PASS (223/223)** |
 
 ---
@@ -209,7 +211,7 @@ Verified via `scratch/t22a_verify_clean_build.py` immediately after `mvn clean t
 
 | Reproducibility Dimension | Classification | Justification & Scope |
 | :--- | :---: | :--- |
-| **`MAVEN TEST REPRODUCIBILITY`** | **PARTIAL** (in current un-staged tree) $\to$ **PASS** (once `OfferExportServiceTests.java` is force-added) | Currently 6 of 7 Offer test classes (**213/223 tests**) are tracked in Git, while `OfferExportServiceTests.java` (**10/223 tests**) is ignored by local `.git/info/exclude:9`. Adding `git add -f src/test/java/com/group2/rms/offer/OfferExportServiceTests.java` to the commit plan makes all **7 test classes (223/223 tests)** 100% reproducible on any fresh clone with a test database configured. |
+| **`MAVEN TEST REPRODUCIBILITY`** | **PARTIAL** (in current un-staged tree) $\to$ **PASS** (once `OfferExportServiceTests.java` is force-added) | Currently 6 of 7 Offer test classes (**213/223 tests**) are tracked in Git, while `OfferExportServiceTests.java` (**10/223 tests**) is ignored by local `.git/info/exclude:9`. Adding `git add -f src/test/java/com/group2/rms/offer/service/OfferExportServiceTests.java` to the commit plan makes all **7 test classes (223/223 tests)** 100% reproducible on any fresh clone with a test database configured. |
 | **`BROWSER TEST REPRODUCIBILITY`** | **LOCAL-ONLY** | Both `scratch/run_interactive_browser_smoke.js` (`10/10 PASS`) and `scratch/verify_director_dedicated.js` (`5/5 PASS`) completed with exit code `0` and `0` console errors, but they reside in the untracked `scratch/` folder and rely on local Chrome executable paths (`C:\Program Files\Google\Chrome\Application\chrome.exe`), local temp profile directories, and local dev database accounts (`hr_lan`, `director`, `trung.huynh`). They are local verification artifacts, not committed CI tests. |
 | **`CLEAN BUILD`** | **PASS** | `mvn clean test` succeeded from a wiped `target/` directory (`223/223` tests passing, exit code `0`), packaging all 8 active Offer CSS/JS files and 6 Offer templates identically to `src/main/resources/` while completely excluding retired `offers.js`, `offers.css`, and `offer-workspace.css`. |
 
@@ -275,7 +277,7 @@ Scanned all untracked reports in `docs/members/huyenpt/html-css-refactor/` using
   - `4` updated internal Offer Thymeleaf templates (`list.html`, `form.html`, `detail.html`, `director-list.html`)
   - *(Note: `candidate-offers.js`, `candidate-list.html`, and `candidate-detail.html` were already committed in `HEAD` (`10031e68`) and have `0` unstaged diffs.)*
 - **Maven Unit Test File (Required for 223-Test Reproducibility):** **1 file**
-  - `src/test/java/com/group2/rms/offer/OfferExportServiceTests.java` (requires `git add -f` due to `.git/info/exclude:9`)
+  - `src/test/java/com/group2/rms/offer/service/OfferExportServiceTests.java` (requires `git add -f` due to `.git/info/exclude:9`)
 - **Refactor Documentation Reports (`docs/members/huyenpt/html-css-refactor/`):**
   - **16 files** (`17` through `32`) $\to$ **31 files total** (`14 + 1 + 16 = 31`, updating Task 22's 30-file manifest by `+1` for `OfferExportServiceTests.java`), **OR**
   - **17 files** (`17` through `33`, including this Task 22A verification report) $\to$ **32 files total** (`14 + 1 + 17 = 32`).
@@ -298,7 +300,7 @@ Scanned all untracked reports in `docs/members/huyenpt/html-css-refactor/` using
 | 12 | ` M` | `src/main/resources/templates/offers/form.html` | Offer Template | Stage modification |
 | 13 | ` M` | `src/main/resources/templates/offers/detail.html` | Offer Template | Stage modification |
 | 14 | ` M` | `src/main/resources/templates/offers/director-list.html` | Offer Template | Stage modification |
-| 15 | `!!` | `src/test/java/com/group2/rms/offer/OfferExportServiceTests.java` | Offer Unit Test (10 tests) | Force-stage (`git add -f`) |
+| 15 | `!!` | `src/test/java/com/group2/rms/offer/service/OfferExportServiceTests.java` | Offer Unit Test (10 tests) | Force-stage (`git add -f`) |
 | 16 | `??` | `docs/members/huyenpt/html-css-refactor/17-task-10-frontend-architecture-audit.md` | Documentation | Stage new file |
 | 17 | `??` | `docs/members/huyenpt/html-css-refactor/18-task-10-js-css-target-structure.md` | Documentation | Stage new file |
 | 18 | `??` | `docs/members/huyenpt/html-css-refactor/19-task-10-migration-roadmap.md` | Documentation | Stage new file |
@@ -341,7 +343,7 @@ git add -- `
   src/main/resources/templates/offers/director-list.html
 
 # 3. Force-stage OfferExportServiceTests.java (1 file, ignored by local .git/info/exclude:9) so all 223 Offer tests are tracked
-git add -f -- src/test/java/com/group2/rms/offer/OfferExportServiceTests.java
+git add -f -- src/test/java/com/group2/rms/offer/service/OfferExportServiceTests.java
 
 # 4. Stage HuyenPT's Task 10–22A technical documentation reports (17 files: 17..33)
 git add -- `
@@ -410,7 +412,7 @@ git commit -m "refactor(offer-ui): decompose offer JS/CSS into role-based module
     13. `M  src/main/resources/templates/offers/detail.html`
     14. `M  src/main/resources/templates/offers/director-list.html`
   - **1 Offer Unit Test File (Force-Staged via `git add -f`):**
-    15. `A  src/test/java/com/group2/rms/offer/OfferExportServiceTests.java`
+    15. `A  src/test/java/com/group2/rms/offer/service/OfferExportServiceTests.java`
   - **17 Technical Documentation Reports (`docs/members/huyenpt/html-css-refactor/`):**
     16. `A  docs/members/huyenpt/html-css-refactor/17-task-10-frontend-architecture-audit.md`
     17. `A  docs/members/huyenpt/html-css-refactor/18-task-10-js-css-target-structure.md`

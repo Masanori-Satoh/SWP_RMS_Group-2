@@ -1,4 +1,4 @@
-package com.group2.rms.offer;
+package com.group2.rms.offer.controller;
 
 import com.group2.rms.core.config.SecurityConfig;
 import com.group2.rms.core.exception.ResourceNotFoundException;

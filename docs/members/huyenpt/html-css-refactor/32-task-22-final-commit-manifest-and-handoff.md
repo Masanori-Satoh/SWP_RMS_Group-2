@@ -1,3 +1,5 @@
+> Ghi chú 11/11/2026: đường dẫn và package test đã được cập nhật theo tầng kiểm thử; kết quả Task/PR lịch sử giữ nguyên.
+
 > Ghi chú 11/11/2026: đường dẫn JavaScript đã được cập nhật theo vị trí hiện hành; kết quả thực hiện lịch sử không thay đổi.
 
 > Ghi chú 11/11/2026: đường dẫn CSS trong tài liệu đã được cập nhật theo vị trí hiện hành; các kết quả Task/PR lịch sử được giữ nguyên.
@@ -34,7 +36,7 @@
 
 ### 1.3 Relevant Ignored Files
 - `src/main/resources/application-local.properties` — Ignored via `.gitignore` line 95 (`application-local.properties`). Contains local database and SMTP credentials; confirmed untracked and excluded from Git.
-- `src/test/java/com/group2/rms/offer/OfferExportServiceTests.java` — Ignored via `.git/info/exclude` line 9 (`src/test/java/com/group2/rms/offer/`). Runs locally during `mvn test` (10 tests) and passes.
+- `src/test/java/com/group2/rms/offer/service/OfferExportServiceTests.java` — Ignored via `.git/info/exclude` line 9 (`src/test/java/com/group2/rms/offer/`). Runs locally during `mvn test` (10 tests) and passes.
 - `target/` and `*.bak` / `*.log` — Ignored via `.gitignore`.
 - `scratch/` — **Not** listed in `.gitignore` (989 untracked files); must be explicitly excluded from staging.
 

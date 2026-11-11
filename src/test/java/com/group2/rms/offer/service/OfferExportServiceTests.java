@@ -1,4 +1,4 @@
-package com.group2.rms.offer;
+package com.group2.rms.offer.service;
 
 import com.group2.rms.candidate.domain.entity.Application;
 import com.group2.rms.candidate.domain.entity.Candidate;

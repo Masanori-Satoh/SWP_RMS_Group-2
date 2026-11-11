@@ -1,3 +1,5 @@
+> Ghi chú 11/11/2026: đường dẫn và package test đã được cập nhật theo tầng kiểm thử; kết quả Task/PR lịch sử giữ nguyên.
+
 # BÁO CÁO TỔNG KẾT NHÁNH: `fix/offer-email-notification-routing`
 
 ---
@@ -12,7 +14,7 @@
   * Trạng thái Git: `Working tree clean` (Không có thay đổi tồn đọng chưa commit).
 * **Kết quả kiểm thử tự động (Automated Tests):**
   * ✅ **19/19 Test Cases ĐẠT (BUILD SUCCESS)**:
-    * `com.group2.rms.offer.CandidateOfferWebTests` (16 test cases).
+    * `com.group2.rms.offer.controller.CandidateOfferWebTests` (16 test cases).
     * `com.group2.rms.offer.controller.OfferControllerBugTests` (3 test cases).
 
 ---

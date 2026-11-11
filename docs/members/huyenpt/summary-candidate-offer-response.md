@@ -1,3 +1,5 @@
+> Ghi chú 11/11/2026: đường dẫn và package test đã được cập nhật theo tầng kiểm thử; kết quả Task/PR lịch sử giữ nguyên.
+
 # BÁO CÁO TỔNG KẾT TOÀN DIỆN: LUỒNG PHẢN HỒI THƯ MỜI NHẬN VIỆC (CANDIDATE OFFER RESPONSE) & HỆ THỐNG THÔNG BÁO HAI CHIỀU
 
 - **Dự án:** Hệ Thống Quản Lý Tuyển Dụng — SWP_RMS_Group-2 (Mộc RMS)
@@ -194,13 +196,13 @@ Toàn bộ **141/141 bài kiểm thử tự động** liên quan đến phân h�
 [INFO] -------------------------------------------------------
 [INFO]  T E S T S
 [INFO] -------------------------------------------------------
-[INFO] Running com.group2.rms.offer.CandidateOfferWebTests
+[INFO] Running com.group2.rms.offer.controller.CandidateOfferWebTests
 [INFO] Tests run: 14, Failures: 0, Errors: 0, Skipped: 0 -- in CandidateOfferWebTests
 [INFO] Running com.group2.rms.offer.service.CandidateOfferServiceTests
 [INFO] Tests run: 30, Failures: 0, Errors: 0, Skipped: 0 -- in CandidateOfferServiceTests
 [INFO] Running com.group2.rms.notification.NotificationServiceImplTest
 [INFO] Tests run: 14, Failures: 0, Errors: 0, Skipped: 0 -- in NotificationServiceImplTest
-[INFO] Running com.group2.rms.offer.OfferExportServiceTests
+[INFO] Running com.group2.rms.offer.service.OfferExportServiceTests
 [INFO] Tests run: 16, Failures: 0, Errors: 0, Skipped: 0 -- in OfferExportServiceTests
 [INFO] Running com.group2.rms.offer.repository.CandidateOfferQueryTests
 [INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0 -- in CandidateOfferQueryTests

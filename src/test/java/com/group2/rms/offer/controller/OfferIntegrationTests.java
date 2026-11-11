@@ -1,4 +1,4 @@
-package com.group2.rms.offer;
+package com.group2.rms.offer.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.group2.rms.core.config.SecurityConfig;

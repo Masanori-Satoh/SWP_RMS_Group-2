@@ -1,3 +1,5 @@
+> Ghi chú 11/11/2026: đường dẫn và package test đã được cập nhật theo tầng kiểm thử; kết quả Task/PR lịch sử giữ nguyên.
+
 # BÁO CÁO MERGE PULL REQUEST (PR DESCRIPTION)
 
 - **Nhánh thực hiện (Branch):** `feat/huyenpt/candidate-offer-response-deadline`
@@ -121,7 +123,7 @@ Nhánh `feat/huyenpt/candidate-offer-response-deadline` hoàn thiện trọn v�
 | 17 | `src/main/resources/static/css/offers.css` | Modified | Thêm toàn bộ style layout chi tiết Screen 32, KPI card, date tiles, flash alert 2s animation |
 | 18 | `src/main/resources/static/js/offers.js` | Modified | Xử lý bộ đếm ký tự 0/500, modal custom SweetAlert2 cho gửi Offer và từ chối |
 | 19 | `src/test/java/com/group2/rms/service/OfferServiceTests.java` | Modified | Cập nhật và bổ sung test cases kiểm tra hạn phản hồi và tính toán deadline |
-| 20 | `src/test/java/com/group2/rms/offer/OfferExportServiceTests.java` | Modified | Sửa import JobPosting khớp gói kiến trúc mới sau khi merge main |
+| 20 | `src/test/java/com/group2/rms/offer/service/OfferExportServiceTests.java` | Modified | Sửa import JobPosting khớp gói kiến trúc mới sau khi merge main |
 | 21 | `docs/members/huyenpt/pr-description.md` | Modified | Tài liệu báo cáo chi tiết Pull Request phục vụ merge |
 
 ---

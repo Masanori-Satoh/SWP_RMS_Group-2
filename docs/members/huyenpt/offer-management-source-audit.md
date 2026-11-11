@@ -1,3 +1,5 @@
+> Ghi chú 11/11/2026: đường dẫn và package test đã được cập nhật theo tầng kiểm thử; kết quả Task/PR lịch sử giữ nguyên.
+
 # BÁO CÁO AUDIT TOÀN DIỆN MÃ NGUỒN PHÂN HỆ QUẢN LÝ THƯ MỜI NHẬN VIỆC (OFFER MANAGEMENT)
 
 > **Lưu ý khi đọc:** Tài liệu lịch sử: phản ánh thời điểm audit/refactor; tên hàm, đường dẫn và đề xuất có thể khác code đã merge. Xem [mục lục và hướng dẫn hiện hành](README.md).
@@ -91,11 +93,11 @@ Hệ thống mã nguồn của phân hệ Quản lý Đề xuất & Thư mời n
 - `database/migrations/008_offer_response_deadline.sql` (21 lines) - Thêm cột `ResponsePeriodDays`, `ResponseDeadline`, ràng buộc `CK_OfferProposal_ResponsePeriodDays`.
 
 ### 1.11. Automated Test Suite (7 files)
-- `src/test/java/com/group2/rms/offer/OfferIntegrationTests.java` (589 lines) - 27 ca kiểm thử tích hợp MVC MockMvc.
+- `src/test/java/com/group2/rms/offer/controller/OfferIntegrationTests.java` (589 lines) - 27 ca kiểm thử tích hợp MVC MockMvc.
 - `src/test/java/com/group2/rms/offer/service/OfferServiceTests.java` (1597 lines) - 41 ca kiểm thử đơn vị tầng Service.
-- `src/test/java/com/group2/rms/offer/CandidateOfferWebTests.java` (322 lines) - 19 ca kiểm thử MVC bảo mật cổng ứng viên.
+- `src/test/java/com/group2/rms/offer/controller/CandidateOfferWebTests.java` (322 lines) - 19 ca kiểm thử MVC bảo mật cổng ứng viên.
 - `src/test/java/com/group2/rms/offer/service/CandidateOfferServiceTests.java` (531 lines) - 18 ca kiểm thử đơn vị CandidateOfferService.
-- `src/test/java/com/group2/rms/offer/OfferExportServiceTests.java` (319 lines) - 10 ca kiểm thử xuất file Excel.
+- `src/test/java/com/group2/rms/offer/service/OfferExportServiceTests.java` (319 lines) - 10 ca kiểm thử xuất file Excel.
 - `src/test/java/com/group2/rms/offer/controller/OfferControllerBugTests.java` (158 lines) - 6 ca kiểm thử hồi quy các lỗi đã fix.
 - `src/test/java/com/group2/rms/offer/repository/CandidateOfferQueryTests.java` (101 lines) - 5 ca kiểm thử JPA Query & Atomic Update.
 

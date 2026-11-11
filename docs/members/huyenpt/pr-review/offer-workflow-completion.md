@@ -1,3 +1,5 @@
+> Ghi chú 11/11/2026: đường dẫn và package test đã được cập nhật theo tầng kiểm thử; kết quả Task/PR lịch sử giữ nguyên.
+
 > Ghi chú 11/11/2026: đường dẫn JavaScript đã được cập nhật theo vị trí hiện hành; kết quả thực hiện lịch sử không thay đổi.
 
 > Ghi chú 11/11/2026: đường dẫn CSS trong tài liệu đã được cập nhật theo vị trí hiện hành; các kết quả Task/PR lịch sử được giữ nguyên.
@@ -103,8 +105,8 @@ Log cục bộ không commit: scratch/offer-workflow-completion-tests.log, scrat
 | `src/main/resources/templates/offers/fragments/confirmations.html` | Fragment xác nhận gửi/xóa dùng chung trong Offer. | 34 / 0 |
 | `src/main/resources/templates/offers/list.html` | Bộ lọc, thuật ngữ, export, popup và trạng thái hết hạn. | 56 / 70 |
 | `src/test/java/com/group2/rms/notification/service/NotificationServiceImplTests.java` | Test link nhận/từ chối theo người nhận. | 25 / 2 |
-| `src/test/java/com/group2/rms/offer/OfferExportServiceTests.java` | Hợp đồng export, số liệu và workbook nhiều dòng. | 363 / 0 |
-| `src/test/java/com/group2/rms/offer/OfferIntegrationTests.java` | HTTP/form/JSON, quyền và render UI; giữ regression PR #161. | 189 / 100 |
+| `src/test/java/com/group2/rms/offer/service/OfferExportServiceTests.java` | Hợp đồng export, số liệu và workbook nhiều dòng. | 363 / 0 |
+| `src/test/java/com/group2/rms/offer/controller/OfferIntegrationTests.java` | HTTP/form/JSON, quyền và render UI; giữ regression PR #161. | 189 / 100 |
 | `src/test/java/com/group2/rms/offer/controller/OfferControllerBugTests.java` | Đồng bộ fixture cho hợp đồng controller. | 1 / 1 |
 | `src/test/java/com/group2/rms/offer/repository/CandidateOfferQueryTests.java` | Đồng bộ câu query và phản hồi với contract mới. | 8 / 3 |
 | `src/test/java/com/group2/rms/offer/repository/OfferPersistenceRegressionTests.java` | Regression SQL riêng cho query, race, rollback, notification và hết hạn. | 601 / 0 |

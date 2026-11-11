@@ -1,3 +1,5 @@
+> Ghi chú 11/11/2026: đường dẫn và package test đã được cập nhật theo tầng kiểm thử; kết quả Task/PR lịch sử giữ nguyên.
+
 > Ghi chú 11/11/2026: đường dẫn JavaScript đã được cập nhật theo vị trí hiện hành; kết quả thực hiện lịch sử không thay đổi.
 
 # Tổng kết thay đổi chưa PR — Offer Management
@@ -75,7 +77,17 @@ Kiểm tra thực tế phát hiện dữ liệu demo đã được nạp vào da
 - Browser fixture xác nhận script mới trên 4 trang; popup HR/Director mở được, form gợi ý 85% cho 36.000.000 ra 30.600.000. Không submit tạo/sửa/gửi/duyệt dữ liệu. Bằng chứng trong `scratch/offer-search-upgrade-20261110/js-move-browser/`; không phải E2E đăng nhập/database.
 - Giữ 4 bản JS build cũ trong `scratch/offer-search-upgrade-20261110/js-move-stale-build-backup/` để không còn tài nguyên cũ trong classpath; không clean toàn bộ target hoặc xóa bản lưu.
 - Quét toàn bộ file Git quản lý: không còn tham chiếu thư mục JS con cũ, đồng thời không tái xuất hiện tham chiếu CSS con cũ. Log/snapshot lịch sử ngoài Git giữ nguyên.
-- Phạm vi lần này: 4 rename JS, 4 template, 2 file test và 13 tài liệu; không đổi nội dung JS, CSS, backend, database hoặc module khác. Manifest tổng branch so với main hiện tại là **34 file**.
+- Phạm vi lần chuyển JS: 4 rename JS, 4 template, 2 file test và 13 tài liệu; không đổi nội dung JS, CSS, backend, database hoặc module khác. Snapshot sau lần chuyển JS là 34 file; tổ chức lại test bổ sung ở mục 2.7.
+
+### 2.7. Đặt test theo tầng kiểm thử — 11/11/2026
+
+- Chuyển `CandidateOfferWebTests.java` và `OfferIntegrationTests.java` vào `src/test/java/com/group2/rms/offer/controller/`; chuyển `OfferExportServiceTests.java` vào `src/test/java/com/group2/rms/offer/service/`.
+- Giữ nguyên tên lớp, method, annotation, fixture, mock và assertion; mỗi file chỉ đổi dòng package. Hai lớp WebMvcTest thuộc controller, lớp Mockito xuất Excel thuộc service; không tạo thêm integration folder chỉ vì tên lớp.
+- Cả 8 file test Offer có package khớp đường dẫn; không còn test Java nằm trực tiếp ở root package Offer. Không đổi cấu hình Surefire hoặc production.
+- Cập nhật đường dẫn/package tham chiếu trong 19 tài liệu HuyenPT, ghi chú việc chuyển; giữ kết quả lịch sử. Tài liệu của thành viên khác không thay đổi.
+- Ba nhóm class build ở package cũ được chuyển riêng sang `scratch/offer-search-upgrade-20261110/test-package-stale-build-backup/` để tránh JUnit chạy cả lớp cũ và mới; không xóa các artifact khác.
+- Chạy lại 5 lớp Offer bằng tên package đầy đủ mới: **314/314 đạt**, không failure/error/skipped. Surefire xác nhận CandidateOfferWebTests 19 test, OfferIntegrationTests 72 test, OfferExportServiceTests 15 test ở package mới; hai lớp service còn lại 46 và 162 test. Log: `scratch/offer-search-upgrade-20261110/test-package-move.log`; không chạy test database opt-in hoặc kết nối/ghi database. Không chạy lại Node vì không đổi JavaScript/test frontend.
+- Manifest lần này: 3 rename test và 19 tài liệu. Sau bổ sung, diff tổng branch so với main là **48 file**; phần lớn file tăng thêm là cập nhật đường dẫn trong tài liệu lịch sử.
 
 ## 3. Các commit công việc mới
 
@@ -100,13 +112,13 @@ Các phase có sửa trùng file; không cộng số file hoặc số dòng từ
 | `src/main/resources/templates/offers/list.html` | 1 | 1 | Gợi ý ô tìm và maxlength cho HR |
 | `src/main/resources/templates/offers/director-list.html` | 1 | 1 | Gợi ý ô tìm và maxlength cho Director |
 | `src/test/java/com/group2/rms/offer/service/OfferServiceTests.java` | 96 | 0 | Keyword, wildcard, #ID, lương và giới hạn |
-| `src/test/java/com/group2/rms/offer/OfferIntegrationTests.java` | 41 | 3 | Payload frontend, HTML theo vai trò, bộ lọc khi phân trang |
-| `src/test/java/com/group2/rms/offer/OfferExportServiceTests.java` | 7 | 4 | Workbook FILTERED với keyword lương |
+| `src/test/java/com/group2/rms/offer/controller/OfferIntegrationTests.java` | 41 | 3 | Payload frontend, HTML theo vai trò, bộ lọc khi phân trang |
+| `src/test/java/com/group2/rms/offer/service/OfferExportServiceTests.java` | 7 | 4 | Workbook FILTERED với keyword lương |
 | `src/test/js/offer-frontend.test.cjs` | 24 | 0 | Scope export và input chưa áp dụng |
 | `docs/members/huyenpt/offer-search-upgrade-20261110.md` | 73 | 0 | Các phase tìm kiếm, bằng chứng và giới hạn kiểm chứng |
 | **Tổng trước báo cáo này** | **286** | **44** | **10 file** |
 
-Snapshot trước lần chuyển CSS gồm 5 file production của ứng dụng Offer, 4 file test, 1 tài liệu; cộng báo cáo này là 11 file. Các file bổ sung của lần chuyển CSS/JS nằm ở mục 2.5–2.6; manifest hiện tại là 34 file. Không có diff seed hoặc hướng dẫn seed so với main.
+Snapshot trước lần chuyển CSS gồm 5 file production của ứng dụng Offer, 4 file test, 1 tài liệu; cộng báo cáo này là 11 file. Các lần chuyển CSS/JS và tổ chức lại test nằm ở mục 2.5–2.7; manifest hiện tại là 48 file. Không có diff seed hoặc hướng dẫn seed so với main.
 
 ## 5. Kết quả kiểm chứng đã thực hiện
 
