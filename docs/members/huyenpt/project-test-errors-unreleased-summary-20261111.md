@@ -89,6 +89,17 @@ Kiểm tra thực tế phát hiện dữ liệu demo đã được nạp vào da
 - Chạy lại 5 lớp Offer bằng tên package đầy đủ mới: **314/314 đạt**, không failure/error/skipped. Surefire xác nhận CandidateOfferWebTests 19 test, OfferIntegrationTests 72 test, OfferExportServiceTests 15 test ở package mới; hai lớp service còn lại 46 và 162 test. Log: `scratch/offer-search-upgrade-20261110/test-package-move.log`; không chạy test database opt-in hoặc kết nối/ghi database. Không chạy lại Node vì không đổi JavaScript/test frontend.
 - Manifest lần này: 3 rename test và 19 tài liệu. Sau bổ sung, diff tổng branch so với main là **48 file**; phần lớn file tăng thêm là cập nhật đường dẫn trong tài liệu lịch sử.
 
+### 2.8. Rà soát cuối — Phase 1: phạm vi đọc của Director
+
+- Dùng một specification `visibleToDirector` cho danh sách, đọc theo ID (HTML/JSON) và bộ đếm trạng thái: loại xóa mềm/Draft; cho xem mọi Pending_Director hoặc thư mời có lịch sử quyết định của Director hiện tại.
+- Đọc nội bộ kiểm tra tài khoản và vai trò: HR giữ phạm vi hiện có, Director áp dụng query giới hạn bản ghi, các vai trò khác bị từ chối. Bản ghi ngoài phạm vi trả ResourceNotFoundException/404, không tiết lộ sự tồn tại qua URL trực tiếp.
+- Dùng EXISTS thay vì join lịch sử để không nhân đôi hàng và không làm sai phân trang/count. Không đổi endpoint, UI, lifecycle, quyền ghi hoặc schema; Candidate portal tiếp tục dùng truy vấn riêng theo chủ sở hữu.
+- Sửa test template trước đây cho phép Director xem Draft: dùng Pending hợp lệ; thêm test 404 HTML/JSON với hai tài khoản Director Active và test service với hai Director ID khác nhau. Kiểm tra Draft, lịch sử của người khác, lịch sử của mình, các trạng thái sau gửi, vai trò không thuộc Offer và phạm vi các bộ đếm.
+- Bộ kiểm thử mở rộng: **337/337 đạt** thuộc 5 lớp Offer, không failure/error/skipped; tăng 23 test so với baseline 314. Không chạy các test database opt-in hoặc gửi email.
+- Probe JPA chỉ đọc SQL Server: so khớp danh sách/count/chi tiết với SQL tham chiếu cho Director có lịch sử (29 dòng) và một danh tính không có lịch sử (4 Pending); Draft không truy cập được. Bộ đếm trạng thái của service khớp các bản ghi được phép xem trong cả hai trường hợp. Đây là kiểm tra trên dữ liệu local, không phải hai tài khoản Director thực được tạo mới. Không chạy ứng dụng, job hoặc DDL/DML.
+- Log nằm tại `scratch/offer-search-upgrade-20261110/phase1-director-access-verified.log` và `phase1-director-sql-verified.log`; probe/helper giữ ngoài Git. Không kết luận toàn bộ test dự án đều đạt.
+- Phạm vi commit Phase 1: repository/service Offer, hai file test Offer và báo cáo này. Phase 2–6 chưa thuộc lần chỉnh sửa này: phân trang/lương, giới hạn nhận xét, xử lý exception, endpoint trùng và chuẩn hóa frontend.
+
 ## 3. Các commit công việc mới
 
 | Commit | Nội dung | Diff riêng commit |

@@ -300,7 +300,7 @@ class OfferIntegrationTests {
             "hr_specialist, HR, Draft, true, false",
             "hr_specialist, HR, Director_Approved, false, true",
             "hr_specialist, HR, Sent_Candidate, false, false",
-            "director_user, DIRECTOR, Draft, false, false",
+            "director_user, DIRECTOR, Pending_Director, false, false",
             "director_user, DIRECTOR, Director_Approved, false, false"
     })
     void sharedConfirmationsKeepRoleAndStatusVisibility(String username, String role, String offerStatus,
@@ -319,6 +319,21 @@ class OfferIntegrationTests {
         }
         if (sendVisible) {
             org.junit.jupiter.api.Assertions.assertTrue(html.contains("aria-labelledby=\"sendOfferTitle\""));
+        }
+    }
+
+    @ParameterizedTest
+    @CsvSource({"director_user,1", "director_other,2"})
+    void directorOutOfScopeDetailsReturn404ForHtmlAndJson(String username, int id) throws Exception {
+        when(userRepository.findByUsernameIgnoreCase(username)).thenReturn(Optional.of(User.builder()
+                .userId(id).username(username).accountStatus("Active")
+                .role(Role.builder().roleName("Director").build()).build()));
+        when(offerService.getOfferDetailForHr(id))
+                .thenThrow(new com.group2.rms.core.exception.ResourceNotFoundException("Không tìm thấy thư mời nhận việc."));
+        for (MediaType accept : List.of(MediaType.TEXT_HTML, MediaType.APPLICATION_JSON)) {
+            mvc.perform(get("/offers/" + id).with(user(username).roles("DIRECTOR")).accept(accept))
+                    .andExpect(status().isNotFound())
+                    .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("candidateEmail"))));
         }
     }
 

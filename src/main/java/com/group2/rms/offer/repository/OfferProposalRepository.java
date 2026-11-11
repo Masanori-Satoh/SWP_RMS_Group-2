@@ -1,6 +1,7 @@
 package com.group2.rms.offer.repository;
 
 import com.group2.rms.offer.entity.OfferProposal;
+import com.group2.rms.offer.entity.OfferApproval;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -52,6 +53,23 @@ public interface OfferProposalRepository extends JpaRepository<OfferProposal, In
 
     @Query("SELECT COUNT(o) FROM OfferProposal o WHERE (o.isDeleted IS NULL OR o.isDeleted = false) AND o.offerStatus = 'Expired'")
     long countExpired();
+
+    /** Giám đốc xem mọi đề xuất chờ duyệt và lịch sử mình đã quyết định; không xem Draft/xóa mềm. */
+    static Specification<OfferProposal> visibleToDirector(Integer directorId) {
+        return (root, query, builder) -> {
+            if (directorId == null) return builder.disjunction();
+            var history = query.subquery(Integer.class);
+            var approval = history.from(OfferApproval.class);
+            history.select(builder.literal(1)).where(
+                    builder.equal(approval.get("offerProposal").get("offerId"), root.get("offerId")),
+                    builder.equal(approval.get("director").get("userId"), directorId));
+            return builder.and(
+                    builder.or(builder.isNull(root.get("isDeleted")), builder.isFalse(root.get("isDeleted"))),
+                    builder.notEqual(builder.lower(root.get("offerStatus")), "draft"),
+                    builder.or(builder.equal(builder.lower(root.get("offerStatus")), "pending_director"),
+                            builder.exists(history)));
+        };
+    }
 
     /**
      * Bộ lọc HR/Excel: loại bản ghi xóa mềm, chuẩn hóa trạng thái và dùng cùng tìm kiếm với Giám đốc.
