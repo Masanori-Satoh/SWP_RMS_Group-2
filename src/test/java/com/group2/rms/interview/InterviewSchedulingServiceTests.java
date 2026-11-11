@@ -639,9 +639,9 @@ class InterviewSchedulingServiceTests {
                 .interviewStatus(InterviewStatus.Scheduled)
                 .build();
 
-        when(interviewScheduleRepository.findAllByDepartmentId(10)).thenReturn(List.of(s1));
+        when(interviewScheduleRepository.findAllByDepartmentId(10, 7)).thenReturn(List.of(s1));
 
-        List<InterviewScheduleResponse> results = service.getSchedulesForDepartment(10);
+        List<InterviewScheduleResponse> results = service.getSchedulesForDepartment(10, 7);
         assertNotNull(results);
         assertEquals(1, results.size());
         assertEquals(401L, results.get(0).interviewId());

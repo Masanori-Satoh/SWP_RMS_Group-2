@@ -11,7 +11,9 @@ import com.group2.rms.dashboard.internal.repository.DashboardListRepository.Prog
 import com.group2.rms.dashboard.internal.repository.InternalMetricsRepository;
 import com.group2.rms.requisition.service.RequisitionAccess;
 import com.group2.rms.requisition.service.RequisitionLabels;
+import com.group2.rms.user.entity.Department;
 import com.group2.rms.user.entity.User;
+import com.group2.rms.user.repository.DepartmentRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,12 +36,14 @@ public class HiringManagerDashboardService {
 
     private final InternalMetricsRepository metrics;
     private final DashboardListRepository lists;
+    private final DepartmentRepository departments;
     private final Clock clock;
 
     public HiringManagerDashboardService(InternalMetricsRepository metrics, DashboardListRepository lists,
-            Clock clock) {
+            DepartmentRepository departments, Clock clock) {
         this.metrics = metrics;
         this.lists = lists;
+        this.departments = departments;
         this.clock = clock;
     }
 
@@ -49,9 +53,19 @@ public class HiringManagerDashboardService {
         int userId = user.getUserId();
         Integer departmentId = null;
         String scopeLabel = "Chưa được gán phòng ban";
+        // Số liệu đã tính cả phòng HM làm trưởng phòng (m.userId = :userId); nhãn liệt kê đủ các phòng đó.
+        List<String> departmentNames = new ArrayList<>();
         if (user.getDepartment() != null) {
             departmentId = user.getDepartment().getDepartmentId();
-            scopeLabel = "Phòng " + user.getDepartment().getDepartmentName();
+            departmentNames.add(user.getDepartment().getDepartmentName());
+        }
+        for (Department managed : departments.findAllByManagerUserIdOrderByDepartmentNameAsc(userId)) {
+            if (!departmentNames.contains(managed.getDepartmentName())) {
+                departmentNames.add(managed.getDepartmentName());
+            }
+        }
+        if (!departmentNames.isEmpty()) {
+            scopeLabel = "Phòng " + String.join(", ", departmentNames);
         }
 
         List<ProgressRow> progressRows = lists.hiringProgress(userId, departmentId);

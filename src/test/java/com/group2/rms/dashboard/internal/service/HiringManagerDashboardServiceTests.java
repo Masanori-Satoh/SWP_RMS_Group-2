@@ -52,7 +52,8 @@ class HiringManagerDashboardServiceTests {
     void setUp() {
         metrics = mock(InternalMetricsRepository.class);
         lists = mock(DashboardListRepository.class);
-        service = new HiringManagerDashboardService(metrics, lists, CLOCK);
+        service = new HiringManagerDashboardService(metrics, lists,
+                mock(com.group2.rms.user.repository.DepartmentRepository.class), CLOCK);
     }
 
     private User hiringManager(Integer departmentId) {

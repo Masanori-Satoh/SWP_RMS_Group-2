@@ -194,12 +194,10 @@ public class AccountListService {
             var before = UserAuditLogger.userSnapshot(user);
             user.setAccountStatus("Inactive");
             users.save(user);
-            // An inactive account must not remain the department's manager.
-            Department department = user.getDepartment();
-            if (department != null && department.getManager() != null
-                    && userId == department.getManager().getUserId()) {
-                department.setManager(null);
-                departments.save(department);
+            // An inactive account must not remain the manager of any department it manages.
+            for (Department managed : departments.findAllByManagerUserIdOrderByDepartmentNameAsc(userId)) {
+                managed.setManager(null);
+                departments.save(managed);
             }
             audit.changes("User", userId, before, UserAuditLogger.userSnapshot(user));
         }

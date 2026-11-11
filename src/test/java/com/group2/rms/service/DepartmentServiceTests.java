@@ -185,6 +185,17 @@ class DepartmentServiceTests {
         assertEquals("Member 9",choices.getFirst().fullName());
         assertEquals("member9",choices.getFirst().username());
     }
+    @Test
+    @DisplayName("Người phòng khác (kể cả Hiring Manager) không được làm trưởng phòng này")
+    void memberOfAnotherDepartmentIsRejected() {
+        when(departments.findForUpdate(7)).thenReturn(Optional.of(department));
+        when(users.findById(9)).thenReturn(Optional.of(
+                member(9, "Hiring Manager", "Active", Department.builder().departmentId(8).build())));
+        var error = assertThrows(DepartmentFieldException.class, () -> service.update(7, new DepartmentRequest("Sản phẩm", 9)));
+        assertEquals("managerId", error.getField());
+        assertEquals(null, department.getManager());
+    }
+
     private User member(int id,String role,String status,Department own) {
         return User.builder().userId(id).fullName("Member "+id).username("member"+id).department(own)
                 .role(Role.builder().roleName(role).build()).accountStatus(status).build();

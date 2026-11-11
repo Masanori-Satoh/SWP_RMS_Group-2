@@ -25,6 +25,7 @@ import java.util.Objects;
 
 @Service
 public class DepartmentService {
+    private static final String HIRING_MANAGER = "Hiring Manager";
     private final DepartmentRepository departments;
     private final UserRepository users;
     private final RoleRepository roles;
@@ -82,10 +83,12 @@ public class DepartmentService {
         User manager = null;
         if (form.managerId() != null) {
             manager = users.findById(form.managerId()).orElse(null);
+            boolean inThisDepartment = manager != null && manager.getDepartment() != null
+                    && Integer.valueOf(id).equals(manager.getDepartment().getDepartmentId());
             if (manager == null || !"Active".equals(manager.getAccountStatus())
                     || !RoleAuthorities.INTERNAL_ROLE_NAMES.contains(manager.getRole().getRoleName())
-                    || manager.getDepartment() == null || !Integer.valueOf(id).equals(manager.getDepartment().getDepartmentId())) {
-                throw invalid("managerId", "Trưởng phòng phải là tài khoản nội bộ đang hoạt động thuộc chính phòng ban này.", id, form);
+                    || !inThisDepartment) {
+                throw invalid("managerId", "Trưởng phòng phải là tài khoản nội bộ đang hoạt động thuộc phòng ban này.", id, form);
             }
         }
         User previousManager = department.getManager();
@@ -93,8 +96,8 @@ public class DepartmentService {
                 manager == null ? null : manager.getUserId());
         // Resolve every required role before changing managed entities; the flush below
         // persists the assignment and both users' roles in this same transaction.
-        Role managerRole = manager != null && !hasRole(manager, "Hiring Manager")
-                ? assignmentRole("Hiring Manager", id, form) : null;
+        Role managerRole = manager != null && !hasRole(manager, HIRING_MANAGER)
+                ? assignmentRole(HIRING_MANAGER, id, form) : null;
         Role previousRole = previousManager != null && managerChanged && !hasRole(previousManager, "Interviewer")
                 ? assignmentRole("Interviewer", id, form) : null;
         var previousUser = previousManager == null ? null : UserAuditLogger.userSnapshot(previousManager);

@@ -436,12 +436,12 @@ public class InterviewSchedulingServiceImpl implements InterviewSchedulingServic
 
     @Override
     @Transactional
-    public List<InterviewScheduleResponse> getSchedulesForDepartment(Integer departmentId) {
+    public List<InterviewScheduleResponse> getSchedulesForDepartment(Integer departmentId, Integer managerUserId) {
         completeEndedSchedules();
         if (departmentId == null) {
             throw new IllegalArgumentException("Department ID không được để trống.");
         }
-        return interviewScheduleRepository.findAllByDepartmentId(departmentId).stream()
+        return interviewScheduleRepository.findAllByDepartmentId(departmentId, managerUserId).stream()
                 .map(InterviewScheduleResponse::fromEntity)
                 .toList();
     }

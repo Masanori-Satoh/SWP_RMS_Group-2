@@ -83,7 +83,7 @@ public class InterviewSchedulingController {
             Integer deptId = currentUser.getDepartment() != null ? currentUser.getDepartment().getDepartmentId() : null;
             log.info("Hiring Manager (ID: {}) đang xem lịch phỏng vấn của phòng ban ID {}.", currentUser.getUserId(), deptId);
             schedules = deptId != null
-                    ? interviewSchedulingService.getSchedulesForDepartment(deptId)
+                    ? interviewSchedulingService.getSchedulesForDepartment(deptId, currentUser.getUserId())
                     : interviewSchedulingService.getMySchedulesForInterviewer(currentUser.getUserId());
         } else if (isHr || isDirector) {
             log.info("HR / Director (ID: {}) đang xem toàn bộ danh sách lịch phỏng vấn.", currentUser.getUserId());

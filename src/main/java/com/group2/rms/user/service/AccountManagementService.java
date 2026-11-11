@@ -176,13 +176,17 @@ public class AccountManagementService {
         checkEmailAvailable(users, email, userId);
         checkSingleHiringManager(role, department, command.accountStatus(), userId);
 
-        // Keep Department.ManagerId consistent when this account stops being the manager.
+        // Keep Department.ManagerId consistent: no longer an active Hiring Manager -> leave every managed
+        // department; moved to another department -> leave only the old home department.
         Department previous = user.getDepartment();
-        if (previous != null && previous.getManager() != null && userId == previous.getManager().getUserId()
-                && (!isHiringManager(role) || department == null
-                    || !previous.getDepartmentId().equals(department.getDepartmentId()))) {
-            previous.setManager(null);
-            departments.save(previous);
+        boolean staysManager = isHiringManager(role) && "Active".equals(command.accountStatus());
+        boolean leftHome = previous != null
+                && (department == null || !previous.getDepartmentId().equals(department.getDepartmentId()));
+        for (Department managed : departments.findAllByManagerUserIdOrderByDepartmentNameAsc(userId)) {
+            if (!staysManager || (leftHome && managed.getDepartmentId().equals(previous.getDepartmentId()))) {
+                managed.setManager(null);
+                departments.save(managed);
+            }
         }
         if (isHiringManager(role) && department != null && department.getManager() == null
                 && "Active".equals(command.accountStatus())) {
