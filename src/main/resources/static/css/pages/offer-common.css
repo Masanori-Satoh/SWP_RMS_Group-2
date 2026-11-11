@@ -627,7 +627,8 @@ button.director-stat-card {
   padding-inline: var(--s6);
 }
 
-.ofw-list-surface .adw-data-table .ofw-id-cell {
+.ofw-list-surface .adw-data-table .ofw-id-cell,
+.ofw-list-surface .adw-data-table .ofw-action-cell {
   text-align: center;
 }
 
@@ -753,7 +754,7 @@ button.director-stat-card {
 .ofw-actions-cell {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: center;
   gap: var(--s2);
 }
 

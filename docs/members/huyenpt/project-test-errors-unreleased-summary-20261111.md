@@ -173,6 +173,11 @@ Kiểm tra thực tế phát hiện dữ liệu demo đã được nạp vào da
 - Thêm class riêng .ofw-id-cell vào th/td cột mã trên HR/Director, căn text-align center trong phạm vi bảng Offer. Giữ độ rộng cột, dữ liệu, href, thứ tự và checkbox; không sửa CSS chung/backend.
 - Đạt **121/121 test MVC Offer**, 6 kiểm tra Edge (2 vai trò × 1440/768/390px). Đo tâm tiêu đề và các mã 1/9/10/1234 khớp tâm ô trong sai số dưới 1px; href vẫn /offers/12 của fixture. Log offer-id-center-mvc.log, offer-id-center-browser.log; ảnh/số đo tại scratch/offer-search-upgrade-20261110/offer-id-center. Không ghi DB.
 
+### 2.19. Căn giữa cột thao tác
+
+- Thêm .ofw-action-cell cho th/td cột thao tác HR/Director, dùng quy tắc căn giữa riêng bảng Offer; nhóm .ofw-actions-cell đổi justify-content từ flex-end sang center. Giữ độ rộng cột, gap/kích thước nút, href, data-action và điều kiện theo trạng thái/quyền.
+- Đạt **121/121 test MVC Offer**, **18 phép đo browser** (2 vai trò × 3 viewport × nhóm 1/2/3 nút) với độ lệch tâm dưới 1px; tiêu đề căn giữa và dữ liệu hành động giữ nguyên. Việc ẩn bớt nút chỉ dùng trong DOM fixture để đo layout, không sửa quyền production. Log offer-action-center-mvc.log, offer-action-center-browser.log, ảnh/số đo tại scratch/offer-search-upgrade-20261110/offer-action-center. Không ghi database hoặc sửa module khác.
+
 ## 3. Các commit công việc mới
 
 | Commit | Nội dung | Diff riêng commit |

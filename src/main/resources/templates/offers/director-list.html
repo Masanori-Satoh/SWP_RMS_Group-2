@@ -148,7 +148,7 @@
                         <th>Trạng thái</th>
                         <th>Ngày lập</th>
                         <th>Người tạo thư mời</th>
-                        <th class="ofw-col-action ofw-col-action-wide">Hành động</th>
+                        <th class="ofw-col-action ofw-col-action-wide ofw-action-cell">Hành động</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -198,7 +198,7 @@
                             <div th:text="${o.proposedByName != null ? o.proposedByName : 'Bộ phận Tuyển dụng'}">Bộ phận Tuyển dụng</div>
                             <div class="cand-email-sub ofw-cand-email">(Bộ phận Tuyển dụng)</div>
                         </td>
-                        <td class="ofw-col-action ofw-col-action-wide">
+                        <td class="ofw-col-action ofw-col-action-wide ofw-action-cell">
                             <div class="offer-actions-cell ofw-actions-cell">
                                 <a th:href="@{/offers/{id}(id=${o.offerId})}"
                                    class="btn-icon ofw-action-btn"
