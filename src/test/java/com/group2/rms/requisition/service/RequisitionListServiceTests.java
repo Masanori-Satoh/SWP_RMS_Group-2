@@ -309,9 +309,9 @@ class RequisitionListServiceTests {
 
         assertTrue(partTime.errors().isEmpty());
         assertEquals("Part-time", partTime.filter().employmentType());
-        assertEquals("Hình thức: Bán thời gian", partTime.chips().get(0).label());
+        assertEquals("Hình thức làm việc: Bán thời gian", partTime.chips().get(0).label());
         assertNull(unknown.filter().employmentType());
-        assertEquals(List.of("Bộ lọc hình thức không hợp lệ. Vui lòng chọn bộ lọc hợp lệ."), unknown.errors());
+        assertEquals(List.of("Bộ lọc hình thức làm việc không hợp lệ. Vui lòng chọn bộ lọc hợp lệ."), unknown.errors());
 
         loginAs(RequisitionAccess.ROLE_DIRECTOR);
         RequisitionListResponse director = service.getListPage(

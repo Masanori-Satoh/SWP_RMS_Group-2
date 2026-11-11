@@ -13,7 +13,10 @@
     };
 
     const FIELD_RULES = [
-        { id: 'title', label: 'Tên vị trí', section: 'rqf-position', requiredForDraft: true },
+        {
+            id: 'title', label: 'Tên vị trí tuyển dụng', section: 'rqf-position', requiredForDraft: true,
+            errorOf: value => value.length < 3 ? 'Tên vị trí tuyển dụng phải có ít nhất 3 ký tự.' : ''
+        },
         {
             id: 'numberOfPositions', label: 'Số lượng', section: 'rqf-position', requiredForDraft: true,
             errorOf: value => {
@@ -25,8 +28,8 @@
                     ? '' : `Số lượng cần tuyển phải từ ${min} đến ${max} người.`;
             }
         },
-        { id: 'employmentType', label: 'Hình thức làm việc', section: 'rqf-work', requiredForDraft: true, radio: true },
-        { id: 'workModel', label: 'Mô hình làm việc', section: 'rqf-work', requiredForDraft: true, radio: true },
+        { id: 'employmentType', label: 'Hình thức làm việc', section: 'rqf-work', requiredForDraft: true },
+        { id: 'workModel', label: 'Mô hình làm việc', section: 'rqf-work', requiredForDraft: true },
         { id: 'workLocation', label: 'Địa điểm làm việc', section: 'rqf-work', requiredForSubmit: true },
         { id: 'reasonForHiring', label: 'Lý do tuyển dụng', section: 'rqf-content', requiredForSubmit: true },
         { id: 'jobDescription', label: 'Mô tả công việc', section: 'rqf-content', requiredForSubmit: true },
@@ -34,12 +37,13 @@
     ];
 
     if (document.getElementById('departmentId')?.tagName === 'SELECT') {
-        FIELD_RULES.splice(1, 0, { id: 'departmentId', label: 'Phòng ban', section: 'rqf-position', requiredForDraft: true });
+        FIELD_RULES.splice(1, 0, { id: 'departmentId', label: 'Phòng ban tuyển dụng', section: 'rqf-position', requiredForDraft: true });
     }
 
     const workLocation = document.getElementById('workLocation');
+    const workModel = document.getElementById('workModel');
     function isRemote() {
-        return form.querySelector('input[name="workModel"]:checked')?.value === 'Remote';
+        return workModel.value === 'Remote';
     }
 
     function syncWorkLocation() {
@@ -54,16 +58,12 @@
     }
 
     function readFieldValue(rule) {
-        if (rule.radio) {
-            const checked = form.querySelector(`input[name="${rule.id}"]:checked`);
-            return checked ? checked.value : '';
-        }
         const input = document.getElementById(rule.id);
         return input ? input.value.trim() : '';
     }
 
     function showError(fieldId, message) {
-        const input = document.getElementById(fieldId) || document.getElementById(fieldId + '-group');
+        const input = document.getElementById(fieldId);
         const errorEl = document.getElementById(fieldId + '-error');
         if (input) {
             input.toggleAttribute('aria-invalid', Boolean(message));
@@ -175,13 +175,11 @@
     }
 
     FIELD_RULES.forEach(rule => {
-        const target = rule.radio ? document.getElementById(rule.id + '-group') : document.getElementById(rule.id);
+        const target = document.getElementById(rule.id);
         target?.addEventListener('change', () => validateField(rule, 'draft'));
         target?.addEventListener('blur', () => validateField(rule, 'submit'), true);
     });
-    form.querySelectorAll('input[name="workModel"]').forEach(input => {
-        input.addEventListener('change', syncWorkLocation);
-    });
+    workModel.addEventListener('change', syncWorkLocation);
 
     ['minSalary', 'maxSalary'].forEach(id => {
         const input = document.getElementById(id);
@@ -233,7 +231,7 @@
             return true;
         };
         const items = FIELD_RULES.filter(rule => rule.id !== 'workLocation' || !isRemote())
-            .map(rule => ({ label: rule.label, target: rule.radio ? rule.id + '-group' : rule.id, done: isFieldDone(rule) }));
+            .map(rule => ({ label: rule.label, target: rule.id, done: isFieldDone(rule) }));
 
         const doneCount = items.filter(item => item.done).length;
         document.getElementById('rqf-progress').textContent = `${doneCount}/${items.length} mục bắt buộc đã xong`;
@@ -257,9 +255,31 @@
     form.addEventListener('input', refreshChecklist);
     form.addEventListener('change', refreshChecklist);
 
+    // Đợt tuyển dụng không bắt buộc (trống = đợt 1), nhưng đã nhập thì phải là số nguyên trong khoảng min..max.
+    const roundInput = document.getElementById('recruitmentRound');
+    function validateRound() {
+        if (!roundInput) return true;
+        const value = roundInput.value.trim();
+        const round = Number(value);
+        const ok = roundInput.validity.valid && (!value || (Number.isInteger(round)
+            && round >= Number(roundInput.min || 1) && round <= Number(roundInput.max || 99)));
+        showError('recruitmentRound', ok ? '' : `Đợt tuyển dụng phải từ ${roundInput.min || 1} đến ${roundInput.max || 99}.`);
+        return ok;
+    }
+    roundInput?.addEventListener('input', validateRound);
+
+    // Chọn "Khác" ở thời gian thử việc thì phải nhập nội dung.
+    function validateProbation() {
+        const choice = document.getElementById('probationChoice');
+        const input = document.getElementById('probationPeriod');
+        const missing = choice?.value === '__other__' && !input?.value.trim();
+        showError('probationPeriod', missing ? 'Vui lòng nhập thời gian thử việc.' : '');
+        return !missing;
+    }
+
     function validateAll(action) {
         const fieldsOk = FIELD_RULES.map(rule => validateField(rule, action)).every(Boolean);
-        const numbersOk = validateNumbers();
+        const numbersOk = [validateNumbers(), validateRound(), validateProbation()].every(Boolean);
         if (!(fieldsOk && numbersOk)) {
             const firstError = form.querySelector('[aria-invalid="true"], .is-invalid input');
             firstError?.scrollIntoView({ behavior: 'smooth', block: 'center' });

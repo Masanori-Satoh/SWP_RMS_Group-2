@@ -28,6 +28,7 @@ public class RequisitionValidator {
 
     public static final int REASON_CHAR_LIMIT = 2000;
     public static final int TITLE_CHAR_LIMIT = 200;
+    public static final int TITLE_MIN_CHARS = 3;
     public static final int TEXT_FIELD_CHAR_LIMIT = 2000;
     public static final int SHORT_FIELD_CHAR_LIMIT = 255;
     public static final int COMMENT_CHAR_LIMIT = 1000;
@@ -95,6 +96,9 @@ public class RequisitionValidator {
 
         // Rule: tên vị trí bắt buộc cả khi lưu nháp
         validateTextField(errors, "title", requisitionRequest.getTitle(), TITLE_CHAR_LIMIT, true);
+        if (requisitionRequest.getTitle() != null && requisitionRequest.getTitle().length() < TITLE_MIN_CHARS) {
+            errors.put("title", "Tên vị trí tuyển dụng phải có ít nhất " + TITLE_MIN_CHARS + " ký tự.");
+        }
         validateTextField(errors, "reasonForHiring", requisitionRequest.getReasonForHiring(), REASON_CHAR_LIMIT,
                 isSubmitAction);
 

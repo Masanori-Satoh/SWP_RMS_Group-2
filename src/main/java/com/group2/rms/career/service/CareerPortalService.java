@@ -21,7 +21,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -60,7 +59,7 @@ public class CareerPortalService {
                         ? job.getRequisition().getDepartment().getDepartmentName()
                         : "",
                 "Remote".equals(job.effectiveWorkModel()) ? "Từ xa" : job.getWorkLocation(),
-                Objects.toString(job.effectiveEmploymentType(), ""),
+                employmentTypeLabel(job),
                 job.getSalaryDisplay(),
                 job.getApplicationDeadline(),
                 job.getPostingDate()));
@@ -70,6 +69,12 @@ public class CareerPortalService {
     public List<PublicJobListResponse> getLatestJobs(int limit) {
         return getPublishedJobs(null, null, null,
                 PageRequest.of(0, limit, Sort.by(Sort.Direction.DESC, "postingDate"))).getContent();
+    }
+
+    // Nhãn tiếng Việt cho ứng viên; tin không có hình thức thì để trống như trước (không hiện "—").
+    private static String employmentTypeLabel(JobPosting job) {
+        String type = job.effectiveEmploymentType();
+        return type == null ? "" : RequisitionLabels.employmentType(type);
     }
 
     private String formatRichText(String text) {
@@ -107,7 +112,7 @@ public class CareerPortalService {
                 job.effectiveWorkLocation(),
                 job.getWorkingHours(),
                 job.getProbationPeriod(),
-                Objects.toString(job.effectiveEmploymentType(), ""),
+                employmentTypeLabel(job),
                 RequisitionLabels.workModel(job.effectiveWorkModel()),
                 RequisitionLabels.gender(job.effectiveGender()),
                 job.getNumberOfPositionsDisplay(),

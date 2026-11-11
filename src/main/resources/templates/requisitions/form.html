@@ -46,10 +46,10 @@
 
                 <div class="card rqf-card adw-surface">
                     <section class="rqf-section" id="rqf-position" aria-labelledby="rqf-h-position">
-                        <h2 id="rqf-h-position">Vị trí cần tuyển</h2>
+                        <h2 id="rqf-h-position">Thông tin tuyển dụng</h2>
                         <div class="rqf-grid">
-                            <div class="rqf-field rqf-full">
-                                <label class="form-label" for="title">Tên vị trí <span
+                            <div class="rqf-field">
+                                <label class="form-label" for="title">Vị trí tuyển dụng <span
                                         class="required-asterisk">*</span></label>
                                 <input class="form-input" type="text" th:field="*{title}" maxlength="200"
                                     placeholder="Nhập vị trí cần tuyển" aria-describedby="title-error"
@@ -58,23 +58,24 @@
                                     th:text="${#fields.hasErrors('title')} ? ${#strings.listJoin(#fields.errors('title'), '; ')} : ''"></small>
                             </div>
 
-                            <div class="rqf-field" th:if="${directApprove}">
-                                <label class="form-label" for="departmentId">Phòng ban <span
+                            <!-- Ô chọn: Giám đốc, hoặc HM quản lý từ 2 phòng trở lên (chỉ liệt kê phòng được phép), cả khi tạo và khi sửa -->
+                            <div class="rqf-field" th:if="${directApprove or #lists.size(departmentChoices) > 1}">
+                                <label class="form-label" for="departmentId">Phòng ban tuyển dụng <span
                                         class="required-asterisk">*</span></label>
                                 <select class="form-select" th:field="*{departmentId}"
                                     aria-describedby="departmentId-error"
                                     th:attr="aria-invalid=${#fields.hasErrors('departmentId')}">
                                     <option value="">Chọn phòng ban</option>
-                                    <option th:each="department : ${departments}"
-                                        th:if="${department.departmentStatus == 'Active'}"
+                                    <option th:each="department : ${departmentChoices}"
                                         th:value="${department.departmentId}" th:text="${department.departmentName}">
                                         Engineering</option>
                                 </select>
                                 <small id="departmentId-error" class="field-error"
                                     th:text="${#fields.hasErrors('departmentId')} ? ${#strings.listJoin(#fields.errors('departmentId'), '; ')} : ''"></small>
                             </div>
-                            <div class="rqf-field" th:unless="${directApprove}">
-                                <span class="form-label">Phòng ban</span>
+                            <div class="rqf-field" th:unless="${directApprove or #lists.size(departmentChoices) > 1}">
+                                <span class="form-label">Phòng ban tuyển dụng</span>
+                                <input type="hidden" th:field="*{departmentId}">
                                 <div class="rqf-readonly">
                                     <th:block th:each="department : ${departments}"
                                         th:if="${department.departmentId == form.departmentId}"
@@ -82,7 +83,7 @@
                                     <span th:if="${form.departmentId == null}">Chưa được gán phòng ban</span>
                                 </div>
                             </div>
-                            <div class="rqf-pair">
+                            <div class="rqf-pair rqf-full">
                                 <div class="rqf-field">
                                     <label class="form-label" for="recruitmentRound">Đợt tuyển dụng</label>
                                     <div class="rqf-stepper">
@@ -119,39 +120,35 @@
                     </section>
 
                     <section class="rqf-section" id="rqf-work" aria-labelledby="rqf-h-work">
-                        <h2 id="rqf-h-work">Điều kiện làm việc</h2>
+                        <h2 id="rqf-h-work">Thông tin công việc</h2>
                         <div class="rqf-grid">
-                            <fieldset class="rqf-field">
-                                <legend class="form-label">Hình thức làm việc <span class="required-asterisk">*</span>
-                                </legend>
-                                <div class="rqf-seg" id="employmentType-group">
-                                    <label><input type="radio" th:field="*{employmentType}" value="Full-time"><span>Toàn
-                                            thời gian</span></label>
-                                    <label><input type="radio" th:field="*{employmentType}" value="Part-time"><span>Bán
-                                            thời gian</span></label>
-                                    <label><input type="radio" th:field="*{employmentType}"
-                                            value="Internship"><span>Thực tập</span></label>
-                                    <label><input type="radio" th:field="*{employmentType}" value="Contract"><span>Hợp
-                                            đồng</span></label>
-                                </div>
+                            <div class="rqf-field">
+                                <label class="form-label" for="employmentType">Hình thức làm việc <span
+                                        class="required-asterisk">*</span></label>
+                                <select class="form-select" th:field="*{employmentType}"
+                                    aria-describedby="employmentType-error"
+                                    th:attr="aria-invalid=${#fields.hasErrors('employmentType')}">
+                                    <option value="Full-time">Toàn thời gian</option>
+                                    <option value="Part-time">Bán thời gian</option>
+                                    <option value="Internship">Thực tập</option>
+                                    <option value="Contract">Tự do</option>
+                                </select>
                                 <small id="employmentType-error" class="field-error"
                                     th:text="${#fields.hasErrors('employmentType')} ? ${#strings.listJoin(#fields.errors('employmentType'), '; ')} : ''"></small>
-                            </fieldset>
+                            </div>
 
-                            <fieldset class="rqf-field">
-                                <legend class="form-label">Mô hình làm việc <span class="required-asterisk">*</span>
-                                </legend>
-                                <div class="rqf-seg" id="workModel-group">
-                                    <label><input type="radio" th:field="*{workModel}" value="On-site"><span>Tại văn
-                                            phòng</span></label>
-                                    <label><input type="radio" th:field="*{workModel}" value="Hybrid"><span>Kết
-                                            hợp</span></label>
-                                    <label><input type="radio" th:field="*{workModel}" value="Remote"><span>Từ
-                                            xa</span></label>
-                                </div>
+                            <div class="rqf-field">
+                                <label class="form-label" for="workModel">Mô hình làm việc <span
+                                        class="required-asterisk">*</span></label>
+                                <select class="form-select" th:field="*{workModel}" aria-describedby="workModel-error"
+                                    th:attr="aria-invalid=${#fields.hasErrors('workModel')}">
+                                    <option value="On-site">Tại văn phòng</option>
+                                    <option value="Hybrid">Kết hợp</option>
+                                    <option value="Remote">Từ xa</option>
+                                </select>
                                 <small id="workModel-error" class="field-error"
                                     th:text="${#fields.hasErrors('workModel')} ? ${#strings.listJoin(#fields.errors('workModel'), '; ')} : ''"></small>
-                            </fieldset>
+                            </div>
 
 
                             <div class="rqf-field rqf-full">
@@ -167,7 +164,7 @@
                             </div>
 
                             <div class="rqf-field">
-                                <label class="form-label" for="minSalary">Lương tối thiểu <span
+                                <label class="form-label" for="minSalary">Mức lương tối thiểu <span
                                         class="rqf-hint">VND/tháng</span></label>
                                 <input class="form-input" type="text" th:field="*{minSalary}" inputmode="numeric"
                                     placeholder="Nhập lương tối thiểu" aria-describedby="minSalary-error"
@@ -176,7 +173,7 @@
                                     th:text="${#fields.hasErrors('minSalary')} ? ${#strings.listJoin(#fields.errors('minSalary'), '; ')} : ''"></small>
                             </div>
                             <div class="rqf-field">
-                                <label class="form-label" for="maxSalary">Lương tối đa <span
+                                <label class="form-label" for="maxSalary">Mức lương tối đa <span
                                         class="rqf-hint">VND/tháng</span></label>
                                 <input class="form-input" type="text" th:field="*{maxSalary}" inputmode="numeric"
                                     placeholder="Nhập lương tối đa" aria-describedby="salary-help maxSalary-error"
@@ -217,7 +214,7 @@
                     </section>
 
                     <section class="rqf-section" id="rqf-content" aria-labelledby="rqf-h-content">
-                        <h2 id="rqf-h-content">Nội dung tuyển dụng</h2>
+                        <h2 id="rqf-h-content">Mô tả và yêu cầu tuyển dụng</h2>
                         <div class="rqf-field">
                             <label class="form-label" for="reasonForHiring">Lý do tuyển dụng <span
                                     class="required-asterisk">*</span></label>

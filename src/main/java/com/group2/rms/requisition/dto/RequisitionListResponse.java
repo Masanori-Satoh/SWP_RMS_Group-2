@@ -9,10 +9,9 @@ import java.util.List;
  * DTO: toàn bộ dữ liệu màn danh sách yêu cầu (trang kết quả, bộ lọc đã làm sạch, ô lọc, chip).
  */
 public record RequisitionListResponse(
-        Page<RequisitionResponse> page,
-        RequisitionSearchRequest filter,
-        RequisitionFilterOptions options,
-        List<FilterChip> chips,
-        // Lỗi tham số URL (sắp xếp, phân trang, tin tuyển dụng); có lỗi thì page rỗng
-        List<String> errors) {
+                Page<RequisitionResponse> page,
+                RequisitionSearchRequest filter,
+                RequisitionFilterOptions options,
+                List<FilterChip> chips,
+                List<String> errors) {
 }

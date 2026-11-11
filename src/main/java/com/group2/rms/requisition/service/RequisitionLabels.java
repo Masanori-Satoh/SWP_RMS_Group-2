@@ -96,7 +96,7 @@ public final class RequisitionLabels {
             return "Thực tập";
         }
         if ("Contract".equals(type)) {
-            return "Hợp đồng";
+            return "Tự do";
         }
         return type == null ? "—" : type;
     }

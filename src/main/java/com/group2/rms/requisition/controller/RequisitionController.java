@@ -348,7 +348,14 @@ public class RequisitionController {
     }
 
     private void addFormOptions(Model model) {
-        model.addAttribute("departments", departments.findAll());
+        var allDepartments = departments.findAll();
+        var actor = access.actor();
+        model.addAttribute("departments", allDepartments);
+        // Phòng được chọn khi tạo/sửa: Director mọi phòng đang hoạt động, HM phòng mình thuộc về hoặc làm trưởng phòng.
+        model.addAttribute("departmentChoices", allDepartments.stream()
+                .filter(department -> "Active".equals(department.getDepartmentStatus())
+                        && access.canManageDepartment(actor, department.getDepartmentId(), department.getManager()))
+                .toList());
         model.addAttribute("employmentTypes", RequisitionValidator.EMPLOYMENT_TYPES);
         model.addAttribute("genders", RequisitionValidator.GENDERS);
         model.addAttribute("probationLimit", RequisitionValidator.PROBATION_CHAR_LIMIT);

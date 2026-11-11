@@ -191,7 +191,7 @@ public class RequisitionListService {
         }
         String employmentType = null;
         if (ListFilters.isInvalidChoice(raw.employmentType(), options.showEmploymentType(), options.employmentTypes())) {
-            errors.add(ListFilters.invalidFilterMessage("hình thức"));
+            errors.add(ListFilters.invalidFilterMessage("hình thức làm việc"));
         } else if (raw.employmentType() != null && !raw.employmentType().isBlank()) {
             employmentType = raw.employmentType();
         }
@@ -333,7 +333,7 @@ public class RequisitionListService {
         }
         if (filter.employmentType() != null) {
             chips.add(new FilterChip(
-                    "Hình thức: " + RequisitionLabels.employmentType(filter.employmentType()),
+                    "Hình thức làm việc: " + RequisitionLabels.employmentType(filter.employmentType()),
                     List.of("employmentType")));
         }
         if (filter.createdFrom() != null || filter.createdTo() != null) {

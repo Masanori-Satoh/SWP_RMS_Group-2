@@ -94,18 +94,16 @@ public class RequisitionServiceImpl implements RequisitionService {
         User currentUser = access.actor();
         access.requireCreate(currentUser);
 
-        if (access.isDirector(currentUser)) {
-            request.setDepartmentId(requireActiveDepartment(request.getDepartmentId()));
-        } else {
-
-            // HM tự tạo phòng ban
-            Department department = currentUser.getDepartment();
-            if (department == null || !DEPARTMENT_ACTIVE.equals(department.getDepartmentStatus())) {
+        Integer departmentId = request.getDepartmentId();
+        if (departmentId == null && !access.isDirector(currentUser)) {
+            // HM chỉ có một phòng: form không có ô chọn, mặc định là phòng của mình.
+            if (currentUser.getDepartment() == null) {
                 throw createValidationException("departmentId",
                         "Tài khoản của bạn chưa được gán phòng ban đang hoạt động. Vui lòng liên hệ quản trị viên.");
             }
-            request.setDepartmentId(department.getDepartmentId());
+            departmentId = currentUser.getDepartment().getDepartmentId();
         }
+        request.setDepartmentId(requireDepartmentFor(currentUser, departmentId));
 
         validator.validate(request);
 
@@ -146,10 +144,14 @@ public class RequisitionServiceImpl implements RequisitionService {
         JobRequisition jobRequisition = findRequisitionById(id, true);
         access.requireEdit(currentUser, jobRequisition);
 
-        if (access.isDirector(currentUser)) {
-            request.setDepartmentId(requireActiveDepartment(request.getDepartmentId()));
+        // Đổi phòng: Giám đốc mọi phòng, HM chỉ trong các phòng mình thuộc về/quản lý.
+        // HM giữ nguyên phòng thì không kiểm lại (có thể đã thôi quản lý phòng đó nhưng vẫn sửa được bản của mình).
+        Integer currentDepartmentId = jobRequisition.getDepartment().getDepartmentId();
+        Integer departmentId = request.getDepartmentId();
+        if (!access.isDirector(currentUser) && (departmentId == null || departmentId.equals(currentDepartmentId))) {
+            request.setDepartmentId(currentDepartmentId);
         } else {
-            request.setDepartmentId(jobRequisition.getDepartment().getDepartmentId());
+            request.setDepartmentId(requireDepartmentFor(currentUser, departmentId));
         }
 
         validator.validate(request);
@@ -305,14 +307,17 @@ public class RequisitionServiceImpl implements RequisitionService {
         return first != null && second != null && first.trim().equalsIgnoreCase(second.trim());
     }
 
-    // Requires an active department.
-    private Integer requireActiveDepartment(Integer departmentId) {
+    // Requires an active department the user may create for: Director any, HM own or managed departments.
+    private Integer requireDepartmentFor(User user, Integer departmentId) {
         Department department = null;
         if (departmentId != null) {
             department = departments.findById(departmentId).orElse(null);
         }
         if (department == null || !DEPARTMENT_ACTIVE.equals(department.getDepartmentStatus())) {
             throw createValidationException("departmentId", "Vui lòng chọn phòng ban đang hoạt động.");
+        }
+        if (!access.canManageDepartment(user, department.getDepartmentId(), department.getManager())) {
+            throw createValidationException("departmentId", "Bạn chỉ được chọn phòng ban mình thuộc về hoặc đang quản lý.");
         }
         return department.getDepartmentId();
     }

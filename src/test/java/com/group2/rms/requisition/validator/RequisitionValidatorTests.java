@@ -772,6 +772,17 @@ class RequisitionValidatorTests {
     }
 
     @Test
+    @DisplayName("Tên vị trí dưới 3 ký tự -> báo lỗi; đủ 3 ký tự -> hợp lệ")
+    void validate_shouldRejectTitle_whenShorterThanThreeChars() {
+        var d = valid();
+        d.setTitle(" QA ");
+        assertEquals("Tên vị trí tuyển dụng phải có ít nhất 3 ký tự.", expectFail(d).getErrors().get("title"));
+        var ok = valid();
+        ok.setTitle("Dev");
+        assertDoesNotThrow(() -> validator.validate(ok));
+    }
+
+    @Test
     @DisplayName("cleanString(null) -> null")
     void cleanString_shouldReturnNull_whenInputIsNull() {
         assertNull(RequisitionValidator.cleanString(null));

@@ -8,54 +8,55 @@ import java.util.List;
 import lombok.Builder;
 
 /*
- * DTO: một yêu cầu cho màn danh sách và chi tiết; nhãn và cờ quyền do RequisitionMapper tính sẵn.
+ * DTO: một yêu cầu cho màn danh sách và chi tiết
  */
 @Builder(toBuilder = true)
 public record RequisitionResponse(
-        Integer requisitionId,
-        String title,
-        String workLocation,
-        boolean editable,
-        boolean deletable,
-        boolean decidable,
-        boolean incomplete,
-        String rejectionReason,
-        String departmentName,
-        String hiringManagerName,
-        Integer numberOfPositions,
-        String approvalStatus,
-        LocalDateTime createdAt,
-        Integer recruitmentRound,
-        String requisitionCode,
-        String postingStatus,
-        Integer jobPostingId,
+                Integer requisitionId,
+                String title,
+                String workLocation,
+                boolean editable,
+                boolean deletable,
+                boolean decidable,
+                boolean incomplete,
+                String rejectionReason,
+                String departmentName,
+                String hiringManagerName,
+                Integer numberOfPositions,
+                String approvalStatus,
+                LocalDateTime createdAt,
+                Integer recruitmentRound,
+                String requisitionCode,
+                String postingStatus,
+                Integer jobPostingId,
 
-        // Nhãn tiếng Việt và tông màu badge, tính sẵn từ RequisitionLabels (template không tự dịch)
-        String statusLabel,
-        String statusTone,
-        String postingLabel,
-        String postingTone,
-        String employmentTypeLabel,
+                // Nhãn tiếng Việt và tông màu badge, tính sẵn từ RequisitionLabels
+                String statusLabel,
+                String statusTone,
+                String postingLabel,
+                String postingTone,
+                String employmentTypeLabel,
 
-        // Cờ quyền cho menu ⋯ của từng dòng, tính từ RequisitionAccess (template không tự so sánh role)
-        boolean copyable,
-        boolean postable,
-        boolean postingViewable,
+                // Cờ quyền cho menu ⋯ của từng dòng, tính từ RequisitionAccess (template không
+                // tự so sánh role)
+                boolean copyable,
+                boolean postable,
+                boolean postingViewable,
 
-        // ----- Chỉ có ở màn Chi tiết -----
-        LocalDateTime submittedAt,          // JobRequisition.SubmittedAt: lúc gửi duyệt gần nhất
-        Long waitingDays,                   // số ngày đã chờ Giám đốc duyệt (chỉ khi Pending_Director)
-        String salaryLabel,                 // "20 – 30 triệu VND/tháng" hoặc "Thỏa thuận"
-        String probationLabel,              // "2 tháng", "Thỏa thuận"... hoặc "Không thử việc"
-        String genderLabel,
-        String workModelLabel,
-        String reasonForHiringHtml,         // nội dung nhiều dòng đã escape + <br/> (hiển thị bằng th:utext)
-        String jobDescriptionHtml,
-        String requirementDetailsHtml,
-        Integer postingNo,                  // JobPosting.PostingNo của tin mới nhất (lần đăng thứ mấy)
-        LocalDateTime postingDate,          // JobPosting.PostingDate
-        LocalDateTime postingDeadline,      // JobPosting.ApplicationDeadline
+                // ----- Chỉ có ở màn Chi tiết -----
+                LocalDateTime submittedAt, // JobRequisition.SubmittedAt: lúc gửi duyệt gần nhất
+                Long waitingDays, // số ngày đã chờ Giám đốc duyệt (chỉ khi Pending_Director)
+                String salaryLabel, // "20 – 30 triệu VND/tháng" hoặc "Thỏa thuận"
+                String probationLabel, // "2 tháng", "Thỏa thuận"... hoặc "Không thử việc"
+                String genderLabel,
+                String workModelLabel,
+                String reasonForHiringHtml, // nội dung nhiều dòng đã escape + <br/> (hiển thị bằng th:utext)
+                String jobDescriptionHtml,
+                String requirementDetailsHtml,
+                Integer postingNo, // JobPosting.PostingNo của tin mới nhất (lần đăng thứ mấy)
+                LocalDateTime postingDate, // JobPosting.PostingDate
+                LocalDateTime postingDeadline, // JobPosting.ApplicationDeadline
 
-        List<ApprovalResponse> approvals,
-        List<ActivityLogResponse> activityLog) {
+                List<ApprovalResponse> approvals,
+                List<ActivityLogResponse> activityLog) {
 }

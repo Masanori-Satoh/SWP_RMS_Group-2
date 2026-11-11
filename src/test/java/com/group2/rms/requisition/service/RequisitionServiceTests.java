@@ -101,6 +101,15 @@ class RequisitionServiceTests {
         // lenient(): stub dùng chung, test nào không dùng cũng không bị Mockito báo "unnecessary stubbing"
         lenient().when(access.actor()).thenReturn(manager);
         lenient().when(departments.findById(1)).thenReturn(Optional.of(itDepartment));
+        // Giống RequisitionAccess.canManageDepartment: Director mọi phòng, HM phòng mình thuộc về hoặc làm trưởng phòng
+        lenient().when(access.canManageDepartment(any(), any(), any())).thenAnswer(invocation -> {
+            User user = invocation.getArgument(0);
+            Integer departmentId = invocation.getArgument(1);
+            User departmentManager = invocation.getArgument(2);
+            return access.isDirector(user)
+                    || (user.getDepartment() != null && departmentId.equals(user.getDepartment().getDepartmentId()))
+                    || (departmentManager != null && departmentManager.getUserId().equals(user.getUserId()));
+        });
         lenient().when(requisitions.saveAndFlush(any())).thenAnswer(invocation -> {
             JobRequisition saved = invocation.getArgument(0);
             if (saved.getRequisitionId() == null) {
@@ -272,18 +281,49 @@ class RequisitionServiceTests {
         }
 
         @Test
-        @DisplayName("Form gửi departmentId khác (sửa HTML) -> Bị ghi đè bằng phòng ban của người tạo")
-        void createRequisition_shouldIgnoreFormDepartment_whenCreatorIsHiringManager() {
-            // Arrange
+        @DisplayName("HM gửi departmentId của phòng mình không quản lý (sửa HTML) -> Báo lỗi, không lưu")
+        void createRequisition_shouldReject_whenHiringManagerPicksUnmanagedDepartment() {
+            // Arrange: phòng 2 đang hoạt động nhưng trưởng phòng là người khác
+            User otherManager = User.builder().userId(99).build();
+            when(departments.findById(2)).thenReturn(Optional.of(Department.builder().departmentId(2)
+                    .departmentName("Sales").departmentStatus("Active").manager(otherManager).build()));
             RequisitionRequest request = draft("Kế toán");
-            request.setDepartmentId(99);
+            request.setDepartmentId(2);
+
+            // Act
+            RequisitionValidationException error = assertThrows(RequisitionValidationException.class,
+                    () -> service.createRequisition(request));
+
+            // Assert
+            assertEquals("Bạn chỉ được chọn phòng ban mình thuộc về hoặc đang quản lý.", error.getErrors().get("departmentId"));
+            verify(requisitions, never()).saveAndFlush(any());
+        }
+
+        @Test
+        @DisplayName("HM làm trưởng phòng thêm một phòng khác -> Tạo được yêu cầu cho phòng đó")
+        void createRequisition_shouldUseManagedDepartment_whenHiringManagerManagesSeveral() {
+            // Arrange: HM thuộc IT nhưng là trưởng phòng Sales
+            Department sales = Department.builder().departmentId(2).departmentName("Sales").departmentStatus("Active")
+                    .manager(manager).build();
+            when(departments.findById(2)).thenReturn(Optional.of(sales));
+            RequisitionRequest request = draft("Kế toán");
+            request.setDepartmentId(2);
 
             // Act
             service.createRequisition(request);
 
             // Assert
+            assertEquals(sales, savedRequisition().getDepartment());
+        }
+
+        @Test
+        @DisplayName("HM không gửi departmentId (chỉ có 1 phòng, form không có ô chọn) -> Dùng phòng của mình")
+        void createRequisition_shouldDefaultToOwnDepartment_whenHiringManagerSendsNoDepartment() {
+            RequisitionRequest request = draft("Kế toán");
+
+            service.createRequisition(request);
+
             assertEquals(1, request.getDepartmentId());
-            verify(departments, never()).findById(99);
         }
 
         @Test
@@ -350,7 +390,7 @@ class RequisitionServiceTests {
         @DisplayName("Giám đốc chưa chọn phòng ban, hoặc chọn phòng ban ngừng hoạt động -> Báo lỗi, không lưu")
         void createRequisition_shouldReject_whenDirectorPicksNoActiveDepartment(String departmentIdText) {
             // Arrange
-            when(access.isDirector(manager)).thenReturn(true);
+            lenient().when(access.isDirector(manager)).thenReturn(true);
             lenient().when(departments.findById(5)).thenReturn(Optional.of(
                     Department.builder().departmentId(5).departmentName("Cũ").departmentStatus("Inactive").build()));
             Integer departmentId = null;
@@ -499,15 +539,55 @@ class RequisitionServiceTests {
     class UpdateRequisition {
 
         @Test
-        @DisplayName("Admin sửa phiếu của HM -> Phiếu giữ nguyên phòng ban cũ, bỏ departmentId trên form")
-        void updateRequisition_shouldKeepSavedDepartment_whenEditorIsNotDirector() {
-            // Arrange
+        @DisplayName("HM sửa phiếu, chuyển sang phòng mình thuộc về/quản lý -> Đổi được phòng ban")
+        void updateRequisition_shouldMoveDepartment_whenHiringManagerPicksManagedDepartment() {
+            // Arrange: phiếu đang ở Sales, HM (thuộc IT) chọn IT
             Department sales = Department.builder().departmentId(2).departmentName("Sales").departmentStatus("Active").build();
-            when(departments.findById(2)).thenReturn(Optional.of(sales));
             JobRequisition requisition = requisitionWithStatus(70, RequisitionAccess.STATUS_DRAFT);
             requisition.setDepartment(sales);
             RequisitionRequest request = draft("Sales Executive");
             request.setDepartmentId(1);
+
+            // Act
+            service.updateRequisition(70, request);
+
+            // Assert
+            assertEquals(1, request.getDepartmentId());
+            assertSame(itDepartment, requisition.getDepartment());
+        }
+
+        @Test
+        @DisplayName("HM sửa phiếu, chọn phòng mình không quản lý (sửa HTML) -> Báo lỗi, giữ phòng cũ")
+        void updateRequisition_shouldReject_whenHiringManagerPicksUnmanagedDepartment() {
+            // Arrange: phiếu ở IT, HM chọn Sales do người khác làm trưởng phòng
+            Department sales = Department.builder().departmentId(2).departmentName("Sales").departmentStatus("Active")
+                    .manager(User.builder().userId(99).build()).build();
+            when(departments.findById(2)).thenReturn(Optional.of(sales));
+            JobRequisition requisition = requisitionWithStatus(70, RequisitionAccess.STATUS_DRAFT);
+            requisition.setDepartment(itDepartment);
+            RequisitionRequest request = draft("Kế toán");
+            request.setDepartmentId(2);
+
+            // Act
+            RequisitionValidationException error = assertThrows(RequisitionValidationException.class,
+                    () -> service.updateRequisition(70, request));
+
+            // Assert
+            assertEquals("Bạn chỉ được chọn phòng ban mình thuộc về hoặc đang quản lý.", error.getErrors().get("departmentId"));
+            assertSame(itDepartment, requisition.getDepartment());
+            verify(requisitions, never()).saveAndFlush(any());
+        }
+
+        @Test
+        @DisplayName("HM sửa phiếu của phòng đã thôi quản lý, giữ nguyên phòng -> Vẫn lưu được")
+        void updateRequisition_shouldKeepSavedDepartment_whenHiringManagerKeepsIt() {
+            // Arrange: phiếu ở Sales (HM không còn quản lý), form gửi lại đúng Sales
+            Department sales = Department.builder().departmentId(2).departmentName("Sales").departmentStatus("Active").build();
+            lenient().when(departments.findById(2)).thenReturn(Optional.of(sales));
+            JobRequisition requisition = requisitionWithStatus(70, RequisitionAccess.STATUS_DRAFT);
+            requisition.setDepartment(sales);
+            RequisitionRequest request = draft("Sales Executive");
+            request.setDepartmentId(2);
 
             // Act
             service.updateRequisition(70, request);

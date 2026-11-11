@@ -27,7 +27,7 @@
 .req-list-page .requisition-list-table th { white-space:nowrap; }
 .req-list-page .requisition-list-table :is(th,td):first-child { width:56px; padding-left:var(--s4); font-variant-numeric:tabular-nums; }
 .req-list-page .requisition-list-table :is(th,td):last-child { width:88px; padding-right:var(--s4); text-align:right; }
-.req-list-page .requisition-list-table :is(th,td):nth-child(5) { padding-right:var(--s4); text-align:right; font-variant-numeric:tabular-nums; }
+.req-list-page .requisition-list-table :is(th,td):is(:nth-child(4),:nth-child(5)) { text-align:center; font-variant-numeric:tabular-nums; }
 .req-list-page .requisition-list-table tbody tr:hover { background:var(--page); }
 .req-list-page .requisition-list-table td:first-child { color:var(--muted); }
 .req-list-page .position-title { display:flex; align-items:center; min-height:44px; min-width:160px; max-width:320px; font-weight:600; text-decoration:none; overflow-wrap:anywhere; }

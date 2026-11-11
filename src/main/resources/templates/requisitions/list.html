@@ -80,9 +80,9 @@
                         </div>
 
                         <div class="mft-field" th:if="${list.options.showEmploymentType}">
-                            <label class="form-label" for="filter-employment-type">Hình thức</label>
+                            <label class="form-label" for="filter-employment-type">Hình thức làm việc</label>
                             <select class="form-select" id="filter-employment-type" name="employmentType">
-                                <option value="">Tất cả hình thức</option>
+                                <option value="">Tất cả hình thức làm việc</option>
                                 <option th:each="option : ${list.options.employmentTypes}" th:value="${option.value}"
                                     th:text="${option.label}"
                                     th:selected="${option.value == list.filter.employmentType}">Toàn thời gian</option>
@@ -128,11 +128,14 @@
                         <path d="m16 16 4 4" />
                     </svg>
                 </button>
+
+
                 <input class="form-control mft-search-input" id="requisition-search" type="search" name="q"
                     th:value="${list.filter.q}" maxlength="120" aria-describedby="requisition-search-error"
                     placeholder="Tìm theo tên vị trí hoặc phòng ban">
                 <p class="field-error mft-search-error" id="requisition-search-error" role="alert" aria-live="polite"
-                    th:style="${#lists.contains(list.errors, 'Từ khóa tìm kiếm không được vượt quá 120 ký tự.')} ? null : 'display:none'">Từ khóa tìm kiếm không được vượt quá 120 ký tự.</p>
+                    th:style="${#lists.contains(list.errors, 'Từ khóa tìm kiếm không được vượt quá 120 ký tự.')} ? null : 'display:none'">
+                    Từ khóa tìm kiếm không được vượt quá 120 ký tự.</p>
             </div>
         </form>
 
@@ -185,7 +188,7 @@
                                 <th scope="col">Phòng ban</th>
                                 <th scope="col">Đợt tuyển dụng</th>
                                 <th scope="col">Số lượng</th>
-                                <th scope="col">Hình thức</th>
+                                <th scope="col">Hình thức làm việc</th>
                                 <th scope="col">Trạng thái</th>
                                 <th scope="col">Tin tuyển dụng</th>
                                 <th scope="col">Ngày tạo</th>
