@@ -131,7 +131,6 @@
                         th:text="${currentStatus == 'Pending_Director' ? 'Thư mời chờ phê duyệt' : (currentStatus == 'Director_Approved' or currentStatus == 'Approved' ? 'Thư mời đã phê duyệt' : (currentStatus == 'Director_Rejected' or currentStatus == 'Rejected' ? 'Thư mời đã bị từ chối' : 'Lịch sử phê duyệt thư mời'))}">
                         Thư mời chờ phê duyệt
                     </h2>
-                    <span class="ofw-list-count" th:text="${totalElements != null ? totalElements + ' thư mời' : '0 thư mời'}">0 thư mời</span>
                 </div>
             </div>
         </header>

@@ -183,6 +183,11 @@ Kiểm tra thực tế phát hiện dữ liệu demo đã được nạp vào da
 - Thêm class card vào section danh sách HR để nhận padding var(--s6) từ components chung, giống Application/Director; không thêm hoặc ghi đè padding CSS. Giữ template/biến dữ liệu, checkbox, độ rộng/căn giữa cột và fragment phân trang.
 - Đạt **121/121 test MVC**, 6 kiểm tra Edge (HR/Director × 1440/768/390px): padding card 24px, lề bảng đối xứng 25px kể cả border, tiêu đề/phân trang khớp 49px; HR và Director cùng số đo, không tràn ngang, cột mã/nút vẫn căn giữa và link giữ bộ lọc. Ảnh desktop được kiểm tra trực quan; fixture không ghi DB. Log offer-list-card-mvc.log, offer-list-card-browser.log; ảnh/số đo tại scratch/offer-search-upgrade-20261110/offer-list-card.
 
+### 2.21. Gọn tiêu đề danh sách Director
+
+- Bỏ badge số thư mời dưới tiêu đề danh sách Director theo yêu cầu. Flex hiện có căn icon/tiêu đề cùng tâm dọc sau khi bỏ dòng phụ, không thêm CSS hoặc thay model tổng số/phân trang. Badge HR giữ nguyên.
+- Đạt **121/121 test MVC**, kiểm tra Edge tại 1440/768/390px: không còn badge ở header Director, tiêu đề chờ phê duyệt đúng, tâm icon/tiêu đề lệch 0px, badge HR còn nguyên. Log director-heading-mvc.log, director-heading-browser.log và ảnh/số đo tại scratch/offer-search-upgrade-20261110/director-heading. Chỉ template Director/báo cáo thay đổi; không ghi DB.
+
 ## 3. Các commit công việc mới
 
 | Commit | Nội dung | Diff riêng commit |
