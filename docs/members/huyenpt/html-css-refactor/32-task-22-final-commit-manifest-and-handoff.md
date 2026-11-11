@@ -1,3 +1,5 @@
+> Ghi chú 11/11/2026: đường dẫn CSS trong tài liệu đã được cập nhật theo vị trí hiện hành; các kết quả Task/PR lịch sử được giữ nguyên.
+
 # TECHNICAL REPORT 32 — TASK 22: FINAL COMMIT PACKAGING, EVIDENCE REPRODUCIBILITY & SWP391 HANDOFF
 
 > **Lưu ý khi đọc:** Tài liệu lịch sử: phản ánh thời điểm audit/refactor; tên hàm, đường dẫn và đề xuất có thể khác code đã merge. Xem [mục lục và hướng dẫn hiện hành](../README.md).
@@ -42,9 +44,9 @@
 
 | Role Group | CSS File Path | CSS Lines | CSS Bytes | JS File Path | JS Lines | JS Bytes |
 | :--- | :--- | ---: | ---: | :--- | ---: | ---: |
-| **1. Common** | `src/main/resources/static/css/pages/offers/offer-common.css` | 1,879 | 39,501 | `src/main/resources/static/js/pages/offers/offer-common.js` | 207 | 8,883 |
-| **2. HR** | `src/main/resources/static/css/pages/offers/offer-hr.css` | 864 | 17,690 | `src/main/resources/static/js/pages/offers/offer-hr.js` | 573 | 22,467 |
-| **3. Director** | `src/main/resources/static/css/pages/offers/offer-director.css` | 408 | 9,826 | `src/main/resources/static/js/pages/offers/offer-director.js` | 480 | 20,084 |
+| **1. Common** | `src/main/resources/static/css/pages/offer-common.css` | 1,879 | 39,501 | `src/main/resources/static/js/pages/offers/offer-common.js` | 207 | 8,883 |
+| **2. HR** | `src/main/resources/static/css/pages/offer-hr.css` | 864 | 17,690 | `src/main/resources/static/js/pages/offers/offer-hr.js` | 573 | 22,467 |
+| **3. Director** | `src/main/resources/static/css/pages/offer-director.css` | 408 | 9,826 | `src/main/resources/static/js/pages/offers/offer-director.js` | 480 | 20,084 |
 | **4. Candidate** | `src/main/resources/static/css/pages/candidate-offers.css` | 1,736 | 34,604 | `src/main/resources/static/js/pages/candidate-offers.js` | 285 | 10,781 |
 | **TOTAL** | **4 Active CSS Files** | **4,887** | **101,621** | **4 Active JS Files** | **1,545** | **62,215** |
 
@@ -195,9 +197,9 @@ All final verification checks were executed against the current working tree:
 | 4 | `src/main/resources/static/js/pages/offers/offer-common.js` | `??` (Untracked) | HuyenPT | `REQUIRED OFFER SOURCE` | Shared internal Offer JS (modal helpers, CSRF, Flash Toast, Send Offer dialog) — 207 lines | **INCLUDE** | Core Common role-based JS module |
 | 5 | `src/main/resources/static/js/pages/offers/offer-hr.js` | `??` (Untracked) | HuyenPT | `REQUIRED OFFER SOURCE` | HR Offer JS (filters, bulk toolbar, 85% probation rule, min start date, Excel export) — 573 lines | **INCLUDE** | Core HR role-based JS module |
 | 6 | `src/main/resources/static/js/pages/offers/offer-director.js` | `??` (Untracked) | HuyenPT | `REQUIRED OFFER SOURCE` | Director Offer JS (quick decision modal, detail approval/rejection, counters) — 480 lines | **INCLUDE** | Core Director role-based JS module |
-| 7 | `src/main/resources/static/css/pages/offers/offer-common.css` | `??` (Untracked) | HuyenPT | `REQUIRED OFFER SOURCE` | Shared internal Offer CSS (tokens, layout, badges, summary cards, export modal) — 1,879 lines | **INCLUDE** | Core Common role-based CSS module |
-| 8 | `src/main/resources/static/css/pages/offers/offer-hr.css` | `??` (Untracked) | HuyenPT | `REQUIRED OFFER SOURCE` | HR Offer CSS (HR list, filter bar, create/edit form) — 864 lines | **INCLUDE** | Core HR role-based CSS module |
-| 9 | `src/main/resources/static/css/pages/offers/offer-director.css` | `??` (Untracked) | HuyenPT | `REQUIRED OFFER SOURCE` | Director Offer CSS (Director list, quick modal, decision card) — 408 lines | **INCLUDE** | Core Director role-based CSS module |
+| 7 | `src/main/resources/static/css/pages/offer-common.css` | `??` (Untracked) | HuyenPT | `REQUIRED OFFER SOURCE` | Shared internal Offer CSS (tokens, layout, badges, summary cards, export modal) — 1,879 lines | **INCLUDE** | Core Common role-based CSS module |
+| 8 | `src/main/resources/static/css/pages/offer-hr.css` | `??` (Untracked) | HuyenPT | `REQUIRED OFFER SOURCE` | HR Offer CSS (HR list, filter bar, create/edit form) — 864 lines | **INCLUDE** | Core HR role-based CSS module |
+| 9 | `src/main/resources/static/css/pages/offer-director.css` | `??` (Untracked) | HuyenPT | `REQUIRED OFFER SOURCE` | Director Offer CSS (Director list, quick modal, decision card) — 408 lines | **INCLUDE** | Core Director role-based CSS module |
 | 10 | `src/main/resources/static/css/pages/candidate-offers.css` | ` M` (Unstaged) | HuyenPT | `REQUIRED OFFER SOURCE` | Optimized Candidate Portal CSS (2,513 $\to$ 1,736 lines, -30.9%) | **INCLUDE** | Removes dead V1/V2 candidate styles while preserving all active candidate portal styles |
 | 11 | `src/main/resources/static/js/pages/candidate-offers.js` | Unchanged | HuyenPT | `REQUIRED OFFER SOURCE` (Unchanged) | Existing Candidate Portal JS — 285 lines (`0` diff vs `HEAD`) | **ALREADY TRACKED (No Staging Needed)** | Unmodified in working tree |
 | 12 | `src/main/resources/templates/offers/list.html` | ` M` (Unstaged) | HuyenPT | `REQUIRED OFFER TEMPLATE` | Link `offer-common.css`, `offer-hr.css`, `offer-common.js`, `offer-hr.js`, `offer-director.js` | **INCLUDE** | Decouples HR list template from retired legacy CSS/JS |
@@ -223,9 +225,9 @@ git rm src/main/resources/static/css/offers.css `
 git add src/main/resources/static/js/pages/offers/offer-common.js `
         src/main/resources/static/js/pages/offers/offer-hr.js `
         src/main/resources/static/js/pages/offers/offer-director.js `
-        src/main/resources/static/css/pages/offers/offer-common.css `
-        src/main/resources/static/css/pages/offers/offer-hr.css `
-        src/main/resources/static/css/pages/offers/offer-director.css `
+        src/main/resources/static/css/pages/offer-common.css `
+        src/main/resources/static/css/pages/offer-hr.css `
+        src/main/resources/static/css/pages/offer-director.css `
         src/main/resources/static/css/pages/candidate-offers.css
 
 # 4. Stage modified Offer HTML templates (explicit file paths only):
@@ -297,14 +299,14 @@ refactor(offer): modularize frontend assets and retire legacy code
 | Responsibility / Feature | File Path | Key Functions / Selectors & Line Numbers |
 | :--- | :--- | :--- |
 | **Shared Modal Helpers, CSRF & Flash Toast** | [`offer-common.js`](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/main/resources/static/js/pages/offers/offer-common.js) | `initOfferModalFallback` (L11), `getCsrfInfo` (L29), `TOAST_ICONS` & `showFlashToast` (L42–L93), `confirmSendOffer` & `executeSendOfferAction` (L126–L192) |
-| **Shared Internal Layout, Badges, Cards & Export Modal CSS** | [`offer-common.css`](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/main/resources/static/css/pages/offers/offer-common.css) | Design tokens, `.ofw-page`, `.status-badge`, `.offers-detail-*`, `.modal-export-*` (1,879 lines) |
+| **Shared Internal Layout, Badges, Cards & Export Modal CSS** | [`offer-common.css`](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/main/resources/static/css/pages/offer-common.css) | Design tokens, `.ofw-page`, `.status-badge`, `.offers-detail-*`, `.modal-export-*` (1,879 lines) |
 | **HR Offer List Filtering & Bulk Selection Toolbar** | [`offer-hr.js`](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/main/resources/static/js/pages/offers/offer-hr.js) | `applyOfferFilters` (L18), `filterOffersByStatus` (L39), `confirmDeleteOffer` / `executeDeleteOffer` (L51–L104), `toggleSelectAllOffers` & `updateSelectionToolbar` (L112–L185) |
 | **85% Probation Salary Rule (`BR-OFF-01`)** | [`offer-hr.js`](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/main/resources/static/js/pages/offers/offer-hr.js) | `handleSelectPassedCandidate` (L214), `autoCalculateProbationSalary` (L247), `PROBATION_ICONS` & `validateProbationRuleUi` (L261–L297) |
 | **Dynamic Minimum Expected Start Date** | [`offer-hr.js`](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/main/resources/static/js/pages/offers/offer-hr.js) & [`form.html`](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/main/resources/templates/offers/form.html#L234) | `updateMinExpectedStartDate` (L303), `initOfferFormExpectedStartDateMin` (L319), inline `oninput="updateMinExpectedStartDate()"` on `#responsePeriodDays` (`form.html` L234) |
 | **HR Excel Export Modal & Fetch Download** | [`offer-hr.js`](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/main/resources/static/js/pages/offers/offer-hr.js) | `openExportModal` / `closeExportModal` (L330–L369), `selectAllColumns` / `deselectAllColumns` / `resetDefaultColumns` (L375–L408), `executeOfferExport` (`POST /offers/export` with `X-CSRF-TOKEN`, L413–L514) |
-| **HR List & Form Styles** | [`offer-hr.css`](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/main/resources/static/css/pages/offers/offer-hr.css) | HR KPI stat cards, filter bar, selection toolbar, form grid, `.ofw-rule-notice` (864 lines) |
+| **HR List & Form Styles** | [`offer-hr.css`](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/main/resources/static/css/pages/offer-hr.css) | HR KPI stat cards, filter bar, selection toolbar, form grid, `.ofw-rule-notice` (864 lines) |
 | **Director Quick Decision & Detail Decision (`JSON` + `CSRF`)** | [`offer-director.js`](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/main/resources/static/js/pages/offers/offer-director.js) | `openDirectorDecisionModal` (L19), `submitDirectorDecision` (`POST /offers/{id}/approve|reject` JSON + `X-CSRF-TOKEN`, L134–L231), `submitDirectorDecisionFromScreen` & `executeDirectorDecisionApi` (L336–L458) |
-| **Director List & Decision Card Styles** | [`offer-director.css`](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/main/resources/static/css/pages/offers/offer-director.css) | Director KPI toolbar, `.director-decision-card`, `.btn-director-approve`, `.btn-director-reject` (408 lines) |
+| **Director List & Decision Card Styles** | [`offer-director.css`](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/main/resources/static/css/pages/offer-director.css) | Director KPI toolbar, `.director-decision-card`, `.btn-director-approve`, `.btn-director-reject` (408 lines) |
 | **Candidate Countdown Timer & Decline Reason Chips** | [`candidate-offers.js`](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/main/resources/static/js/pages/candidate-offers.js) | `initCountdowns` (L51–L95), `initCandidateOfferTabs` (L97–L142), `initReasonChips` (`.cof-chip[data-reason]` syncing `#cof-detail-reason-input`, L144–L211), `initModals` (L213–L280) |
 | **Candidate Portal Letterhead, Detail, Dialog & Print Styles** | [`candidate-offers.css`](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/main/resources/static/css/pages/candidate-offers.css) | `.cof-hero`, `.cof-letter`, `.cof-chip`, `.cof-modal`, `@media print` (1,736 lines) |
 

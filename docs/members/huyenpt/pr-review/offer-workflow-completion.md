@@ -1,3 +1,5 @@
+> Ghi chú 11/11/2026: đường dẫn CSS trong tài liệu đã được cập nhật theo vị trí hiện hành; các kết quả Task/PR lịch sử được giữ nguyên.
+
 # Hoàn thiện giao diện, nghiệp vụ và giao dịch Offer
 
 **Nhánh:** `feat/huyenpt/offer-workflow-completion`.
@@ -83,9 +85,9 @@ Log cục bộ không commit: scratch/offer-workflow-completion-tests.log, scrat
 | `src/main/java/com/group2/rms/offer/service/OfferServiceImpl.java` | Gọn workflow, đúng ngày/thử việc, chống race và cách ly notification. | 212 / 316 |
 | `src/main/resources/static/css/pages/candidate-offer-detail.css` | CSS riêng trang chi tiết Candidate. | 897 / 0 |
 | `src/main/resources/static/css/pages/candidate-offers.css` | Giữ CSS danh sách, bỏ phần chi tiết đã tách và rule dư. | 32 / 1243 |
-| `src/main/resources/static/css/pages/offers/offer-common.css` | Dùng token, thành phần chung và dọn CSS dư. | 142 / 288 |
-| `src/main/resources/static/css/pages/offers/offer-director.css` | Đồng bộ popup Director, bỏ selector không dùng. | 43 / 201 |
-| `src/main/resources/static/css/pages/offers/offer-hr.css` | Chuẩn hóa form/export và nút chọn cột, bỏ rule dư. | 17 / 94 |
+| `src/main/resources/static/css/pages/offer-common.css` | Dùng token, thành phần chung và dọn CSS dư. | 142 / 288 |
+| `src/main/resources/static/css/pages/offer-director.css` | Đồng bộ popup Director, bỏ selector không dùng. | 43 / 201 |
+| `src/main/resources/static/css/pages/offer-hr.css` | Chuẩn hóa form/export và nút chọn cột, bỏ rule dư. | 17 / 94 |
 | `src/main/resources/static/js/pages/candidate-offers.js` | Đồng bộ popup phản hồi và xử lý giao diện Candidate. | 16 / 13 |
 | `src/main/resources/static/js/pages/offers/offer-common.js` | Helper JSON/CSRF/toast và phát hành dùng chung. | 56 / 39 |
 | `src/main/resources/static/js/pages/offers/offer-director.js` | Gom xử lý quyết định, feedback và popup. | 48 / 221 |

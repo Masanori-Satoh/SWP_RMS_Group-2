@@ -1,3 +1,5 @@
+> Ghi chú 11/11/2026: đường dẫn CSS trong tài liệu đã được cập nhật theo vị trí hiện hành; các kết quả Task/PR lịch sử được giữ nguyên.
+
 # BÁO CÁO KIỂM KÊ CSS THEO VAI TRÒ, THIẾT LẬP BASELINE HÌNH ẢNH & TRÍCH XUẤT COMMON CSS AN TOÀN (TASK 14)
 
 > **Lưu ý khi đọc:** Tài liệu lịch sử: phản ánh thời điểm audit/refactor; tên hàm, đường dẫn và đề xuất có thể khác code đã merge. Xem [mục lục và hướng dẫn hiện hành](../README.md).
@@ -86,7 +88,7 @@ Trước khi thực hiện bất kỳ chỉnh sửa CSS nào, hệ thống đã 
 
 ## 4. CHI TIẾT TRÍCH XUẤT COMMON CSS (TASK 14 EXECUTION)
 
-### 4.1. Khởi tạo tệp [`offer-common.css`](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/main/resources/static/css/pages/offers/offer-common.css) (427 dòng)
+### 4.1. Khởi tạo tệp [`offer-common.css`](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/main/resources/static/css/pages/offer-common.css) (427 dòng)
 Tệp mới được cấu trúc chặt chẽ thành 5 khu vực nghiệp vụ:
 - **SECTION 1 — STATUS BADGES & DECLINE INDICATOR:**
   - `.status-badge`, `.status-draft`, `.status-pending`, `.status-approved`, `.status-rejected`, `.status-sent`, `.status-accepted`, `.status-declined`.
@@ -125,7 +127,7 @@ Tệp mới được cấu trúc chặt chẽ thành 5 khu vực nghiệp vụ:
 Cả 4 template Offer nội bộ được cập nhật nạp `offer-common.css` đầu tiên:
 ```html
 <th:block layout:fragment="styles">
-    <link rel="stylesheet" th:href="@{/css/pages/offers/offer-common.css}">
+    <link rel="stylesheet" th:href="@{/css/pages/offer-common.css}">
     <link rel="stylesheet" th:href="@{/css/offers.css}">
     <link rel="stylesheet" th:href="@{/css/pages/offer-workspace.css}">
     <link rel="stylesheet" th:href="@{/css/pages/flash-toast.css}">
@@ -170,7 +172,7 @@ Sau khi trích xuất, toàn bộ 17 ảnh chụp màn hình được chụp l�
 
 - **Cú pháp JavaScript tĩnh (`node --check`):** Cả 4 tệp JavaScript đều đạt mã thoát `0`.
 - **Mã phản hồi HTTP Stylesheet (`curl.exe -I`):**
-  - `/css/pages/offers/offer-common.css`: **HTTP 200 OK** (`Content-Length: 9683`)
+  - `/css/pages/offer-common.css`: **HTTP 200 OK** (`Content-Length: 9683`)
   - `/css/offers.css`: **HTTP 200 OK** (`Content-Length: 42911`)
   - `/css/pages/offer-workspace.css`: **HTTP 200 OK** (`Content-Length: 22744`)
 - **Kiểm thử Trình duyệt Tương tác CDP (10 Kịch bản Chung — `run_interactive_browser_smoke.js`):**
@@ -239,7 +241,7 @@ Khi Hội đồng chấm đồ án hỏi:
 ## 10. TRẠNG THÁI GIT & KẾT THÚC NHIỆM VỤ
 
 - Nhánh: `refactor/huyenpt/offer-ui-js-to-html-css`
-- Tệp mới: `src/main/resources/static/css/pages/offers/offer-common.css`
+- Tệp mới: `src/main/resources/static/css/pages/offer-common.css`
 - Tệp cập nhật: `offers.css`, `offer-workspace.css`, `list.html`, `detail.html`, `director-list.html`, `form.html`.
 - Báo cáo: `docs/members/huyenpt/html-css-refactor/24-task-14-css-common-extraction-report.md`.
 - Cam kết: **KHÔNG commit, KHÔNG push, KHÔNG merge**. DỪNG LẠI tại đây chờ chỉ thị tiếp theo.

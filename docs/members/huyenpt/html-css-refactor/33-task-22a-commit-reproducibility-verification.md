@@ -1,3 +1,5 @@
+> Ghi chú 11/11/2026: đường dẫn CSS trong tài liệu đã được cập nhật theo vị trí hiện hành; các kết quả Task/PR lịch sử được giữ nguyên.
+
 # TASK 22A — RESOLVE FINAL COMMIT BLOCKERS WITHOUT REFACTORING (REPRODUCIBILITY & CLEAN BUILD VERIFICATION)
 
 > **Lưu ý khi đọc:** Tài liệu lịch sử: phản ánh thời điểm audit/refactor; tên hàm, đường dẫn và đề xuất có thể khác code đã merge. Xem [mục lục và hướng dẫn hiện hành](../README.md).
@@ -29,7 +31,7 @@
 | ` M` (Unstaged) | `src/main/resources/templates/offers/form.html` | HuyenPT Offer Template (HR Form — Include) |
 | ` M` (Unstaged) | `src/main/resources/templates/offers/detail.html` | HuyenPT Offer Template (HR/Director Detail — Include) |
 | ` M` (Unstaged) | `src/main/resources/templates/offers/director-list.html` | HuyenPT Offer Template (Director Workspace — Include) |
-| `??` (Untracked) | `src/main/resources/static/css/pages/offers/` (`offer-common.css`, `offer-hr.css`, `offer-director.css`) | HuyenPT Offer Frontend (3 Active Internal CSS Files — Include) |
+| `??` (Untracked) | `src/main/resources/static/css/pages/` (`offer-common.css`, `offer-hr.css`, `offer-director.css`) | HuyenPT Offer Frontend (3 Active Internal CSS Files — Include) |
 | `??` (Untracked) | `src/main/resources/static/js/pages/offers/` (`offer-common.js`, `offer-hr.js`, `offer-director.js`) | HuyenPT Offer Frontend (3 Active Internal JS Files — Include) |
 | `!!` (Ignored) | `src/test/java/com/group2/rms/offer/OfferExportServiceTests.java` | HuyenPT Offer Unit Test (10 tests, ignored by `.git/info/exclude:9` — Force-Add in Commit Plan) |
 | `??` (Untracked) | `docs/members/huyenpt/html-css-refactor/17-*.md` through `33-*.md` | HuyenPT Offer Technical Documentation (17 Reports — Include) |
@@ -178,9 +180,9 @@ Verified via `scratch/t22a_verify_clean_build.py` immediately after `mvn clean t
 
 | Asset Category | Relative Path under `target/classes/` | Present in `target/classes/` | SHA-256 Matches `src/main/resources/` | Verification Result |
 | :--- | :--- | :---: | :---: | :--- |
-| **Active CSS (1/4)** | `static/css/pages/offers/offer-common.css` | `True` | `True` | **PASS** |
-| **Active CSS (2/4)** | `static/css/pages/offers/offer-hr.css` | `True` | `True` | **PASS** |
-| **Active CSS (3/4)** | `static/css/pages/offers/offer-director.css` | `True` | `True` | **PASS** |
+| **Active CSS (1/4)** | `static/css/pages/offer-common.css` | `True` | `True` | **PASS** |
+| **Active CSS (2/4)** | `static/css/pages/offer-hr.css` | `True` | `True` | **PASS** |
+| **Active CSS (3/4)** | `static/css/pages/offer-director.css` | `True` | `True` | **PASS** |
 | **Active CSS (4/4)** | `static/css/pages/candidate-offers.css` | `True` | `True` | **PASS** |
 | **Active JS (1/4)** | `static/js/pages/offers/offer-common.js` | `True` | `True` | **PASS** |
 | **Active JS (2/4)** | `static/js/pages/offers/offer-hr.js` | `True` | `True` | **PASS** |
@@ -283,9 +285,9 @@ Scanned all untracked reports in `docs/members/huyenpt/html-css-refactor/` using
 | 1 | `D ` (Staged) | `src/main/resources/static/js/offers.js` | Retired Legacy JS | Keep staged deletion |
 | 2 | ` D` | `src/main/resources/static/css/offers.css` | Retired Legacy CSS | Stage deletion |
 | 3 | ` D` | `src/main/resources/static/css/pages/offer-workspace.css` | Retired Legacy CSS | Stage deletion |
-| 4 | `??` | `src/main/resources/static/css/pages/offers/offer-common.css` | Active Offer CSS | Stage new file |
-| 5 | `??` | `src/main/resources/static/css/pages/offers/offer-hr.css` | Active Offer CSS | Stage new file |
-| 6 | `??` | `src/main/resources/static/css/pages/offers/offer-director.css` | Active Offer CSS | Stage new file |
+| 4 | `??` | `src/main/resources/static/css/pages/offer-common.css` | Active Offer CSS | Stage new file |
+| 5 | `??` | `src/main/resources/static/css/pages/offer-hr.css` | Active Offer CSS | Stage new file |
+| 6 | `??` | `src/main/resources/static/css/pages/offer-director.css` | Active Offer CSS | Stage new file |
 | 7 | ` M` | `src/main/resources/static/css/pages/candidate-offers.css` | Active Offer CSS | Stage modification |
 | 8 | `??` | `src/main/resources/static/js/pages/offers/offer-common.js` | Active Offer JS | Stage new file |
 | 9 | `??` | `src/main/resources/static/js/pages/offers/offer-hr.js` | Active Offer JS | Stage new file |
@@ -321,9 +323,9 @@ git add -- `
   src/main/resources/static/js/offers.js `
   src/main/resources/static/css/offers.css `
   src/main/resources/static/css/pages/offer-workspace.css `
-  src/main/resources/static/css/pages/offers/offer-common.css `
-  src/main/resources/static/css/pages/offers/offer-hr.css `
-  src/main/resources/static/css/pages/offers/offer-director.css `
+  src/main/resources/static/css/pages/offer-common.css `
+  src/main/resources/static/css/pages/offer-hr.css `
+  src/main/resources/static/css/pages/offer-director.css `
   src/main/resources/static/css/pages/candidate-offers.css `
   src/main/resources/static/js/pages/offers/offer-common.js `
   src/main/resources/static/js/pages/offers/offer-hr.js `
@@ -394,9 +396,9 @@ git commit -m "refactor(offer-ui): decompose offer JS/CSS into role-based module
     1. `D  src/main/resources/static/js/offers.js`
     2. `D  src/main/resources/static/css/offers.css`
     3. `D  src/main/resources/static/css/pages/offer-workspace.css`
-    4. `A  src/main/resources/static/css/pages/offers/offer-common.css`
-    5. `A  src/main/resources/static/css/pages/offers/offer-hr.css`
-    6. `A  src/main/resources/static/css/pages/offers/offer-director.css`
+    4. `A  src/main/resources/static/css/pages/offer-common.css`
+    5. `A  src/main/resources/static/css/pages/offer-hr.css`
+    6. `A  src/main/resources/static/css/pages/offer-director.css`
     7. `M  src/main/resources/static/css/pages/candidate-offers.css`
     8. `A  src/main/resources/static/js/pages/offers/offer-common.js`
     9. `A  src/main/resources/static/js/pages/offers/offer-hr.js`

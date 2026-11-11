@@ -1,3 +1,5 @@
+> Ghi chú 11/11/2026: đường dẫn CSS trong tài liệu đã được cập nhật theo vị trí hiện hành; các kết quả Task/PR lịch sử được giữ nguyên.
+
 # PR 01/08 — Tách tài nguyên frontend Offer theo vai trò và loại stylesheet trùng
 
 **Base:** `main` (`1e3d7134`).
@@ -28,9 +30,9 @@ Diff production gồm **16 file HTML/CSS/JS, +4.467/-6.488 dòng, giảm ròng 2
 |---|---|---|
 | `src/main/resources/static/css/offers.css` | Xóa CSS Offer nguyên khối sau khi chuyển các nhóm cần thiết sang thư mục pages/offers | Bỏ nguồn CSS cũ |
 | `src/main/resources/static/css/pages/offer-workspace.css` | Xóa nguồn CSS workspace Offer cũ | Thay bằng bộ common/HR/Director |
-| `src/main/resources/static/css/pages/offers/offer-common.css` | Thêm nền CSS chung của các màn Offer nội bộ: khung, bảng, bộ lọc và thành phần dùng chung | Tránh chép CSS giữa HR và Director |
-| `src/main/resources/static/css/pages/offers/offer-hr.css` | Thêm CSS đặc thù danh sách, form và popup xuất Excel HR | Nạp cùng các màn HR cần dùng |
-| `src/main/resources/static/css/pages/offers/offer-director.css` | Thêm CSS danh sách phê duyệt, popup quyết định và phần quyết định trên trang chi tiết | Tách giao diện phê duyệt khỏi CSS HR |
+| `src/main/resources/static/css/pages/offer-common.css` | Thêm nền CSS chung của các màn Offer nội bộ: khung, bảng, bộ lọc và thành phần dùng chung | Tránh chép CSS giữa HR và Director |
+| `src/main/resources/static/css/pages/offer-hr.css` | Thêm CSS đặc thù danh sách, form và popup xuất Excel HR | Nạp cùng các màn HR cần dùng |
+| `src/main/resources/static/css/pages/offer-director.css` | Thêm CSS danh sách phê duyệt, popup quyết định và phần quyết định trên trang chi tiết | Tách giao diện phê duyệt khỏi CSS HR |
 | `src/main/resources/static/css/pages/candidate-offers.css` | Loại phần CSS nội bộ/legacy không còn thuộc trang Candidate sau khi tách | Giữ phạm vi CSS của ứng viên rõ ràng |
 
 ### Template — 6 file

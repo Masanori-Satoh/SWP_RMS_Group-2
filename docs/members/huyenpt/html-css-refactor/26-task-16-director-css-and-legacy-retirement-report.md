@@ -1,3 +1,5 @@
+> Ghi chú 11/11/2026: đường dẫn CSS trong tài liệu đã được cập nhật theo vị trí hiện hành; các kết quả Task/PR lịch sử được giữ nguyên.
+
 # BÁO CÁO TASK 16: BÓC TÁCH CSS DIRECTOR, KHẮC PHỤC SAI LỆCH VISUAL PARITY & ĐÁNH GIÁ NGHỈ HƯU CSS CŨ CÓ ĐIỀU KIỆN (PARTIAL RETIREMENT)
 
 > **Lưu ý khi đọc:** Tài liệu lịch sử: phản ánh thời điểm audit/refactor; tên hàm, đường dẫn và đề xuất có thể khác code đã merge. Xem [mục lục và hướng dẫn hiện hành](../README.md).
@@ -29,9 +31,9 @@ Trước khi tiến hành thay đổi mã nguồn trong Task 16, toàn bộ cây
 2. **Đính chính số dòng thực tế tại Baseline Task 16:**
    - `src/main/resources/static/css/offers.css`: **1,577 dòng** (giữ nguyên).
    - `src/main/resources/static/css/pages/offer-workspace.css`: **830 dòng** (giữ nguyên).
-   - `src/main/resources/static/css/pages/offers/offer-common.css`: **428 dòng** (tạo trong Task 14).
-   - `src/main/resources/static/css/pages/offers/offer-hr.css`: **864 dòng** (sau khi fix Gate Issue 1).
-   - `src/main/resources/static/css/pages/offers/offer-director.css`: **408 dòng** (bóc tách mới trong Task 16).
+   - `src/main/resources/static/css/pages/offer-common.css`: **428 dòng** (tạo trong Task 14).
+   - `src/main/resources/static/css/pages/offer-hr.css`: **864 dòng** (sau khi fix Gate Issue 1).
+   - `src/main/resources/static/css/pages/offer-director.css`: **408 dòng** (bóc tách mới trong Task 16).
    - `src/main/resources/static/css/pages/candidate-offers.css`: **2,513 dòng** (giữ nguyên, thuộc phạm vi Candidate).
    - Tổng dòng JavaScript mô-đun hóa: **1,282 dòng** (so với 2,005 dòng của file nguyên khối ban đầu).
 
@@ -44,7 +46,7 @@ Trong Task 15, hệ thống ghi nhận 3 vấn đề cần giải quyết dứt 
 ### Issue 1: Lệch 46,268 Diff Pixels tại Modal Xuất Excel (`04_hr_excel_modal_1440.png`)
 - **Triệu chứng:** Ảnh chụp modal xuất Excel ghi nhận sai lệch 46,268 pixel (3.57%) với bounding box bao trùm gần như toàn bộ modal.
 - **Nguyên nhân gốc rễ (Root Cause):**
-  1. Trong `src/main/resources/static/css/pages/offers/offer-hr.css` (dòng 639), selector `.ofw-modal-stat-icon` bị thiếu kích thước cố định `width: 36px; height: 36px;` và chứa thuộc tính thừa `margin-right: var(--s2)`.
+  1. Trong `src/main/resources/static/css/pages/offer-hr.css` (dòng 639), selector `.ofw-modal-stat-icon` bị thiếu kích thước cố định `width: 36px; height: 36px;` và chứa thuộc tính thừa `margin-right: var(--s2)`.
   2. Do `offer-hr.css` được nạp sau `offer-workspace.css`, quy tắc `.offer-stat-icon` cũ (kích thước 44px) đã ghi đè lên icon của modal, đẩy khối tiêu đề dịch sang phải 16px và làm tăng chiều cao header thêm 2px.
   3. Selector `.ofw-modal-desc` có `margin: var(--s1) 0 0; font-size: 13px;` thay vì kích thước chuẩn `font-size: 12.5px; margin-top: 2px;`.
 - **Khắc phục:** Chuẩn hóa quy tắc tại dòng 639 của `offer-hr.css`:
@@ -87,7 +89,7 @@ Trong Task 15, hệ thống ghi nhận 3 vấn đề cần giải quyết dứt 
 
 ## 3. KIẾN TRÚC VÀ BÓC TÁCH CSS PHÂN HỆ GIÁM ĐỐC (`offer-director.css`)
 
-Tệp `src/main/resources/static/css/pages/offers/offer-director.css` (408 dòng) được tổ chức thành 4 phân mục trách nhiệm rõ ràng:
+Tệp `src/main/resources/static/css/pages/offer-director.css` (408 dòng) được tổ chức thành 4 phân mục trách nhiệm rõ ràng:
 
 ### Section A — Director List Workspace (Quản lý Danh sách Đề xuất)
 - **Stats Grid & Stat Cards:** Định nghĩa layout lưới 3 cột hiển thị số lượng đề xuất: Chờ duyệt (`statPending`), Đã duyệt (`statApproved`), Đã từ chối (`statRejected`). Sử dụng `display: flex; flex-direction: column; justify-content: space-between;` để bảo toàn cấu trúc nhãn ở trên và icon + số lượng ở dưới.

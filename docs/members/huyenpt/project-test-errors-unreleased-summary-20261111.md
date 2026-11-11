@@ -12,7 +12,7 @@ Ngày lập: **11/11/2026** — Người phụ trách: **HuyenPT**.
 | Base `origin/main` đã fetch lại | `054c73d2c9183119393aad986883d3d52ce67b71` |
 | Snapshot chức năng còn giữ sau hoàn tác seed | `44fcc15326890e9d437a02363c67c89dcfdae589` |
 | HEAD nhánh trên remote | `35c16a87739c260aceb3059a64510c78af446fc1` |
-| Diff chức năng so với main | **10 file, +286/-44 dòng**, chưa tính chính báo cáo này |
+| Diff chức năng tìm kiếm trước khi chuyển CSS | **10 file, +286/-44 dòng**, chưa tính chính báo cáo này; phần CSS bổ sung ở mục 2.5 |
 | PR của nhánh | PR #171 đã merge; chưa tìm thấy PR mới cho phần bổ sung dưới đây |
 
 Đã kiểm tra GitHub: [PR #171 — Fix/huyenpt/project test errors](https://github.com/Masanori-Satoh/SWP_RMS_Group-2/pull/171) đã merge vào main ngày 09/11/2026. PR đó chứa thay đổi giới hạn export chỉ cho HR (`7dcfa794`), **không phải nội dung mới cần PR lại**. Hiện `OfferController.java` không có diff so với main.
@@ -52,6 +52,18 @@ Theo yêu cầu ngày 11/11/2026, toàn bộ thay đổi ở `7fb29794` đã đ�
 
 Kiểm tra thực tế phát hiện dữ liệu demo đã được nạp vào database. Sau khi người dùng duyệt riêng, đã sao lưu và xóa đúng 16 tài khoản/Candidate/Application/Offer cùng dữ liệu phụ thuộc trong transaction trên `RitirementManagement2`. Còn 0 tài khoản demo; so sánh snapshot SHA-256 trên 19 bảng xác nhận mọi bản ghi ngoài phạm vi không đổi. Không reset database, sửa schema hoặc reseed. Backup và kết quả nằm local trong scratch, không đưa vào Git.
 
+### 2.5. Đưa CSS Offer trực tiếp vào pages — 11/11/2026
+
+- Di chuyển bằng Git 3 file `offer-common.css`, `offer-hr.css`, `offer-director.css` vào `src/main/resources/static/css/pages/`; gỡ thư mục con rỗng. SHA-256 trước/sau khớp 3/3, không sửa bất kỳ rule CSS nào.
+- Đổi đúng 8 href trong 4 template `offers/list.html`, `form.html`, `detail.html`, `director-list.html`. Giữ nguyên thứ tự và cách ghép head hiện tại, không thêm styles fragment gây nạp lặp.
+- Cập nhật đường dẫn trong 10 tài liệu HuyenPT có tham chiếu cũ, ghi chú đường dẫn đã chuyển; giữ các kết quả Task/PR lịch sử. Không sửa tài liệu thành viên khác.
+- Bổ sung 3 tình huống HTTP: tài nguyên mới trả 200, đúng MIME và byte; URL cũ trả 404. Bốn template render 7 stylesheet duy nhất, common trước CSS vai trò, không còn đường dẫn thư mục con trong HTML.
+- Maven sau thay đổi: **310/310 test Offer đạt** (OfferIntegrationTests tăng từ 65 lên 68); frontend **23/23 đạt**. Không đổi backend nghiệp vụ, JavaScript, database, exception hoặc shared layout.
+- Browser xác nhận 4 trang và popup HR/Director trên HTML Thymeleaf với service mock, dùng CSS/JS thật; CSS mới được browser đọc rule thành công. Đây là fixture, không phải E2E đăng nhập/database. Bằng chứng ở `scratch/offer-search-upgrade-20261110/css-move-browser/`.
+- Đã phát hiện 3 CSS build cũ trong `target/classes`; chuyển riêng các bản có hash khớp sang `scratch/offer-search-upgrade-20261110/css-move-stale-build-backup/`, không xóa nội dung hoặc clean toàn bộ target. Các artifact khác được giữ nguyên.
+- Quét toàn bộ file Git quản lý bằng git grep và kiểm tra đường dẫn trong source/test/tài liệu: không còn tham chiếu thư mục CSS con cũ. Log/cache/snapshot lịch sử ngoài Git được giữ làm bằng chứng, không thuộc nội dung runtime hoặc commit.
+- Manifest lần chuyển này: 3 rename CSS, 4 template, 1 file test, 10 tài liệu tham chiếu và báo cáo này. Sau bổ sung, diff branch so với base main gồm **26 file**; bảng mục 4 bên dưới chỉ là snapshot phần tìm kiếm trước lần chuyển CSS.
+
 ## 3. Các commit công việc mới
 
 | Commit | Nội dung | Diff riêng commit |
@@ -81,7 +93,7 @@ Các phase có sửa trùng file; không cộng số file hoặc số dòng từ
 | `docs/members/huyenpt/offer-search-upgrade-20261110.md` | 73 | 0 | Các phase tìm kiếm, bằng chứng và giới hạn kiểm chứng |
 | **Tổng trước báo cáo này** | **286** | **44** | **10 file** |
 
-Gồm 5 file production của ứng dụng Offer, 4 file test, 1 tài liệu. Cộng báo cáo tổng kết này thành **11 file**. Không còn diff seed hoặc hướng dẫn seed so với main.
+Snapshot trước lần chuyển CSS gồm 5 file production của ứng dụng Offer, 4 file test, 1 tài liệu; cộng báo cáo này là 11 file. Các file bổ sung của lần chuyển CSS nằm ở mục 2.5; manifest hiện tại là 26 file. Không có diff seed hoặc hướng dẫn seed so với main.
 
 ## 5. Kết quả kiểm chứng đã thực hiện
 
@@ -112,5 +124,7 @@ Log local nằm trong `scratch/offer-search-upgrade-20261110`: `salary-search-fi
 **Title:** `feat(offer): unify keyword and salary search and align filtered exports`
 
 **Mô tả ngắn:** Nâng cấp ô tìm kiếm Offer hiện có để dùng chung quy tắc cho HR, Director và Excel, hỗ trợ tên/email/vị trí/phòng ban không dấu, #ID và số tiền định dạng VNĐ/VND. Sửa export FILTERED để khớp bộ lọc đã áp dụng; giữ bố cục và phân quyền hiện tại. Đã đạt 307 test Java Offer và 23 test frontend. Không có thay đổi seed hoặc schema trong diff PR.
+
+**Bổ sung mô tả sau chuyển CSS:** Đặt 3 stylesheet Offer trực tiếp trong css/pages, cập nhật template và tài liệu liên quan; giữ nguyên nội dung CSS, thứ tự nạp và giao diện. Kết quả kiểm thử mới nhất là 310 test Java Offer và 23 test frontend đạt.
 
 Phạm vi PR không bao gồm thay đổi đã merge ở PR #171, không đổi schema, nghiệp vụ Application hoặc cấu trúc layout chung.

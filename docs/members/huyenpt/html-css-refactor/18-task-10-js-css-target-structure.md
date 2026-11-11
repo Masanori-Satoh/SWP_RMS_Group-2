@@ -1,3 +1,5 @@
+> Ghi chú 11/11/2026: đường dẫn CSS trong tài liệu đã được cập nhật theo vị trí hiện hành; các kết quả Task/PR lịch sử được giữ nguyên.
+
 # THIẾT KẾ KIẾN TRÚC MỤC TIÊU CHO JAVASCRIPT VÀ CSS PHÂN HỆ OFFER (TASK 10)
 
 > **Lưu ý khi đọc:** Tài liệu lịch sử: phản ánh thời điểm audit/refactor; tên hàm, đường dẫn và đề xuất có thể khác code đã merge. Xem [mục lục và hướng dẫn hiện hành](../README.md).
@@ -41,7 +43,7 @@ graph TD
         JS_Candidate["candidate-offers.js (285 dòng)<br/><i>Countdown, Reason Chips, Double-submit Block</i>"]
     end
 
-    subgraph Modular_CSS ["Modular CSS (static/css/pages/offers/)"]
+    subgraph Modular_CSS ["Modular CSS (static/css/pages/)"]
         CSS_Base["offer-base.css (~220 dòng)<br/><i>Tokens, Status Badges, Typography, Alerts</i>"]
         CSS_List["offer-list.css (~280 dòng)<br/><i>Table layout, Stat Cards, Selection Toolbar</i>"]
         CSS_Export["offer-export.css (~150 dòng)<br/><i>Export Dialog, Scope Radios, Checkbox Grid</i>"]
@@ -229,7 +231,7 @@ Thư mục lưu trữ: `src/main/resources/static/js/pages/offers/`
 
 ## 4. THIẾT KẾ CHI TIẾT CÁC TỆP CSS MỤC TIÊU
 
-Thư mục lưu trữ: `src/main/resources/static/css/pages/offers/`
+Thư mục lưu trữ: `src/main/resources/static/css/pages/`
 
 Hiện tại, mã CSS đang bị phân tán giữa `offers.css` (2.348 dòng) và `offer-workspace.css` (1.223 dòng), trong đó có rất nhiều rule trùng lặp hoặc thuộc về các modal cũ đã bị loại bỏ. Kiến trúc mục tiêu sẽ hợp nhất và phân tách thành 6 tệp CSS gọn gàng:
 
@@ -240,7 +242,7 @@ graph LR
         S2["offer-workspace.css (1,223 dòng)"]
     end
 
-    subgraph CSS_Target ["Kiến trúc mục tiêu (static/css/pages/offers/)"]
+    subgraph CSS_Target ["Kiến trúc mục tiêu (static/css/pages/)"]
         T1["offer-base.css (~220 dòng)<br/>Tokens, Badges, Typography"]
         T2["offer-list.css (~280 dòng)<br/>Table, Stat Cards, Selection Toolbar"]
         T3["offer-export.css (~150 dòng)<br/>Export Dialog, Checkbox Grid"]
@@ -303,10 +305,10 @@ Dưới đây là cấu hình tham chiếu tài nguyên chính xác sau khi hoà
 
 | Template | Các tệp CSS cần nạp (`<link rel="stylesheet">`) | Các tệp JS cần nạp (`<script defer>`) |
 | :--- | :--- | :--- |
-| [`offers/list.html`](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/main/resources/templates/offers/list.html) | 1. `/css/pages/offers/offer-base.css`<br/>2. `/css/pages/offers/offer-list.css`<br/>3. `/css/pages/offers/offer-export.css`<br/>4. `/css/pages/offers/offer-director.css`<br/>5. `/css/pages/flash-toast.css` | 1. `/js/pages/flash-toast.js`<br/>2. `/js/pages/offers/offer-common.js`<br/>3. `/js/pages/offers/offer-list.js`<br/>4. `/js/pages/offers/offer-export.js`<br/>5. `/js/pages/offers/offer-director.js` |
-| [`offers/form.html`](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/main/resources/templates/offers/form.html) | 1. `/css/pages/offers/offer-base.css`<br/>2. `/css/pages/offers/offer-form.css`<br/>3. `/css/pages/flash-toast.css` | 1. `/js/pages/flash-toast.js`<br/>2. `/js/pages/offers/offer-common.js`<br/>3. `/js/pages/offers/offer-form.js` |
-| [`offers/detail.html`](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/main/resources/templates/offers/detail.html) | 1. `/css/pages/offers/offer-base.css`<br/>2. `/css/pages/offers/offer-detail.css`<br/>3. `/css/pages/offers/offer-director.css`<br/>4. `/css/pages/flash-toast.css` | 1. `/js/pages/flash-toast.js`<br/>2. `/js/pages/offers/offer-common.js`<br/>3. `/js/pages/offers/offer-detail.js` |
-| [`offers/director-list.html`](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/main/resources/templates/offers/director-list.html) | 1. `/css/pages/offers/offer-base.css`<br/>2. `/css/pages/offers/offer-list.css`<br/>3. `/css/pages/offers/offer-director.css`<br/>4. `/css/pages/flash-toast.css` | 1. `/js/pages/flash-toast.js`<br/>2. `/js/pages/offers/offer-common.js`<br/>3. `/js/pages/offers/offer-director.js` |
+| [`offers/list.html`](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/main/resources/templates/offers/list.html) | 1. `/css/pages/offer-base.css`<br/>2. `/css/pages/offer-list.css`<br/>3. `/css/pages/offer-export.css`<br/>4. `/css/pages/offer-director.css`<br/>5. `/css/pages/flash-toast.css` | 1. `/js/pages/flash-toast.js`<br/>2. `/js/pages/offers/offer-common.js`<br/>3. `/js/pages/offers/offer-list.js`<br/>4. `/js/pages/offers/offer-export.js`<br/>5. `/js/pages/offers/offer-director.js` |
+| [`offers/form.html`](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/main/resources/templates/offers/form.html) | 1. `/css/pages/offer-base.css`<br/>2. `/css/pages/offer-form.css`<br/>3. `/css/pages/flash-toast.css` | 1. `/js/pages/flash-toast.js`<br/>2. `/js/pages/offers/offer-common.js`<br/>3. `/js/pages/offers/offer-form.js` |
+| [`offers/detail.html`](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/main/resources/templates/offers/detail.html) | 1. `/css/pages/offer-base.css`<br/>2. `/css/pages/offer-detail.css`<br/>3. `/css/pages/offer-director.css`<br/>4. `/css/pages/flash-toast.css` | 1. `/js/pages/flash-toast.js`<br/>2. `/js/pages/offers/offer-common.js`<br/>3. `/js/pages/offers/offer-detail.js` |
+| [`offers/director-list.html`](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/main/resources/templates/offers/director-list.html) | 1. `/css/pages/offer-base.css`<br/>2. `/css/pages/offer-list.css`<br/>3. `/css/pages/offer-director.css`<br/>4. `/css/pages/flash-toast.css` | 1. `/js/pages/flash-toast.js`<br/>2. `/js/pages/offers/offer-common.js`<br/>3. `/js/pages/offers/offer-director.js` |
 | [`offers/candidate-list.html`](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/main/resources/templates/offers/candidate-list.html) | 1. `/css/pages/candidate-offers.css`<br/>2. `/css/pages/flash-toast.css` | 1. `/js/pages/flash-toast.js`<br/>2. `/js/pages/candidate-offers.js` |
 | [`offers/candidate-detail.html`](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/main/resources/templates/offers/candidate-detail.html) | 1. `/css/pages/candidate-offers.css`<br/>2. `/css/pages/flash-toast.css` | 1. `/js/pages/flash-toast.js`<br/>2. `/js/pages/candidate-offers.js` |
 

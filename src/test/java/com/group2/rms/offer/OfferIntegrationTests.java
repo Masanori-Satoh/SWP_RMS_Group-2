@@ -53,6 +53,36 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Import({SecurityConfig.class, DatabaseUserDetailsService.class})
 class OfferIntegrationTests {
 
+    private static void assertOfferStyles(String html, String roleStylesheet, String page) throws Exception {
+        var matcher = java.util.regex.Pattern.compile("href=\"(/css/[^\"]+\\.css)\"").matcher(html);
+        var links = new java.util.ArrayList<String>();
+        while (matcher.find()) links.add(matcher.group(1));
+        String common = "/css/pages/offer-common.css";
+        String role = "/css/pages/" + roleStylesheet;
+        org.junit.jupiter.api.Assertions.assertEquals(1, java.util.Collections.frequency(links, common));
+        org.junit.jupiter.api.Assertions.assertEquals(1, java.util.Collections.frequency(links, role));
+        org.junit.jupiter.api.Assertions.assertTrue(links.indexOf(common) < links.indexOf(role));
+        org.junit.jupiter.api.Assertions.assertEquals(links.size(), new java.util.HashSet<>(links).size());
+        org.junit.jupiter.api.Assertions.assertFalse(html.contains("/css/pages/" + "offers/"));
+        String directory = System.getProperty("offer.styles.evidence.dir");
+        if (directory != null) {
+            var path = java.nio.file.Path.of(directory);
+            java.nio.file.Files.createDirectories(path);
+            java.nio.file.Files.writeString(path.resolve(page + ".html"), html);
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"offer-common.css", "offer-hr.css", "offer-director.css"})
+    void flatOfferStylesAreServedWithoutChangingContent(String filename) throws Exception {
+        byte[] expected = java.nio.file.Files.readAllBytes(
+                java.nio.file.Path.of("src/main/resources/static/css/pages", filename));
+        mvc.perform(get("/css/pages/" + filename))
+                .andExpect(status().isOk()).andExpect(content().contentTypeCompatibleWith("text/css"))
+                .andExpect(content().bytes(expected));
+        mvc.perform(get("/css/pages/" + "offers/" + filename)).andExpect(status().isNotFound());
+    }
+
     @ParameterizedTest
     @ValueSource(strings = {"/interviews", "/offers", "/requisitions", "/internal/job-postings", "/applications"})
     void systemAdminCannotOpenRecruitmentModules(String path) throws Exception {
@@ -209,6 +239,7 @@ class OfferIntegrationTests {
         mvc.perform(get("/offers/create"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("offers/form"))
+                .andExpect(result -> assertOfferStyles(result.getResponse().getContentAsString(java.nio.charset.StandardCharsets.UTF_8), "offer-hr.css", "form"))
                 .andExpect(model().attributeExists("offerDto", "passedCandidates"));
     }
 
@@ -231,6 +262,7 @@ class OfferIntegrationTests {
         mvc.perform(get("/offers/1"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("offers/detail"))
+                .andExpect(result -> assertOfferStyles(result.getResponse().getContentAsString(java.nio.charset.StandardCharsets.UTF_8), "offer-director.css", "detail"))
                 .andExpect(model().attributeExists("detail"));
     }
 
@@ -373,6 +405,7 @@ class OfferIntegrationTests {
                 .andExpect(status().isOk()).andExpect(model().attribute("search", keyword))
                 .andReturn().getResponse().getContentAsString(java.nio.charset.StandardCharsets.UTF_8);
         org.junit.jupiter.api.Assertions.assertTrue(html.contains("maxlength=\"120\""));
+        assertOfferStyles(html, "HR".equals(role) ? "offer-hr.css" : "offer-director.css", role.toLowerCase());
         org.junit.jupiter.api.Assertions.assertTrue(html.contains("Tìm #mã thư mời, ứng viên, email, vị trí, phòng ban…"));
         org.junit.jupiter.api.Assertions.assertEquals(1, html.split("id=\"offerFilters\"", -1).length - 1);
         org.junit.jupiter.api.Assertions.assertEquals("HR".equals(role), html.contains("id=\"offerExportModal\""));

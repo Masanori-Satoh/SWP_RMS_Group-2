@@ -1,3 +1,5 @@
+> Ghi chú 11/11/2026: đường dẫn CSS trong tài liệu đã được cập nhật theo vị trí hiện hành; các kết quả Task/PR lịch sử được giữ nguyên.
+
 # LỘ TRÌNH THỰC THI CHUYỂN ĐỔI KIẾN TRÚC FRONTEND OFFER (TASK 10)
 
 > **Lưu ý khi đọc:** Tài liệu lịch sử: phản ánh thời điểm audit/refactor; tên hàm, đường dẫn và đề xuất có thể khác code đã merge. Xem [mục lục và hướng dẫn hiện hành](../README.md).
@@ -182,12 +184,12 @@ Mỗi đợt triển khai phải vượt qua 3 cổng kiểm soát bắt buộc 
 ### BATCH 09 — PHÂN TÁCH VÀ DỌN DẸP KIẾN TRÚC CSS
 - **Tệp nguồn:** `offers.css` (2.348 dòng) và `offer-workspace.css` (1.223 dòng).
 - **Tệp đích mới:**
-  - `src/main/resources/static/css/pages/offers/offer-base.css` (~220 dòng)
-  - `src/main/resources/static/css/pages/offers/offer-list.css` (~280 dòng)
-  - `src/main/resources/static/css/pages/offers/offer-export.css` (~150 dòng)
-  - `src/main/resources/static/css/pages/offers/offer-form.css` (~250 dòng)
-  - `src/main/resources/static/css/pages/offers/offer-detail.css` (~280 dòng)
-  - `src/main/resources/static/css/pages/offers/offer-director.css` (~220 dòng)
+  - `src/main/resources/static/css/pages/offer-base.css` (~220 dòng)
+  - `src/main/resources/static/css/pages/offer-list.css` (~280 dòng)
+  - `src/main/resources/static/css/pages/offer-export.css` (~150 dòng)
+  - `src/main/resources/static/css/pages/offer-form.css` (~250 dòng)
+  - `src/main/resources/static/css/pages/offer-detail.css` (~280 dòng)
+  - `src/main/resources/static/css/pages/offer-director.css` (~220 dòng)
 - **Mã CSS bị loại bỏ:**
   - Xóa bỏ các selector của drawer cũ `#directorDetailModal` (~160 dòng).
   - Xóa bỏ các selector modal cũ `#createOfferModal` và `#detailOfferModal` (~150 dòng).
