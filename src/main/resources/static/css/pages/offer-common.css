@@ -1730,3 +1730,48 @@ button.director-stat-card {
 .ofw-page [hidden] {
     display: none !important;
 }
+
+/* Chi tiết trên tablet/mobile: giữ đủ dữ liệu và nút thao tác, không che phần lương bị tràn. */
+@media (max-width: 768px) {
+    .ofw-page.offer-detail-container .offers-detail-header-actions {
+        flex-wrap: wrap;
+    }
+
+    .ofw-page.offer-detail-container :is(.candidate-detail-grid, .salary-kpi-grid, .detail-info-tiles) {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .ofw-page.offer-detail-container .candidate-detail-grid .detail-item.col-span-2 {
+        grid-column: auto;
+    }
+
+    .ofw-page.offer-detail-container :is(.offers-detail-header-left, .detail-item, .salary-kpi-card, .detail-info-tile, .detail-soft-box) {
+        min-width: 0;
+        max-width: 100%;
+        overflow-wrap: anywhere;
+    }
+
+    .ofw-page.offer-detail-container .ofw-card-body {
+        padding: var(--s4);
+    }
+
+    .ofw-page.offer-detail-container :is(.salary-kpi-header, .salary-kpi-amount) {
+        flex-wrap: wrap;
+        gap: var(--s2);
+    }
+
+    .ofw-page.offer-detail-container .meta-item {
+        min-width: 0;
+        max-width: 100%;
+        align-items: flex-start;
+    }
+
+    .ofw-page.offer-detail-container .meta-item :is(svg, .meta-label) {
+        flex-shrink: 0;
+    }
+
+    .ofw-page.offer-detail-container .meta-val {
+        min-width: 0;
+        overflow-wrap: anywhere;
+    }
+}

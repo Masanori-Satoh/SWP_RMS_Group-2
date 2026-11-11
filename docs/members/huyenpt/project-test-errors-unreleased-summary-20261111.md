@@ -154,6 +154,14 @@ Kiểm tra thực tế phát hiện dữ liệu demo đã được nạp vào da
 - Giữ keyword, trạng thái, sort và size đã chuẩn hóa. Các page/offset còn hợp lệ không bị đổi, kể cả giá trị sát giới hạn. Thêm 8 trường hợp tham số, mỗi trường hợp kiểm cả HR/Director: âm, 0, bình thường, sát/vượt ngưỡng và Integer.MAX_VALUE với các size khác nhau.
 - Đạt **400/400 Java Offer**, log p2-phase2-pagination.log tại scratch/offer-search-upgrade-20261110; kiểm tra thông báo thực trong HTML, model bộ lọc và Pageable tới service đều đúng. Không ghi database, không đổi lifecycle/quyền hoặc module khác; không tuyên bố E2E thao tác ghi.
 
+### 2.16. Sửa P2 — Phase 3: responsive chi tiết HR/Director
+
+- Chỉ thêm media query ≤768px trong offer-common.css, scope .ofw-page.offer-detail-container. Nhóm nút được xuống dòng; grid ứng viên/lương/điều khoản về một cột; reset span hai cột; chỉnh padding theo token, min-width và wrap để email/chức danh/lương dài không bị cắt. Không sửa template, điều kiện nút hoặc CSS/layout chung; không dùng thêm overflow hidden để giấu dữ liệu.
+- Đạt **400/400 Java Offer, 35/35 Node**. Edge: **24 fixture × 3 viewport = 72 lượt**, **24 lượt popup**; không còn document overflow hoặc clipping ở các grid/card chi tiết được đo, không pageerror/thiếu CSS/JS. Kiểm tra thêm bên trong card để tránh bỏ sót nội dung bị overflow hidden che mất.
+- A/B CSS ở 1440px cho cả **15 fixture chi tiết nội bộ**: hình học, màu, font/padding/display của các phần tử trong main khớp trước/sau. Ảnh mobile Draft HR đã kiểm tra trực quan: cả hai mức lương và toàn bộ thông tin hiển thị, ba nút đủ thao tác; ở 390px nhóm nút xuống hai dòng.
+- Bằng chứng: p2-phase3-responsive.log, p2-final-node.log, p2-phase3-browser.log và thư mục p2-responsive-browser trong scratch/offer-search-upgrade-20261110. Browser dùng HTML Thymeleaf từ MockMvc và tài nguyên thật, không phải đăng nhập/E2E thao tác ghi. Không đổi database hoặc module khác.
+- Ba P2 trong audit đã được xử lý; hai P3 (thông báo URL từ chối cũ và nợ selector class chung) ngoài phạm vi đợt này, giữ nguyên. Không tuyên bố toàn bộ dự án sạch lỗi; cảnh báo coverage Notification cũ vẫn còn.
+
 ## 3. Các commit công việc mới
 
 | Commit | Nội dung | Diff riêng commit |
