@@ -1,3 +1,5 @@
+> Ghi chú 11/11/2026: đường dẫn JavaScript đã được cập nhật theo vị trí hiện hành; kết quả thực hiện lịch sử không thay đổi.
+
 # BÁO CÁO TÁI CẤU TRÚC KIẾN TRÚC THEO VAI TRÒ & TRÍCH XUẤT COMMON JAVASCRIPT (TASK 11)
 
 > **Lưu ý khi đọc:** Tài liệu lịch sử: phản ánh thời điểm audit/refactor; tên hàm, đường dẫn và đề xuất có thể khác code đã merge. Xem [mục lục và hướng dẫn hiện hành](../README.md).
@@ -64,7 +66,7 @@ graph TD
 ```
 
 ### 2.1. Phân định trách nhiệm 4 tệp JavaScript
-1. [`offer-common.js`](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/main/resources/static/js/pages/offers/offer-common.js):
+1. [`offer-common.js`](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/main/resources/static/js/pages/offer-common.js):
    - Chứa các tiện ích dùng chung giữa các màn hình nội bộ: CSRF Helper (`getCsrfInfo`), XSS Sanitizer (`escapeOfferHtml`), Flash Toast (`showFlashToast`, `showToast`, `checkOfferPendingFlashToast`), Modal xác nhận gửi thư mời (`confirmSendOffer`, `executeSendOfferAction`).
    - Xuất khẩu toàn cục qua `window.*` để tương thích hoàn toàn với các thuộc tính inline `onclick` của Thymeleaf.
 2. `offer-hr.js`:
@@ -82,7 +84,7 @@ graph TD
 Tuân thủ nghiêm ngặt nguyên tắc **chỉ thực hiện Batch 01 và không chạm vào mã nguồn ngoài phạm vi**, các thay đổi sau đã được thi công:
 
 ### 3.1. Tệp mới được tạo
-- Đường dẫn: `src/main/resources/static/js/pages/offers/offer-common.js` (210 dòng).
+- Đường dẫn: `src/main/resources/static/js/pages/offer-common.js` (210 dòng).
 - Chứa 5 hàm nghiệp vụ dùng chung và các helper gắn liền:
   1. `getCsrfInfo()`
   2. `escapeOfferHtml(str)`
@@ -109,7 +111,7 @@ Tuân thủ nghiêm ngặt nguyên tắc **chỉ thực hiện Batch 01 và khô
   - Số dòng đã trích xuất an toàn: **173 dòng**.
 
 ### 3.3. Cập nhật các Template Thymeleaf
-Đã bổ sung thẻ nạp `<script th:src="@{/js/pages/offers/offer-common.js}" defer></script>` ngay trước `offers.js` tại 4 template:
+Đã bổ sung thẻ nạp `<script th:src="@{/js/pages/offer-common.js}" defer></script>` ngay trước `offers.js` tại 4 template:
 1. `src/main/resources/templates/offers/list.html`
 2. `src/main/resources/templates/offers/form.html`
 3. `src/main/resources/templates/offers/detail.html`
@@ -118,7 +120,7 @@ Tuân thủ nghiêm ngặt nguyên tắc **chỉ thực hiện Batch 01 và khô
 Thứ tự nạp thẻ `<script defer>` trên cả 4 template:
 ```html
 <script th:src="@{/js/pages/flash-toast.js}" defer></script>
-<script th:src="@{/js/pages/offers/offer-common.js}" defer></script>
+<script th:src="@{/js/pages/offer-common.js}" defer></script>
 <script th:src="@{/js/offers.js}" defer></script>
 ```
 
@@ -140,7 +142,7 @@ Theo đúng yêu cầu của Task 11, **việc di chuyển mã giữa các tệp
 ## 5. KẾT QUẢ KIỂM THỬ HỒI QUY BẮT BUỘC (MANDATORY REGRESSION RESULTS)
 
 ### 5.1. Kiểm tra cú pháp JavaScript (Node.js Syntax Check)
-- Lệnh: `node --check src/main/resources/static/js/pages/offers/offer-common.js` -> **PASS (ReturnCode: 0)**
+- Lệnh: `node --check src/main/resources/static/js/pages/offer-common.js` -> **PASS (ReturnCode: 0)**
 - Lệnh: `node --check src/main/resources/static/js/offers.js` -> **PASS (ReturnCode: 0)**
 
 ### 5.2. Kiểm thử tự động Backend (7 Maven Test Suites)
@@ -169,7 +171,7 @@ Theo đúng yêu cầu của Task 11, **việc di chuyển mã giữa các tệp
 - **Lỗi Console ghi nhận được:** **0 lỗi**.
 
 ### 5.4. Kiểm tra HTTP Status của tài nguyên tĩnh
-- Lệnh: `curl.exe -I http://localhost:8080/js/pages/offers/offer-common.js` -> **HTTP/1.1 200 OK** (Content-Type: `text/javascript;charset=UTF-8`).
+- Lệnh: `curl.exe -I http://localhost:8080/js/pages/offer-common.js` -> **HTTP/1.1 200 OK** (Content-Type: `text/javascript;charset=UTF-8`).
 - Lệnh: `curl.exe -I http://localhost:8080/js/offers.js` -> **HTTP/1.1 200 OK**.
 
 ---
@@ -190,7 +192,7 @@ graph TD
 ```
 
 - **Bước đề xuất tiếp theo (Batch 02):**
-  - Tạo tệp `src/main/resources/static/js/pages/offers/offer-hr.js`.
+  - Tạo tệp `src/main/resources/static/js/pages/offer-hr.js`.
   - Di chuyển các khối: (A) HR List & Row selection, (B) Create/Edit Form rules & dynamic start date, (C) Excel Export 25 cột.
   - Đồng thời loại bỏ 159 dòng mã chết của `openCreateOfferModal` và `submitCreateOffer`.
   - Cập nhật `list.html` và `form.html`.

@@ -1,3 +1,5 @@
+> Ghi chú 11/11/2026: đường dẫn JavaScript đã được cập nhật theo vị trí hiện hành; kết quả thực hiện lịch sử không thay đổi.
+
 > Ghi chú 11/11/2026: đường dẫn CSS trong tài liệu đã được cập nhật theo vị trí hiện hành; các kết quả Task/PR lịch sử được giữ nguyên.
 
 # PR 01/08 — Tách tài nguyên frontend Offer theo vai trò và loại stylesheet trùng
@@ -20,9 +22,9 @@ Diff production gồm **16 file HTML/CSS/JS, +4.467/-6.488 dòng, giảm ròng 2
 | File | Thay đổi | Mục đích |
 |---|---|---|
 | `src/main/resources/static/js/offers.js` | Xóa file JS nguyên khối sau khi tách chức năng và cập nhật các trang gọi | Loại mã cũ và tránh nạp toàn bộ xử lý của mọi vai trò |
-| `src/main/resources/static/js/pages/offers/offer-common.js` | Thêm phần CSRF, escape HTML, flash toast, toast chờ sau reload và xác nhận/phát hành thư mời | Dùng chung các thao tác xuất hiện ở nhiều trang Offer |
-| `src/main/resources/static/js/pages/offers/offer-hr.js` | Thêm xử lý danh sách/bộ lọc/chọn hàng/xóa nháp, form tạo-sửa, gợi ý dữ liệu và popup xuất Excel | Gom hành vi thuộc màn HR; chỉ khởi tạo theo phần tử DOM thực tế |
-| `src/main/resources/static/js/pages/offers/offer-director.js` | Thêm xử lý popup quyết định và duyệt/từ chối trên trang chi tiết | Tách phần Director khỏi mã dành cho HR |
+| `src/main/resources/static/js/pages/offer-common.js` | Thêm phần CSRF, escape HTML, flash toast, toast chờ sau reload và xác nhận/phát hành thư mời | Dùng chung các thao tác xuất hiện ở nhiều trang Offer |
+| `src/main/resources/static/js/pages/offer-hr.js` | Thêm xử lý danh sách/bộ lọc/chọn hàng/xóa nháp, form tạo-sửa, gợi ý dữ liệu và popup xuất Excel | Gom hành vi thuộc màn HR; chỉ khởi tạo theo phần tử DOM thực tế |
+| `src/main/resources/static/js/pages/offer-director.js` | Thêm xử lý popup quyết định và duyệt/từ chối trên trang chi tiết | Tách phần Director khỏi mã dành cho HR |
 
 ### CSS — 6 file
 

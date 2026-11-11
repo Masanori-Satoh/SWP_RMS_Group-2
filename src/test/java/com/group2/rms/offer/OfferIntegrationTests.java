@@ -64,6 +64,24 @@ class OfferIntegrationTests {
         org.junit.jupiter.api.Assertions.assertTrue(links.indexOf(common) < links.indexOf(role));
         org.junit.jupiter.api.Assertions.assertEquals(links.size(), new java.util.HashSet<>(links).size());
         org.junit.jupiter.api.Assertions.assertFalse(html.contains("/css/pages/" + "offers/"));
+        var scriptMatcher = java.util.regex.Pattern.compile("src=\"(/js/pages/[^\"]+\\.js)\"").matcher(html);
+        var scripts = new java.util.ArrayList<String>();
+        while (scriptMatcher.find()) scripts.add(scriptMatcher.group(1));
+        var expectedScripts = switch (page) {
+            case "form" -> List.of("offer-form.js");
+            case "hr" -> List.of("offer-common.js", "offer-hr.js");
+            case "director" -> List.of("offer-common.js", "offer-director.js");
+            default -> List.of("offer-common.js"); // Chi tiết HR không nạp script quyết định của Giám đốc.
+        };
+        for (String file : expectedScripts) {
+            org.junit.jupiter.api.Assertions.assertEquals(1, java.util.Collections.frequency(scripts, "/js/pages/" + file));
+        }
+        if (expectedScripts.size() > 1) {
+            org.junit.jupiter.api.Assertions.assertTrue(scripts.indexOf("/js/pages/" + expectedScripts.get(0))
+                    < scripts.indexOf("/js/pages/" + expectedScripts.get(1)));
+        }
+        org.junit.jupiter.api.Assertions.assertEquals(scripts.size(), new java.util.HashSet<>(scripts).size());
+        org.junit.jupiter.api.Assertions.assertFalse(html.contains("/js/pages/" + "offers/"));
         String directory = System.getProperty("offer.styles.evidence.dir");
         if (directory != null) {
             var path = java.nio.file.Path.of(directory);
@@ -81,6 +99,17 @@ class OfferIntegrationTests {
                 .andExpect(status().isOk()).andExpect(content().contentTypeCompatibleWith("text/css"))
                 .andExpect(content().bytes(expected));
         mvc.perform(get("/css/pages/" + "offers/" + filename)).andExpect(status().isNotFound());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"offer-common.js", "offer-director.js", "offer-form.js", "offer-hr.js"})
+    void flatOfferScriptsAreServedWithoutChangingContent(String filename) throws Exception {
+        byte[] expected = java.nio.file.Files.readAllBytes(
+                java.nio.file.Path.of("src/main/resources/static/js/pages", filename));
+        mvc.perform(get("/js/pages/" + filename)).andExpect(status().isOk())
+                .andExpect(header().string("Content-Type", org.hamcrest.Matchers.matchesPattern("(?:text|application)/javascript(?:;.*)?")))
+                .andExpect(content().bytes(expected));
+        mvc.perform(get("/js/pages/" + "offers/" + filename)).andExpect(status().isNotFound());
     }
 
     @ParameterizedTest
@@ -363,7 +392,7 @@ class OfferIntegrationTests {
                   }
                 };
                 vm.createContext(context);
-                vm.runInContext(fs.readFileSync('src/main/resources/static/js/pages/offers/offer-hr.js', 'utf8'), context);
+                vm.runInContext(fs.readFileSync('src/main/resources/static/js/pages/offer-hr.js', 'utf8'), context);
                 context.executeOfferExport();
                 """;
         Process process = new ProcessBuilder("node", "-e", script, scope).redirectErrorStream(true).start();

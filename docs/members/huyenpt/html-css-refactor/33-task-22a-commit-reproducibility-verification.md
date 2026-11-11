@@ -1,3 +1,5 @@
+> Ghi chú 11/11/2026: đường dẫn JavaScript đã được cập nhật theo vị trí hiện hành; kết quả thực hiện lịch sử không thay đổi.
+
 > Ghi chú 11/11/2026: đường dẫn CSS trong tài liệu đã được cập nhật theo vị trí hiện hành; các kết quả Task/PR lịch sử được giữ nguyên.
 
 # TASK 22A — RESOLVE FINAL COMMIT BLOCKERS WITHOUT REFACTORING (REPRODUCIBILITY & CLEAN BUILD VERIFICATION)
@@ -32,7 +34,7 @@
 | ` M` (Unstaged) | `src/main/resources/templates/offers/detail.html` | HuyenPT Offer Template (HR/Director Detail — Include) |
 | ` M` (Unstaged) | `src/main/resources/templates/offers/director-list.html` | HuyenPT Offer Template (Director Workspace — Include) |
 | `??` (Untracked) | `src/main/resources/static/css/pages/` (`offer-common.css`, `offer-hr.css`, `offer-director.css`) | HuyenPT Offer Frontend (3 Active Internal CSS Files — Include) |
-| `??` (Untracked) | `src/main/resources/static/js/pages/offers/` (`offer-common.js`, `offer-hr.js`, `offer-director.js`) | HuyenPT Offer Frontend (3 Active Internal JS Files — Include) |
+| `??` (Untracked) | `src/main/resources/static/js/pages/` (`offer-common.js`, `offer-hr.js`, `offer-director.js`) | HuyenPT Offer Frontend (3 Active Internal JS Files — Include) |
 | `!!` (Ignored) | `src/test/java/com/group2/rms/offer/OfferExportServiceTests.java` | HuyenPT Offer Unit Test (10 tests, ignored by `.git/info/exclude:9` — Force-Add in Commit Plan) |
 | `??` (Untracked) | `docs/members/huyenpt/html-css-refactor/17-*.md` through `33-*.md` | HuyenPT Offer Technical Documentation (17 Reports — Include) |
 | `??` (Untracked) | `scratch/` | Local Scratch Verification Scripts (**EXCLUDE — Do Not Stage**) |
@@ -184,9 +186,9 @@ Verified via `scratch/t22a_verify_clean_build.py` immediately after `mvn clean t
 | **Active CSS (2/4)** | `static/css/pages/offer-hr.css` | `True` | `True` | **PASS** |
 | **Active CSS (3/4)** | `static/css/pages/offer-director.css` | `True` | `True` | **PASS** |
 | **Active CSS (4/4)** | `static/css/pages/candidate-offers.css` | `True` | `True` | **PASS** |
-| **Active JS (1/4)** | `static/js/pages/offers/offer-common.js` | `True` | `True` | **PASS** |
-| **Active JS (2/4)** | `static/js/pages/offers/offer-hr.js` | `True` | `True` | **PASS** |
-| **Active JS (3/4)** | `static/js/pages/offers/offer-director.js` | `True` | `True` | **PASS** |
+| **Active JS (1/4)** | `static/js/pages/offer-common.js` | `True` | `True` | **PASS** |
+| **Active JS (2/4)** | `static/js/pages/offer-hr.js` | `True` | `True` | **PASS** |
+| **Active JS (3/4)** | `static/js/pages/offer-director.js` | `True` | `True` | **PASS** |
 | **Active JS (4/4)** | `static/js/pages/candidate-offers.js` | `True` | `True` | **PASS** |
 | **Retired Legacy JS** | `static/js/offers.js` | `False` | N/A (Deleted) | **PASS (Absent)** |
 | **Retired Legacy CSS** | `static/css/offers.css` | `False` | N/A (Deleted) | **PASS (Absent)** |
@@ -289,9 +291,9 @@ Scanned all untracked reports in `docs/members/huyenpt/html-css-refactor/` using
 | 5 | `??` | `src/main/resources/static/css/pages/offer-hr.css` | Active Offer CSS | Stage new file |
 | 6 | `??` | `src/main/resources/static/css/pages/offer-director.css` | Active Offer CSS | Stage new file |
 | 7 | ` M` | `src/main/resources/static/css/pages/candidate-offers.css` | Active Offer CSS | Stage modification |
-| 8 | `??` | `src/main/resources/static/js/pages/offers/offer-common.js` | Active Offer JS | Stage new file |
-| 9 | `??` | `src/main/resources/static/js/pages/offers/offer-hr.js` | Active Offer JS | Stage new file |
-| 10 | `??` | `src/main/resources/static/js/pages/offers/offer-director.js` | Active Offer JS | Stage new file |
+| 8 | `??` | `src/main/resources/static/js/pages/offer-common.js` | Active Offer JS | Stage new file |
+| 9 | `??` | `src/main/resources/static/js/pages/offer-hr.js` | Active Offer JS | Stage new file |
+| 10 | `??` | `src/main/resources/static/js/pages/offer-director.js` | Active Offer JS | Stage new file |
 | 11 | ` M` | `src/main/resources/templates/offers/list.html` | Offer Template | Stage modification |
 | 12 | ` M` | `src/main/resources/templates/offers/form.html` | Offer Template | Stage modification |
 | 13 | ` M` | `src/main/resources/templates/offers/detail.html` | Offer Template | Stage modification |
@@ -327,9 +329,9 @@ git add -- `
   src/main/resources/static/css/pages/offer-hr.css `
   src/main/resources/static/css/pages/offer-director.css `
   src/main/resources/static/css/pages/candidate-offers.css `
-  src/main/resources/static/js/pages/offers/offer-common.js `
-  src/main/resources/static/js/pages/offers/offer-hr.js `
-  src/main/resources/static/js/pages/offers/offer-director.js
+  src/main/resources/static/js/pages/offer-common.js `
+  src/main/resources/static/js/pages/offer-hr.js `
+  src/main/resources/static/js/pages/offer-director.js
 
 # 2. Stage the 4 modified internal Offer Thymeleaf templates (4 files)
 git add -- `
@@ -400,9 +402,9 @@ git commit -m "refactor(offer-ui): decompose offer JS/CSS into role-based module
     5. `A  src/main/resources/static/css/pages/offer-hr.css`
     6. `A  src/main/resources/static/css/pages/offer-director.css`
     7. `M  src/main/resources/static/css/pages/candidate-offers.css`
-    8. `A  src/main/resources/static/js/pages/offers/offer-common.js`
-    9. `A  src/main/resources/static/js/pages/offers/offer-hr.js`
-    10. `A  src/main/resources/static/js/pages/offers/offer-director.js`
+    8. `A  src/main/resources/static/js/pages/offer-common.js`
+    9. `A  src/main/resources/static/js/pages/offer-hr.js`
+    10. `A  src/main/resources/static/js/pages/offer-director.js`
     11. `M  src/main/resources/templates/offers/list.html`
     12. `M  src/main/resources/templates/offers/form.html`
     13. `M  src/main/resources/templates/offers/detail.html`

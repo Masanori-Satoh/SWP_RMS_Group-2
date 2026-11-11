@@ -14,7 +14,7 @@ function loadForm(proposed = '', probation = '') {
     const context = { document: { readyState: 'loading', addEventListener() {},
         getElementById: id => fields[id] || null }, window: {} };
     vm.createContext(context);
-    vm.runInContext(fs.readFileSync('src/main/resources/static/js/pages/offers/offer-form.js', 'utf8'), context);
+    vm.runInContext(fs.readFileSync('src/main/resources/static/js/pages/offer-form.js', 'utf8'), context);
     return { context, fields };
 }
 
@@ -56,7 +56,7 @@ function load(fetch) {
     } };
     context.window = context;
     vm.createContext(context);
-    vm.runInContext(fs.readFileSync('src/main/resources/static/js/pages/offers/offer-common.js', 'utf8'), context);
+    vm.runInContext(fs.readFileSync('src/main/resources/static/js/pages/offer-common.js', 'utf8'), context);
     return context;
 }
 
@@ -79,7 +79,7 @@ for (const scope of ['FILTERED', 'SELECTED', 'ALL']) {
         context.document.querySelector = selector => selector.includes('exportScope') ? { value: scope } : null;
         context.document.querySelectorAll = selector => selector.includes('exportCol')
             ? [{ value: 'offerId' }] : [{ value: '42' }];
-        vm.runInContext(fs.readFileSync('src/main/resources/static/js/pages/offers/offer-hr.js', 'utf8'), context);
+        vm.runInContext(fs.readFileSync('src/main/resources/static/js/pages/offer-hr.js', 'utf8'), context);
         context.executeOfferExport();
         await new Promise(setImmediate);
         assert.equal(payload.scope, scope);
@@ -157,7 +157,7 @@ for (const action of ['send', 'delete', 'approve']) {
                 context.executeSendOfferAction();
             } else {
                 const file = action === 'delete' ? 'offer-hr.js' : 'offer-director.js';
-                vm.runInContext(fs.readFileSync('src/main/resources/static/js/pages/offers/' + file, 'utf8'), context);
+                vm.runInContext(fs.readFileSync('src/main/resources/static/js/pages/' + file, 'utf8'), context);
                 if (action === 'delete') context.executeDeleteOffer(button);
                 else await context.executeDirectorDecisionApi('/offers/42/approve', 'Approved', () => navigations++);
             }

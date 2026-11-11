@@ -1,3 +1,5 @@
+> Ghi chú 11/11/2026: đường dẫn JavaScript đã được cập nhật theo vị trí hiện hành; kết quả thực hiện lịch sử không thay đổi.
+
 # Tổng kết thay đổi chưa PR — Offer Management
 
 Ngày lập: **11/11/2026** — Người phụ trách: **HuyenPT**.
@@ -62,7 +64,18 @@ Kiểm tra thực tế phát hiện dữ liệu demo đã được nạp vào da
 - Browser xác nhận 4 trang và popup HR/Director trên HTML Thymeleaf với service mock, dùng CSS/JS thật; CSS mới được browser đọc rule thành công. Đây là fixture, không phải E2E đăng nhập/database. Bằng chứng ở `scratch/offer-search-upgrade-20261110/css-move-browser/`.
 - Đã phát hiện 3 CSS build cũ trong `target/classes`; chuyển riêng các bản có hash khớp sang `scratch/offer-search-upgrade-20261110/css-move-stale-build-backup/`, không xóa nội dung hoặc clean toàn bộ target. Các artifact khác được giữ nguyên.
 - Quét toàn bộ file Git quản lý bằng git grep và kiểm tra đường dẫn trong source/test/tài liệu: không còn tham chiếu thư mục CSS con cũ. Log/cache/snapshot lịch sử ngoài Git được giữ làm bằng chứng, không thuộc nội dung runtime hoặc commit.
-- Manifest lần chuyển này: 3 rename CSS, 4 template, 1 file test, 10 tài liệu tham chiếu và báo cáo này. Sau bổ sung, diff branch so với base main gồm **26 file**; bảng mục 4 bên dưới chỉ là snapshot phần tìm kiếm trước lần chuyển CSS.
+- Manifest lần chuyển CSS: 3 rename CSS, 4 template, 1 file test, 10 tài liệu tham chiếu và báo cáo này. Snapshot sau lần chuyển CSS gồm 26 file; lần chuyển JavaScript bổ sung ở mục 2.6. Bảng mục 4 chỉ là snapshot phần tìm kiếm trước các lần chuyển tài nguyên.
+
+### 2.6. Đưa JavaScript Offer trực tiếp vào pages — 11/11/2026
+
+- Thư mục nguồn thực tế có 4 file: `offer-common.js`, `offer-director.js`, `offer-form.js`, `offer-hr.js`. Chuyển cả 4 bằng git mv vào `src/main/resources/static/js/pages/`, bỏ thư mục con rỗng; giữ nguyên byte nội dung, hash khớp 4/4.
+- Cập nhật 7 script src trong 4 template, giữ nguyên defer, thứ tự common trước script vai trò và điều kiện chỉ Director nạp script quyết định. Sửa đường dẫn đọc file trong test Java/Node.
+- Cập nhật 13 tài liệu của HuyenPT (gồm báo cáo này) có đường dẫn JavaScript cũ. Kết quả thực hiện Task/PR lịch sử được giữ nguyên, chỉ cập nhật đường dẫn và ghi chú.
+- Bổ sung 4 kiểm tra HTTP: đường dẫn mới 200 đúng MIME/byte, URL cũ 404. Bốn template render đúng script, không lặp, giữ thứ tự; hồi quy **314/314 Java Offer và 23/23 JavaScript đạt**.
+- Browser fixture xác nhận script mới trên 4 trang; popup HR/Director mở được, form gợi ý 85% cho 36.000.000 ra 30.600.000. Không submit tạo/sửa/gửi/duyệt dữ liệu. Bằng chứng trong `scratch/offer-search-upgrade-20261110/js-move-browser/`; không phải E2E đăng nhập/database.
+- Giữ 4 bản JS build cũ trong `scratch/offer-search-upgrade-20261110/js-move-stale-build-backup/` để không còn tài nguyên cũ trong classpath; không clean toàn bộ target hoặc xóa bản lưu.
+- Quét toàn bộ file Git quản lý: không còn tham chiếu thư mục JS con cũ, đồng thời không tái xuất hiện tham chiếu CSS con cũ. Log/snapshot lịch sử ngoài Git giữ nguyên.
+- Phạm vi lần này: 4 rename JS, 4 template, 2 file test và 13 tài liệu; không đổi nội dung JS, CSS, backend, database hoặc module khác. Manifest tổng branch so với main hiện tại là **34 file**.
 
 ## 3. Các commit công việc mới
 
@@ -83,7 +96,7 @@ Các phase có sửa trùng file; không cộng số file hoặc số dòng từ
 | --- | ---: | ---: | --- |
 | `src/main/java/com/group2/rms/offer/repository/OfferProposalRepository.java` | 36 | 9 | Quy tắc keyword và lương dùng chung |
 | `src/main/java/com/group2/rms/offer/service/OfferServiceImpl.java` | 2 | 22 | Director dùng lại specification, bỏ imports/logic thừa |
-| `src/main/resources/static/js/pages/offers/offer-hr.js` | 5 | 4 | FILTERED export lấy bộ lọc URL |
+| `src/main/resources/static/js/pages/offer-hr.js` | 5 | 4 | FILTERED export lấy bộ lọc URL |
 | `src/main/resources/templates/offers/list.html` | 1 | 1 | Gợi ý ô tìm và maxlength cho HR |
 | `src/main/resources/templates/offers/director-list.html` | 1 | 1 | Gợi ý ô tìm và maxlength cho Director |
 | `src/test/java/com/group2/rms/offer/service/OfferServiceTests.java` | 96 | 0 | Keyword, wildcard, #ID, lương và giới hạn |
@@ -93,7 +106,7 @@ Các phase có sửa trùng file; không cộng số file hoặc số dòng từ
 | `docs/members/huyenpt/offer-search-upgrade-20261110.md` | 73 | 0 | Các phase tìm kiếm, bằng chứng và giới hạn kiểm chứng |
 | **Tổng trước báo cáo này** | **286** | **44** | **10 file** |
 
-Snapshot trước lần chuyển CSS gồm 5 file production của ứng dụng Offer, 4 file test, 1 tài liệu; cộng báo cáo này là 11 file. Các file bổ sung của lần chuyển CSS nằm ở mục 2.5; manifest hiện tại là 26 file. Không có diff seed hoặc hướng dẫn seed so với main.
+Snapshot trước lần chuyển CSS gồm 5 file production của ứng dụng Offer, 4 file test, 1 tài liệu; cộng báo cáo này là 11 file. Các file bổ sung của lần chuyển CSS/JS nằm ở mục 2.5–2.6; manifest hiện tại là 34 file. Không có diff seed hoặc hướng dẫn seed so với main.
 
 ## 5. Kết quả kiểm chứng đã thực hiện
 
@@ -126,5 +139,7 @@ Log local nằm trong `scratch/offer-search-upgrade-20261110`: `salary-search-fi
 **Mô tả ngắn:** Nâng cấp ô tìm kiếm Offer hiện có để dùng chung quy tắc cho HR, Director và Excel, hỗ trợ tên/email/vị trí/phòng ban không dấu, #ID và số tiền định dạng VNĐ/VND. Sửa export FILTERED để khớp bộ lọc đã áp dụng; giữ bố cục và phân quyền hiện tại. Đã đạt 307 test Java Offer và 23 test frontend. Không có thay đổi seed hoặc schema trong diff PR.
 
 **Bổ sung mô tả sau chuyển CSS:** Đặt 3 stylesheet Offer trực tiếp trong css/pages, cập nhật template và tài liệu liên quan; giữ nguyên nội dung CSS, thứ tự nạp và giao diện. Kết quả kiểm thử mới nhất là 310 test Java Offer và 23 test frontend đạt.
+
+**Bổ sung mô tả sau chuyển JS:** Đặt 4 script Offer trực tiếp trong js/pages, cập nhật tất cả tham chiếu template/test/tài liệu; giữ nguyên nội dung JS, defer, thứ tự nạp và điều kiện theo vai trò. Kết quả mới nhất là 314 test Java Offer và 23 test frontend đạt.
 
 Phạm vi PR không bao gồm thay đổi đã merge ở PR #171, không đổi schema, nghiệp vụ Application hoặc cấu trúc layout chung.

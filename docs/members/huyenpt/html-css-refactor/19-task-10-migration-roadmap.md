@@ -1,3 +1,5 @@
+> Ghi chú 11/11/2026: đường dẫn JavaScript đã được cập nhật theo vị trí hiện hành; kết quả thực hiện lịch sử không thay đổi.
+
 > Ghi chú 11/11/2026: đường dẫn CSS trong tài liệu đã được cập nhật theo vị trí hiện hành; các kết quả Task/PR lịch sử được giữ nguyên.
 
 # LỘ TRÌNH THỰC THI CHUYỂN ĐỔI KIẾN TRÚC FRONTEND OFFER (TASK 10)
@@ -43,7 +45,7 @@ Mỗi đợt triển khai phải vượt qua 3 cổng kiểm soát bắt buộc 
 
 ### BATCH 01 — TRÍCH XUẤT TỆP TIỆN ÍCH DÙNG CHUNG (`offer-common.js`)
 - **Tệp nguồn:** `src/main/resources/static/js/offers.js`
-- **Tệp đích mới:** `src/main/resources/static/js/pages/offers/offer-common.js`
+- **Tệp đích mới:** `src/main/resources/static/js/pages/offer-common.js`
 - **Các hàm chuyển dịch:**
   - `getCsrfInfo()`
   - `escapeOfferHtml()`
@@ -51,7 +53,7 @@ Mỗi đợt triển khai phải vượt qua 3 cổng kiểm soát bắt buộc 
   - `confirmSendOffer(offerId)`
   - `executeSendOfferAction()`
 - **Hàm xóa bỏ:** 0.
-- **Cập nhật Template:** Thêm `<script th:src="@{/js/pages/offers/offer-common.js}" defer></script>` vào `offers/list.html` và `offers/detail.html`.
+- **Cập nhật Template:** Thêm `<script th:src="@{/js/pages/offer-common.js}" defer></script>` vào `offers/list.html` và `offers/detail.html`.
 - **Thứ tự nạp:** Nạp ngay sau `flash-toast.js` và trước các script nghiệp vụ khác.
 - **Kế hoạch Rollback:** Xóa tệp `offer-common.js`, hoàn nguyên `<script>` trong 2 template bằng lệnh `git checkout`.
 
@@ -59,7 +61,7 @@ Mỗi đợt triển khai phải vượt qua 3 cổng kiểm soát bắt buộc 
 
 ### BATCH 02 — TRÍCH XUẤT FORM LOGIC & XÓA BỎ DEAD CREATE MODAL (`offer-form.js`)
 - **Tệp nguồn:** `src/main/resources/static/js/offers.js`
-- **Tệp đích mới:** `src/main/resources/static/js/pages/offers/offer-form.js`
+- **Tệp đích mới:** `src/main/resources/static/js/pages/offer-form.js`
 - **Các hàm chuyển dịch:**
   - `handleSelectPassedCandidate(appId)`
   - `autoCalculateProbationSalary(forceSet)`
@@ -74,8 +76,8 @@ Mỗi đợt triển khai phải vượt qua 3 cổng kiểm soát bắt buộc 
 - **Cập nhật Template:**
   - `offers/form.html`: Thay `<script th:src="@{/js/offers.js}" defer>` bằng:
     ```html
-    <script th:src="@{/js/pages/offers/offer-common.js}" defer></script>
-    <script th:src="@{/js/pages/offers/offer-form.js}" defer></script>
+    <script th:src="@{/js/pages/offer-common.js}" defer></script>
+    <script th:src="@{/js/pages/offer-form.js}" defer></script>
     ```
 - **Kiểm thử nghiệm thu:**
   - Kiểm tra chọn ứng viên dropdown -> Group A tự động hiển thị dữ liệu.
@@ -87,14 +89,14 @@ Mỗi đợt triển khai phải vượt qua 3 cổng kiểm soát bắt buộc 
 
 ### BATCH 03 — TRÍCH XUẤT ĐIỀU KHIỂN XUẤT EXCEL (`offer-export.js`)
 - **Tệp nguồn:** `src/main/resources/static/js/offers.js`
-- **Tệp đích mới:** `src/main/resources/static/js/pages/offers/offer-export.js`
+- **Tệp đích mới:** `src/main/resources/static/js/pages/offer-export.js`
 - **Các hàm chuyển dịch:**
   - `openExportModal()`, `openExportModalWithScope(scope)`, `closeExportModal()`, `handleExportModalBackdropClick(e)`
   - `handleScopeChange()`, `selectAllColumns()`, `deselectAllColumns()`, `resetDefaultColumns()`
   - `executeOfferExport()`
 - **Hàm xóa bỏ:**
   - `showOfferToast`: gộp trực tiếp vào `showFlashToast` của `offer-common.js` (giảm 8 dòng).
-- **Cập nhật Template:** Thêm `<script th:src="@{/js/pages/offers/offer-export.js}" defer></script>` vào `offers/list.html`.
+- **Cập nhật Template:** Thêm `<script th:src="@{/js/pages/offer-export.js}" defer></script>` vào `offers/list.html`.
 - **Kiểm thử nghiệm thu:**
   - Mở modal xuất Excel từ nút đầu trang -> Mặc định chọn 10 cột.
   - Bấm "Chọn tất cả" -> 25 checkbox được tick.
@@ -105,14 +107,14 @@ Mỗi đợt triển khai phải vượt qua 3 cổng kiểm soát bắt buộc 
 
 ### BATCH 04 — TRÍCH XUẤT BỘ LỌC VÀ CHỌN BẢNG DANH SÁCH HR (`offer-list.js`)
 - **Tệp nguồn:** `src/main/resources/static/js/offers.js`
-- **Tệp đích mới:** `src/main/resources/static/js/pages/offers/offer-list.js`
+- **Tệp đích mới:** `src/main/resources/static/js/pages/offer-list.js`
 - **Các hàm chuyển dịch:**
   - `applyOfferFilters()`, `filterOffersByStatus(status)`, `clearSearchInput()`
   - `getSelectedOfferIds()`, `toggleSelectAllOffers(isChecked)`, `handleOfferRowSelectionChange()`, `deselectAllOffers()`, `updateSelectionToolbar()`
   - `confirmDeleteOffer(offerId)`
 - **Hàm xóa bỏ:**
   - `handleFilterSearch`: wrapper thừa (giảm 4 dòng).
-- **Cập nhật Template:** Thêm `<script th:src="@{/js/pages/offers/offer-list.js}" defer></script>` vào `offers/list.html`.
+- **Cập nhật Template:** Thêm `<script th:src="@{/js/pages/offer-list.js}" defer></script>` vào `offers/list.html`.
 - **Kiểm thử nghiệm thu:**
   - Nhập tìm kiếm và Enter -> URL thay đổi kèm tham số `search=...&page=0`.
   - Chọn checkbox dòng -> thanh công cụ hàng loạt hiện ra, nút Xuất Excel hàng loạt cập nhật số lượng `(N)`.
@@ -121,7 +123,7 @@ Mỗi đợt triển khai phải vượt qua 3 cổng kiểm soát bắt buộc 
 
 ### BATCH 05 — TRÍCH XUẤT LOGIC GIÁM ĐỐC (`offer-director.js`)
 - **Tệp nguồn:** `src/main/resources/static/js/offers.js`
-- **Tệp đích mới:** `src/main/resources/static/js/pages/offers/offer-director.js`
+- **Tệp đích mới:** `src/main/resources/static/js/pages/offer-director.js`
 - **Các hàm chuyển dịch:**
   - `applyDirectorFilters()`, `filterDirectorOffersByStatus(status)`, `clearDirectorSearch()`
   - `openDirectorDecisionModal(offerId, actionType)`, `handleDirectorDecisionCommentInput(textarea)`
@@ -129,7 +131,7 @@ Mỗi đợt triển khai phải vượt qua 3 cổng kiểm soát bắt buộc 
 - **Hàm xóa bỏ:**
   - `submitDirectorApprove`, `submitDirectorReject`: wrappers thừa không dùng (giảm 10 dòng).
 - **Cập nhật Template:**
-  - Thêm `<script th:src="@{/js/pages/offers/offer-director.js}" defer></script>` vào `offers/director-list.html` và `offers/list.html`.
+  - Thêm `<script th:src="@{/js/pages/offer-director.js}" defer></script>` vào `offers/director-list.html` và `offers/list.html`.
 - **Kiểm thử nghiệm thu:**
   - Bấm nút Duyệt trên danh sách Giám đốc -> modal mở ra với tiêu đề xanh, không bắt buộc ghi chú.
   - Bấm nút Từ chối -> modal đổi tiêu đề đỏ, bắt buộc nhập lý do (viền đỏ nếu để trống).
@@ -138,7 +140,7 @@ Mỗi đợt triển khai phải vượt qua 3 cổng kiểm soát bắt buộc 
 
 ### BATCH 06 — TRÍCH XUẤT CHI TIẾT OFFER & DUYỆT TRÊN MÀN HÌNH (`offer-detail.js`)
 - **Tệp nguồn:** `src/main/resources/static/js/offers.js`
-- **Tệp đích mới:** `src/main/resources/static/js/pages/offers/offer-detail.js`
+- **Tệp đích mới:** `src/main/resources/static/js/pages/offer-detail.js`
 - **Các hàm chuyển dịch:**
   - `updateDirectorDetailCommentCounter(el)`
   - `scrollToDirectorDecision()`
@@ -151,8 +153,8 @@ Mỗi đợt triển khai phải vượt qua 3 cổng kiểm soát bắt buộc 
 - **Cập nhật Template:**
   - `offers/detail.html`: Thay thế `<script th:src="@{/js/offers.js}" defer>` bằng:
     ```html
-    <script th:src="@{/js/pages/offers/offer-common.js}" defer></script>
-    <script th:src="@{/js/pages/offers/offer-detail.js}" defer></script>
+    <script th:src="@{/js/pages/offer-common.js}" defer></script>
+    <script th:src="@{/js/pages/offer-detail.js}" defer></script>
     ```
 - **Kiểm thử nghiệm thu:**
   - Gõ vào `#directorDetailComments` -> bộ đếm ký tự cập nhật chính xác (hỗ trợ nhập hơn 500 ký tự an toàn theo DTO backend).
@@ -217,7 +219,7 @@ Khi được phê duyệt bắt đầu thi công, **Batch 01** sẽ được th�
    - Working tree sạch hoàn toàn đối với các tệp theo dõi (`git status` clean).
    - Ứng dụng Spring Boot đang chạy ổn định tại cổng 8080.
 2. **Hành động cụ thể:**
-   - Tạo thư mục `src/main/resources/static/js/pages/offers/`.
+   - Tạo thư mục `src/main/resources/static/js/pages/`.
    - Tạo tệp `offer-common.js` chứa đúng 5 hàm dùng chung: `getCsrfInfo`, `escapeOfferHtml`, `showFlashToast`, `confirmSendOffer`, `executeSendOfferAction`.
    - Cập nhật thẻ `<script defer>` trên `offers/list.html` và `offers/detail.html`.
 3. **Cổng kiểm tra (Test Gates):**
@@ -225,5 +227,5 @@ Khi được phê duyệt bắt đầu thi công, **Batch 01** sẽ được th�
    - Chạy 223 Maven tests: Phải đạt **223/223 PASS**.
 4. **Chiến lược Rollback khẩn cấp nếu gặp sự cố:**
    - Chạy: `git checkout -- src/main/resources/templates/offers/`
-   - Xóa tệp vừa tạo: `Remove-Item src/main/resources/static/js/pages/offers/offer-common.js -Force`
+   - Xóa tệp vừa tạo: `Remove-Item src/main/resources/static/js/pages/offer-common.js -Force`
    - Hệ thống lập tức trở về trạng thái ổn định 100% của commit `10031e68`.

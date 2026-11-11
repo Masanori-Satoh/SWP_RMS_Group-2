@@ -1,3 +1,5 @@
+> Ghi chú 11/11/2026: đường dẫn JavaScript đã được cập nhật theo vị trí hiện hành; kết quả thực hiện lịch sử không thay đổi.
+
 > Ghi chú 11/11/2026: đường dẫn CSS trong tài liệu đã được cập nhật theo vị trí hiện hành; các kết quả Task/PR lịch sử được giữ nguyên.
 
 # TECHNICAL REPORT 31 — TASK 21: FINAL PRE-COMMIT QUALITY AUDIT & SWP391 OFFER FRONTEND ACCEPTANCE
@@ -265,9 +267,9 @@ src/main/resources/static/css/pages/offer-hr.css
 src/main/resources/static/css/pages/offer-director.css
 
 # Active JS (Role-based):
-src/main/resources/static/js/pages/offers/offer-common.js
-src/main/resources/static/js/pages/offers/offer-hr.js
-src/main/resources/static/js/pages/offers/offer-director.js
+src/main/resources/static/js/pages/offer-common.js
+src/main/resources/static/js/pages/offer-hr.js
+src/main/resources/static/js/pages/offer-director.js
 
 # Offer HTML Templates:
 src/main/resources/templates/offers/list.html
