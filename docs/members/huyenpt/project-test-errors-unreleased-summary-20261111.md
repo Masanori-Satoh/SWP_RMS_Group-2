@@ -162,6 +162,12 @@ Kiểm tra thực tế phát hiện dữ liệu demo đã được nạp vào da
 - Bằng chứng: p2-phase3-responsive.log, p2-final-node.log, p2-phase3-browser.log và thư mục p2-responsive-browser trong scratch/offer-search-upgrade-20261110. Browser dùng HTML Thymeleaf từ MockMvc và tài nguyên thật, không phải đăng nhập/E2E thao tác ghi. Không đổi database hoặc module khác.
 - Ba P2 trong audit đã được xử lý; hai P3 (thông báo URL từ chối cũ và nợ selector class chung) ngoài phạm vi đợt này, giữ nguyên. Không tuyên bố toàn bộ dự án sạch lỗi; cảnh báo coverage Notification cũ vẫn còn.
 
+### 2.17. Căn lề chân phân trang Offer HR/Director
+
+- Hai template danh sách bọc nguyên fragment fragments/ui/pagination :: paged bằng .ofw-pagination; CSS riêng thêm padding-inline: var(--s6), cùng token với tiêu đề khung. Không ghi đè .pagination-wrapper hoặc sửa fragment/components chung; không thay query, bộ lọc hay Page dữ liệu.
+- Đạt **121/121 test MVC Offer**. Edge kiểm tra 6 trường hợp (HR/Director × 1440/768/390px): khoảng cách hai bên bằng nhau và khớp lề tiêu đề, một nav chung, không tràn ngang, link trang tiếp theo giữ keyword/status/timeSort. Kiểm tra ảnh desktop; browser dùng HTML Thymeleaf fixture và CSS thật, không ghi database.
+- Log pagination-inset-mvc.log, pagination-inset-browser.log và ảnh/số đo tại scratch/offer-search-upgrade-20261110/pagination-inset. Không chạy lại service/Node vì chỉ thay wrapper và padding; cảnh báo JaCoCo Notification cũ vẫn còn. Phạm vi commit: hai template, CSS Offer và báo cáo này.
+
 ## 3. Các commit công việc mới
 
 | Commit | Nội dung | Diff riêng commit |

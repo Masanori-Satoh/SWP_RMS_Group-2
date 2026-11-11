@@ -623,6 +623,10 @@ button.director-stat-card {
   background: var(--surface);
 }
 
+.ofw-pagination {
+  padding-inline: var(--s6);
+}
+
 .ofw-list-heading {
   display: flex;
   align-items: center;

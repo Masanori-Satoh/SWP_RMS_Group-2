@@ -226,7 +226,9 @@
             </table>
         </div>
         <!-- Phân trang chuẩn UI catalog -->
-        <nav th:replace="~{fragments/ui/pagination :: paged(page=${offersPage})}"></nav>
+        <div class="ofw-pagination">
+            <nav th:replace="~{fragments/ui/pagination :: paged(page=${offersPage})}"></nav>
+        </div>
     </div>
 
     <!-- ===========================================================================
