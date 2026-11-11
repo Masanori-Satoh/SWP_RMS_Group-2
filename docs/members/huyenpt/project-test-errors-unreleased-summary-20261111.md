@@ -108,6 +108,12 @@ Kiểm tra thực tế phát hiện dữ liệu demo đã được nạp vào da
 - Bổ sung 20 trường hợp MockMvc: 8 giá trị size từ Integer.MIN_VALUE đến Integer.MAX_VALUE cho cả hai vai trò, 8 trường hợp lương vượt độ chính xác qua form tạo/sửa, 4 trường hợp lương có hai chữ số thập phân hoặc đạt giới hạn tối đa được truyền nguyên vẹn tới service.
 - Kiểm thử đạt **357/357** thuộc 5 lớp Offer, không failure/error/skipped (94 Web/MVC, 183 service Offer, 46 service Candidate, 19 web Candidate, 15 export). Log: `scratch/offer-search-upgrade-20261110/phase2-pagination-salary-verified.log`. Đây là MockMvc/Bean Validation và hồi quy service, không phải E2E đăng nhập/database; không lưu lương biên vào database thực. Lần Maven sandbox đầu dừng khi truy cập dependency jboss-logging trước test; lần chạy lại có quyền truy cập cache đạt BUILD SUCCESS. JaCoCo vẫn có cảnh báo dữ liệu cũ Notification, không dùng coverage làm bằng chứng. Không cần chạy lại Node vì không đổi frontend. Phase 3–6 chưa thực hiện trong lần này.
 
+### 2.10. Rà soát cuối — Phase 3: thống nhất nhận xét Giám đốc
+
+- Popup danh sách và ô nhận xét trang chi tiết cùng dùng maxlength 2000, hiển thị bộ đếm /2000; giữ cấu trúc và thiết kế hiện có. DTO dùng từ “Giám đốc” giống service; giới hạn service/DTO đã là 2000, không đổi nghiệp vụ.
+- Thêm 10 trường hợp MockMvc: duyệt/từ chối với 500, 501, 2000 ký tự được chuyển nguyên vẹn tới service; 2001 bị Bean Validation chặn trước service; hai trang render maxlength và bộ đếm thống nhất. Các test service hiện có tiếp tục chặn 2001 nếu gọi trực tiếp.
+- Hồi quy đạt **367/367 Java Offer và 23/23 Node**, log `phase3-director-comments.log` / `phase3-frontend.log` trong scratch/offer-search-upgrade-20261110. Không ghi database, không thay module khác; không kết luận E2E trình duyệt hoặc toàn bộ test dự án. Giữ cảnh báo coverage Notification cũ như các phase trước.
+
 ## 3. Các commit công việc mới
 
 | Commit | Nội dung | Diff riêng commit |

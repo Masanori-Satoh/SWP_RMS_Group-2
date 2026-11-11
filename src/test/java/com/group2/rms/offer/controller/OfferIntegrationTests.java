@@ -53,6 +53,39 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Import({SecurityConfig.class, DatabaseUserDetailsService.class})
 class OfferIntegrationTests {
 
+    @ParameterizedTest
+    @CsvSource({"approve,500", "reject,500", "approve,501", "reject,501", "approve,2000", "reject,2000", "approve,2001", "reject,2001"})
+    @WithMockUser(username = "director_user", roles = "DIRECTOR")
+    void directorCommentBoundariesMatchBackendLimit(String action, int length) throws Exception {
+        String comments = "ý".repeat(length);
+        var result = mvc.perform(post("/offers/1/" + action).with(csrf()).contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(new DirectorDecisionRequest(comments))));
+        if (length <= 2000) {
+            result.andExpect(status().isOk()).andExpect(jsonPath("$.success").value(true));
+            if ("approve".equals(action)) org.mockito.Mockito.verify(offerService).approveOfferByDirector(1, comments);
+            else org.mockito.Mockito.verify(offerService).rejectOfferByDirector(1, comments);
+        } else {
+            result.andExpect(status().isBadRequest());
+            org.mockito.Mockito.verify(offerService, org.mockito.Mockito.never()).approveOfferByDirector(any(), any());
+            org.mockito.Mockito.verify(offerService, org.mockito.Mockito.never()).rejectOfferByDirector(any(), any());
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"/offers", "/offers/1"})
+    @WithMockUser(username = "director_user", roles = "DIRECTOR")
+    void directorTextareasAndCountersShareThe2000CharacterLimit(String path) throws Exception {
+        when(offerService.getDirectorOffers(any(), any(), any(), any())).thenReturn(org.springframework.data.domain.Page.empty());
+        when(offerService.getOfferDetailForHr(1)).thenReturn(OfferDetailResponse.builder()
+                .offerId(1).offerStatus("Pending_Director").build());
+        String html = mvc.perform(get(path)).andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        String id = path.equals("/offers") ? "directorDecisionComments" : "directorDetailComments";
+        org.junit.jupiter.api.Assertions.assertTrue(java.util.regex.Pattern.compile(
+                "<textarea[^>]*id=\"" + id + "\"[^>]*maxlength=\"2000\"", java.util.regex.Pattern.DOTALL).matcher(html).find());
+        org.junit.jupiter.api.Assertions.assertTrue(html.contains("0</span>/2000"));
+        org.junit.jupiter.api.Assertions.assertFalse(html.contains("0</span>/500"));
+    }
+
     private static void assertOfferStyles(String html, String roleStylesheet, String page) throws Exception {
         var matcher = java.util.regex.Pattern.compile("href=\"(/css/[^\"]+\\.css)\"").matcher(html);
         var links = new java.util.ArrayList<String>();

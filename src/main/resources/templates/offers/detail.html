@@ -351,16 +351,17 @@
         </div>
 
         <div class="director-decision-card-body">
-            <!-- Label & Character Counter (0/500) -->
+            <!-- Giới hạn nhận xét khớp DTO và service: 2000 ký tự. -->
             <div class="director-comment-label-row">
                 <label for="directorDetailComments">Ý kiến phê duyệt hoặc lý do từ chối:</label>
                 <span class="ofw-counter-label">
-                    <span id="directorDetailCommentCount">0</span>/500
+                    <span id="directorDetailCommentCount">0</span>/2000
                 </span>
             </div>
 
             <!-- Textarea: Placeholder chuẩn theo mockup -->
             <textarea id="directorDetailComments" class="director-decision-textarea" rows="3"
+                      maxlength="2000"
                       aria-label="Ý kiến phê duyệt hoặc lý do từ chối của Giám đốc"
                       placeholder="Nhập ý kiến phê duyệt hoặc ghi chú điều chỉnh lương, thời gian..."
                       oninput="updateDirectorDetailCommentCounter(this)"></textarea>
