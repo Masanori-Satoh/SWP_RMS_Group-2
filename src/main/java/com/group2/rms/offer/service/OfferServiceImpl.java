@@ -44,7 +44,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -106,10 +105,6 @@ public class OfferServiceImpl implements OfferService {
             throw new org.springframework.security.access.AccessDeniedException("Chỉ Giám đốc được xem danh sách phê duyệt.");
         }
         return viewer;
-    }
-
-    private static Specification<OfferProposal> withStatuses(String... statuses) {
-        return (root, query, builder) -> builder.lower(root.get("offerStatus")).in(List.of(statuses));
     }
 
 
@@ -308,20 +303,7 @@ public class OfferServiceImpl implements OfferService {
     @Override
     @Transactional(readOnly = true)
     public Page<OfferResponse> getAllOffersForHr(String search, String status, String timeSort, Pageable pageable) {
-        boolean hasSearch = search != null && !search.trim().isEmpty();
-        boolean hasStatus = status != null && !status.trim().isEmpty() && !"ALL".equalsIgnoreCase(status.trim());
-        boolean hasCustomSort = timeSort != null && !timeSort.trim().isEmpty() && !"DEFAULT".equalsIgnoreCase(timeSort.trim());
-
-        // Fast-path: Nếu không tìm kiếm theo từ khóa và không chọn sắp xếp tùy biến
-        if (!hasSearch && !hasCustomSort) {
-            Page<OfferProposal> pagedEntities;
-            if (!hasStatus) {
-                pagedEntities = offerProposalRepository.findAllActiveByOrderByOfferIdAsc(pageable);
-            } else {
-                pagedEntities = offerProposalRepository.findActiveByStatusOrderByOfferIdAsc(status.trim(), pageable);
-            }
-            return pagedEntities.map(this::mapToResponse);
-        }
+        LocalDateTime now = LocalDateTime.now(clock);
 
         // Cấu hình sắp xếp theo thời gian (EARLIEST / LATEST / DEFAULT)
         Sort sort;
@@ -335,10 +317,10 @@ public class OfferServiceImpl implements OfferService {
 
         Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
 
-        Specification<OfferProposal> spec = OfferProposalRepository.matchingFilters(search, status);
+        Specification<OfferProposal> spec = OfferProposalRepository.matchingFilters(search, status, now);
 
         Page<OfferProposal> pagedEntities = offerProposalRepository.findAll(spec, sortedPageable);
-        return pagedEntities.map(this::mapToResponse);
+        return pagedEntities.map(entity -> mapToResponse(entity, now));
     }
 
     @Override
@@ -348,7 +330,7 @@ public class OfferServiceImpl implements OfferService {
         stats.put("statTotal", offerProposalRepository.countActiveOffers());
         stats.put("statPending", offerProposalRepository.countPendingDirector());
         stats.put("statApproved", offerProposalRepository.countDirectorApproved());
-        stats.put("statSent", offerProposalRepository.countSentCandidate());
+        stats.put("statSent", offerProposalRepository.count(OfferProposalRepository.matchingFilters(null, "Sent_Candidate", LocalDateTime.now(clock))));
         stats.put("statAccepted", offerProposalRepository.countAccepted());
         return stats;
     }
@@ -691,6 +673,10 @@ public class OfferServiceImpl implements OfferService {
 
 
     private OfferResponse mapToResponse(OfferProposal entity) {
+        return mapToResponse(entity, LocalDateTime.now(clock));
+    }
+
+    private OfferResponse mapToResponse(OfferProposal entity, LocalDateTime now) {
         String candidateName = null;
         String candidateEmail = null;
         if (entity.getApplication() != null && entity.getApplication().getCandidate() != null) {
@@ -722,7 +708,7 @@ public class OfferServiceImpl implements OfferService {
                 .benefitsPackage(entity.getBenefitsPackage())
                 .responsePeriodDays(entity.getResponsePeriodDays())
                 .responseDeadline(entity.getResponseDeadline())
-                .responseExpired(entity.isResponseExpiredAt(LocalDateTime.now(clock)))
+                .responseExpired(entity.isResponseExpiredAt(now))
                 .proposedById(proposedById)
                 .proposedByName(proposedByName)
                 .offerStatus(entity.getOfferStatus())
@@ -831,15 +817,13 @@ public class OfferServiceImpl implements OfferService {
     @Transactional(readOnly = true)
     public Map<String, Long> getDirectorStatusCounts() {
         var visible = OfferProposalRepository.visibleToDirector(requireDirector().getUserId());
+        LocalDateTime now = LocalDateTime.now(clock);
         Map<String, Long> counts = new HashMap<>();
         counts.put("ALL", offerProposalRepository.count(visible));
-        counts.put("Pending_Director", offerProposalRepository.count(visible.and(withStatuses("pending_director"))));
-        counts.put("Director_Approved", offerProposalRepository.count(visible.and(withStatuses("director_approved", "approved"))));
-        counts.put("Sent_Candidate", offerProposalRepository.count(visible.and(withStatuses("sent_candidate"))));
-        counts.put("Expired", offerProposalRepository.count(visible.and(withStatuses("expired"))));
-        counts.put("Accepted", offerProposalRepository.count(visible.and(withStatuses("accepted"))));
-        counts.put("Declined", offerProposalRepository.count(visible.and(withStatuses("declined"))));
-        counts.put("Director_Rejected", offerProposalRepository.count(visible.and(withStatuses("director_rejected", "rejected"))));
+        for (String status : List.of("Pending_Director", "Director_Approved", "Sent_Candidate", "Expired",
+                "Accepted", "Declined", "Director_Rejected")) {
+            counts.put(status, offerProposalRepository.count(visible.and(OfferProposalRepository.matchingStatus(status, now))));
+        }
         return counts;
     }
 
@@ -853,6 +837,7 @@ public class OfferServiceImpl implements OfferService {
     @Transactional(readOnly = true)
     public Page<OfferResponse> getDirectorOffers(String search, String status, String timeSort, Pageable pageable) {
         var visible = OfferProposalRepository.visibleToDirector(requireDirector().getUserId());
+        LocalDateTime now = LocalDateTime.now(clock);
         boolean hasSearch = search != null && !search.trim().isEmpty();
         boolean hasStatus = status != null && !status.trim().isEmpty() && !"ALL".equalsIgnoreCase(status.trim());
 
@@ -898,7 +883,7 @@ public class OfferServiceImpl implements OfferService {
                             builder.equal(builder.lower(root.get("offerStatus")), "rejected")
                     ));
                 } else {
-                    predicates.add(builder.equal(builder.lower(root.get("offerStatus")), s.toLowerCase(Locale.ROOT)));
+                    predicates.add(OfferProposalRepository.matchingStatus(s, now).toPredicate(root, query, builder));
                 }
             }
 
@@ -906,7 +891,7 @@ public class OfferServiceImpl implements OfferService {
         };
 
         Page<OfferProposal> pagedEntities = offerProposalRepository.findAll(spec, sortedPageable);
-        return pagedEntities.map(this::mapToResponse);
+        return pagedEntities.map(entity -> mapToResponse(entity, now));
     }
 
 

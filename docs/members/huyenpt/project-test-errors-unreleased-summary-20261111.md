@@ -139,6 +139,15 @@ Kiểm tra thực tế phát hiện dữ liệu demo đã được nạp vào da
 - Edge headless trên HTML MockMvc/Thymeleaf và CSS/JS thật đạt 6 nhóm: CSS A/B ba trang giữ kích thước/màu nút icon và card header; popup export/chọn cột/xóa/chọn hàng HR; Director từ chối bắt buộc lý do, bộ đếm/payload 2000 và mở khóa khi lỗi; xác nhận/hủy tại chi tiết; gợi ý 85%; rời form sửa cảnh báo và hoàn tác cho phép rời trang. Không có pageerror từ script Offer.
 - Log: `phase6-final-verification.log`, `phase6-frontend.log`, `phase6-browser-verified.log`; HTML, ảnh và results.json tại scratch/offer-search-upgrade-20261110/phase6-browser. Browser chỉ dùng fixture, request quyết định được intercept; không đăng nhập E2E hoặc ghi DB. beforeunload phụ thuộc hỗ trợ/chính sách của trình duyệt; không bảo đảm phục hồi dữ liệu khi ứng dụng/trình duyệt bị tắt đột ngột. JaCoCo vẫn có warning Notification cũ, không dùng coverage làm bằng chứng.
 
+### 2.14. Sửa P2 — Phase 1: trạng thái hết hạn hiệu lực khi đọc
+
+- Thêm matchingStatus(status, now), dùng chung với matchingFilters cho HR/Excel, bộ lọc và bộ đếm Director. Expired gồm trạng thái đã lưu hoặc Sent_Candidate đã quá ResponseDeadline/ngày bắt đầu; Sent_Candidate chỉ còn các bản còn hạn. Guard NULL rõ ràng, bằng đúng hạn/ngày bắt đầu hôm nay vẫn hợp lệ.
+- Bỏ fast-path HR dùng query trạng thái lưu riêng; giữ sắp xếp mặc định ID tăng dần và scope Director hiện có. List dùng cùng một now cho query và responseExpired, không cập nhật OfferStatus trong database khi đọc.
+- Export dùng bean Clock chung, một now cho query/nhãn/tổng hợp; cả ALL/SELECTED/FILTERED hiển thị trạng thái hiệu lực, không sửa entity. Ngày tên file cũng lấy Clock để test ổn định. Không đổi Application, quyền Candidate, email hoặc job.
+- Đạt **392/392 Java Offer** (thêm 13 trường hợp workbook/summary trước/đúng/sau hạn, NULL, trạng thái kết thúc, các scope). Cập nhật mock query/Clock và chữ ký helper trong một test opt-in để toàn bộ test source biên dịch; không bật opt-in ghi database.
+- JPA/SQL Server chỉ đọc với CTE VALUES: **88 đối chiếu, 22 tình huống**, so khớp helper query với isResponseExpiredAt trước/sau mô phỏng job; không tạo bảng hoặc UPDATE. Probe dữ liệu local với Clock vượt một deadline: HR/Director/counts/Excel khớp, Sent còn 1, Expired 6 trong snapshot kiểm tra. Scope Director và chặn Draft tiếp tục đạt.
+- Log: p2-phase1-complete.log, p2-phase1-sql-pass.log, p2-phase1-live-readonly.log tại scratch/offer-search-upgrade-20261110. Helper CTE/probe ngoài Git; không khởi động job, không đổi đồng hồ máy, schema hoặc dữ liệu. Chưa kiểm thử E2E thao tác ghi; JaCoCo vẫn cảnh báo dữ liệu cũ Notification.
+
 ## 3. Các commit công việc mới
 
 | Commit | Nội dung | Diff riêng commit |

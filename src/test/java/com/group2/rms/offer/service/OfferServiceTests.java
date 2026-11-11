@@ -1111,7 +1111,7 @@ class OfferServiceTests {
         OfferProposal offer = OfferProposal.builder().offerId(1).offerStatus("Draft").build();
         Page<OfferProposal> page = new PageImpl<>(List.of(offer), pageable, 1);
 
-        when(offerProposalRepository.findAllActiveByOrderByOfferIdAsc(pageable)).thenReturn(page);
+        when(offerProposalRepository.findAll(any(org.springframework.data.jpa.domain.Specification.class), any(Pageable.class))).thenReturn(page);
 
         Page<OfferResponse> resultAll = offerService.getAllOffersForHr("ALL", pageable);
         assertNotNull(resultAll);
@@ -1129,7 +1129,7 @@ class OfferServiceTests {
         OfferProposal offer = OfferProposal.builder().offerId(2).offerStatus("Pending_Director").build();
         Page<OfferProposal> page = new PageImpl<>(List.of(offer), pageable, 1);
 
-        when(offerProposalRepository.findActiveByStatusOrderByOfferIdAsc("Pending_Director", pageable)).thenReturn(page);
+        when(offerProposalRepository.findAll(any(org.springframework.data.jpa.domain.Specification.class), any(Pageable.class))).thenReturn(page);
 
         Page<OfferResponse> result = offerService.getAllOffersForHr("Pending_Director", pageable);
         assertNotNull(result);
@@ -1158,7 +1158,7 @@ class OfferServiceTests {
         when(offerProposalRepository.countActiveOffers()).thenReturn(14L);
         when(offerProposalRepository.countPendingDirector()).thenReturn(3L);
         when(offerProposalRepository.countDirectorApproved()).thenReturn(5L);
-        when(offerProposalRepository.countSentCandidate()).thenReturn(2L);
+        when(offerProposalRepository.count(any(org.springframework.data.jpa.domain.Specification.class))).thenReturn(2L);
         when(offerProposalRepository.countAccepted()).thenReturn(4L);
 
         Map<String, Long> stats = offerService.getOfferStats();
@@ -1885,15 +1885,15 @@ class OfferServiceTests {
     }
 
     @Test
-    @DisplayName("getAllOffersForHr: Blank search string with default status queries active offers via fast-path")
-    void getAllOffersForHr_blankSearch_queriesActiveFastPath() {
-        when(offerProposalRepository.findAllActiveByOrderByOfferIdAsc(any(Pageable.class)))
+    @DisplayName("getAllOffersForHr: Blank search uses the same specification as filtered search")
+    void getAllOffersForHr_blankSearch_queriesSharedSpecification() {
+        when(offerProposalRepository.findAll(any(org.springframework.data.jpa.domain.Specification.class), any(Pageable.class)))
                 .thenReturn(Page.empty());
 
         Page<OfferResponse> result = offerService.getAllOffersForHr("   ", "ALL", "DEFAULT", PageRequest.of(0, 10));
 
         assertNotNull(result);
-        verify(offerProposalRepository).findAllActiveByOrderByOfferIdAsc(any(Pageable.class));
+        verify(offerProposalRepository).findAll(any(org.springframework.data.jpa.domain.Specification.class), any(Pageable.class));
     }
 
     @org.junit.jupiter.api.AfterEach

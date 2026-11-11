@@ -22,6 +22,7 @@ import jakarta.persistence.criteria.JoinType;
 import java.util.ArrayList;
 import java.util.Locale;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 import java.util.List;
 import java.util.Optional;
@@ -75,21 +76,39 @@ public interface OfferProposalRepository extends JpaRepository<OfferProposal, In
      * Bộ lọc HR/Excel: loại bản ghi xóa mềm, chuẩn hóa trạng thái và dùng cùng tìm kiếm với Giám đốc.
      * ListFilters escape các ký tự %, _ và [ để tìm đúng ký tự người dùng nhập, không coi chúng là mẫu LIKE.
      */
-    static Specification<OfferProposal> matchingFilters(String search, String status) {
-        String normalized = status == null ? "" : status.trim().toLowerCase(Locale.ROOT);
+    static Specification<OfferProposal> matchingFilters(String search, String status, LocalDateTime now) {
         return (root, query, builder) -> {
             var predicates = new ArrayList<Predicate>();
             predicates.add(builder.or(builder.isNull(root.get("isDeleted")), builder.isFalse(root.get("isDeleted"))));
             predicates.add(matchingKeyword(search).toPredicate(root, query, builder));
-            if (!normalized.isEmpty() && !"all".equals(normalized)) {
-                var statuses = switch (normalized) {
-                    case "approved", "director_approved" -> List.of("approved", "director_approved");
-                    case "rejected", "director_rejected" -> List.of("rejected", "director_rejected");
-                    default -> List.of(normalized);
-                };
-                predicates.add(builder.lower(root.get("offerStatus")).in(statuses));
-            }
+            predicates.add(matchingStatus(status, now).toPredicate(root, query, builder));
             return builder.and(predicates.toArray(new Predicate[0]));
+        };
+    }
+
+    /** Trạng thái hiệu lực khi đọc, khớp isResponseExpiredAt; bằng đúng hạn vẫn còn hạn, không ghi DB. */
+    static Specification<OfferProposal> matchingStatus(String status, LocalDateTime now) {
+        String normalized = status == null ? "" : status.trim().toLowerCase(Locale.ROOT);
+        return (root, query, builder) -> {
+            if (normalized.isEmpty() || "all".equals(normalized)) return builder.conjunction();
+            var stored = builder.lower(root.get("offerStatus"));
+            if ("expired".equals(normalized) || "sent_candidate".equals(normalized)) {
+                var overdue = builder.or(
+                        builder.and(builder.isNotNull(root.get("responseDeadline")),
+                                builder.lessThan(root.get("responseDeadline"), now)),
+                        builder.and(builder.isNotNull(root.get("expectedStartDate")),
+                                builder.lessThan(root.get("expectedStartDate"), now.toLocalDate())));
+                var sent = builder.equal(stored, "sent_candidate");
+                return "expired".equals(normalized)
+                        ? builder.or(builder.equal(stored, "expired"), builder.and(sent, overdue))
+                        : builder.and(sent, builder.not(overdue));
+            }
+            var statuses = switch (normalized) {
+                case "approved", "director_approved" -> List.of("approved", "director_approved");
+                case "rejected", "director_rejected" -> List.of("rejected", "director_rejected");
+                default -> List.of(normalized);
+            };
+            return stored.in(statuses);
         };
     }
 
