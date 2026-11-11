@@ -188,6 +188,11 @@ Kiểm tra thực tế phát hiện dữ liệu demo đã được nạp vào da
 - Bỏ badge số thư mời dưới tiêu đề danh sách Director theo yêu cầu. Flex hiện có căn icon/tiêu đề cùng tâm dọc sau khi bỏ dòng phụ, không thêm CSS hoặc thay model tổng số/phân trang. Badge HR giữ nguyên.
 - Đạt **121/121 test MVC**, kiểm tra Edge tại 1440/768/390px: không còn badge ở header Director, tiêu đề chờ phê duyệt đúng, tâm icon/tiêu đề lệch 0px, badge HR còn nguyên. Log director-heading-mvc.log, director-heading-browser.log và ảnh/số đo tại scratch/offer-search-upgrade-20261110/director-heading. Chỉ template Director/báo cáo thay đổi; không ghi DB.
 
+### 2.22. Thu gọn thẻ thống kê Director và làm rõ số đếm
+
+- Chỉ sửa offer-director.css: padding thẻ 12px/16px theo token, khoảng cách nhãn/hàng số var(--s1), icon 36px; số đếm 26→36px, weight 700→800. Giữ ba cột đều trên desktop và một cột trên tablet/mobile, không đổi số liệu, màu, trạng thái active hoặc dữ liệu lọc. CSS giới hạn ở .director-stat-card, không thay thống kê HR.
+- Đạt **121/121 test MVC** và A/B Edge tại 1440/768/390px: thẻ từ khoảng 108px xuống 86px (~20%), cả ba thẻ cùng chiều cao; thử số 0/4/23/12345 không tràn, click cả ba thẻ vẫn gửi đúng trạng thái vào form lọc. Ảnh desktop được kiểm tra trực quan; số 4/23/2 trong ảnh chỉ là DOM fixture, không thay số liệu thật. Log director-stats-compact-mvc.log, director-stats-compact-browser.log và ảnh/số đo tại scratch/offer-search-upgrade-20261110/director-stats-compact. Không ghi database.
+
 ## 3. Các commit công việc mới
 
 | Commit | Nội dung | Diff riêng commit |

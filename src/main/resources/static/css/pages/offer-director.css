@@ -25,7 +25,7 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: var(--s4, 16px) var(--s5, 20px);
+  padding: var(--s3) var(--s4);
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius-lg, 12px);
@@ -35,6 +35,20 @@
   box-sizing: border-box;
   text-align: left;
   width: 100%;
+}
+
+.director-stat-card .ofw-stat-bottom {
+  margin-top: var(--s1);
+}
+
+.director-stat-card .ofw-stat-icon {
+  width: 36px;
+  height: 36px;
+}
+
+.director-stat-card .ofw-stat-value {
+  font-size: 36px;
+  font-weight: 800;
 }
 
 .director-stat-card:hover,
