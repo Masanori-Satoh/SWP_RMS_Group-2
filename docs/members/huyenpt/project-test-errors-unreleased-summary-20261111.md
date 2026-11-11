@@ -198,6 +198,11 @@ Kiểm tra thực tế phát hiện dữ liệu demo đã được nạp vào da
 - Giới hạn nhóm thẻ ở width 92% khi viewport >1024px, giữ ba thẻ đều và căn trái như trước; chiều cao và số 36px giữ nguyên. Tablet/mobile không đổi.
 - A/B Edge tại 1920/1440/768/390px đạt: nhóm desktop hẹp hơn 8%, ba thẻ đều, không tràn; hình học tablet/mobile giữ nguyên. Chỉ sửa CSS nên không chạy lại Maven/Node; dùng HTML fixture từ lượt MVC đã đạt trước đó. Bằng chứng director-stats-width-browser.log và thư mục scratch/offer-search-upgrade-20261110/director-stats-width. Không đổi dữ liệu, lọc hoặc DB.
 
+### 2.24. Giảm khoảng trống bên trong thẻ thống kê
+
+- Theo xác nhận người dùng, cần đưa phần nhãn/icon trái gần số phải khoảng 40%, không chỉ thu nhóm nhẹ 8%. Đổi width desktop của nhóm 92%→65%; vẫn ba thẻ bằng nhau, gap ngoài thẻ và cỡ số/chiều cao không đổi. Tablet/mobile giữ nguyên.
+- A/B Edge tại 1920/1815/1440/1025/768/390px đạt. Khoảng icon–số giảm 36–41% ở 1440–1920px (46–51% tại desktop hẹp 1025px); thẻ 1815px từ khoảng 508px→356px, không tràn; tablet/mobile hình học giữ nguyên. Bằng chứng director-stats-gap-browser.log và scratch/offer-search-upgrade-20261110/director-stats-gap; kiểm tra ảnh desktop. Chỉ CSS nên không chạy lại Maven/Node; không thay dữ liệu/filter/DB.
+
 ## 3. Các commit công việc mới
 
 | Commit | Nội dung | Diff riêng commit |
