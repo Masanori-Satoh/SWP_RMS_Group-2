@@ -1,3 +1,5 @@
+> Ghi chú 11/11/2026: đường dẫn và package test đã được cập nhật theo tầng kiểm thử; kết quả Task/PR lịch sử giữ nguyên.
+
 # CẨM NANG THỰC HÀNH LIVE CODING, VẤN ĐÁP BẢO VỆ & KỊCH BẢN DEMO MODULE OFFER MANAGEMENT
 
 > **Lưu ý khi đọc:** Tài liệu lịch sử: phản ánh thời điểm audit/refactor; tên hàm, đường dẫn và đề xuất có thể khác code đã merge. Xem [mục lục và hướng dẫn hiện hành](README.md).
@@ -648,17 +650,17 @@
 #### Câu 51: Sự khác biệt giữa Unit Test và Integration Test trong module Offer?
 * **Đáp án ngắn:** Unit Test kiểm thử logic nghiệp vụ cô lập có Mockito; Integration Test kiểm thử tích hợp toàn diện qua MockMvc xuyên suốt từ Filter, Controller tới Database.
 * **Giải thích chuyên sâu:** `OfferServiceTests` (Unit Test) mock toàn bộ repository để kiểm tra các nhánh logic tính lương 85% và deadline. `OfferIntegrationTests` (Integration Test) khởi động Spring Web Context với MockMvc để kiểm tra phân quyền URL, CSRF token và view Thymeleaf trả về thực tế.
-* **Dẫn chứng code:** [`OfferServiceTests.java`](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/test/java/com/group2/rms/offer/service/OfferServiceTests.java) và [`OfferIntegrationTests.java`](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/test/java/com/group2/rms/offer/OfferIntegrationTests.java).
+* **Dẫn chứng code:** [`OfferServiceTests.java`](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/test/java/com/group2/rms/offer/service/OfferServiceTests.java) và [`OfferIntegrationTests.java`](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/test/java/com/group2/rms/offer/controller/OfferIntegrationTests.java).
 
 #### Câu 52: Phương thức kiểm thử `withMockUser` trong Spring Security Test hoạt động như thế nào?
 * **Đáp án ngắn:** Giả lập sẵn một đối tượng `Authentication` có tên đăng nhập và vai trò chỉ định nạp vào `SecurityContext`.
 * **Giải thích chuyên sâu:** Cho phép test phân quyền mà không cần phải gọi API đăng nhập thực tế. Ví dụ `@WithMockUser(roles = "HR")` sẽ cho phép test các endpoint của HR, và kiểm tra xem tài khoản này có bị chặn HTTP 403 khi gọi vào endpoint của Giám đốc hay không.
-* **Dẫn chứng code:** [`OfferIntegrationTests.java`](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/test/java/com/group2/rms/offer/OfferIntegrationTests.java) dòng 118 `@WithMockUser(authorities = "ROLE_HR")`.
+* **Dẫn chứng code:** [`OfferIntegrationTests.java`](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/test/java/com/group2/rms/offer/controller/OfferIntegrationTests.java) dòng 118 `@WithMockUser(authorities = "ROLE_HR")`.
 
 #### Câu 53: Em đã thiết kế ca kiểm thử nào để chứng minh hệ thống chống được lỗ hổng IDOR?
 * **Đáp án ngắn:** Giả lập đăng nhập bằng Ứng viên A (`candidateA@test.com`) nhưng gọi API xem thư mời của Ứng viên B (`offerOfCandidateB`).
 * **Giải thích chuyên sâu:** Trong `CandidateOfferWebTests`, test case `candidateCannotViewOthersOffer` thực hiện request `GET /portal/offers/{idOfCandidateB}`. Kết quả mong đợi là hệ thống trả về mã lỗi HTTP 404 Not Found (hoặc 403), chứng minh Ứng viên A không thể xem trộm thư mời của người khác.
-* **Dẫn chứng code:** [`CandidateOfferWebTests.java`](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/test/java/com/group2/rms/offer/CandidateOfferWebTests.java).
+* **Dẫn chứng code:** [`CandidateOfferWebTests.java`](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/test/java/com/group2/rms/offer/controller/CandidateOfferWebTests.java).
 
 #### Câu 54: Làm thế nào để tái hiện và kiểm chứng lỗi BUG-OFF-01 (SpEL `isLockedCandidate`) bằng kiểm thử tự động?
 * **Đáp án ngắn:** Viết test gọi `GET /offers/{id}/edit` và `GET /offers/create` không truyền param, kiểm tra model có chứa thuộc tính `isLockedCandidate`.
@@ -677,12 +679,12 @@
 #### Câu 57: Test case nào kiểm chứng tính năng bắt buộc nhập lý do khi Giám đốc từ chối?
 * **Đáp án ngắn:** Test case `it17b_rejectOfferJson_emptyComments_returnsBadRequest` trong `OfferIntegrationTests`.
 * **Giải thích chuyên sâu:** Test case gửi một request `POST /offers/{id}/reject` với payload JSON rỗng `{"comments": "   "}`. Kết quả mong đợi là server kiên quyết từ chối với HTTP Status `400 Bad Request` và thông điệp: *"Vui lòng nhập lý do từ chối vào ô nhận xét trước khi tiếp tục."*.
-* **Dẫn chứng code:** [`OfferIntegrationTests.java`](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/test/java/com/group2/rms/offer/OfferIntegrationTests.java) dòng 453–465.
+* **Dẫn chứng code:** [`OfferIntegrationTests.java`](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/test/java/com/group2/rms/offer/controller/OfferIntegrationTests.java) dòng 453–465.
 
 #### Câu 58: Tại sao khi test xuất Excel, test case lại kiểm tra Magic Number của mảng byte?
 * **Đáp án ngắn:** Để đảm bảo file sinh ra là file Excel chuẩn định dạng (.xlsx - OOXML Zip) chứ không phải file văn bản lỗi trá hình.
 * **Giải thích chuyên sâu:** File Excel `.xlsx` thực chất là một gói nén Zip. Hai byte đầu tiên của file Zip luôn luôn là `0x50, 0x4B` (ký tự 'PK'). Trong `OfferExportServiceTests`, việc assert 2 byte đầu tiên bằng `PK` chứng minh thư viện Apache POI đã đóng gói đúng cấu trúc binary của bảng tính Excel.
-* **Dẫn chứng code:** [`OfferExportServiceTests.java`](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/test/java/com/group2/rms/offer/OfferExportServiceTests.java).
+* **Dẫn chứng code:** [`OfferExportServiceTests.java`](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/test/java/com/group2/rms/offer/service/OfferExportServiceTests.java).
 
 #### Câu 59: Làm sao kiểm thử được logic hết hạn Deadline khi đồng hồ máy tính luôn chạy về phía trước?
 * **Đáp án ngắn:** Tiêm đối tượng `java.time.Clock` vào Service và mock thời gian của Clock trong Unit Test.

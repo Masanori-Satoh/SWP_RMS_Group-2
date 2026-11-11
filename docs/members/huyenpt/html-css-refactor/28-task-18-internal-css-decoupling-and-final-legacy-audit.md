@@ -1,3 +1,5 @@
+> Ghi chú 11/11/2026: đường dẫn và package test đã được cập nhật theo tầng kiểm thử; kết quả Task/PR lịch sử giữ nguyên.
+
 # TECHNICAL REPORT 28 — TASK 18: INTERNAL OFFER CSS DECOUPLING, FAILED UNLINKING ROOT CAUSE RESOLUTION & LEGACY RETIREMENT AUDIT
 
 > **Lưu ý khi đọc:** Tài liệu lịch sử: phản ánh thời điểm audit/refactor; tên hàm, đường dẫn và đề xuất có thể khác code đã merge. Xem [mục lục và hướng dẫn hiện hành](../README.md).
@@ -229,7 +231,7 @@ An exhaustive audit of `candidate-list.html` and `candidate-detail.html` confirm
 ### 7.4 Maven Unit & Integration Test Suite (223/223 PASS)
 
 ```text
-[INFO] Running com.group2.rms.offer.CandidateOfferWebTests
+[INFO] Running com.group2.rms.offer.controller.CandidateOfferWebTests
 [INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0
 [INFO] Running com.group2.rms.offer.integration.OfferIntegrationTests
 [INFO] Tests run: 45, Failures: 0, Errors: 0, Skipped: 0

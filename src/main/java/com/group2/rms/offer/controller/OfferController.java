@@ -1,8 +1,7 @@
 package com.group2.rms.offer.controller;
 
 import com.group2.rms.core.dto.ApiResponse;
-import com.group2.rms.core.exception.BaseBusinessException;
-import com.group2.rms.core.exception.ResourceNotFoundException;
+import com.group2.rms.offer.exception.OfferValidationException;
 import com.group2.rms.offer.dto.CreateOfferRequest;
 import com.group2.rms.offer.dto.DirectorDecisionRequest;
 import com.group2.rms.offer.dto.OfferDetailResponse;
@@ -12,7 +11,6 @@ import com.group2.rms.offer.dto.UpdateOfferRequest;
 import com.group2.rms.offer.service.OfferService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
@@ -36,7 +34,6 @@ import java.util.Map;
  * Điều hướng và xử lý toàn bộ các màn hình Screen 30 (List & Create) và Screen
  * 32 (Detail & Update).
  */
-@Slf4j
 @Controller
 @RequestMapping("/offers")
 @RequiredArgsConstructor
@@ -78,6 +75,12 @@ public class OfferController {
             Model model) {
 
         int validPage = Math.max(0, page);
+        // Không để URL yêu cầu trang rỗng hoặc tải quá nhiều bản ghi trong một lần.
+        int validSize = Math.max(1, Math.min(size, 50));
+        if ((long) validPage * validSize > Integer.MAX_VALUE) {
+            validPage = 0;
+            model.addAttribute("errorMessage", "Số trang yêu cầu vượt giới hạn. Đã chuyển về trang đầu.");
+        }
         if ("Director".equals(userRole)) {
             Map<String, Long> statusCounts = offerService.getDirectorStatusCounts();
             Map<String, Long> directorStats = offerService.getDirectorOfferStats();
@@ -100,7 +103,7 @@ public class OfferController {
             }
 
             Page<OfferResponse> directorOffers = offerService.getDirectorOffers(search, currentStatus, timeSort,
-                    PageRequest.of(validPage, size));
+                    PageRequest.of(validPage, validSize));
 
             model.addAttribute("offersPage", directorOffers);
             model.addAttribute("offers", directorOffers.getContent());
@@ -123,7 +126,7 @@ public class OfferController {
         }
 
         Page<OfferResponse> pagedData = offerService.getAllOffersForHr(search, status, timeSort,
-                PageRequest.of(validPage, size));
+                PageRequest.of(validPage, validSize));
         model.addAttribute("activeMenu", "offers");
 
         Map<String, Long> stats = offerService.getOfferStats();
@@ -216,16 +219,13 @@ public class OfferController {
                     ? "Lưu bản nháp thư mời nhận việc thành công!"
                     : "Đã gửi thư mời nhận việc để Giám đốc duyệt.");
             return "redirect:/offers";
-        } catch (BaseBusinessException error) {
+        } catch (OfferValidationException error) {
             errors.reject("businessError", error.getMessage());
-        } catch (Exception error) {
-            log.error("Lỗi không mong muốn khi tạo thư mời nhận việc", error);
-            errors.reject("businessError", "Không thể lưu thư mời nhận việc. Vui lòng thử lại hoặc liên hệ bộ phận hỗ trợ.");
         }
         return renderCreateForm(model, createRequest, isLockedCandidate);
     }
 
-    /** Dựng lại cùng một form cho lỗi nhập liệu, lỗi nghiệp vụ và lỗi hệ thống; giữ nguyên dữ liệu đã nhập. */
+    /** Dựng lại form cho lỗi nhập liệu/nghiệp vụ; lỗi quyền, không tìm thấy và hệ thống do Global xử lý. */
     private String renderCreateForm(Model model, CreateOfferRequest request, Boolean isLockedCandidate) {
         List<PassedCandidateResponse> candidates = offerService.getPassedCandidatesForOffer();
         boolean locked = Boolean.TRUE.equals(isLockedCandidate);
@@ -277,7 +277,7 @@ public class OfferController {
             model.addAttribute("isEdit", true);
             model.addAttribute("isLockedCandidate", false);
             return "offers/form";
-        } catch (BaseBusinessException e) {
+        } catch (OfferValidationException e) {
             flash.addFlashAttribute("errorMessage", e.getMessage());
             return "redirect:/offers/" + id;
         }
@@ -312,7 +312,7 @@ public class OfferController {
                     ? "Cập nhật bản nháp thư mời nhận việc thành công!"
                     : "Đã gửi thư mời nhận việc để Giám đốc duyệt.");
             return "redirect:/offers/" + id;
-        } catch (BaseBusinessException e) {
+        } catch (OfferValidationException e) {
             errors.reject("businessError", e.getMessage());
             OfferDetailResponse detail = offerService.getOfferDetailForHr(id);
             model.addAttribute("activeMenu", "offers");
@@ -333,28 +333,9 @@ public class OfferController {
         try {
             offerService.deleteDraftOfferByHr(id);
             return ResponseEntity.ok(new ApiResponse<>(true, "Đã xóa bản nháp thư mời nhận việc thành công."));
-        } catch (BaseBusinessException e) {
-            HttpStatus status = (e instanceof ResourceNotFoundException) ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST;
-            return ResponseEntity.status(status).body(new ApiResponse<>(false, e.getMessage()));
-        } catch (Exception e) {
-            log.error("Lỗi không mong muốn khi xóa bản nháp Offer ID {}: {}", id, e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ApiResponse<>(false, "Đã xảy ra lỗi hệ thống khi xóa bản nháp thư mời nhận việc."));
+        } catch (OfferValidationException e) {
+            return ResponseEntity.badRequest().body(new ApiResponse<>(false, e.getMessage()));
         }
-    }
-
-    /**
-     * 7b. DELETE: Xóa bản thảo Offer (Chỉ cho phép khi Draft)
-     */
-    @PostMapping("/{id}/delete")
-    public String deleteOffer(@PathVariable Integer id, RedirectAttributes flash) {
-        try {
-            offerService.deleteDraftOfferByHr(id);
-            flash.addFlashAttribute("successMessage", "Đã xóa bản nháp thư mời nhận việc thành công.");
-        } catch (BaseBusinessException e) {
-            flash.addFlashAttribute("errorMessage", e.getMessage());
-        }
-        return "redirect:/offers";
     }
 
     /**
@@ -368,31 +349,9 @@ public class OfferController {
             OfferResponse sentOffer = offerService.sendOfferToCandidate(id);
             return ResponseEntity.ok(new ApiResponse<>(true,
                     offerPublicationMessage(sentOffer), sentOffer));
-        } catch (BaseBusinessException e) {
-            HttpStatus status = (e instanceof ResourceNotFoundException) ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST;
-            return ResponseEntity.status(status).body(new ApiResponse<>(false, e.getMessage()));
-        } catch (Exception e) {
-            log.error("Lỗi không mong muốn khi phát hành thư mời nhận việc ID {}: {}", id, e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ApiResponse<>(false, "Đã xảy ra lỗi hệ thống khi phát hành thư mời nhận việc."));
+        } catch (OfferValidationException e) {
+            return ResponseEntity.badRequest().body(new ApiResponse<>(false, e.getMessage()));
         }
-    }
-
-    /**
-     * 8b. SEND OFFER: HR phát hành thư mời làm việc cho Candidate (Khi Status ==
-     * Director_Approved)
-     */
-    @PostMapping("/{id}/send")
-    public String sendOfferToCandidate(@PathVariable Integer id, RedirectAttributes flash) {
-        try {
-            OfferResponse sentOffer = offerService.sendOfferToCandidate(id);
-            String flashType = sentOffer.getEmailStatus() == OfferResponse.EmailStatus.SENT
-                    ? "successMessage" : "offerWarningMessage";
-            flash.addFlashAttribute(flashType, offerPublicationMessage(sentOffer));
-        } catch (BaseBusinessException e) {
-            flash.addFlashAttribute("errorMessage", e.getMessage());
-        }
-        return "redirect:/offers/" + id;
     }
 
     private String offerPublicationMessage(OfferResponse offer) {
@@ -418,14 +377,9 @@ public class OfferController {
         try {
             OfferResponse approved = offerService.approveOfferByDirector(id, request.getComments());
             return ResponseEntity.ok(new ApiResponse<>(true, "Đã phê duyệt thư mời nhận việc thành công!", approved));
-        } catch (BaseBusinessException e) {
-            HttpStatus status = e instanceof ResourceNotFoundException ? HttpStatus.NOT_FOUND
-                    : "OFFER_STATUS_INVALID".equals(e.getErrorCode()) ? HttpStatus.CONFLICT : HttpStatus.BAD_REQUEST;
+        } catch (OfferValidationException e) {
+            HttpStatus status = "OFFER_STATUS_INVALID".equals(e.getErrorCode()) ? HttpStatus.CONFLICT : HttpStatus.BAD_REQUEST;
             return ResponseEntity.status(status).body(new ApiResponse<>(false, e.getMessage()));
-        } catch (Exception e) {
-            log.error("Lỗi không mong muốn khi phê duyệt thư mời nhận việc ID {}: {}", id, e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ApiResponse<>(false, "Đã xảy ra lỗi hệ thống khi phê duyệt thư mời nhận việc."));
         }
     }
 
@@ -445,14 +399,9 @@ public class OfferController {
             }
             OfferResponse rejected = offerService.rejectOfferByDirector(id, request.getComments().trim());
             return ResponseEntity.ok(new ApiResponse<>(true, "Đã từ chối thư mời nhận việc thành công!", rejected));
-        } catch (BaseBusinessException e) {
-            HttpStatus status = e instanceof ResourceNotFoundException ? HttpStatus.NOT_FOUND
-                    : "OFFER_STATUS_INVALID".equals(e.getErrorCode()) ? HttpStatus.CONFLICT : HttpStatus.BAD_REQUEST;
+        } catch (OfferValidationException e) {
+            HttpStatus status = "OFFER_STATUS_INVALID".equals(e.getErrorCode()) ? HttpStatus.CONFLICT : HttpStatus.BAD_REQUEST;
             return ResponseEntity.status(status).body(new ApiResponse<>(false, e.getMessage()));
-        } catch (Exception e) {
-            log.error("Lỗi không mong muốn khi từ chối thư mời nhận việc ID {}: {}", id, e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ApiResponse<>(false, "Đã xảy ra lỗi hệ thống khi từ chối thư mời nhận việc."));
         }
     }
 

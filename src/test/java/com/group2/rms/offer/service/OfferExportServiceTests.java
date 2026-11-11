@@ -1,4 +1,4 @@
-package com.group2.rms.offer;
+package com.group2.rms.offer.service;
 
 import com.group2.rms.candidate.domain.entity.Application;
 import com.group2.rms.candidate.domain.entity.Candidate;
@@ -43,11 +43,47 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class OfferExportServiceTests {
 
+    @ParameterizedTest
+    @org.junit.jupiter.params.provider.CsvSource({
+            "ALL,Sent_Candidate,-1,10,true", "SELECTED,Sent_Candidate,-1,10,true", "FILTERED,Sent_Candidate,-1,10,true",
+            "ALL,Sent_Candidate,0,0,false", "ALL,Sent_Candidate,1,10,false",
+            "ALL,Sent_Candidate,,-1,true", "ALL,Sent_Candidate,,0,false", "ALL,Sent_Candidate,,,false",
+            "ALL,Sent_Candidate,100,-1,true", "ALL,Expired,100,10,true",
+            "ALL,Accepted,-1,-1,false", "ALL,Declined,-1,-1,false", "ALL,Draft,-1,-1,false"})
+    void exportStatusAndSummaryUseTheSameEffectiveExpiry(String scope, String stored, Integer deadlineSeconds,
+                                                        Integer startDays, boolean expired) throws Exception {
+        LocalDateTime now = LocalDateTime.of(2026, 10, 15, 12, 0);
+        mockOffer1.setOfferStatus(stored);
+        mockOffer1.setResponseDeadline(deadlineSeconds == null ? null : now.plusSeconds(deadlineSeconds));
+        mockOffer1.setExpectedStartDate(startDays == null ? null : now.toLocalDate().plusDays(startDays));
+        when(offerProposalRepository.findAll(any(Specification.class), any(Sort.class))).thenReturn(List.of(mockOffer1));
+        var request = new OfferExportRequest(OfferExportScope.valueOf(scope), List.of(1),
+                new OfferExportFilterRequest(null, expired ? "Expired" : stored, "DEFAULT"), List.of("offerStatus"));
+        try (Workbook workbook = new XSSFWorkbook(new ByteArrayInputStream(exportService.exportOffersToExcel(request, "HR")))) {
+            String label = OfferExportServiceImpl.mapOfferStatusLabel(expired ? "Expired" : stored);
+            assertThat(workbook.getSheet("Offers").getRow(1).getCell(0).getStringCellValue()).isEqualTo(label);
+            boolean counted = false;
+            for (var row : workbook.getSheet("Summary")) {
+                if (row.getCell(0) != null && row.getCell(0).getCellType() == org.apache.poi.ss.usermodel.CellType.STRING
+                        && label.equals(row.getCell(0).getStringCellValue())) {
+                    assertThat(row.getCell(1).getNumericCellValue()).isEqualTo(1);
+                    counted = true;
+                }
+            }
+            assertThat(counted).isTrue();
+        }
+        assertThat(mockOffer1.getOfferStatus()).isEqualTo(stored);
+        org.mockito.Mockito.verify(offerProposalRepository, org.mockito.Mockito.never()).save(any());
+    }
+
     @Mock
     private OfferProposalRepository offerProposalRepository;
 
     @Mock
     private OfferApprovalRepository offerApprovalRepository;
+
+    @Mock
+    private java.time.Clock clock;
 
     @InjectMocks
     private OfferExportServiceImpl exportService;
@@ -57,6 +93,8 @@ class OfferExportServiceTests {
 
     @BeforeEach
     void setUp() {
+        org.mockito.Mockito.lenient().when(clock.getZone()).thenReturn(java.time.ZoneOffset.UTC);
+        org.mockito.Mockito.lenient().when(clock.instant()).thenReturn(java.time.Instant.parse("2026-10-15T12:00:00Z"));
         Department dept = Department.builder().departmentId(1).departmentName("Phòng Kỹ thuật").build();
         User candUser = User.builder().userId(10).fullName("Nguyễn Văn A").email("a.nguyen@test.com").phoneNumber("0987654321").build();
         Candidate cand = Candidate.builder().candidateId(20).account(candUser).build();
@@ -298,7 +336,7 @@ class OfferExportServiceTests {
     @Test
     @DisplayName("Generate filename: Sinh tên file chuẩn theo scope và ngày hiện tại")
     void testGenerateExportFilename() {
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(clock);
 
         OfferExportRequest reqAll = new OfferExportRequest(OfferExportScope.ALL, null, null, List.of("offerId"));
         assertThat(exportService.generateExportFilename(reqAll)).isEqualTo("offers_" + today + ".xlsx");

@@ -23,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -35,6 +36,7 @@ public class OfferExportServiceImpl implements OfferExportService {
 
     private final OfferProposalRepository offerProposalRepository;
     private final OfferApprovalRepository offerApprovalRepository;
+    private final Clock clock;
 
     /**
      * Danh sách các cột được phép xuất (Whitelist) kèm tiêu đề tiếng Việt tương ứng.
@@ -80,9 +82,10 @@ public class OfferExportServiceImpl implements OfferExportService {
     @Transactional(readOnly = true)
     public byte[] exportOffersToExcel(OfferExportRequest request, String exportedBy) {
         validateExportRequest(request);
+        LocalDateTime now = LocalDateTime.now(clock);
 
         // 1. Lấy danh sách entities theo Scope & Filters
-        List<OfferProposal> entities = fetchOffersByScope(request);
+        List<OfferProposal> entities = fetchOffersByScope(request, now);
         if (entities.isEmpty()) {
             throw new OfferValidationException("Không có dữ liệu thư mời nhận việc phù hợp để xuất Excel.", "EMPTY_EXPORT_DATA");
         }
@@ -94,7 +97,7 @@ public class OfferExportServiceImpl implements OfferExportService {
 
         Map<Integer, OfferApproval> latestApprovals = needDirectorDetails ? loadLatestApprovals(entities) : Map.of();
         List<OfferExportRow> rows = entities.stream()
-                .map(entity -> mapToExportRow(entity, latestApprovals.get(entity.getOfferId())))
+                .map(entity -> mapToExportRow(entity, latestApprovals.get(entity.getOfferId()), now))
                 .toList();
 
         // 3. Xây dựng Apache POI Workbook với 2 sheet: Offers & Summary
@@ -104,7 +107,7 @@ public class OfferExportServiceImpl implements OfferExportService {
             workbook.setCompressTempFiles(true);
 
             buildOffersSheet(workbook, rows, request.columns());
-            buildSummarySheet(workbook, rows, request, exportedBy);
+            buildSummarySheet(workbook, rows, request, exportedBy, now);
 
             workbook.write(out);
             return out.toByteArray();
@@ -116,7 +119,7 @@ public class OfferExportServiceImpl implements OfferExportService {
 
     @Override
     public String generateExportFilename(OfferExportRequest request) {
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(clock);
         OfferExportScope scope = request.scope() != null ? request.scope() : OfferExportScope.ALL;
 
         return switch (scope) {
@@ -168,7 +171,7 @@ public class OfferExportServiceImpl implements OfferExportService {
      * SELECTED lấy các ID đã chọn; ALL lấy mọi Offer chưa xóa; FILTERED dùng keyword/status/sort trong filters.
      * Bộ lọc FILTERED dùng cùng matchingFilters với danh sách HR.
      */
-    private List<OfferProposal> fetchOffersByScope(OfferExportRequest request) {
+    private List<OfferProposal> fetchOffersByScope(OfferExportRequest request, LocalDateTime now) {
         OfferExportScope scope = request.scope();
         OfferExportFilterRequest filters = request.filters();
 
@@ -190,7 +193,7 @@ public class OfferExportServiceImpl implements OfferExportService {
         }
 
         return offerProposalRepository.findAll(OfferProposalRepository.matchingFilters(
-                filters != null ? filters.keyword() : null, filters != null ? filters.status() : null), sort);
+                filters != null ? filters.keyword() : null, filters != null ? filters.status() : null, now), sort);
     }
 
     private Sort resolveSort(String timeSort) {
@@ -225,7 +228,7 @@ public class OfferExportServiceImpl implements OfferExportService {
     /**
      * Chuyển quan hệ entity sang một dòng Excel; latest đã được đọc theo lô, không truy vấn thêm ở mỗi dòng.
      */
-    private OfferExportRow mapToExportRow(OfferProposal offer, OfferApproval latest) {
+    private OfferExportRow mapToExportRow(OfferProposal offer, OfferApproval latest, LocalDateTime now) {
         var app = offer.getApplication();
         var cand = app != null ? app.getCandidate() : null;
         var user = cand != null ? cand.getAccount() : null;
@@ -256,6 +259,7 @@ public class OfferExportServiceImpl implements OfferExportService {
 
         String proposedByName = offer.getProposedBy() != null ? offer.getProposedBy().getFullName() : null;
 
+        String effectiveStatus = offer.isResponseExpiredAt(now) ? "Expired" : offer.getOfferStatus();
         return OfferExportRow.builder()
                 .offerId(offer.getOfferId())
                 .candidateName(user != null ? user.getFullName() : null)
@@ -264,8 +268,8 @@ public class OfferExportServiceImpl implements OfferExportService {
                 .proposedSalary(offer.getProposedSalary())
                 .probationSalary(offer.getProbationSalary())
                 .probationPercentage(probationPercentage)
-                .offerStatus(mapOfferStatusLabel(offer.getOfferStatus()))
-                .rawOfferStatus(offer.getOfferStatus())
+                .offerStatus(mapOfferStatusLabel(effectiveStatus))
+                .rawOfferStatus(effectiveStatus)
                 .expectedStartDate(offer.getExpectedStartDate())
                 .workLocation(offer.getWorkLocation())
                 .createdAt(offer.getCreatedAt())
@@ -586,7 +590,7 @@ public class OfferExportServiceImpl implements OfferExportService {
     // EXCEL SHEET 2: SUMMARY
     // =========================================================================
 
-    private void buildSummarySheet(Workbook workbook, List<OfferExportRow> rows, OfferExportRequest request, String exportedBy) {
+    private void buildSummarySheet(Workbook workbook, List<OfferExportRow> rows, OfferExportRequest request, String exportedBy, LocalDateTime now) {
         Sheet sheet = createExportSheet(workbook, "Summary");
 
         Font titleFont = workbook.createFont();
@@ -641,7 +645,7 @@ public class OfferExportServiceImpl implements OfferExportService {
         Cell c3_0 = r3.createCell(0);
         c3_0.setCellValue("Thời gian xuất:");
         c3_0.setCellStyle(labelStyle);
-        r3.createCell(1).setCellValue(LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")));
+        r3.createCell(1).setCellValue(now.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")));
 
         // Row 4: Phạm vi xuất
         Row r4 = sheet.createRow(4);

@@ -1,3 +1,5 @@
+> Ghi chú 11/11/2026: đường dẫn và package test đã được cập nhật theo tầng kiểm thử; kết quả Task/PR lịch sử giữ nguyên.
+
 # DANH MỤC KIỂM THỬ HỒI QUY & TIÊU CHÍ AN TOÀN (REGRESSION TEST CHECKLIST)
 
 > **Lưu ý khi đọc:** Tài liệu lịch sử: phản ánh thời điểm audit/refactor; tên hàm, đường dẫn và đề xuất có thể khác code đã merge. Xem [mục lục và hướng dẫn hiện hành](../README.md).
@@ -15,11 +17,11 @@ Trước và sau bất kỳ thay đổi nào liên quan đến HTML/CSS, bộ ki
 
 | Tên Test Suite | Đường dẫn tệp tin | Số lượng ca test | Phạm vi kiểm tra |
 | :--- | :--- | :---: | :--- |
-| **OfferIntegrationTests** | `src/test/java/com/group2/rms/offer/OfferIntegrationTests.java` | 27 ca test | Tích hợp MVC MockMvc, bảo mật phân quyền URL, CSRF token, model binding |
+| **OfferIntegrationTests** | `src/test/java/com/group2/rms/offer/controller/OfferIntegrationTests.java` | 27 ca test | Tích hợp MVC MockMvc, bảo mật phân quyền URL, CSRF token, model binding |
 | **OfferServiceTests** | `src/test/java/com/group2/rms/offer/service/OfferServiceTests.java` | 41 ca test | Logic tính lương 85%, nộp duyệt, soft delete, deadline calculation |
-| **CandidateOfferWebTests**| `src/test/java/com/group2/rms/offer/CandidateOfferWebTests.java` | 19 ca test | Bảo mật Cổng ứng viên, chống IDOR, kiểm tra nút bấm hiển thị theo trạng thái |
+| **CandidateOfferWebTests**| `src/test/java/com/group2/rms/offer/controller/CandidateOfferWebTests.java` | 19 ca test | Bảo mật Cổng ứng viên, chống IDOR, kiểm tra nút bấm hiển thị theo trạng thái |
 | **CandidateOfferServiceTests**| `src/test/java/com/group2/rms/offer/service/CandidateOfferServiceTests.java`| 18 ca test | Nghiệp vụ ứng viên chấp thuận, từ chối, atomic update, đồng bộ Application |
-| **OfferExportServiceTests**| `src/test/java/com/group2/rms/offer/OfferExportServiceTests.java` | 10 ca test | Xuất Excel Apache POI theo 3 phạm vi (FILTERED, SELECTED, ALL) |
+| **OfferExportServiceTests**| `src/test/java/com/group2/rms/offer/service/OfferExportServiceTests.java` | 10 ca test | Xuất Excel Apache POI theo 3 phạm vi (FILTERED, SELECTED, ALL) |
 | **OfferControllerBugTests**| `src/test/java/com/group2/rms/offer/controller/OfferControllerBugTests.java` | 6 ca test | Kiểm thử hồi quy các bug cũ (`BUG-OFF-01`, `BUG-OFF-11`, filter Giám đốc) |
 | **CandidateOfferQueryTests**| `src/test/java/com/group2/rms/offer/repository/CandidateOfferQueryTests.java` | 5 ca test | Kiểm thử câu lệnh JPA Query, JOIN FETCH và khóa nguyên tử CSDL |
 | **TỔNG CỘNG** | | **126 ca test** | **BẮT BUỘC 100% PASS TRƯỚC VÀ SAU KHI REFACTOR** |

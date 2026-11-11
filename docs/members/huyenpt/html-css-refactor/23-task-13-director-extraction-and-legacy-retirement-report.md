@@ -1,3 +1,5 @@
+> Ghi chú 11/11/2026: đường dẫn JavaScript đã được cập nhật theo vị trí hiện hành; kết quả thực hiện lịch sử không thay đổi.
+
 # BÁO CÁO TRÍCH XUẤT JAVASCRIPT THEO VAI TRÒ GIÁM ĐỐC & XÓA BỎ HOÀN TOÀN TỆP ĐỒ SỘ OFFERS.JS (TASK 13)
 
 > **Lưu ý khi đọc:** Tài liệu lịch sử: phản ánh thời điểm audit/refactor; tên hàm, đường dẫn và đề xuất có thể khác code đã merge. Xem [mục lục và hướng dẫn hiện hành](../README.md).
@@ -12,7 +14,7 @@
 Batch 03 là bước hoàn thiện mang tính bước ngoặt của đề án tái cấu trúc giao diện theo vai trò (Role-Based Frontend Architecture) cho Phân hệ Quản lý Đề xuất (Offer Management). Bằng việc độc lập phân tích, trích xuất và kiểm thử chặt chẽ, nhiệm vụ đã hoàn thành 100% mục tiêu:
 
 1. **Khởi tạo tệp `offer-director.js` tinh gọn, chuẩn nghiệp vụ:**
-   - Tạo mới tệp [`src/main/resources/static/js/pages/offers/offer-director.js`](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/main/resources/static/js/pages/offers/offer-director.js) (479 dòng).
+   - Tạo mới tệp [`src/main/resources/static/js/pages/offer-director.js`](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/main/resources/static/js/pages/offer-director.js) (479 dòng).
    - Quy hoạch toàn bộ quy trình phê duyệt / từ chối của Giám đốc thành các khu vực chức năng mạch lạc:
      - `SECTION A — DIRECTOR QUICK DECISION MODAL`: Điều khiển hộp thoại phê duyệt nhanh từ màn hình danh sách (Quick Approve / Quick Reject), xác thực lý do từ chối bắt buộc, đồng bộ bộ đếm ký tự 500.
      - `SECTION B — DIRECTOR LIST WORKSPACE`: Lọc trạng thái (`Pending_Director`, `Director_Approved`, `Director_Rejected`), sắp xếp thời gian, tìm kiếm từ khóa.
@@ -157,9 +159,9 @@ graph TD
 ### 5.1. Kiểm tra Cú pháp Tĩnh (Node.js Syntax Check)
 Kiểm tra cú pháp độc lập cho toàn bộ các tệp JavaScript đang hoạt động trong hệ thống:
 ```bash
-node --check src/main/resources/static/js/pages/offers/offer-common.js
-node --check src/main/resources/static/js/pages/offers/offer-hr.js
-node --check src/main/resources/static/js/pages/offers/offer-director.js
+node --check src/main/resources/static/js/pages/offer-common.js
+node --check src/main/resources/static/js/pages/offer-hr.js
+node --check src/main/resources/static/js/pages/offer-director.js
 node --check src/main/resources/static/js/pages/candidate-offers.js
 ```
 - **Kết quả:** Mã thoát `0`, không có bất kỳ lỗi cú pháp (SyntaxError) hay cảnh báo nào.
@@ -257,7 +259,7 @@ Khi Hội đồng Giám khảo hoặc Giảng viên phản biện đặt câu h�
 
 - **Trạng thái Git hiện tại:**
   - Nhánh: `refactor/huyenpt/offer-ui-js-to-html-css`
-  - Tệp mới tạo: `src/main/resources/static/js/pages/offers/offer-director.js` (479 dòng).
+  - Tệp mới tạo: `src/main/resources/static/js/pages/offer-director.js` (479 dòng).
   - Tệp đã xóa: `src/main/resources/static/js/offers.js` (xóa vĩnh viễn, staged trong git index).
   - Tệp templates đã cập nhật: `list.html`, `detail.html`, `director-list.html`.
 - **Cam kết an toàn:**

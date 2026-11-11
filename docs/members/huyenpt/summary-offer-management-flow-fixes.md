@@ -1,3 +1,5 @@
+> Ghi chú 11/11/2026: đường dẫn và package test đã được cập nhật theo tầng kiểm thử; kết quả Task/PR lịch sử giữ nguyên.
+
 # BÁO CÁO TỔNG HỢP CÁC CẢI TIẾN VÀ SỬA LỖI PHÂN HỆ QUẢN LÝ ĐỀ XUẤT NHẬN VIỆC (OFFER MANAGEMENT)
 
 - **Dự án:** Hệ Thống Quản Lý Tuyển Dụng — SWP_RMS_Group-2 (Mộc RMS)
@@ -101,7 +103,7 @@
 | 8 | `database/seeds/build_seed.py` | Bỏ `(Offer)` trong câu nhận xét tổng hợp kết quả phỏng vấn |
 | 9 | `database/seeds/seed_data.sql` | Cập nhật 16 dòng seed data bỏ `(Offer)` |
 | 10 | `src/test/java/com/group2/rms/candidate/application/portal/controller/MyApplicationWebTests.java` | Cập nhật kiểm thử phù hợp với giao diện bỏ `#CAN-xxxx` |
-| 11 | `src/test/java/com/group2/rms/offer/OfferIntegrationTests.java` | Bổ sung kiểm thử tích hợp cho bộ lọc Giám đốc và HTML rendering |
+| 11 | `src/test/java/com/group2/rms/offer/controller/OfferIntegrationTests.java` | Bổ sung kiểm thử tích hợp cho bộ lọc Giám đốc và HTML rendering |
 | 12 | `src/test/java/com/group2/rms/offer/controller/OfferControllerBugTests.java` | Bổ sung kiểm thử đơn vị cho chức năng lọc và hiển thị danh sách |
 
 ---
@@ -119,7 +121,7 @@ mvn test -Dtest="OfferIntegrationTests,OfferControllerBugTests,MyApplicationWebT
 [INFO] Tests run: 20, Failures: 0, Errors: 0, Skipped: 0
 [INFO] Running com.group2.rms.offer.controller.OfferControllerBugTests
 [INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0
-[INFO] Running com.group2.rms.offer.OfferIntegrationTests
+[INFO] Running com.group2.rms.offer.controller.OfferIntegrationTests
 [INFO] Tests run: 33, Failures: 0, Errors: 0, Skipped: 0
 [INFO] ------------------------------------------------------------------------
 [INFO] BUILD SUCCESS

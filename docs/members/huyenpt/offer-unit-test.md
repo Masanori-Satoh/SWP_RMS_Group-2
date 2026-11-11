@@ -1,3 +1,5 @@
+> Ghi chú 11/11/2026: đường dẫn và package test đã được cập nhật theo tầng kiểm thử; kết quả Task/PR lịch sử giữ nguyên.
+
 # Offer Module - Automated Test Report
 
 - **Module:** Offer Proposal Management (`Offer Proposal`)
@@ -26,11 +28,11 @@ The automated test suite spans all architectural layers conforming to `ARCHITECT
 ### 2.1. Service Layer Unit Tests (`src/test/java/com/group2/rms/offer/service/`)
 - [OfferServiceTests.java](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/test/java/com/group2/rms/offer/service/OfferServiceTests.java): Covers [OfferServiceImpl.java](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/main/java/com/group2/rms/offer/service/OfferServiceImpl.java), testing offer creation, salary validation, start date validation, Director approval/rejection, issuing offers to candidates, soft-deletion, search/filter specifications, and failure containment.
 - [CandidateOfferServiceTests.java](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/test/java/com/group2/rms/offer/service/CandidateOfferServiceTests.java): Covers [CandidateOfferServiceImpl.java](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/main/java/com/group2/rms/offer/service/CandidateOfferServiceImpl.java), testing candidate offer listing, detail views, candidate acceptance, candidate decline with reasons, response deadline expiration, and concurrency guards.
-- [OfferExportServiceTests.java](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/test/java/com/group2/rms/offer/OfferExportServiceTests.java): Covers [OfferExportServiceImpl.java](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/main/java/com/group2/rms/offer/service/OfferExportServiceImpl.java), testing Apache POI workbook generation, scopes (`SELECTED`, `FILTERED`, `ALL`), column whitelisting, cell data types, and summary sheet creation.
+- [OfferExportServiceTests.java](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/test/java/com/group2/rms/offer/service/OfferExportServiceTests.java): Covers [OfferExportServiceImpl.java](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/main/java/com/group2/rms/offer/service/OfferExportServiceImpl.java), testing Apache POI workbook generation, scopes (`SELECTED`, `FILTERED`, `ALL`), column whitelisting, cell data types, and summary sheet creation.
 
 ### 2.2. WebMvc & Security Layer Tests (`src/test/java/com/group2/rms/offer/`)
-- [OfferIntegrationTests.java](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/test/java/com/group2/rms/offer/OfferIntegrationTests.java): WebMvc integration testing for [OfferController.java](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/main/java/com/group2/rms/offer/controller/OfferController.java), testing role-based access control (RBAC), CSRF protection, JSON/AJAX modal endpoints, invalid input handling, and negative pagination sanitization.
-- [CandidateOfferWebTests.java](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/test/java/com/group2/rms/offer/CandidateOfferWebTests.java): WebMvc testing for [CandidateOfferController.java](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/main/java/com/group2/rms/offer/controller/CandidateOfferController.java), testing candidate portal views, accept/decline POST endpoints, flash attributes, and countdown UI attributes.
+- [OfferIntegrationTests.java](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/test/java/com/group2/rms/offer/controller/OfferIntegrationTests.java): WebMvc integration testing for [OfferController.java](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/main/java/com/group2/rms/offer/controller/OfferController.java), testing role-based access control (RBAC), CSRF protection, JSON/AJAX modal endpoints, invalid input handling, and negative pagination sanitization.
+- [CandidateOfferWebTests.java](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/test/java/com/group2/rms/offer/controller/CandidateOfferWebTests.java): WebMvc testing for [CandidateOfferController.java](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/main/java/com/group2/rms/offer/controller/CandidateOfferController.java), testing candidate portal views, accept/decline POST endpoints, flash attributes, and countdown UI attributes.
 
 ### 2.3. Repository & Data JPA Tests (`src/test/java/com/group2/rms/offer/repository/`)
 - [CandidateOfferQueryTests.java](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/test/java/com/group2/rms/offer/repository/CandidateOfferQueryTests.java): Tests [CandidateOfferRepository.java](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/main/java/com/group2/rms/offer/repository/CandidateOfferRepository.java) against local transactional database queries, ensuring user isolation and atomic conditional update `answerIfSent`.
@@ -364,9 +366,9 @@ The automated test suite spans all architectural layers conforming to `ARCHITECT
 |:---:|---|---|---:|---:|---:|---:|---:|
 | 1 | `com.group2.rms.offer.service.OfferServiceTests` | Service Unit Test | **106** | 106 | 0 | 0 | 0.759 s |
 | 2 | `com.group2.rms.offer.service.CandidateOfferServiceTests` | Service Unit Test | **33** | 33 | 0 | 0 | 0.286 s |
-| 3 | `com.group2.rms.offer.CandidateOfferWebTests` | WebMvc Test | **16** | 16 | 0 | 0 | 11.490 s |
-| 4 | `com.group2.rms.offer.OfferIntegrationTests` | WebMvc Integration Test | **24** | 24 | 0 | 0 | 14.050 s |
-| 5 | `com.group2.rms.offer.OfferExportServiceTests` | Service Unit Test | **10** | 10 | 0 | 0 | 5.582 s |
+| 3 | `com.group2.rms.offer.controller.CandidateOfferWebTests` | WebMvc Test | **16** | 16 | 0 | 0 | 11.490 s |
+| 4 | `com.group2.rms.offer.controller.OfferIntegrationTests` | WebMvc Integration Test | **24** | 24 | 0 | 0 | 14.050 s |
+| 5 | `com.group2.rms.offer.service.OfferExportServiceTests` | Service Unit Test | **10** | 10 | 0 | 0 | 5.582 s |
 | 6 | `com.group2.rms.offer.repository.CandidateOfferQueryTests` | Data JPA Repository Test | **5** | 5 | 0 | 0 | 3.665 s |
 | 7 | `com.group2.rms.offer.controller.OfferControllerBugTests` | Controller Integration Test | **2** | 2 | 0 | 0 | 17.760 s |
 | **TOTAL** | **7 Test Suites** | **Entire Offer Module** | **196** | **196** | **0** | **0** | **53.592 s** |

@@ -11,10 +11,11 @@ function loadForm(proposed = '', probation = '') {
     const option = { value: '42', getAttribute: name => ({ 'data-recom-salary': '12345678.90',
         'data-pos': 'Suggested title' })[name] || '' };
     fields.createAppSelect = { value: '42', selectedIndex: 0, options: [option] };
+    for (const field of Object.values(fields)) field.addEventListener = () => {};
     const context = { document: { readyState: 'loading', addEventListener() {},
         getElementById: id => fields[id] || null }, window: {} };
     vm.createContext(context);
-    vm.runInContext(fs.readFileSync('src/main/resources/static/js/pages/offers/offer-form.js', 'utf8'), context);
+    vm.runInContext(fs.readFileSync('src/main/resources/static/js/pages/offer-form.js', 'utf8'), context);
     return { context, fields };
 }
 
@@ -48,21 +49,70 @@ for (const salary of [10000004, 12.34, 0.01, 25000000.25]) {
 }
 
 function load(fetch) {
-    const context = { fetch, console, document: {
-        readyState: 'loading', addEventListener() {},
+    const events = {};
+    const context = { fetch, console, events, document: {
+        readyState: 'loading', addEventListener(type, fn) { (events[type] ||= []).push(fn); },
         querySelector(selector) {
             return { getAttribute: () => selector.includes('_csrf_header') ? 'X-TEST-CSRF' : 'test-token' };
         }
     } };
     context.window = context;
     vm.createContext(context);
-    vm.runInContext(fs.readFileSync('src/main/resources/static/js/pages/offers/offer-common.js', 'utf8'), context);
+    vm.runInContext(fs.readFileSync('src/main/resources/static/js/pages/offer-common.js', 'utf8'), context);
     return context;
 }
 
 function response(status, data, type = 'application/json') {
     return { ok: status >= 200 && status < 300, status,
         headers: { get: () => type }, json: async () => data };
+}
+
+test('delegated actions handle nested SVG clicks, filter changes and disabled buttons', () => {
+    const context = load(() => assert.fail('No API before confirmation'));
+    let selectedId, submits = 0;
+    context.confirmSendOffer = id => { selectedId = id; };
+    const element = { dataset: { offerClick: 'open-send', offerId: '42' },
+        form: { elements: { status: { value: '' }, search: { value: 'Old' } }, requestSubmit() { submits++; } },
+        closest: () => ({}) };
+    const dispatch = type => context.events[type].forEach(fn => fn({ target: { closest: () => element } }));
+    dispatch('click');
+    assert.equal(selectedId, '42');
+    element.disabled = true;
+    selectedId = null;
+    dispatch('click');
+    assert.equal(selectedId, null);
+    element.disabled = false;
+    element.dataset.offerClick = 'filter-status'; element.dataset.offerStatus = 'Accepted';
+    dispatch('click');
+    assert.equal(element.form.elements.status.value, 'Accepted');
+    assert.equal(submits, 1);
+    element.dataset.offerChange = 'filter'; dispatch('change');
+    assert.equal(submits, 2);
+    element.dataset.offerClick = 'clear-search'; dispatch('click');
+    assert.equal(element.form.elements.search.value, '');
+});
+
+for (const scenario of ['unchanged', 'changed', 'reverted', 'submitted', 'cancelled-submit', 'new-form', 'history-return']) {
+    test(`unsaved edit warning: ${scenario}`, () => {
+        const { context } = loadForm();
+        const events = {}, fields = { salary: '20000000', _csrf: 'first-token' };
+        const formEvents = {};
+        const form = { dataset: { offerEdit: scenario === 'new-form' ? 'false' : 'true' },
+            addEventListener(type, fn) { formEvents[type] = fn; } };
+        context.FormData = class { constructor() { return Object.entries(fields); } };
+        context.window.addEventListener = (type, fn) => { events[type] = fn; };
+        context.initOfferUnsavedChanges(form);
+        fields._csrf = 'rotated-token';
+        if (scenario !== 'unchanged') fields.salary = '21000000';
+        if (scenario === 'reverted') fields.salary = '20000000';
+        if (['submitted', 'cancelled-submit', 'history-return'].includes(scenario)) {
+            formEvents.submit({ defaultPrevented: scenario === 'cancelled-submit' });
+        }
+        if (scenario === 'history-return') events.pageshow();
+        let warned = false;
+        events.beforeunload?.({ preventDefault() { warned = true; } });
+        assert.equal(warned, ['changed', 'cancelled-submit', 'history-return'].includes(scenario));
+    });
 }
 
 for (const scope of ['FILTERED', 'SELECTED', 'ALL']) {
@@ -79,7 +129,7 @@ for (const scope of ['FILTERED', 'SELECTED', 'ALL']) {
         context.document.querySelector = selector => selector.includes('exportScope') ? { value: scope } : null;
         context.document.querySelectorAll = selector => selector.includes('exportCol')
             ? [{ value: 'offerId' }] : [{ value: '42' }];
-        vm.runInContext(fs.readFileSync('src/main/resources/static/js/pages/offers/offer-hr.js', 'utf8'), context);
+        vm.runInContext(fs.readFileSync('src/main/resources/static/js/pages/offer-hr.js', 'utf8'), context);
         context.executeOfferExport();
         await new Promise(setImmediate);
         assert.equal(payload.scope, scope);
@@ -116,6 +166,8 @@ test('DELETE actions do not send a JSON body or content type', async () => {
 
 for (const [name, status, data, type, expected] of [
     ['permission denied', 403, null, 'text/html', /không có quyền/],
+    ['not found HTML from global handler', 404, null, 'text/html', /không thành công.*404/],
+    ['server failure HTML from global handler', 500, null, 'text/html', /không thành công.*500/],
     ['server failure', 500, { message: 'Server failed' }, 'application/json', /Server failed/],
     ['business conflict', 200, { success: false, message: 'Already sent' }, 'application/json', /Already sent/],
     ['login HTML instead of JSON', 200, null, 'text/html', /không thành công/]
@@ -135,6 +187,23 @@ test('network errors return a Vietnamese recovery message', async () => {
     const context = load(async () => { throw new TypeError('Failed to fetch'); });
     await assert.rejects(context.offerRequest('/offers/42/send'), /Không thể kết nối/);
 });
+
+for (const success of [true, false]) {
+    test(`detail delete ${success ? 'returns to list' : 'stays on detail after failure'}`, async () => {
+        let calls = 0;
+        const context = load(async () => { calls++; return response(success ? 200 : 400, { success, message: 'Result' }); });
+        const dialog = { dataset: { offerId: '42', successUrl: '/offers' } };
+        const button = { disabled: false, closest: () => dialog };
+        context.location = { href: '/offers/42', reload() { assert.fail('Do not reload deleted detail'); } };
+        context.queueOfferToast = context.showFlashToast = () => {};
+        context.executeDeleteOffer(button);
+        context.executeDeleteOffer(button);
+        await new Promise(setImmediate);
+        assert.equal(calls, 1);
+        assert.equal(context.location.href, success ? '/offers' : '/offers/42');
+        assert.equal(button.disabled, false);
+    });
+}
 
 for (const action of ['send', 'delete', 'approve']) {
     for (const success of [true, false]) {
@@ -157,7 +226,7 @@ for (const action of ['send', 'delete', 'approve']) {
                 context.executeSendOfferAction();
             } else {
                 const file = action === 'delete' ? 'offer-hr.js' : 'offer-director.js';
-                vm.runInContext(fs.readFileSync('src/main/resources/static/js/pages/offers/' + file, 'utf8'), context);
+                vm.runInContext(fs.readFileSync('src/main/resources/static/js/pages/' + file, 'utf8'), context);
                 if (action === 'delete') context.executeDeleteOffer(button);
                 else await context.executeDirectorDecisionApi('/offers/42/approve', 'Approved', () => navigations++);
             }
