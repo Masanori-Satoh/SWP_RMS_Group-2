@@ -18,7 +18,7 @@
     <div class="offers-header adw-heading ofw-heading">
         <h1 class="page-title adw-title">Quản lý thư mời nhận việc</h1>
         <div class="offers-header-actions ofw-header-actions">
-            <button type="button" class="btn btn--secondary" id="btnOpenExportModal" onclick="openExportModal()">
+            <button type="button" class="btn btn--secondary" id="btnOpenExportModal" data-offer-click="export-open">
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
                 <span>Xuất Excel</span>
             </button>
@@ -35,7 +35,7 @@
     <!-- Stats Overview Cards -->
     <div class="offers-stats-grid ofw-stats-grid">
         <button type="button" class="offer-stat-card adw-surface ofw-stat-card"
-                form="offerFilters" onclick="this.form.elements.status.value = 'ALL'; this.form.requestSubmit()"
+                form="offerFilters" data-offer-click="filter-status" data-offer-status="ALL"
                 th:classappend="${currentStatus == 'ALL' or currentStatus == null or currentStatus == ''} ? ' ofw-stat-card--active' : ''"
                 th:attr="aria-pressed=${currentStatus == 'ALL' or currentStatus == null or currentStatus == '' ? 'true' : 'false'}">
             <div class="ofw-stat-label">Tổng thư mời</div>
@@ -48,7 +48,7 @@
         </button>
 
         <button type="button" class="offer-stat-card adw-surface ofw-stat-card"
-                form="offerFilters" onclick="this.form.elements.status.value = 'Pending_Director'; this.form.requestSubmit()"
+                form="offerFilters" data-offer-click="filter-status" data-offer-status="Pending_Director"
                 th:classappend="${currentStatus == 'Pending_Director'} ? ' ofw-stat-card--active' : ''"
                 th:attr="aria-pressed=${currentStatus == 'Pending_Director' ? 'true' : 'false'}">
             <div class="ofw-stat-label">Chờ Giám đốc duyệt</div>
@@ -61,7 +61,7 @@
         </button>
 
         <button type="button" class="offer-stat-card adw-surface ofw-stat-card"
-                form="offerFilters" onclick="this.form.elements.status.value = 'Director_Approved'; this.form.requestSubmit()"
+                form="offerFilters" data-offer-click="filter-status" data-offer-status="Director_Approved"
                 th:classappend="${currentStatus == 'Director_Approved' or currentStatus == 'Approved'} ? ' ofw-stat-card--active' : ''"
                 th:attr="aria-pressed=${currentStatus == 'Director_Approved' or currentStatus == 'Approved' ? 'true' : 'false'}">
             <div class="ofw-stat-label">Giám đốc đã duyệt</div>
@@ -74,7 +74,7 @@
         </button>
 
         <button type="button" class="offer-stat-card adw-surface ofw-stat-card"
-                form="offerFilters" onclick="this.form.elements.status.value = 'Sent_Candidate'; this.form.requestSubmit()"
+                form="offerFilters" data-offer-click="filter-status" data-offer-status="Sent_Candidate"
                 th:classappend="${currentStatus == 'Sent_Candidate'} ? ' ofw-stat-card--active' : ''"
                 th:attr="aria-pressed=${currentStatus == 'Sent_Candidate' ? 'true' : 'false'}">
             <div class="ofw-stat-label">Đã gửi thư mời</div>
@@ -87,7 +87,7 @@
         </button>
 
         <button type="button" class="offer-stat-card adw-surface ofw-stat-card"
-                form="offerFilters" onclick="this.form.elements.status.value = 'Accepted'; this.form.requestSubmit()"
+                form="offerFilters" data-offer-click="filter-status" data-offer-status="Accepted"
                 th:classappend="${currentStatus == 'Accepted'} ? ' ofw-stat-card--active' : ''"
                 th:attr="aria-pressed=${currentStatus == 'Accepted' ? 'true' : 'false'}">
             <div class="ofw-stat-label">Ứng viên đã nhận việc</div>
@@ -108,13 +108,13 @@
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                 <input type="text" id="searchInput" name="search" class="ofw-search-input" maxlength="120" placeholder="Tìm #mã thư mời, ứng viên, email, vị trí, phòng ban…"
                        th:value="${search}">
-                <button type="submit" th:if="${search != null and search != ''}" onclick="this.form.elements.search.value = ''"
+                <button type="submit" th:if="${search != null and search != ''}" data-offer-click="clear-search"
                         class="ofw-search-clear" title="Xóa từ khóa">
                     ✕
                 </button>
             </div>
 
-            <select id="statusFilter" name="status" class="filter-select ofw-filter-select" onchange="this.form.requestSubmit()">
+            <select id="statusFilter" name="status" class="filter-select ofw-filter-select" data-offer-change="filter">
                 <option value="ALL" th:selected="${currentStatus == 'ALL'}">-- Tất cả trạng thái --</option>
                 <option value="Draft" th:selected="${currentStatus == 'Draft'}">Bản nháp</option>
                 <option value="Pending_Director" th:selected="${currentStatus == 'Pending_Director'}">Chờ Giám đốc duyệt</option>
@@ -126,7 +126,7 @@
                 <option value="Declined" th:selected="${currentStatus == 'Declined'}">Ứng viên từ chối</option>
             </select>
 
-            <select id="timeSortFilter" name="timeSort" class="filter-select ofw-filter-select" onchange="this.form.requestSubmit()">
+            <select id="timeSortFilter" name="timeSort" class="filter-select ofw-filter-select" data-offer-change="filter">
                 <option value="DEFAULT" th:selected="${currentTimeSort == 'DEFAULT'}">-- Sắp xếp theo thời gian --</option>
                 <option value="EARLIEST" th:selected="${currentTimeSort == 'EARLIEST'}">Sớm nhất</option>
                 <option value="LATEST" th:selected="${currentTimeSort == 'LATEST'}">Muộn nhất</option>
@@ -141,11 +141,11 @@
             <span>Đã chọn <strong id="selectedOffersCount">0</strong> thư mời</span>
         </div>
         <div class="ofw-selection-toolbar-right">
-            <button type="button" class="btn btn--secondary btn--sm" onclick="openExportModalWithScope('SELECTED')">
+            <button type="button" class="btn btn--secondary btn--sm" data-offer-click="export-selected">
                 <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
                 <span>Xuất <span id="selectedOffersBtnCount">0</span> thư mời</span>
             </button>
-            <button type="button" class="btn btn--secondary btn--sm" onclick="deselectAllOffers()">
+            <button type="button" class="btn btn--secondary btn--sm" data-offer-click="selection-clear">
                 Bỏ chọn
             </button>
         </div>
@@ -165,7 +165,7 @@
                 <thead>
                     <tr>
                         <th class="offer-col-w-44 offer-text-center">
-                            <input type="checkbox" id="selectAllOffers" class="offer-checkbox" onchange="toggleSelectAllOffers(this.checked)" title="Chọn tất cả trên trang này">
+                            <input type="checkbox" id="selectAllOffers" class="offer-checkbox" data-offer-change="selection-all" title="Chọn tất cả trên trang này">
                         </th>
                         <th class="offer-col-w-70">Mã thư mời</th>
                         <th>Ứng viên</th>
@@ -186,7 +186,7 @@
                     </tr>
                     <tr th:each="o : ${offers}" th:attr="data-id=${o.offerId}, data-status=${o.offerStatus}">
                         <td class="offer-text-center">
-                            <input type="checkbox" class="offer-checkbox offer-row-checkbox" th:attr="aria-label=|Chọn thư mời số ${o.offerId}|" th:value="${o.offerId}" onchange="handleOfferRowSelectionChange()">
+                            <input type="checkbox" class="offer-checkbox offer-row-checkbox" th:attr="aria-label=|Chọn thư mời số ${o.offerId}|" th:value="${o.offerId}" data-offer-change="selection-row">
                         </td>
                         <td>
                             <a th:href="@{/offers/{id}(id=${o.offerId})}" class="offer-id-link" th:text="${o.offerId}">1</a>
@@ -231,7 +231,7 @@
 
                                 <!-- Phát hành gửi Offer cho Candidate (Chỉ khi Director_Approved) -->
                                 <button type="button" th:if="${o.offerStatus == 'Director_Approved' or o.offerStatus == 'Approved'}"
-                                        th:onclick="'confirmSendOffer(' + ${o.offerId} + ')'" class="btn-icon btn-icon-success ofw-action-btn ofw-action-btn--success" title="Phát hành gửi Thư mời nhận việc">
+                                        data-offer-click="open-send" th:attr="data-offer-id=${o.offerId}" class="btn-icon btn-icon-success ofw-action-btn ofw-action-btn--success" title="Phát hành gửi Thư mời nhận việc">
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
                                 </button>
 
@@ -244,7 +244,7 @@
 
                                 <!-- Xóa Offer (Chỉ khi Draft) -->
                                 <button type="button" th:if="${o.offerStatus == 'Draft'}"
-                                        th:onclick="'confirmDeleteOffer(' + ${o.offerId} + ')'" class="btn-icon btn-icon-danger ofw-action-btn ofw-action-btn--danger" title="Xóa bản nháp">
+                                        data-offer-click="open-delete" th:attr="data-offer-id=${o.offerId}" class="btn-icon btn-icon-danger ofw-action-btn ofw-action-btn--danger" title="Xóa bản nháp">
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
                                 </button>
                             </div>
@@ -258,8 +258,8 @@
     </section>
 
 <!-- Modal Xuất Excel Offer (HR) -->
-<dialog id="offerExportModal" class="confirm-dialog ofw-workspace-dialog" aria-labelledby="offerExportTitle" onclick="handleExportModalBackdropClick(event)">
-    <div class="dialog-content" onclick="event.stopPropagation()">
+<dialog id="offerExportModal" class="confirm-dialog ofw-workspace-dialog" aria-labelledby="offerExportTitle" data-offer-click="export-backdrop">
+    <div class="dialog-content" >
         <div class="dialog-header ofw-dialog-header">
             <div class="ofw-modal-title-group">
                 <div class="offer-stat-icon stat-icon-green ofw-modal-stat-icon">
@@ -270,7 +270,7 @@
                     <div class="ofw-modal-desc">Tải dữ liệu thư mời nhận việc ra file Microsoft Excel (.xlsx)</div>
                 </div>
             </div>
-            <button type="button" class="btn-icon" onclick="closeExportModal()" title="Đóng">✕</button>
+            <button type="button" class="btn-icon" data-offer-click="export-close" title="Đóng">✕</button>
         </div>
 
         <div class="dialog-body">
@@ -309,9 +309,9 @@
                 <div class="export-columns-header">
                     <label class="export-section-title ofw-export-title--no-mb">Cột dữ liệu</label>
                     <div class="ofw-columns-quick-actions">
-                        <button type="button" class="btn btn--secondary btn--sm" onclick="selectAllColumns()">Chọn tất cả</button>
-                        <button type="button" class="btn btn--secondary btn--sm" onclick="resetDefaultColumns()">Mặc định</button>
-                        <button type="button" class="btn btn--secondary btn--sm" onclick="deselectAllColumns()">Bỏ chọn</button>
+                        <button type="button" class="btn btn--secondary btn--sm" data-offer-click="columns-all">Chọn tất cả</button>
+                        <button type="button" class="btn btn--secondary btn--sm" data-offer-click="columns-default">Mặc định</button>
+                        <button type="button" class="btn btn--secondary btn--sm" data-offer-click="columns-clear">Bỏ chọn</button>
                     </div>
                 </div>
 
@@ -409,8 +409,8 @@
         </div>
 
         <div class="dialog-actions">
-            <button type="button" class="btn btn--secondary" onclick="closeExportModal()">Hủy</button>
-            <button type="button" class="btn btn--primary" id="btnExecuteExport" onclick="executeOfferExport()">
+            <button type="button" class="btn btn--secondary" data-offer-click="export-close">Hủy</button>
+            <button type="button" class="btn btn--primary" id="btnExecuteExport" data-offer-click="export">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> Xuất Excel
             </button>
         </div>

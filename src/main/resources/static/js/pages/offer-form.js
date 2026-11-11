@@ -160,6 +160,33 @@ function initOfferForm() {
     }
 
     validateProbationRuleUi();
+
+    select?.addEventListener('change', () => handleSelectPassedCandidate(select.value));
+    document.getElementById('proposedSalary')?.addEventListener('input', () => autoCalculateProbationSalary());
+    document.getElementById('probationSalary')?.addEventListener('input', validateProbationRuleUi);
+    document.getElementById('responsePeriodDays')?.addEventListener('input', updateMinExpectedStartDate);
+    const form = document.getElementById('offerForm');
+    if (!form) return;
+    form.addEventListener('click', event => {
+        if (event.target.closest('[data-offer-click="suggest-probation"]')) autoCalculateProbationSalary(true);
+    });
+    initOfferUnsavedChanges(form);
+}
+
+/** Chỉ cảnh báo form sửa có thay đổi thật; submit hợp lệ không bị chặn, sửa rồi hoàn tác không báo. */
+function initOfferUnsavedChanges(form) {
+    if (form.dataset.offerEdit !== 'true') return;
+    const snapshot = () => JSON.stringify(Array.from(new FormData(form)).filter(([name]) => name !== '_csrf'));
+    const original = snapshot();
+    let submitting = false;
+    form.addEventListener('submit', event => { submitting = !event.defaultPrevented; });
+    window.addEventListener('pageshow', () => { submitting = false; });
+    window.addEventListener('beforeunload', event => {
+        if (!submitting && snapshot() !== original) {
+            event.preventDefault();
+            event.returnValue = '';
+        }
+    });
 }
 
 if (document.readyState === 'loading') {
@@ -167,8 +194,3 @@ if (document.readyState === 'loading') {
 } else {
     initOfferForm();
 }
-
-window.handleSelectPassedCandidate = handleSelectPassedCandidate;
-window.autoCalculateProbationSalary = autoCalculateProbationSalary;
-window.validateProbationRuleUi = validateProbationRuleUi;
-window.updateMinExpectedStartDate = updateMinExpectedStartDate;

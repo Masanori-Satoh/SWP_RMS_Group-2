@@ -24,7 +24,7 @@
     <!-- MAIN FORM -->
     <form id="offerForm" th:object="${offerDto}"
           th:action="${isEdit ? '/offers/' + offerId + '/edit' : '/offers/create'}"
-          method="post">
+          method="post" th:attr="data-offer-edit=${isEdit}">
       <input type="hidden" name="isLockedCandidate" th:value="${isLockedCandidate != null and isLockedCandidate ? 'true' : 'false'}">
 
       <!-- VALIDATION SUMMARY ALERT -->
@@ -117,7 +117,7 @@
           <div th:if="${!isEdit and (!isLockedCandidate or fixedCandidate == null)}">
             <div class="form-group">
               <label class="form-label form-label--required" for="createAppSelect">Chọn ứng viên chờ tạo thư mời nhận việc</label>
-              <select id="createAppSelect" th:field="*{applicationId}" class="form-select" onchange="handleSelectPassedCandidate(this.value)" required>
+              <select id="createAppSelect" th:field="*{applicationId}" class="form-select" required>
                 <option value="">-- Chọn ứng viên đã đỗ phỏng vấn --</option>
                 <option th:each="c : ${passedCandidates}"
                         th:value="${c.applicationId}"
@@ -190,8 +190,7 @@
                 </label>
               </div>
               <input type="number" id="proposedSalary" th:field="*{proposedSalary}" class="form-input"
-                     placeholder="VD: 25000000" min="0" step="any"
-                     oninput="autoCalculateProbationSalary()" required>
+                     placeholder="VD: 25000000" min="0" step="any" required>
               <p class="form-error" th:if="${#fields.hasErrors('proposedSalary')}"
                  th:text="${#strings.contains(#fields.errors('proposedSalary')[0], 'Failed to convert') ? 'Mức lương chính thức phải là số hợp lệ.' : #fields.errors('proposedSalary')[0]}"></p>
             </div>
@@ -201,15 +200,14 @@
                 <label class="form-label form-label--required" for="probationSalary">
                   Lương thử việc (VNĐ/tháng)
                 </label>
-                <button type="button" class="btn btn--secondary btn--sm ofw-btn-calc" onclick="autoCalculateProbationSalary(true)"
+                <button type="button" class="btn btn--secondary btn--sm ofw-btn-calc" data-offer-click="suggest-probation"
                         title="Gợi ý mức sàn 85% theo quy định BR-OFF-01">
                   <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></svg>
                   <span>Gợi ý 85%</span>
                 </button>
               </div>
               <input type="number" id="probationSalary" th:field="*{probationSalary}" class="form-input"
-                     placeholder="Tối thiểu 85% lương chính thức" min="0" step="any"
-                     oninput="validateProbationRuleUi()" required>
+                     placeholder="Tối thiểu 85% lương chính thức" min="0" step="any" required>
               <div id="probationRuleNotice" class="ofw-rule-notice">
                 <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
                 <span>Tuân thủ quy định tối thiểu 85% lương chính thức.</span>
@@ -229,7 +227,7 @@
 
             <div class="form-group">
               <label class="form-label form-label--required" for="responsePeriodDays">Thời hạn phản hồi (ngày)</label>
-              <input type="number" id="responsePeriodDays" th:field="*{responsePeriodDays}" class="form-input" min="1" max="60" placeholder="5" oninput="updateMinExpectedStartDate()" required>
+              <input type="number" id="responsePeriodDays" th:field="*{responsePeriodDays}" class="form-input" min="1" max="60" placeholder="5" required>
               <div class="form-hint">
                 Hạn phản hồi = Thời điểm Bộ phận Tuyển dụng phát hành + số ngày này (mặc định 5 ngày).
               </div>

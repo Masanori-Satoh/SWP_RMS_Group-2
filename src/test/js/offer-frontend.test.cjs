@@ -11,6 +11,7 @@ function loadForm(proposed = '', probation = '') {
     const option = { value: '42', getAttribute: name => ({ 'data-recom-salary': '12345678.90',
         'data-pos': 'Suggested title' })[name] || '' };
     fields.createAppSelect = { value: '42', selectedIndex: 0, options: [option] };
+    for (const field of Object.values(fields)) field.addEventListener = () => {};
     const context = { document: { readyState: 'loading', addEventListener() {},
         getElementById: id => fields[id] || null }, window: {} };
     vm.createContext(context);
@@ -48,8 +49,9 @@ for (const salary of [10000004, 12.34, 0.01, 25000000.25]) {
 }
 
 function load(fetch) {
-    const context = { fetch, console, document: {
-        readyState: 'loading', addEventListener() {},
+    const events = {};
+    const context = { fetch, console, events, document: {
+        readyState: 'loading', addEventListener(type, fn) { (events[type] ||= []).push(fn); },
         querySelector(selector) {
             return { getAttribute: () => selector.includes('_csrf_header') ? 'X-TEST-CSRF' : 'test-token' };
         }
@@ -63,6 +65,54 @@ function load(fetch) {
 function response(status, data, type = 'application/json') {
     return { ok: status >= 200 && status < 300, status,
         headers: { get: () => type }, json: async () => data };
+}
+
+test('delegated actions handle nested SVG clicks, filter changes and disabled buttons', () => {
+    const context = load(() => assert.fail('No API before confirmation'));
+    let selectedId, submits = 0;
+    context.confirmSendOffer = id => { selectedId = id; };
+    const element = { dataset: { offerClick: 'open-send', offerId: '42' },
+        form: { elements: { status: { value: '' }, search: { value: 'Old' } }, requestSubmit() { submits++; } },
+        closest: () => ({}) };
+    const dispatch = type => context.events[type].forEach(fn => fn({ target: { closest: () => element } }));
+    dispatch('click');
+    assert.equal(selectedId, '42');
+    element.disabled = true;
+    selectedId = null;
+    dispatch('click');
+    assert.equal(selectedId, null);
+    element.disabled = false;
+    element.dataset.offerClick = 'filter-status'; element.dataset.offerStatus = 'Accepted';
+    dispatch('click');
+    assert.equal(element.form.elements.status.value, 'Accepted');
+    assert.equal(submits, 1);
+    element.dataset.offerChange = 'filter'; dispatch('change');
+    assert.equal(submits, 2);
+    element.dataset.offerClick = 'clear-search'; dispatch('click');
+    assert.equal(element.form.elements.search.value, '');
+});
+
+for (const scenario of ['unchanged', 'changed', 'reverted', 'submitted', 'cancelled-submit', 'new-form', 'history-return']) {
+    test(`unsaved edit warning: ${scenario}`, () => {
+        const { context } = loadForm();
+        const events = {}, fields = { salary: '20000000', _csrf: 'first-token' };
+        const formEvents = {};
+        const form = { dataset: { offerEdit: scenario === 'new-form' ? 'false' : 'true' },
+            addEventListener(type, fn) { formEvents[type] = fn; } };
+        context.FormData = class { constructor() { return Object.entries(fields); } };
+        context.window.addEventListener = (type, fn) => { events[type] = fn; };
+        context.initOfferUnsavedChanges(form);
+        fields._csrf = 'rotated-token';
+        if (scenario !== 'unchanged') fields.salary = '21000000';
+        if (scenario === 'reverted') fields.salary = '20000000';
+        if (['submitted', 'cancelled-submit', 'history-return'].includes(scenario)) {
+            formEvents.submit({ defaultPrevented: scenario === 'cancelled-submit' });
+        }
+        if (scenario === 'history-return') events.pageshow();
+        let warned = false;
+        events.beforeunload?.({ preventDefault() { warned = true; } });
+        assert.equal(warned, ['changed', 'cancelled-submit', 'history-return'].includes(scenario));
+    });
 }
 
 for (const scope of ['FILTERED', 'SELECTED', 'ALL']) {

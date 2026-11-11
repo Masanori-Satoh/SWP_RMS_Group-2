@@ -2,7 +2,7 @@
    OFFER MANAGEMENT — HR ROLE STYLESHEET (offer-hr.css)
    Project: SWP391 - Mộc RMS Group 2
    Module: Offer Management (Developer: HuyenPT)
-   Architecture: Compact Role-Based (offer-common.css -> offers.css -> offer-workspace.css -> offer-hr.css)
+   Architecture: offer-common.css + offer-hr.css (trang HR và form)
 
    SECTIONS:
    - SECTION A — HR LIST & WORKSPACE (Heading, 4 KPI cards, selection toolbar, table cells)

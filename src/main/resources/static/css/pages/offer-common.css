@@ -9,7 +9,7 @@
    Target Pages:
      - /offers (HR & Director Workspace Lists)
      - /offers/{id} (Offer Detail View for HR & Director)
-     - /offers/new, /offers/{id}/edit (Offer Create/Edit Forms)
+     - /offers/create, /offers/{id}/edit (Offer Create/Edit Forms)
    Cascade Position: Loaded FIRST among Offer stylesheets, providing the
                      shared foundation for role-specific overlays.
    ============================================================================= */
@@ -178,7 +178,7 @@ dialog.confirm-dialog#offerExportModal {
     gap: 6px;
 }
 
-.btn-icon,
+:where(.ofw-page) .btn-icon,
 .ofw-action-btn {
     width: 34px;
     height: 34px;
@@ -196,41 +196,41 @@ dialog.confirm-dialog#offerExportModal {
     text-decoration: none;
 }
 
-.btn-icon:hover,
+:where(.ofw-page) .btn-icon:hover,
 .ofw-action-btn:hover {
     background: var(--brand-soft);
     color: var(--brand-dark);
     border-color: var(--control-line);
 }
 
-.btn-icon-primary {
+:where(.ofw-page) .btn-icon-primary {
     color: var(--brand-dark);
 }
 
-.btn-icon-primary:hover {
+:where(.ofw-page) .btn-icon-primary:hover {
     background: var(--brand-soft);
     color: var(--brand-dark);
     border-color: var(--brand);
 }
 
-.btn-icon-success,
+:where(.ofw-page) .btn-icon-success,
 .ofw-action-btn--success {
     color: var(--brand-dark);
 }
 
-.btn-icon-success:hover,
+:where(.ofw-page) .btn-icon-success:hover,
 .ofw-action-btn--success:hover {
     background: var(--brand-soft);
     border-color: var(--brand-caption);
     color: var(--brand-hover);
 }
 
-.btn-icon-danger,
+:where(.ofw-page) .btn-icon-danger,
 .ofw-action-btn--danger {
     color: var(--error);
 }
 
-.btn-icon-danger:hover,
+:where(.ofw-page) .btn-icon-danger:hover,
 .ofw-action-btn--danger:hover {
     background: var(--error-soft);
     border-color: var(--error-soft);
@@ -1215,7 +1215,7 @@ button.director-stat-card {
 
 
 /* Card General Enhancements */
-.card-header-flex {
+:where(.ofw-page) .card-header-flex {
     display: flex;
     justify-content: space-between;
     align-items: center;

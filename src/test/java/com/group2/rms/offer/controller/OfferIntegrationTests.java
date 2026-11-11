@@ -145,6 +145,7 @@ class OfferIntegrationTests {
                 "<textarea[^>]*id=\"" + id + "\"[^>]*maxlength=\"2000\"", java.util.regex.Pattern.DOTALL).matcher(html).find());
         org.junit.jupiter.api.Assertions.assertTrue(html.contains("0</span>/2000"));
         org.junit.jupiter.api.Assertions.assertFalse(html.contains("0</span>/500"));
+        if (path.endsWith("/1")) writeOfferFixture(html, "director-detail");
     }
 
     private static void assertOfferStyles(String html, String roleStylesheet, String page) throws Exception {
@@ -158,6 +159,8 @@ class OfferIntegrationTests {
         org.junit.jupiter.api.Assertions.assertTrue(links.indexOf(common) < links.indexOf(role));
         org.junit.jupiter.api.Assertions.assertEquals(links.size(), new java.util.HashSet<>(links).size());
         org.junit.jupiter.api.Assertions.assertFalse(html.contains("/css/pages/" + "offers/"));
+        String offerContent = html.substring(html.indexOf("<main"), html.lastIndexOf("</main>"));
+        org.junit.jupiter.api.Assertions.assertFalse(java.util.regex.Pattern.compile("\\bon(?:click|input|change)=").matcher(offerContent).find());
         var scriptMatcher = java.util.regex.Pattern.compile("src=\"(/js/pages/[^\"]+\\.js)\"").matcher(html);
         var scripts = new java.util.ArrayList<String>();
         while (scriptMatcher.find()) scripts.add(scriptMatcher.group(1));
@@ -176,6 +179,10 @@ class OfferIntegrationTests {
         }
         org.junit.jupiter.api.Assertions.assertEquals(scripts.size(), new java.util.HashSet<>(scripts).size());
         org.junit.jupiter.api.Assertions.assertFalse(html.contains("/js/pages/" + "offers/"));
+        writeOfferFixture(html, page);
+    }
+
+    private static void writeOfferFixture(String html, String page) throws Exception {
         String directory = System.getProperty("offer.styles.evidence.dir");
         if (directory != null) {
             var path = java.nio.file.Path.of(directory);
@@ -484,7 +491,7 @@ class OfferIntegrationTests {
                       return {searchInput: {value: 'Unsubmitted'}, statusFilter: {value: 'Accepted'},
                               timeSortFilter: {value: 'EARLIEST'}}[id] || null;
                     },
-                    querySelector() { return {value: scope}; },
+                    querySelector(selector) { return selector.startsWith('meta') ? null : {value: scope}; },
                     querySelectorAll(selector) {
                       if (selector.includes('exportCol')) return [{value: 'offerId'}];
                       if (selector.includes('offer-row-checkbox')) return [{value: '42'}];
@@ -497,6 +504,7 @@ class OfferIntegrationTests {
                   }
                 };
                 vm.createContext(context);
+                vm.runInContext(fs.readFileSync('src/main/resources/static/js/pages/offer-common.js', 'utf8'), context);
                 vm.runInContext(fs.readFileSync('src/main/resources/static/js/pages/offer-hr.js', 'utf8'), context);
                 context.executeOfferExport();
                 """;
@@ -982,7 +990,9 @@ class OfferIntegrationTests {
                 .andExpect(view().name("offers/form"))
                 .andExpect(model().attribute("isEdit", true))
                 .andExpect(model().attribute("isLockedCandidate", false))
-                .andExpect(model().attributeExists("offerDto", "detail"));
+                .andExpect(model().attributeExists("offerDto", "detail"))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("data-offer-edit=\"true\"")))
+                .andExpect(result -> writeOfferFixture(result.getResponse().getContentAsString(java.nio.charset.StandardCharsets.UTF_8), "edit"));
     }
 
     @ParameterizedTest
@@ -996,8 +1006,8 @@ class OfferIntegrationTests {
                 .expectedStartDate(LocalDate.now().plusDays(14)).build());
         String html = mvc.perform(get("/offers/1").with(user(username).roles(role)))
                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
-        org.junit.jupiter.api.Assertions.assertEquals(deleteVisible, html.contains("onclick=\"confirmDeleteOffer(1)\""));
-        org.junit.jupiter.api.Assertions.assertEquals(sendVisible, html.contains("onclick=\"confirmSendOffer(1)\""));
+        org.junit.jupiter.api.Assertions.assertEquals(deleteVisible, html.contains("data-offer-click=\"open-delete\""));
+        org.junit.jupiter.api.Assertions.assertEquals(sendVisible, html.contains("data-offer-click=\"open-send\""));
     }
 
 }

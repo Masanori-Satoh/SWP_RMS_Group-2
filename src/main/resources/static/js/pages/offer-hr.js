@@ -10,6 +10,20 @@
 // SECTION A — HR OFFER LIST (Screen 30 List Filters & Row Selection)
 // =========================================================================
 
+bindOfferEvents({
+    'export-open': () => openExportModal(),
+    'export-selected': () => openExportModalWithScope('SELECTED'),
+    'export-close': () => closeExportModal(),
+    'export-backdrop': (el, event) => handleExportModalBackdropClick(event),
+    'selection-clear': () => deselectAllOffers(),
+    'selection-all': el => toggleSelectAllOffers(el.checked),
+    'selection-row': () => handleOfferRowSelectionChange(),
+    'columns-all': () => selectAllColumns(),
+    'columns-default': () => resetDefaultColumns(),
+    'columns-clear': () => deselectAllColumns(),
+    export: () => executeOfferExport()
+});
+
 /**
  * Lấy danh sách ID các Offer đang được chọn qua checkbox
  */
@@ -288,22 +302,3 @@ if (document.readyState === 'loading') {
 } else {
     initOfferHrPage();
 }
-
-// =========================================================================
-// SECTION E — WINDOW GLOBAL EXPORTS
-// =========================================================================
-window.getSelectedOfferIds = getSelectedOfferIds;
-window.toggleSelectAllOffers = toggleSelectAllOffers;
-window.handleOfferRowSelectionChange = handleOfferRowSelectionChange;
-window.deselectAllOffers = deselectAllOffers;
-window.updateSelectionToolbar = updateSelectionToolbar;
-
-
-window.openExportModal = openExportModal;
-window.openExportModalWithScope = openExportModalWithScope;
-window.closeExportModal = closeExportModal;
-window.handleExportModalBackdropClick = handleExportModalBackdropClick;
-window.selectAllColumns = selectAllColumns;
-window.deselectAllColumns = deselectAllColumns;
-window.resetDefaultColumns = resetDefaultColumns;
-window.executeOfferExport = executeOfferExport;

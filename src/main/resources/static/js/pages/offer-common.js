@@ -12,6 +12,28 @@
 // 1. CSRF TOKEN HELPER
 // =========================================================================
 
+/** Gắn sự kiện theo data-* trong vùng Offer; không thực thi chuỗi JavaScript từ HTML. */
+function bindOfferEvents(handlers) {
+    for (const type of ['click', 'change', 'input']) {
+        document.addEventListener(type, event => {
+            const element = event.target.closest?.(`[data-offer-${type}]`);
+            const handler = element && handlers[element.dataset['offer' + type[0].toUpperCase() + type.slice(1)]];
+            if (handler && !element.disabled && element.closest('.ofw-page')) handler(element, event);
+        });
+    }
+}
+
+bindOfferEvents({
+    'close-dialog': el => el.closest('dialog').close(),
+    'open-send': el => confirmSendOffer(el.dataset.offerId),
+    'open-delete': el => confirmDeleteOffer(el.dataset.offerId),
+    send: () => executeSendOfferAction(),
+    delete: el => executeDeleteOffer(el),
+    'filter-status': el => { el.form.elements.status.value = el.dataset.offerStatus; el.form.requestSubmit(); },
+    'clear-search': el => { el.form.elements.search.value = ''; },
+    filter: el => el.form.requestSubmit()
+});
+
 /**
  * Lấy CSRF token và header name từ thẻ meta tag
  */
@@ -235,15 +257,3 @@ function executeDeleteOffer(button) {
             button.disabled = false;
         });
 }
-
-// =========================================================================
-// 5. WINDOW GLOBAL EXPORTS
-// =========================================================================
-window.getCsrfInfo = getCsrfInfo;
-window.escapeOfferHtml = escapeOfferHtml;
-window.showFlashToast = showFlashToast;
-window.confirmSendOffer = confirmSendOffer;
-window.executeSendOfferAction = executeSendOfferAction;
-
-window.confirmDeleteOffer = confirmDeleteOffer;
-window.executeDeleteOffer = executeDeleteOffer;

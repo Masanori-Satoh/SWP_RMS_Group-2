@@ -11,8 +11,8 @@
             <p>Bạn có chắc chắn muốn gửi thư mời nhận việc tới ứng viên? Ứng viên sẽ thấy thư mời và thời hạn phản hồi trên cổng ứng viên.</p>
         </div>
         <div class="dialog-actions">
-            <button type="button" class="btn btn--secondary" onclick="this.closest('dialog').close()">Hủy</button>
-            <button type="button" id="btnConfirmSendOfferModal" class="btn btn--primary" onclick="executeSendOfferAction()">
+            <button type="button" class="btn btn--secondary" data-offer-click="close-dialog">Hủy</button>
+            <button type="button" id="btnConfirmSendOfferModal" class="btn btn--primary" data-offer-click="send">
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="ofw-btn-icon-inline"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
                 Phát hành thư mời
             </button>
@@ -25,8 +25,8 @@
         <div class="dialog-header"><h3 id="deleteOfferTitle" class="dialog-title">Xóa bản nháp?</h3></div>
         <div class="dialog-body"><p>Bạn có chắc chắn muốn xóa bản nháp thư mời nhận việc này?</p></div>
         <div class="dialog-actions">
-            <button type="button" class="btn btn--secondary" autofocus onclick="this.closest('dialog').close()">Hủy</button>
-            <button type="button" onclick="executeDeleteOffer(this)"
+            <button type="button" class="btn btn--secondary" autofocus data-offer-click="close-dialog">Hủy</button>
+            <button type="button" data-offer-click="delete"
                     class="btn btn--danger">Xóa bản nháp</button>
         </div>
     </div>

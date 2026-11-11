@@ -129,6 +129,16 @@ Kiểm tra thực tế phát hiện dữ liệu demo đã được nạp vào da
 - Đạt **379/379 Java Offer và 27/27 Node**, log `phase5-single-endpoints.log` / `phase5-frontend.log` trong scratch/offer-search-upgrade-20261110. Test URL xóa form cũ trả 404, không gọi service; gửi không có Accept vẫn trả JSON từ đúng một handler; quyền và ma trận lỗi tiếp tục đạt. Hai test Node thêm kiểm tra xóa tại chi tiết và chặn bấm lặp.
 - Không thay trạng thái nghiệp vụ, database hoặc module khác; kiểm chứng bằng MockMvc/service mock và Node, chưa là E2E trình duyệt/database. Các tài liệu/test manual dùng POST xóa cũ cần chuyển sang DELETE; lịch sử báo cáo trước đây giữ nguyên.
 
+### 2.13. Rà soát cuối — Phase 6: sự kiện frontend, cảnh báo chưa lưu và CSS
+
+- Chuyển 54 thuộc tính sự kiện inline trong 5 template/fragment Offer sang data-offer-click/change/input và listener trong 4 script hiện có. Điều phối chung chỉ xử lý phần tử trong .ofw-page, dùng danh sách hàm rõ ràng, không eval chuỗi HTML; giữ thứ tự common trước HR/Director. Form tự gắn listener riêng, không nạp thêm common hoặc tạo file mới.
+- Bỏ các phép gán window.<hàm> dư thừa sau khi template không còn gọi inline; giữ các hàm hiện có và thứ tự nạp. Comment đường dẫn CSS/route cũ được sửa. JavaScript tăng ròng 23 dòng để có điều phối và bảo vệ dữ liệu, không tuyên bố toàn bộ JS ngắn hơn; số file không tăng.
+- Form chỉnh sửa lấy snapshot sau khởi tạo, loại CSRF khỏi so sánh; beforeunload chỉ cảnh báo thay đổi chưa lưu. Dữ liệu không đổi/đã hoàn tác không cảnh báo, submit hợp lệ không bị chặn; pageshow khôi phục cảnh báo khi quay lại bằng lịch sử. Dùng hộp thoại native của trình duyệt, không thêm UI/popup riêng. Form tạo mới giữ hành vi hiện tại.
+- Giới hạn nhóm selector .btn-icon và .card-header-flex vào :where(.ofw-page), giữ độ ưu tiên CSS và giá trị cũ, không tác động topbar/layout chung. Không đổi thiết kế, nghiệp vụ, backend hoặc database.
+- Đạt **379/379 Java Offer và 35/35 Node**. Assertion sự kiện inline chỉ kiểm tra nội dung Offer; các nút đăng xuất của topbar chung giữ nguyên. Test export nạp common trước HR và mô phỏng meta CSRF đúng DOM mới; hai lỗi fixture ban đầu được sửa ở test, không sửa code dùng chung.
+- Edge headless trên HTML MockMvc/Thymeleaf và CSS/JS thật đạt 6 nhóm: CSS A/B ba trang giữ kích thước/màu nút icon và card header; popup export/chọn cột/xóa/chọn hàng HR; Director từ chối bắt buộc lý do, bộ đếm/payload 2000 và mở khóa khi lỗi; xác nhận/hủy tại chi tiết; gợi ý 85%; rời form sửa cảnh báo và hoàn tác cho phép rời trang. Không có pageerror từ script Offer.
+- Log: `phase6-final-verification.log`, `phase6-frontend.log`, `phase6-browser-verified.log`; HTML, ảnh và results.json tại scratch/offer-search-upgrade-20261110/phase6-browser. Browser chỉ dùng fixture, request quyết định được intercept; không đăng nhập E2E hoặc ghi DB. beforeunload phụ thuộc hỗ trợ/chính sách của trình duyệt; không bảo đảm phục hồi dữ liệu khi ứng dụng/trình duyệt bị tắt đột ngột. JaCoCo vẫn có warning Notification cũ, không dùng coverage làm bằng chứng.
+
 ## 3. Các commit công việc mới
 
 | Commit | Nội dung | Diff riêng commit |
