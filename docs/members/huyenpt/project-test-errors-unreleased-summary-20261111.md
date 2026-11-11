@@ -193,6 +193,11 @@ Kiểm tra thực tế phát hiện dữ liệu demo đã được nạp vào da
 - Chỉ sửa offer-director.css: padding thẻ 12px/16px theo token, khoảng cách nhãn/hàng số var(--s1), icon 36px; số đếm 26→36px, weight 700→800. Giữ ba cột đều trên desktop và một cột trên tablet/mobile, không đổi số liệu, màu, trạng thái active hoặc dữ liệu lọc. CSS giới hạn ở .director-stat-card, không thay thống kê HR.
 - Đạt **121/121 test MVC** và A/B Edge tại 1440/768/390px: thẻ từ khoảng 108px xuống 86px (~20%), cả ba thẻ cùng chiều cao; thử số 0/4/23/12345 không tràn, click cả ba thẻ vẫn gửi đúng trạng thái vào form lọc. Ảnh desktop được kiểm tra trực quan; số 4/23/2 trong ảnh chỉ là DOM fixture, không thay số liệu thật. Log director-stats-compact-mvc.log, director-stats-compact-browser.log và ảnh/số đo tại scratch/offer-search-upgrade-20261110/director-stats-compact. Không ghi database.
 
+### 2.23. Thu nhẹ chiều ngang thẻ thống kê Director
+
+- Giới hạn nhóm thẻ ở width 92% khi viewport >1024px, giữ ba thẻ đều và căn trái như trước; chiều cao và số 36px giữ nguyên. Tablet/mobile không đổi.
+- A/B Edge tại 1920/1440/768/390px đạt: nhóm desktop hẹp hơn 8%, ba thẻ đều, không tràn; hình học tablet/mobile giữ nguyên. Chỉ sửa CSS nên không chạy lại Maven/Node; dùng HTML fixture từ lượt MVC đã đạt trước đó. Bằng chứng director-stats-width-browser.log và thư mục scratch/offer-search-upgrade-20261110/director-stats-width. Không đổi dữ liệu, lọc hoặc DB.
+
 ## 3. Các commit công việc mới
 
 | Commit | Nội dung | Diff riêng commit |

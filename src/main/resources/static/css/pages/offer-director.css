@@ -64,6 +64,12 @@ button.director-stat-card:hover {
   background: color-mix(in srgb, var(--brand-soft) 40%, var(--surface));
 }
 
+@media (min-width: 1025px) {
+  .ofw-director-stats-grid {
+    width: 92%;
+  }
+}
+
 /* A.2 Director Tabs (All / Pending / Reviewed) */
 .ofw-director-tabs {
   display: flex;
