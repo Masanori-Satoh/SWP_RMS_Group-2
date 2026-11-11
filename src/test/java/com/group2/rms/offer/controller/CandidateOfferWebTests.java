@@ -39,6 +39,24 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Import({SecurityConfig.class, DatabaseUserDetailsService.class})
 class CandidateOfferWebTests {
 
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(ints = {403, 404, 500})
+    void candidateOperationFailuresReachGlobalHandlerWithoutSuccessFeedback(int expected) throws Exception {
+        RuntimeException error = expected == 403 ? new org.springframework.security.access.AccessDeniedException("Denied")
+                : expected == 404 ? new ResourceNotFoundException("Không tìm thấy thư mời.")
+                : new IllegalStateException("INTERNAL_FAILURE_MARKER");
+        when(candidateOffers.accept(1)).thenThrow(error);
+        when(candidateOffers.decline(1)).thenThrow(error);
+        when(candidateOffers.getDetail(1)).thenThrow(error);
+        for (var request : List.of(post("/portal/offers/1/accept"), post("/portal/offers/1/decline"),
+                get("/portal/offers/1/decline"))) {
+            mvc.perform(request.with(as("an.vo", "Candidate")).with(csrf()).accept(org.springframework.http.MediaType.APPLICATION_JSON))
+                    .andExpect(status().is(expected)).andExpect(view().name("error/" + expected))
+                    .andExpect(flash().attributeCount(0))
+                    .andExpect(content().string(not(containsString("INTERNAL_FAILURE_MARKER"))));
+        }
+    }
+
     @Autowired MockMvc mvc;
     @MockitoBean CandidateOfferService candidateOffers;
     @MockitoBean UserRepository users;

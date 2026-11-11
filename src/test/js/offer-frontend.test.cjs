@@ -116,6 +116,8 @@ test('DELETE actions do not send a JSON body or content type', async () => {
 
 for (const [name, status, data, type, expected] of [
     ['permission denied', 403, null, 'text/html', /không có quyền/],
+    ['not found HTML from global handler', 404, null, 'text/html', /không thành công.*404/],
+    ['server failure HTML from global handler', 500, null, 'text/html', /không thành công.*500/],
     ['server failure', 500, { message: 'Server failed' }, 'application/json', /Server failed/],
     ['business conflict', 200, { success: false, message: 'Already sent' }, 'application/json', /Already sent/],
     ['login HTML instead of JSON', 200, null, 'text/html', /không thành công/]

@@ -54,6 +54,69 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class OfferIntegrationTests {
 
     @ParameterizedTest
+    @ValueSource(ints = {403, 404, 500})
+    void internalOperationFailuresReachGlobalHandlerWithoutSuccessFeedback(int expected) throws Exception {
+        RuntimeException error = expected == 403 ? new org.springframework.security.access.AccessDeniedException("Denied")
+                : expected == 404 ? new com.group2.rms.core.exception.ResourceNotFoundException("Không tìm thấy thư mời.")
+                : new IllegalStateException("INTERNAL_FAILURE_MARKER");
+        when(offerService.createOfferByHr(any())).thenThrow(error);
+        when(offerService.updateOfferByHr(eq(1), any())).thenThrow(error);
+        when(offerService.getUpdateOfferRequestById(1)).thenThrow(error);
+        org.mockito.Mockito.doThrow(error).when(offerService).deleteDraftOfferByHr(1);
+        when(offerService.sendOfferToCandidate(1)).thenThrow(error);
+        when(offerService.approveOfferByDirector(eq(1), any())).thenThrow(error);
+        when(offerService.rejectOfferByDirector(eq(1), any())).thenThrow(error);
+        var requests = List.of(validSalaryForm("/offers/create", "20000000", "18000000"),
+                validSalaryForm("/offers/1/edit", "20000000", "18000000"),
+                get("/offers/1/edit").accept(MediaType.APPLICATION_JSON),
+                delete("/offers/1").with(csrf()).accept(MediaType.APPLICATION_JSON),
+                post("/offers/1/delete").with(csrf()).accept(MediaType.TEXT_HTML),
+                post("/offers/1/send").with(csrf()).accept(MediaType.APPLICATION_JSON),
+                post("/offers/1/send").with(csrf()).accept(MediaType.TEXT_HTML),
+                post("/offers/1/approve").with(csrf()).contentType(MediaType.APPLICATION_JSON).content("{\"comments\":\"OK\"}"),
+                post("/offers/1/reject").with(csrf()).contentType(MediaType.APPLICATION_JSON).content("{\"comments\":\"Reason\"}"));
+        for (int i = 0; i < requests.size(); i++) {
+            var actor = i >= 7 ? user("director_user").roles("DIRECTOR") : user("hr_specialist").roles("HR");
+            mvc.perform(requests.get(i).with(actor)).andExpect(status().is(expected))
+                    .andExpect(view().name("error/" + expected))
+                    .andExpect(flash().attributeCount(0))
+                    .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("INTERNAL_FAILURE_MARKER"))));
+        }
+    }
+
+    @ParameterizedTest
+    @CsvSource({"delete,400", "send,400", "approve,400", "reject,400", "approve,409", "reject,409"})
+    void moduleBusinessErrorsKeepJsonMessagesAndConflictStatus(String action, int expected) throws Exception {
+        var error = new com.group2.rms.offer.exception.OfferValidationException("Business feedback",
+                expected == 409 ? "OFFER_STATUS_INVALID" : "OFFER_VALIDATION_ERROR");
+        boolean director = action.equals("approve") || action.equals("reject");
+        var request = action.equals("delete") ? delete("/offers/1") : post("/offers/1/" + action);
+        switch (action) {
+            case "delete" -> org.mockito.Mockito.doThrow(error).when(offerService).deleteDraftOfferByHr(1);
+            case "send" -> when(offerService.sendOfferToCandidate(1)).thenThrow(error);
+            case "approve" -> when(offerService.approveOfferByDirector(eq(1), any())).thenThrow(error);
+            case "reject" -> when(offerService.rejectOfferByDirector(eq(1), any())).thenThrow(error);
+        }
+        mvc.perform(request.with(csrf()).with(user(director ? "director_user" : "hr_specialist").roles(director ? "DIRECTOR" : "HR"))
+                        .accept(MediaType.APPLICATION_JSON).contentType(MediaType.APPLICATION_JSON).content("{\"comments\":\"Reason\"}"))
+                .andExpect(status().is(expected)).andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value("Business feedback"));
+    }
+
+    @Test
+    @WithMockUser(username = "hr_specialist", roles = "HR")
+    void editBusinessErrorKeepsEnteredFormAndDraftContext() throws Exception {
+        when(offerService.updateOfferByHr(eq(1), any())).thenThrow(
+                new com.group2.rms.offer.exception.OfferValidationException("Business feedback"));
+        when(offerService.getOfferDetailForHr(1)).thenReturn(OfferDetailResponse.builder().offerId(1).offerStatus("Draft").build());
+        mvc.perform(validSalaryForm("/offers/1/edit", "20000000", "18000000"))
+                .andExpect(status().isOk()).andExpect(view().name("offers/form"))
+                .andExpect(model().attributeHasErrors("offerDto")).andExpect(model().attribute("isEdit", true))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Business feedback")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Entered salary test")));
+    }
+
+    @ParameterizedTest
     @CsvSource({"approve,500", "reject,500", "approve,501", "reject,501", "approve,2000", "reject,2000", "approve,2001", "reject,2001"})
     @WithMockUser(username = "director_user", roles = "DIRECTOR")
     void directorCommentBoundariesMatchBackendLimit(String action, int length) throws Exception {
@@ -740,7 +803,7 @@ class OfferIntegrationTests {
 
     @Test
     @WithMockUser(username = "hr_specialist", roles = {"HR"})
-    void unexpectedCreateErrorDoesNotExposeTechnicalDetailsAndPreservesTheForm() throws Exception {
+    void unexpectedCreateErrorReturns500WithoutExposingTechnicalDetails() throws Exception {
         when(offerService.createOfferByHr(any())).thenThrow(new IllegalStateException("SQL_INTERNAL_DETAILS"));
         when(offerService.getPassedCandidatesForOffer()).thenReturn(List.of());
         mvc.perform(post("/offers/create").with(csrf())
@@ -750,14 +813,12 @@ class OfferIntegrationTests {
                         .param("probationDays", "60").param("responsePeriodDays", "5")
                         .param("workLocation", "Hà Nội")
                         .param("expectedStartDate", LocalDate.now().plusDays(14).toString()))
-                .andExpect(status().isOk()).andExpect(view().name("offers/form"))
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("Vui lòng thử lại hoặc liên hệ bộ phận hỗ trợ.")))
-                .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("SQL_INTERNAL_DETAILS"))))
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("Java Dev")));
+                .andExpect(status().isInternalServerError()).andExpect(view().name("error/500"))
+                .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("SQL_INTERNAL_DETAILS"))));
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"validation", "business", "technical"})
+    @ValueSource(strings = {"validation", "business"})
     @WithMockUser(username = "hr_specialist", roles = {"HR"})
     void createErrorsKeepTheLockedCandidateAndEnteredData(String errorKind) throws Exception {
         var candidate = com.group2.rms.offer.dto.PassedCandidateResponse.builder()
@@ -765,10 +826,8 @@ class OfferIntegrationTests {
                 .departmentName("IT").finalDecision("Passed").build();
         when(offerService.getPassedCandidatesForOffer()).thenReturn(List.of(candidate));
         if (!"validation".equals(errorKind)) {
-            RuntimeException error = "business".equals(errorKind)
-                    ? new com.group2.rms.offer.exception.OfferValidationException("Hồ sơ đã được cập nhật.")
-                    : new IllegalStateException("INTERNAL_FAILURE");
-            when(offerService.createOfferByHr(any())).thenThrow(error);
+            when(offerService.createOfferByHr(any())).thenThrow(
+                    new com.group2.rms.offer.exception.OfferValidationException("Hồ sơ đã được cập nhật."));
         }
         mvc.perform(post("/offers/create").with(csrf())
                         .contentType(MediaType.APPLICATION_FORM_URLENCODED)

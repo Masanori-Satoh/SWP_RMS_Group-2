@@ -114,6 +114,14 @@ Kiểm tra thực tế phát hiện dữ liệu demo đã được nạp vào da
 - Thêm 10 trường hợp MockMvc: duyệt/từ chối với 500, 501, 2000 ký tự được chuyển nguyên vẹn tới service; 2001 bị Bean Validation chặn trước service; hai trang render maxlength và bộ đếm thống nhất. Các test service hiện có tiếp tục chặn 2001 nếu gọi trực tiếp.
 - Hồi quy đạt **367/367 Java Offer và 23/23 Node**, log `phase3-director-comments.log` / `phase3-frontend.log` trong scratch/offer-search-upgrade-20261110. Không ghi database, không thay module khác; không kết luận E2E trình duyệt hoặc toàn bộ test dự án. Giữ cảnh báo coverage Notification cũ như các phase trước.
 
+### 2.11. Rà soát cuối — Phase 4: xử lý exception đúng tầng
+
+- OfferController chỉ bắt OfferValidationException; CandidateOfferController chỉ bắt OfferResponseException. Bỏ catch Exception/BaseBusinessException ở controller để ResourceNotFoundException/AccessDeniedException/lỗi hệ thống tới GlobalExceptionHandler, trả đúng 404/403/500 thay vì chuyển thành form HTTP 200, redirect hoặc 500 sai loại.
+- Lỗi nhập liệu/nghiệp vụ vẫn giữ form và nội dung đã nhập; JSON nghiệp vụ giữ ApiResponse 400 và 409 khi quyết định cũ. Không sửa core handler; với lỗi không thể tiếp tục, AJAX nhận trang lỗi theo cơ chế chung và helper hiện tại xử lý mã HTTP, không cố đọc HTML thành JSON.
+- Giữ catch bảo vệ tác vụ email/thông báo sau commit trong service; lỗi tác vụ phụ không đổi kết quả nghiệp vụ đã lưu. Không thay quyền, trạng thái, endpoint, dữ liệu hoặc module khác.
+- Kiểm thử đạt **379/379 Java Offer, 25/25 Node**. Ma trận lỗi mô phỏng kiểm tra 9 đường nội bộ và 3 đường Candidate cho từng mã 403/404/500, không có flash thành công và không lộ thông tin kỹ thuật; kiểm tra riêng JSON nghiệp vụ 400/409 và giữ form tạo/sửa. Các GET HTML bị cấm vẫn theo cơ chế điều hướng chung, ma trận GET dùng Accept JSON để xác minh mã lỗi gốc.
+- Log `phase4-exception-handling.log` / `phase4-frontend.log` trong scratch/offer-search-upgrade-20261110. Test dùng service mock hoặc unit test, không phải E2E database; không ghi DB. Giữ cảnh báo JaCoCo Notification cũ.
+
 ## 3. Các commit công việc mới
 
 | Commit | Nội dung | Diff riêng commit |
