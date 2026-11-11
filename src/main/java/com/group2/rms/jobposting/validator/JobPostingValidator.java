@@ -142,13 +142,13 @@ public class JobPostingValidator {
             errors.put("salaryMode", "Vui lòng chọn cách hiển thị mức lương.");
         } else if (JobPostingRequest.SALARY_CUSTOM.equals(request.getSalaryMode())) {
             requireText(errors, "salaryCustom", request.getSalaryCustom(), SALARY_TEXT_LIMIT,
-                    "Nhập mức lương hiển thị hoặc chọn một lựa chọn khác.");
+                    "Vui lòng nhập khoảng lương hiển thị.");
         }
 
         // Rule: bật "Hiển thị số lượng tuyển" thì phải có nội dung
         if (Boolean.TRUE.equals(request.getShowPositions())) {
             requireText(errors, "numberOfPositionsDisplay", request.getNumberOfPositionsDisplay(), POSITIONS_TEXT_LIMIT,
-                    "Nhập số lượng hiển thị hoặc tắt hiển thị số lượng.");
+                    "Vui lòng nhập số lượng.");
         }
 
         validateDeadline(errors, request, publishing, now);

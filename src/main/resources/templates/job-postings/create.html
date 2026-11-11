@@ -28,7 +28,8 @@
                 <div class="jpf-source-meta">
                     <span class="jpf-code" th:text="*{requisitionCode}">REQ-0020</span>
                     <span th:text="*{departmentName}">Sales &amp; Marketing</span>
-                    <span th:if="*{numberOfPositions != null}" th:text="|Cần *{numberOfPositions} người|">Cần 2 người</span>
+                    <span th:if="*{numberOfPositions != null}" th:text="|Cần *{numberOfPositions} người|">Cần 2
+                        người</span>
                     <span th:text="|Người tạo: *{hiringManagerName}|">Người tạo: Đỗ Thu Hương</span>
                     <span class="jpf-pno" th:text="|Đợt tuyển dụng *{recruitmentRound}|">Đợt tuyển dụng 1</span>
                 </div>
@@ -49,8 +50,8 @@
 
         <form id="posting-form" class="jpf-form" method="post" th:object="${form}" novalidate
             th:action="${isEdit} ? @{/internal/job-postings/{id}/edit(id=*{jobPostingId})} : @{/internal/job-postings/create}"
-            th:data-today="${today}" th:data-salary-range="*{salaryRangeLabel}"
-            th:data-department="*{departmentName}" th:data-draft="${draftOrNew}">
+            th:data-today="${today}" th:data-salary-range="*{salaryRangeLabel}" th:data-department="*{departmentName}"
+            th:data-draft="${draftOrNew}">
             <input type="hidden" th:field="*{jobPostingId}">
             <input type="hidden" th:field="*{requisitionId}">
 
@@ -98,11 +99,12 @@
                                     <span class="jpf-from" data-from="employmentType"
                                         th:data-source="*{sourceEmploymentType}"></span>
                                 </div>
-                                <select class="form-select" th:field="*{employmentType}" aria-describedby="employmentType-error">
+                                <select class="form-select" th:field="*{employmentType}"
+                                    aria-describedby="employmentType-error">
                                     <option value="Full-time">Toàn thời gian</option>
                                     <option value="Part-time">Bán thời gian</option>
                                     <option value="Internship">Thực tập</option>
-                                    <option value="Contract">Hợp đồng</option>
+                                    <option value="Contract">Tự do</option>
                                 </select>
                                 <small id="employmentType-error" class="field-error"
                                     th:text="${#fields.hasErrors('employmentType')} ? ${#fields.errors('employmentType')[0]} : ''"></small>
@@ -134,14 +136,15 @@
                                 <select class="form-select" id="probationChoice"
                                     th:with="p=*{probationPeriod}, presets=${ {'6 ngày làm việc','15 ngày','30 ngày'} },
                                              other=${p != null and !#strings.isEmpty(p) and !#lists.contains(presets, p)}">
-                                    <option value="" th:selected="${p == null or #strings.isEmpty(p)}">Không thử việc</option>
+                                    <option value="" th:selected="${p == null or #strings.isEmpty(p)}">Không thử việc
+                                    </option>
                                     <option th:each="preset : ${presets}" th:value="${preset}" th:text="${preset}"
                                         th:selected="${preset == p}">15 ngày</option>
                                     <option value="__other__" th:selected="${other}">Khác</option>
                                 </select>
                                 <input class="form-input" th:field="*{probationPeriod}" th:maxlength="${probationLimit}"
-                                    placeholder="Nhập thời gian thử việc (VD: 2 tháng)" aria-label="Thời gian thử việc khác"
-                                    aria-describedby="probationPeriod-error">
+                                    placeholder="Nhập thời gian thử việc (VD: 2 tháng)"
+                                    aria-label="Thời gian thử việc khác" aria-describedby="probationPeriod-error">
                                 <small id="probationPeriod-error" class="field-error"
                                     th:text="${#fields.hasErrors('probationPeriod')} ? ${#fields.errors('probationPeriod')[0]} : ''"></small>
                             </div>
@@ -159,53 +162,53 @@
                             </div>
                         </div>
 
-                        <fieldset class="jpf-field" id="salaryMode-group">
-                            <legend class="form-label">Mức lương hiển thị</legend>
-                            <div class="jpf-choice">
-                                <label><input type="radio" th:field="*{salaryMode}" value="range">
-                                    <span><b>Theo yêu cầu</b><span class="jpf-help" th:text="*{salaryRangeLabel}">20 –
-                                            30 triệu VND/tháng</span></span></label>
-                                <label><input type="radio" th:field="*{salaryMode}" value="nego">
-                                    <span><b>Thỏa thuận</b><span class="jpf-help">Không công khai con
-                                            số</span></span></label>
-                                <label><input type="radio" th:field="*{salaryMode}" value="custom">
-                                    <span><b>Tự nhập</b>
-                                        <input class="form-input" th:field="*{salaryCustom}"
-                                            th:maxlength="${salaryTextLimit}"
-                                            placeholder="Nhập mức lương hiển thị"
-                                            aria-label="Mức lương tự nhập"></span></label>
-                            </div>
-                            <small id="salaryMode-error" class="field-error"
-                                th:text="${#fields.hasErrors('salaryMode')} ? ${#fields.errors('salaryMode')[0]} : ''"></small>
-                            <small id="salaryCustom-error" class="field-error"
-                                th:text="${#fields.hasErrors('salaryCustom')} ? ${#fields.errors('salaryCustom')[0]} : ''"></small>
-                        </fieldset>
 
-                        <!-- Số lượng và Hạn nộp nằm cùng 1 hàng (màn hẹp tự xuống dòng) -->
+
+                        <!-- Số lượng và Thời hạn ứng tuyển nằm cùng 1 hàng (màn hẹp tự xuống dòng) -->
                         <div class="jpf-pair jpf-pair--positions-deadline">
                             <div class="jpf-field">
-                                <div class="jpf-lblrow"><label class="jpf-toggle"><input type="checkbox"
-                                            th:field="*{showPositions}"><i aria-hidden="true"></i>Hiển thị số lượng
-                                        tuyển</label>
+                                <!-- Luôn hiển thị số lượng (bỏ nút bật/tắt); tin cũ đang tắt thì điền lại từ yêu cầu. -->
+                                <input type="hidden" name="showPositions" value="true">
+                                <div class="jpf-lblrow"><label class="form-label" for="numberOfPositionsDisplay">Số
+                                        lượng <span class="required-asterisk">*</span></label>
                                     <span class="jpf-from" data-from="numberOfPositionsDisplay"
                                         th:data-source="*{sourcePositionsDisplay}"></span>
                                 </div>
-                                <input class="form-input jpf-short" th:field="*{numberOfPositionsDisplay}"
-                                    th:maxlength="${positionsTextLimit}" aria-label="Số lượng hiển thị"
-                                    placeholder="Nhập số lượng tuyển"
-                                    aria-describedby="numberOfPositionsDisplay-help numberOfPositionsDisplay-error">
+                                <input class="form-input jpf-short" id="numberOfPositionsDisplay"
+                                    name="numberOfPositionsDisplay"
+                                    th:value="*{numberOfPositionsDisplay} ?: *{sourcePositionsDisplay}"
+                                    th:maxlength="${positionsTextLimit}" placeholder="Nhập số lượng tuyển"
+                                    aria-describedby="numberOfPositionsDisplay-error">
 
                                 <small id="numberOfPositionsDisplay-error" class="field-error"
                                     th:text="${#fields.hasErrors('numberOfPositionsDisplay')} ? ${#fields.errors('numberOfPositionsDisplay')[0]} : ''"></small>
                             </div>
                             <div class="jpf-field">
-                                <label class="form-label" for="applicationDeadline">Hạn nộp <span
+                                <label class="form-label" for="applicationDeadline">Thời hạn ứng tuyển <span
                                         class="required-asterisk">*</span></label>
                                 <input class="form-input jpf-short" type="date" th:field="*{applicationDeadline}"
                                     th:min="${today}" aria-describedby="applicationDeadline-error">
                                 <small id="applicationDeadline-error" class="field-error"
                                     th:text="${#fields.hasErrors('applicationDeadline')} ? ${#fields.errors('applicationDeadline')[0]} : ''"></small>
                             </div>
+                        </div>
+
+                        <!-- Một ô chữ duy nhất; luôn gửi salaryMode=custom. Điền sẵn khoảng lương của yêu cầu (hoặc "Thỏa thuận"). -->
+                        <div class="jpf-field" id="salaryMode-group">
+                            <input type="hidden" name="salaryMode" value="custom">
+                            <div class="jpf-lblrow"><label class="form-label" for="salaryCustom">Khoảng lương hiển thị
+                                    <span class="required-asterisk">*</span></label>
+                                <span class="jpf-from" data-from="salaryCustom"
+                                    th:data-source="*{salaryRangeLabel}"></span>
+                            </div>
+                            <input class="form-input" id="salaryCustom" name="salaryCustom"
+                                th:value="*{salaryMode == 'range' ? salaryRangeLabel : (salaryMode == 'nego' ? 'Thỏa thuận' : salaryCustom)}"
+                                th:maxlength="${salaryTextLimit}" placeholder="Ví dụ: 12 - 18 triệu VND/tháng"
+                                aria-describedby="salaryCustom-error">
+                            <small id="salaryMode-error" class="field-error"
+                                th:text="${#fields.hasErrors('salaryMode')} ? ${#fields.errors('salaryMode')[0]} : ''"></small>
+                            <small id="salaryCustom-error" class="field-error"
+                                th:text="${#fields.hasErrors('salaryCustom')} ? ${#fields.errors('salaryCustom')[0]} : ''"></small>
                         </div>
                     </section>
 
@@ -261,23 +264,8 @@
                                     th:data-source="*{sourceWorkLocation}"></span>
                             </div>
                             <input class="form-input" th:field="*{workLocation}" th:maxlength="${locationLimit}"
-                                placeholder="Nhập địa điểm làm việc"
-                                th:disabled="*{workModel == 'Remote'}"
+                                placeholder="Nhập địa điểm làm việc" th:disabled="*{workModel == 'Remote'}"
                                 aria-describedby="workLocation-help workLocation-error">
-                            <!-- Bản đồ thu gọn (D3): chỉ bung ra khi bấm "Xem bản đồ"; job-posting-form.js chỉ tải Google Maps khi đang mở -->
-                            <details class="jpf-map-toggle" id="jpf-map-toggle">
-                                <summary class="jpf-map-summary">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                                        aria-hidden="true">
-                                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                                        <circle cx="12" cy="10" r="3" />
-                                    </svg>
-                                    <span class="jpf-map-show">Xem bản đồ</span><span class="jpf-map-hide">Ẩn bản
-                                        đồ</span>
-                                </summary>
-                                <div class="jpf-map" id="jpf-map"></div>
-                            </details>
                             <small id="workLocation-error" class="field-error"
                                 th:text="${#fields.hasErrors('workLocation')} ? ${#fields.errors('workLocation')[0]} : ''"></small>
                         </div>

@@ -36,7 +36,6 @@
         return isoDate(new Date(y, m - 1, d + days));
     };
     const today = form.dataset.today || isoDate(new Date());
-    const radioValue = name => form.querySelector(`input[name="${name}"]:checked`)?.value || '';
     const isRemote = () => $('workModel').value === 'Remote';
 
     // Đổi yêu cầu nguồn: chọn xong thì mở lại form với yêu cầu đó
@@ -95,70 +94,24 @@
     });
 
     /* ---------------------------------------------------------------------
-     * 3. BẢN ĐỒ: thu gọn mặc định; bấm "Xem bản đồ" mới nhúng Google Maps theo địa chỉ
-     *    (cần mạng) + link mở Google Maps làm dự phòng
+     * 3. ĐỊA ĐIỂM: làm việc từ xa thì khóa ô địa điểm
      * --------------------------------------------------------------------- */
-    const mapToggle = $('jpf-map-toggle');
     function syncWorkLocation() {
         const remote = isRemote();
         $('workLocation').disabled = remote;
         if (remote) {
             $('workLocation').value = '';
-            mapToggle.open = false;
-            lastMapAddress = null;
-            $('jpf-map').replaceChildren();
             showError('workLocation', '');
         }
-        mapToggle.hidden = remote;
     }
-    const mapsLink = address => 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(address);
-    const mapsEmbed = address => 'https://www.google.com/maps?q=' + encodeURIComponent(address) + '&output=embed';
-    function mapHtml(address) {
-        if (!address) {
-            return '<p class="jpf-map-empty">Nhập địa chỉ để xem bản đồ</p>';
-        }
-        return `<iframe title="Bản đồ ${escapeHtml(address)}" src="${mapsEmbed(address)}" loading="lazy"
-                    referrerpolicy="no-referrer-when-downgrade"></iframe>
-                <a class="jpf-map-link" href="${mapsLink(address)}" target="_blank" rel="noopener">Mở Google Maps ↗</a>`;
-    }
-    let mapTimer = null;
-    let lastMapAddress = null;
-    function renderMap() {
-        // Khung bản đồ đang thu gọn thì không tải Google Maps
-        if (!mapToggle.open) return;
-        const address = isRemote() ? '' : $('workLocation').value.trim();
-        if (address === lastMapAddress) return;
-        lastMapAddress = address;
-        $('jpf-map').innerHTML = mapHtml(address);
-    }
-    // Bung khung thì tải bản đồ theo địa chỉ hiện tại
-    mapToggle.addEventListener('toggle', renderMap);
-    // Đợi người dùng ngừng gõ 0,8 giây mới tải lại bản đồ (tránh gọi Google Maps mỗi phím)
-    $('workLocation').addEventListener('input', () => {
-        clearTimeout(mapTimer);
-        mapTimer = setTimeout(renderMap, 800);
-    });
 
     /* ---------------------------------------------------------------------
      * 4. LƯƠNG, SỐ LƯỢNG, QUYỀN LỢI
      * --------------------------------------------------------------------- */
-    // Bấm vào ô "Tự nhập" thì tự chọn lựa chọn "Tự nhập"
-    $('salaryCustom').addEventListener('focus', () => {
-        form.querySelector('input[name="salaryMode"][value="custom"]').checked = true;
-        refresh();
-    });
     function salaryText() {
-        const mode = radioValue('salaryMode');
-        if (mode === 'range') return form.dataset.salaryRange || 'Thỏa thuận';
-        if (mode === 'custom') return $('salaryCustom').value.trim();
-        return 'Thỏa thuận';
+        return $('salaryCustom').value.trim();
     }
 
-    const showPositions = $('showPositions1') || form.querySelector('input[type="checkbox"][name="showPositions"]');
-    function syncPositions() {
-        $('numberOfPositionsDisplay').disabled = !showPositions.checked;
-    }
-    showPositions.addEventListener('change', syncPositions);
 
     // Nút "+ quyền lợi": thêm một dòng vào ô Quyền lợi; nút của quyền lợi đã có thì mờ đi
     const benefitBox = $('benefits');
@@ -198,8 +151,8 @@
         // Nhãn đang chọn ở ô Hình thức / Mô hình (HR đổi được), cộng phòng ban của yêu cầu
         const selectedLabel = id => $(id).selectedOptions[0]?.textContent.trim();
         const tags = [selectedLabel('employmentType'), selectedLabel('workModel'), form.dataset.department].filter(Boolean);
-        const facts = [['Mức lương', salaryText() || '—'], ['Hạn nộp', deadline.value ? viDate(deadline.value) : '—']];
-        if (showPositions.checked && $('numberOfPositionsDisplay').value.trim()) {
+        const facts = [['Mức lương', salaryText() || '—'], ['Thời hạn ứng tuyển', deadline.value ? viDate(deadline.value) : '—']];
+        if ($('numberOfPositionsDisplay').value.trim()) {
             facts.push(['Số lượng', $('numberOfPositionsDisplay').value.trim()]);
         }
         const probation = $('probationPeriod').value.trim();
@@ -208,7 +161,7 @@
         if (gender) facts.push(['Yêu cầu giới tính', gender]);
         const workingHours = $('workingHours').value.trim();
         // Mục "Địa điểm và thời gian" giống trang /jobs/{id}: chỉ hiện dòng nào HR đã nhập
-        const placeTime = (address ? `<h5>Địa điểm làm việc</h5><a href="${mapsLink(address)}" target="_blank" rel="noopener">${escapeHtml(address)} ↗</a>` : '')
+        const placeTime = (address ? `<h5>Địa điểm làm việc</h5><p>${escapeHtml(address)}</p>` : '')
             + (workingHours ? `<h5>Thời gian làm việc</h5><p>${escapeHtml(workingHours)}</p>` : '');
 
         $('jpf-preview').innerHTML = `
@@ -260,11 +213,10 @@
             return empty ? 'Vui lòng nhập yêu cầu ứng viên.' : '';
         }
         if (field === 'salaryCustom') {
-            return radioValue('salaryMode') === 'custom' && empty
-                ? 'Nhập mức lương hiển thị hoặc chọn một lựa chọn khác.' : '';
+            return empty ? 'Vui lòng nhập khoảng lương hiển thị.' : '';
         }
         if (field === 'numberOfPositionsDisplay') {
-            return showPositions.checked && empty ? 'Nhập số lượng hiển thị hoặc tắt hiển thị số lượng.' : '';
+            return empty ? 'Vui lòng nhập số lượng.' : '';
         }
         // Còn lại: hạn nộp hồ sơ
         if (empty) {
@@ -348,8 +300,6 @@
 
     form.dataset.tab = 'edit';
     syncProbationChoice();
-    syncPositions();
-    renderMap();
     refresh();
     $('jpf-summary')?.focus();
 })();

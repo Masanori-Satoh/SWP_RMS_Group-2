@@ -226,8 +226,8 @@ class JobPostingValidatorTests {
 
             Map<String, String> errors = errorsOf(form, true);
 
-            assertEquals("Nhập mức lương hiển thị hoặc chọn một lựa chọn khác.", errors.get("salaryCustom"));
-            assertEquals("Nhập số lượng hiển thị hoặc tắt hiển thị số lượng.", errors.get("numberOfPositionsDisplay"));
+            assertEquals("Vui lòng nhập khoảng lương hiển thị.", errors.get("salaryCustom"));
+            assertEquals("Vui lòng nhập số lượng.", errors.get("numberOfPositionsDisplay"));
         }
 
         @ParameterizedTest(name = "salaryMode = [{0}] -> lỗi")

@@ -38,39 +38,6 @@
 .jp-form-page .jpf-short { max-width:240px; }
 .jp-form-page .is-invalid { border-color:var(--error); }
 
-/* Bản đồ: thu gọn mặc định, bấm "Xem bản đồ" mới bung khung */
-.jp-form-page .jpf-map-summary { display:inline-flex; align-items:center; gap:var(--s1); color:var(--brand-dark);
-    font-size:var(--font-sm); font-weight:700; list-style:none; cursor:pointer; }
-.jp-form-page .jpf-map-summary::-webkit-details-marker { display:none; }
-.jp-form-page .jpf-map-summary:hover { text-decoration:underline; }
-.jp-form-page .jpf-map-summary:focus-visible { outline:2px solid var(--focus); outline-offset:2px; border-radius:var(--radius-sm); }
-.jp-form-page .jpf-map-toggle .jpf-map-hide,
-.jp-form-page .jpf-map-toggle[open] .jpf-map-show { display:none; }
-.jp-form-page .jpf-map-toggle[open] .jpf-map-hide { display:inline; }
-.jp-form-page .jpf-map-toggle[open] .jpf-map { margin-top:var(--s2); }
-.jp-form-page .jpf-map { position:relative; overflow:hidden; min-height:64px; border:1px solid var(--line); border-radius:var(--radius-md); background:var(--surface-subtle); }
-.jp-form-page .jpf-map iframe { display:block; width:100%; height:200px; border:0; }
-.jp-form-page .jpf-map-empty { margin:0; padding:var(--s4); color:var(--muted); font-size:var(--font-sm); text-align:center; }
-.jp-form-page .jpf-map-link { position:absolute; right:var(--s2); bottom:var(--s2); padding:var(--s1) var(--s3); border-radius:var(--radius-md);
-    background:var(--surface); box-shadow:var(--shadow-sm); color:var(--brand-dark); font-size:var(--font-sm); font-weight:700; text-decoration:none; }
-
-/* Lựa chọn dạng thẻ (lương, ngày đăng) */
-.jp-form-page .jpf-choice { display:grid; gap:var(--s2); }
-.jp-form-page .jpf-choice > label { display:flex; gap:var(--s3); align-items:flex-start; padding:var(--s3); border:1px solid var(--line); border-radius:var(--radius-md); cursor:pointer; }
-.jp-form-page .jpf-choice > label:has(input[type="radio"]:checked) { border-color:var(--brand); background:var(--brand-soft); }
-.jp-form-page .jpf-choice > label > span { display:grid; gap:var(--s1); flex:1; min-width:0; }
-.jp-form-page .jpf-choice input[type="radio"] { margin-top:3px; accent-color:var(--brand); }
-
-/* Công tắc "Hiển thị số lượng tuyển" */
-.jp-form-page .jpf-toggle { display:inline-flex; align-items:center; gap:var(--s2); width:max-content; font-weight:600; cursor:pointer; }
-.jp-form-page .jpf-toggle input { position:absolute; opacity:0; }
-.jp-form-page .jpf-toggle i { position:relative; width:36px; height:20px; border-radius:var(--radius-full); background:var(--control-line); transition:background .15s; }
-.jp-form-page .jpf-toggle i::after { content:""; position:absolute; top:2px; left:2px; width:16px; height:16px; border-radius:50%; background:var(--surface); transition:left .15s; }
-/* Dùng ~ thay vì +: th:field chèn một <input type="hidden" name="_showPositions"> ngay sau checkbox */
-.jp-form-page .jpf-toggle input:checked ~ i { background:var(--brand); }
-.jp-form-page .jpf-toggle input:checked ~ i::after { left:18px; }
-.jp-form-page .jpf-toggle input:focus-visible ~ i { outline:3px solid var(--focus); outline-offset:2px; }
-
 /* Nút thêm nhanh quyền lợi */
 .jp-form-page .jpf-chips { display:flex; flex-wrap:wrap; gap:var(--s2); }
 .jp-form-page .jpf-chips button { padding:var(--s1) var(--s3); border:1px dashed var(--brand); border-radius:var(--radius-full); background:var(--surface);

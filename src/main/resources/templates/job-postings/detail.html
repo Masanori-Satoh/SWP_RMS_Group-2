@@ -130,23 +130,6 @@
                         <b th:text="${p.workLocation}">Tầng 8, RMS Tower</b>
                         <span class="jpd-muted" th:text="${p.workModelLabel}">Kết hợp</span>
                     </div>
-                    <!-- Bản đồ thu gọn: chỉ bung ra khi bấm "Xem bản đồ" (<details> tự mở/đóng).
-                         iframe để trống src, job-posting-detail.js gán src khi mở lần đầu => chưa bấm thì chưa tải Google Maps. -->
-                    <details class="jpd-map-toggle">
-                        <summary class="jpd-map-summary">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
-                            </svg>
-                            <span class="jpd-map-show">Xem bản đồ</span><span class="jpd-map-hide">Ẩn bản đồ</span>
-                        </summary>
-                        <div class="jpd-map">
-                            <iframe th:data-src="|https://www.google.com/maps?q=${#uris.escapeQueryParam(p.workLocation)}&output=embed|"
-                                    th:title="|Bản đồ ${p.workLocation}|" referrerpolicy="no-referrer-when-downgrade"></iframe>
-                            <a class="jpd-map-link" target="_blank" rel="noopener"
-                               th:href="|https://www.google.com/maps/search/?api=1&query=${#uris.escapeQueryParam(p.workLocation)}|">Mở Google Maps ↗</a>
-                        </div>
-                    </details>
                     </th:block>
                     <th:block th:unless="${#strings.isEmpty(p.workingHours)}">
                     <h3>Thời gian làm việc</h3>
