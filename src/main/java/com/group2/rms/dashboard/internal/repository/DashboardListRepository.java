@@ -160,6 +160,29 @@ public class DashboardListRepository {
 
     // ===== HR =====
 
+    /** Tin nháp chưa đăng; tin đang đăng đã tuyển đủ người hoặc đã qua hạn nộp (hệ thống không tự đóng tin). */
+    public List<PostingActionRow> postingsNeedingAction(LocalDateTime now) {
+        String hiredCount = "(select count(a) from Application a where a.jobPosting = j and a.applicationStatus = :hired)";
+        List<Object[]> rows = entityManager.createQuery("select j.jobPostingId, j.postingTitle, j.postingStatus, "
+                        + "j.applicationDeadline, coalesce(j.updatedAt, j.createdAt), " + hiredCount + ", "
+                        + "r.numberOfPositions from JobPosting j join j.requisition r "
+                        + "where j.postingStatus = :draft or (j.postingStatus = :published "
+                        + "and (j.applicationDeadline < :now or " + hiredCount + " >= r.numberOfPositions)) "
+                        + "order by j.jobPostingId asc", Object[].class)
+                .setParameter("hired", "Hired")
+                .setParameter("draft", JobPostingAccess.STATUS_DRAFT)
+                .setParameter("published", JobPostingAccess.STATUS_PUBLISHED)
+                .setParameter("now", now)
+                .getResultList();
+        List<PostingActionRow> result = new ArrayList<>();
+        for (Object[] row : rows) {
+            result.add(new PostingActionRow((Integer) row[0], (String) row[1], (String) row[2],
+                    (LocalDateTime) row[3], (LocalDateTime) row[4], ((Number) row[5]).longValue(),
+                    (Integer) row[6]));
+        }
+        return result;
+    }
+
     /** Yêu cầu đã duyệt nhưng chưa có tin nháp / đang đăng / tạm dừng: HR cần tạo tin. Chờ lâu nhất lên đầu. */
     public List<AwaitingPostingRow> requisitionsAwaitingPosting() {
         List<Object[]> rows = entityManager.createQuery("select r.requisitionId, r.requisitionCode, r.title, "
@@ -300,6 +323,11 @@ public class DashboardListRepository {
 
     public record AwaitingPostingRow(int requisitionId, String requisitionCode, String title,
             LocalDateTime waitingSince) {
+    }
+
+    /** Tin HR cần xử lý: nháp chưa đăng, hoặc đang đăng mà đã tuyển đủ / đã quá hạn nộp. */
+    public record PostingActionRow(int jobPostingId, String title, String postingStatus,
+            LocalDateTime applicationDeadline, LocalDateTime lastChanged, long hired, Integer numberOfPositions) {
     }
 
     public record PendingRequisitionRow(int requisitionId, String requisitionCode, String title,

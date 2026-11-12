@@ -30,7 +30,6 @@
 .dash-kpi__delta { font-size: var(--font-sm); font-weight: 700; font-variant-numeric: tabular-nums; color: var(--muted); }
 .dash-kpi__delta--success { color: var(--success); }
 .dash-kpi__delta--danger { color: var(--error); }
-.dash-kpi__detail { color: var(--muted); font-size: var(--font-sm); }
 .dash-kpi__action { position: absolute; top: var(--s4); right: var(--s4); display: grid; place-items: center; color: var(--brand); }
 
 /* Khối nội dung */

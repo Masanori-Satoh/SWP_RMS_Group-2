@@ -79,18 +79,18 @@ public class InterviewerDashboardService {
 
         return List.of(
                 DashboardMetricResponse.backlog("calendarDays", "Buổi phỏng vấn sắp tới", upcoming, "Trong 7 ngày tới",
-                        DashboardViews.INTERVIEWS_HREF, "neutral"),
+                        DashboardViews.INTERVIEWS_UPCOMING_HREF, "neutral"),
                 DashboardMetricResponse.backlog("clipboardCheck", "Đánh giá chưa hoàn thành", evaluationRows.size(),
-                        "Đang chờ đánh giá", DashboardViews.INTERVIEWS_HREF, "neutral"),
+                        "Đang chờ đánh giá", DashboardViews.INTERVIEWS_PENDING_EVALUATION_HREF, "neutral"),
                 DashboardMetricResponse.backlog("userCheck", "Ứng viên đạt phỏng vấn", passedThisMonth,
-                        "Trong tháng này", DashboardViews.INTERVIEWS_HREF, "neutral"));
+                        "Trong tháng này", DashboardViews.INTERVIEWS_PASSED_HREF, "neutral"));
     }
 
     private List<EvaluationItem> evaluations(List<EvaluationRow> rows) {
         List<EvaluationItem> items = new ArrayList<>();
         for (EvaluationRow row : rows) {
             items.add(new EvaluationItem(DashboardViews.candidateName(row.candidateName()), row.positionTitle(),
-                    row.endTime(), DashboardViews.INTERVIEWS_HREF));
+                    row.endTime(), DashboardViews.interviewResultHref(row.interviewId())));
         }
         return items;
     }

@@ -98,7 +98,7 @@ public class HiringManagerDashboardService {
                 DashboardMetricResponse.backlog("megaphone", "Yêu cầu đã đăng tuyển", posted,
                         "Đã được HR đăng tin", "/internal/job-postings?status=Published", "neutral"),
                 DashboardMetricResponse.backlog("calendarDays", "Buổi phỏng vấn sắp tới", interviews,
-                        "Trong " + INTERVIEW_WINDOW_DAYS + " ngày tới", "/interviews", "neutral"));
+                        "Trong " + INTERVIEW_WINDOW_DAYS + " ngày tới", DashboardViews.INTERVIEWS_UPCOMING_HREF, "neutral"));
     }
 
     /** Việc HM tự làm được, đã xếp sẵn: bị từ chối trước, bản nháp sau. */
@@ -112,7 +112,7 @@ public class HiringManagerDashboardService {
 
     private DashboardWorkItem workItem(AttentionRow row) {
         String status = row.approvalStatus();
-        String title = RequisitionLabels.requisitionCode(row.requisitionId(), row.requisitionCode()) + " · " + row.title();
+        String title = row.title();
         String tag = RequisitionLabels.approvalStatus(status);
         String tagTone = RequisitionLabels.approvalTone(status);
 

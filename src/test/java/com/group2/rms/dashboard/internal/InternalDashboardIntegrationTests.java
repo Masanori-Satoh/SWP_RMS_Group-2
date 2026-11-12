@@ -190,6 +190,30 @@ class InternalDashboardIntegrationTests {
     }
 
     @Test
+    @DisplayName("HR: tin nháp và tin đang đăng đã quá hạn nộp cần xử lý; tin đang đăng còn hạn thì không")
+    void postingsNeedingAction_shouldIncludeDraftAndOverdue() {
+        // Arrange
+        JobPosting draft = savePosting(saveRequisition("Tin nháp kiểm thử", RequisitionAccess.STATUS_APPROVED, 1, null), null);
+        draft.setPostingStatus(JobPostingAccess.STATUS_DRAFT);
+        postings.saveAndFlush(draft);
+        JobPosting overdue = savePosting(saveRequisition("Quá hạn kiểm thử", RequisitionAccess.STATUS_APPROVED, 1, null),
+                now.minusDays(20));
+        overdue.setApplicationDeadline(now.minusDays(2));
+        postings.saveAndFlush(overdue);
+        JobPosting open = savePosting(saveRequisition("Còn hạn kiểm thử", RequisitionAccess.STATUS_APPROVED, 1, null),
+                now.minusDays(1));
+        entityManager.clear();
+
+        // Act
+        List<DashboardListRepository.PostingActionRow> rows = lists.postingsNeedingAction(now);
+
+        // Assert
+        assertTrue(rows.stream().anyMatch(row -> row.jobPostingId() == draft.getJobPostingId()));
+        assertTrue(rows.stream().anyMatch(row -> row.jobPostingId() == overdue.getJobPostingId()));
+        assertFalse(rows.stream().anyMatch(row -> row.jobPostingId() == open.getJobPostingId()));
+    }
+
+    @Test
     @DisplayName("Mọi câu đếm / danh sách còn lại chạy được trên SQL Server (không lỗi JPQL, không số âm)")
     void remainingQueries_shouldRunOnSqlServer() {
         // Arrange

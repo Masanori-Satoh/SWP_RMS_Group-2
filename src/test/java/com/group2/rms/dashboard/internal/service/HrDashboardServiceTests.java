@@ -10,6 +10,7 @@ import com.group2.rms.dashboard.internal.dto.DashboardWorkItem;
 import com.group2.rms.dashboard.internal.dto.HrDashboardResponse;
 import com.group2.rms.dashboard.internal.repository.DashboardListRepository;
 import com.group2.rms.dashboard.internal.repository.DashboardListRepository.AwaitingPostingRow;
+import com.group2.rms.dashboard.internal.repository.DashboardListRepository.PostingActionRow;
 import com.group2.rms.dashboard.internal.repository.InternalMetricsRepository;
 import com.group2.rms.user.entity.Role;
 import com.group2.rms.user.entity.User;
@@ -97,7 +98,7 @@ class HrDashboardServiceTests {
     }
 
     @Test
-    @DisplayName("Việc cần xử lý: chỉ hồ sơ HR cầm bóng + yêu cầu chưa có tin, chờ lâu nhất lên đầu; chỉ 'Tạo tin' là nút chính")
+    @DisplayName("Việc cần xử lý: 'Tạo tin' luôn đứng đầu, sau đó hồ sơ HR cầm bóng chờ lâu nhất lên đầu; chỉ 'Tạo tin' là nút chính")
     void build_shouldSortHrWorkByWaitDays_whenApplicationsAndRequisitionsWaiting() {
         // Arrange
         application(1, ApplicationStage.SCREENING, HrDashboardService.HR_OWNER, 2);
@@ -111,13 +112,40 @@ class HrDashboardServiceTests {
 
         // Assert
         assertEquals(3, work.size());
-        assertEquals("/applications/3", work.get(0).href());
-        assertEquals("5 ngày", work.get(0).waitText());
-        assertEquals("/internal/job-postings/create?requisitionId=40", work.get(1).href());
-        assertEquals("Tạo tin", work.get(1).actionLabel());
-        assertTrue(work.get(1).primary());
+        assertEquals("/internal/job-postings/create?requisitionId=40", work.get(0).href());
+        assertEquals("Tạo tin", work.get(0).actionLabel());
+        assertTrue(work.get(0).primary());
+        assertEquals("/applications/3", work.get(1).href());
+        assertEquals("5 ngày", work.get(1).waitText());
+        assertFalse(work.get(1).primary());
         assertEquals("/applications/1", work.get(2).href());
         assertFalse(work.get(2).primary());
+    }
+
+    @Test
+    @DisplayName("Việc về tin: nháp -> Đăng tin, đã tuyển đủ -> Đóng tin, quá hạn nộp -> Xử lý; đứng trước hồ sơ")
+    void build_shouldListPostingActions_whenPostingsNeedHr() {
+        // Arrange
+        application(1, ApplicationStage.SCREENING, HrDashboardService.HR_OWNER, 30);
+        when(lists.postingsNeedingAction(NOW)).thenReturn(List.of(
+                new PostingActionRow(7, "Tin nháp", "Draft", null, NOW.minusDays(1), 0, 2),
+                new PostingActionRow(8, "Tin đủ người", "Published", NOW.plusDays(5), NOW.minusDays(3), 2, 2),
+                new PostingActionRow(9, "Tin quá hạn", "Published", NOW.minusDays(6), NOW.minusDays(9), 0, 2)));
+
+        // Act
+        List<DashboardWorkItem> work = build().work();
+
+        // Assert
+        assertEquals(4, work.size());
+        assertEquals("/internal/job-postings/9", work.get(0).href());
+        assertEquals("Xử lý", work.get(0).actionLabel());
+        assertTrue(work.get(0).detail().startsWith("Đã quá hạn nộp"));
+        assertEquals("6 ngày", work.get(0).waitText());
+        assertEquals("Đóng tin", work.get(1).actionLabel());
+        assertEquals("Đã tuyển đủ 2/2 người, cần đóng tin", work.get(1).detail());
+        assertEquals("Đăng tin", work.get(2).actionLabel());
+        assertTrue(work.get(2).primary());
+        assertEquals("/applications/1", work.get(3).href());
     }
 
     @Test

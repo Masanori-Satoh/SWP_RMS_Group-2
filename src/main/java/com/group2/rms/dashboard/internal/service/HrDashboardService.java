@@ -11,6 +11,8 @@ import com.group2.rms.dashboard.internal.dto.HrDashboardResponse;
 import com.group2.rms.dashboard.internal.dto.WeeklyApplicationItem;
 import com.group2.rms.dashboard.internal.repository.DashboardListRepository;
 import com.group2.rms.dashboard.internal.repository.DashboardListRepository.AwaitingPostingRow;
+import com.group2.rms.dashboard.internal.repository.DashboardListRepository.PostingActionRow;
+import com.group2.rms.jobposting.service.JobPostingAccess;
 import com.group2.rms.dashboard.internal.repository.InternalMetricsRepository;
 import com.group2.rms.requisition.service.RequisitionLabels;
 import com.group2.rms.user.entity.User;
@@ -48,6 +50,7 @@ public class HrDashboardService {
     static final List<ApplicationStage> WAITING_STAGES = List.of(
             ApplicationStage.APPLIED, ApplicationStage.SCREENING, ApplicationStage.INTERVIEW, ApplicationStage.OFFER);
 
+    private static final DateTimeFormatter DEADLINE_FORMAT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     private static final DateTimeFormatter WEEK_LABEL = DateTimeFormatter.ofPattern("dd/MM");
 
     private final InternalMetricsRepository metrics;
@@ -102,25 +105,35 @@ public class HrDashboardService {
                         "Chưa xếp lịch", "/applications?stage=" + ApplicationStage.INTERVIEW.name(), "neutral"));
     }
 
-    /** Việc HR phải làm: hồ sơ HR đang cầm bóng + yêu cầu đã duyệt chưa có tin. Chờ lâu nhất lên đầu. */
+    /**
+     * Việc HR phải làm: việc về tin tuyển dụng (tạo tin, đăng tin nháp, đóng tin đã đủ người / quá hạn) luôn đứng đầu (chưa có tin thì không có hồ sơ nào
+     * vào, và nếu xếp chung theo ngày chờ sẽ bị hồ sơ cũ đẩy khỏi 5 dòng đầu); sau đó là hồ sơ HR đang cầm bóng.
+     * Trong mỗi nhóm, chờ lâu nhất lên đầu.
+     */
     private List<DashboardWorkItem> workQueue(OwnerWorkloadResponse workload,
             Map<Integer, LocalDateTime> waitingSince, LocalDateTime now) {
-        List<WaitingWork> waiting = new ArrayList<>();
+        List<WaitingWork> postingQueue = new ArrayList<>();
+        for (AwaitingPostingRow row : lists.requisitionsAwaitingPosting()) {
+            long days = DashboardLabels.waitDays(row.waitingSince(), now);
+            postingQueue.add(new WaitingWork(days, postingWork(row, days)));
+        }
+        for (PostingActionRow row : lists.postingsNeedingAction(now)) {
+            postingQueue.add(postingActionWork(row, now));
+        }
+        List<WaitingWork> applicationQueue = new ArrayList<>();
         for (ApplicationStage stage : WAITING_STAGES) {
             for (ApplicationPipelineResponse row : workload.owned(stage)) {
                 long days = DashboardLabels.waitDays(waitingSince.get(row.applicationId()), now);
-                waiting.add(new WaitingWork(days, applicationWork(stage, row, days)));
+                applicationQueue.add(new WaitingWork(days, applicationWork(stage, row, days)));
             }
         }
-        for (AwaitingPostingRow row : lists.requisitionsAwaitingPosting()) {
-            long days = DashboardLabels.waitDays(row.waitingSince(), now);
-            waiting.add(new WaitingWork(days, postingWork(row, days)));
-        }
-        waiting.sort(Comparator.comparingLong(WaitingWork::days).reversed());
 
         List<DashboardWorkItem> items = new ArrayList<>();
-        for (WaitingWork work : waiting) {
-            items.add(work.item());
+        for (List<WaitingWork> queue : List.of(postingQueue, applicationQueue)) {
+            queue.sort(Comparator.comparingLong(WaitingWork::days).reversed());
+            for (WaitingWork work : queue) {
+                items.add(work.item());
+            }
         }
         return items;
     }
@@ -133,10 +146,31 @@ public class HrDashboardService {
     }
 
     private DashboardWorkItem postingWork(AwaitingPostingRow row, long days) {
-        String code = RequisitionLabels.requisitionCode(row.requisitionId(), row.requisitionCode());
-        return new DashboardWorkItem("Yêu cầu", "success", code + " · " + row.title(),
+        return new DashboardWorkItem("Yêu cầu", "success", row.title(),
                 "Đã duyệt, chưa có tin tuyển dụng", DashboardLabels.waitText(days), DashboardLabels.waitTone(days),
                 "Tạo tin", "/internal/job-postings/create?requisitionId=" + row.requisitionId(), true);
+    }
+
+    /** Tin nháp -> "Đăng tin"; tin đang đăng đã tuyển đủ -> đóng tin; quá hạn nộp -> đóng hoặc gia hạn. */
+    private WaitingWork postingActionWork(PostingActionRow row, LocalDateTime now) {
+        String href = "/internal/job-postings/" + row.jobPostingId();
+        if (JobPostingAccess.STATUS_DRAFT.equals(row.postingStatus())) {
+            long days = DashboardLabels.waitDays(row.lastChanged(), now);
+            return new WaitingWork(days, new DashboardWorkItem("Tin nháp", "neutral", row.title(),
+                    "Tin chưa đăng, ứng viên chưa thấy", DashboardLabels.waitText(days),
+                    DashboardLabels.waitTone(days), "Đăng tin", href, true));
+        }
+        boolean filled = row.numberOfPositions() != null && row.hired() >= row.numberOfPositions();
+        if (filled) {
+            long days = DashboardLabels.waitDays(row.lastChanged(), now);
+            return new WaitingWork(days, new DashboardWorkItem("Tin tuyển dụng", "success", row.title(),
+                    "Đã tuyển đủ " + row.hired() + "/" + row.numberOfPositions() + " người, cần đóng tin",
+                    DashboardLabels.waitText(days), DashboardLabels.waitTone(days), "Đóng tin", href, false));
+        }
+        long days = DashboardLabels.waitDays(row.applicationDeadline(), now);
+        return new WaitingWork(days, new DashboardWorkItem("Tin tuyển dụng", "warning", row.title(),
+                "Đã quá hạn nộp " + row.applicationDeadline().format(DEADLINE_FORMAT) + ", cần đóng hoặc gia hạn",
+                DashboardLabels.waitText(days), DashboardLabels.waitTone(days), "Xử lý", href, false));
     }
 
     private List<DashboardInterviewItem> upcomingInterviews(LocalDateTime now) {

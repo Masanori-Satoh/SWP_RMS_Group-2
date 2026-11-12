@@ -94,7 +94,7 @@ class HiringManagerDashboardServiceTests {
             assertEquals("/requisitions?status=" + RequisitionAccess.STATUS_PENDING_DIRECTOR, kpis.get(0).href());
             assertEquals("/internal/job-postings?status=Published", kpis.get(1).href());
             assertEquals("Trong 7 ngày tới", kpis.get(2).detail());
-            assertEquals("/interviews", kpis.get(2).href());
+            assertEquals("/interviews?period=upcoming", kpis.get(2).href());
         }
 
         @Test
@@ -195,10 +195,10 @@ class HiringManagerDashboardServiceTests {
             List<DashboardWorkItem> work = service.build(hiringManager(DEPARTMENT_ID)).needsAttention();
 
             // Assert
-            assertEquals("REQ-0005 · DevOps", work.get(0).title());
+            assertEquals("DevOps", work.get(0).title());
             assertEquals("Thiếu ngân sách", work.get(0).detail());
             assertEquals("Chỉnh sửa", work.get(0).actionLabel());
-            assertEquals("REQ-0006 · QA", work.get(1).title());
+            assertEquals("QA", work.get(1).title());
             assertNull(work.get(1).detail());
             assertEquals("Gửi duyệt", work.get(1).actionLabel());
         }

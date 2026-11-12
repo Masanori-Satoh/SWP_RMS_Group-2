@@ -15,8 +15,22 @@ import java.util.List;
  */
 public final class DashboardViews {
 
-    /** Link của mọi dòng lịch phỏng vấn: hệ thống chưa có trang chi tiết lịch (D7). */
+    /** Trang lịch phỏng vấn; tham số URL do js/interview-list.js đọc để đặt sẵn bộ lọc. */
     public static final String INTERVIEWS_HREF = "/interviews";
+    public static final String INTERVIEWS_UPCOMING_HREF = INTERVIEWS_HREF + "?period=upcoming";
+    /** Khớp KPI "Đánh giá chưa hoàn thành" (chỉ đếm buổi Completed): lọc thêm status để không lẫn buổi quá giờ chưa đóng. */
+    public static final String INTERVIEWS_PENDING_EVALUATION_HREF = INTERVIEWS_HREF + "?status=Completed&evaluation=pending";
+    public static final String INTERVIEWS_PASSED_HREF = INTERVIEWS_HREF + "?period=all&result=PASSED";
+
+    /** Mở lịch đúng ngày của buổi và cuộn tới thẻ của buổi đó (chưa có trang chi tiết lịch, D7). */
+    public static String interviewHref(InterviewRow row) {
+        return INTERVIEWS_HREF + "?date=" + row.startTime().toLocalDate() + "&focus=" + row.interviewId();
+    }
+
+    /** Trang kết quả & phiếu đánh giá của một buổi. */
+    public static String interviewResultHref(long interviewId) {
+        return INTERVIEWS_HREF + "/" + interviewId + "/result";
+    }
 
     private DashboardViews() {
         // Chỉ chứa hàm static, không tạo đối tượng
@@ -55,7 +69,7 @@ public final class DashboardViews {
                 (int) row.panelSize(),
                 stateLabel,
                 stateTone,
-                INTERVIEWS_HREF,
+                interviewHref(row),
                 finished);
     }
 
