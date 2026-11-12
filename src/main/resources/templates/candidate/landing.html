@@ -132,7 +132,7 @@
               </div>
               <div class="lp-job-meta-item" th:if="${job.applicationDeadline != null}">
                 <svg class="lp-icon" aria-hidden="true"><use href="#i-calendar"/></svg>
-                <span>Hạn nộp: <strong
+                <span>Hạn ứng tuyển: <strong
                     th:text="${#temporals.format(job.applicationDeadline, 'dd/MM/yyyy')}">31/12/2026</strong></span>
               </div>
             </div>

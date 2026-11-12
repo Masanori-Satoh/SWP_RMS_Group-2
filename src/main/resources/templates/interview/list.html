@@ -136,7 +136,10 @@
     <div th:unless="${#lists.isEmpty(schedules)}" class="il-grid">
         <article class="card il-card adw-surface" th:each="s : ${schedules}"
                  th:data-id="${s.interviewId}"
+                 th:id="|interview-${s.interviewId}|"
                  th:data-date="${#temporals.format(s.startTime, 'yyyy-MM-dd')}"
+                 th:data-start="${#temporals.format(s.startTime, 'yyyy-MM-dd''T''HH:mm')}"
+                 th:data-evaluation="${evaluationStates[s.interviewId] != null ? evaluationStates[s.interviewId].code() : ''}"
                  th:data-job="${s.jobPostingTitle != null ? s.jobPostingTitle : ''}"
                  th:data-candidate="${s.candidateFullName != null ? s.candidateFullName : ''}"
                  th:data-candidate-email="${s.candidateEmail != null ? s.candidateEmail : ''}"

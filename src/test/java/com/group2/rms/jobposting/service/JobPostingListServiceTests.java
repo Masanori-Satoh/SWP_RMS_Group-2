@@ -278,7 +278,7 @@ class JobPostingListServiceTests {
         JobPostingListResponse list = service.getListPage(raw, userWithRole(RequisitionAccess.ROLE_HR));
 
         List<String> labels = list.chips().stream().map(FilterChip::label).toList();
-        assertEquals(List.of("Trạng thái: Đang đăng", "Hạn nộp: Còn hạn", "Sắp xếp: Nhiều hồ sơ nhất"), labels);
+        assertEquals(List.of("Trạng thái: Đang đăng", "Hạn ứng tuyển: Còn hạn", "Sắp xếp: Nhiều hồ sơ nhất"), labels);
         ArgumentCaptor<Pageable> pageable = ArgumentCaptor.forClass(Pageable.class);
         verify(postings).findAll(any(Specification.class), pageable.capture());
         assertTrue(pageable.getValue().getSort().isUnsorted(), "Sắp theo số hồ sơ nằm trong Specification, không dùng Sort");

@@ -11,14 +11,6 @@
 .jp-form-page .jpf-lead { margin:0 0 var(--s4); max-width:75ch; color:var(--muted); }
 .jp-form-page .jpf-k { color:var(--muted); font-size:var(--font-xs); font-weight:700; text-transform:uppercase; letter-spacing:.04em; }
 
-/* ----- 2. Thẻ yêu cầu nguồn ----- */
-.jp-form-page .jpf-source { display:flex; flex-wrap:wrap; justify-content:space-between; gap:var(--s3) var(--s6); margin-bottom:var(--s4);
-    padding:var(--s4) var(--s5, 20px); border-left:4px solid var(--brand); }
-.jp-form-page .jpf-source-main { display:grid; gap:var(--s1); min-width:0; flex:1 1 360px; }
-.jp-form-page .jpf-source-meta { display:flex; flex-wrap:wrap; gap:var(--s1) var(--s3); color:var(--muted); font-size:var(--font-sm); }
-.jp-form-page .jpf-code { padding:0 var(--s2); border:1px solid var(--line); border-radius:var(--radius-sm); font-family:ui-monospace, Consolas, monospace; font-size:var(--font-xs); }
-.jp-form-page .jpf-pno { color:var(--brand-dark); font-weight:700; }
-.jp-form-page .jpf-switch { display:grid; gap:var(--s1); align-content:start; min-width:min(320px, 100%); }
 
 /* ----- 3. Bố cục: soạn tin (trái) + xem trước (phải) ----- */
 .jp-form-page .jpf-layout { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,380px); gap:var(--s4); align-items:start; }
@@ -37,6 +29,9 @@
 .jp-form-page .form-textarea { resize:vertical; overflow-wrap:anywhere; }
 .jp-form-page .jpf-short { max-width:240px; }
 .jp-form-page .is-invalid { border-color:var(--error); }
+/* Câu lỗi dưới ô: cùng kiểu với form yêu cầu tuyển dụng (requisition-shared.css) */
+.jp-form-page .field-error { display:block; color:var(--error); font-size:14px; margin-top:var(--s1); overflow-wrap:anywhere; }
+.jp-form-page .field-error:empty { display:none; }
 
 /* Nút thêm nhanh quyền lợi */
 .jp-form-page .jpf-chips { display:flex; flex-wrap:wrap; gap:var(--s2); }

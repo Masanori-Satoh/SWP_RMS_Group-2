@@ -359,8 +359,6 @@ public class JobPostingServiceImpl implements JobPostingService {
                 .total(total)
                 .last7Days(postings.countApplicationsSince(postingId, now.minusDays(RECENT_WINDOW_DAYS)))
                 .pending(byStatus.getOrDefault(APPLICATION_APPLIED, 0L))
-                // dunglt bổ sung: thay thẻ "Đạt ngưỡng AI" bằng "Qua vòng CV" (gỡ AI, 01/11)
-                .passedCvRound(applications.countPastCvRoundByJobPosting(postingId))
                 .interviewing(byStatus.getOrDefault(APPLICATION_INTERVIEWING, 0L))
                 .hired(byStatus.getOrDefault(APPLICATION_HIRED, 0L))
                 .recent(recentApplications(postingId))

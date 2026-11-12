@@ -194,3 +194,22 @@
     margin-bottom: 0.75rem;
     color: #94a3b8;
 }
+
+.notif-title,
+.notif-content {
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 600px) {
+    .notif-container { padding: 1rem 0; }
+    .notif-page-header h1 { font-size: 1.4rem; }
+    .notif-actions,
+    .notif-actions form,
+    .notif-actions .btn-read-all { width: 100%; justify-content: center; }
+    .notif-card { padding: 1rem; }
+    .notif-card-header { flex-wrap: wrap; gap: 0.5rem; }
+    .notif-badge-group { flex-wrap: wrap; }
+    .notif-footer { flex-wrap: wrap; }
+    .notif-footer form { flex: 1 1 140px; }
+    .notif-footer .btn { width: 100%; justify-content: center; }
+}

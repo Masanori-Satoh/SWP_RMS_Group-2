@@ -8,7 +8,7 @@ import org.springframework.data.domain.Sort;
 public enum JobPostingSort {
     NEWEST("newest", "Mới đăng nhất",
             Sort.by(Sort.Order.desc("postingDate"), Sort.Order.desc("createdAt"), Sort.Order.desc("jobPostingId"))),
-    DEADLINE("deadline", "Hạn nộp gần nhất",
+    DEADLINE("deadline", "Hạn ứng tuyển gần nhất",
             Sort.by(Sort.Order.asc("applicationDeadline"), Sort.Order.desc("jobPostingId"))),
     MOST_APPLICATIONS("apps", "Nhiều hồ sơ nhất", Sort.unsorted()),
     TITLE("title", "Tiêu đề A–Z",

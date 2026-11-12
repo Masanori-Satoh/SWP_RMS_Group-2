@@ -21,32 +21,6 @@
         </h1>
         <p class="jpf-lead">Nội dung được điền sẵn từ yêu cầu tuyển dụng đã duyệt</p>
 
-        <!-- ===== Yêu cầu nguồn (chỉ đọc, chỉ thông tin nội bộ; phần ứng viên thấy nằm ở form bên dưới) ===== -->
-        <section class="card jpf-source adw-surface" aria-label="Yêu cầu tuyển dụng nguồn" th:object="${form}">
-            <div class="jpf-source-main">
-                <span class="jpf-k">Tạo từ yêu cầu đã duyệt</span>
-                <div class="jpf-source-meta">
-                    <span class="jpf-code" th:text="*{requisitionCode}">REQ-0020</span>
-                    <span th:text="*{departmentName}">Sales &amp; Marketing</span>
-                    <span th:if="*{numberOfPositions != null}" th:text="|Cần *{numberOfPositions} người|">Cần 2
-                        người</span>
-                    <span th:text="|Người tạo: *{hiringManagerName}|">Người tạo: Đỗ Thu Hương</span>
-                    <span class="jpf-pno" th:text="|Đợt tuyển dụng *{recruitmentRound}|">Đợt tuyển dụng 1</span>
-                </div>
-            </div>
-            <!-- Đổi yêu cầu: chỉ khi tạo mới. Form GET riêng, chọn xong thì mở lại form với yêu cầu khác. -->
-            <form class="jpf-switch" th:if="${!isEdit and #lists.size(requisitionChoices) > 1}" method="get"
-                th:action="@{/internal/job-postings/create}">
-                <label class="jpf-k" for="requisition-switch">Đổi yêu cầu</label>
-                <select class="form-select" id="requisition-switch" name="requisitionId" data-auto-submit>
-                    <option th:each="choice : ${requisitionChoices}" th:value="${choice.value}"
-                        th:text="${choice.label}"
-                        th:selected="${choice.value == #strings.toString(form.requisitionId)}">Business Analyst ·
-                        REQ-0019</option>
-                </select>
-                <noscript><button class="btn btn--secondary btn--sm" type="submit">Đổi</button></noscript>
-            </form>
-        </section>
 
         <form id="posting-form" class="jpf-form" method="post" th:object="${form}" novalidate
             th:action="${isEdit} ? @{/internal/job-postings/{id}/edit(id=*{jobPostingId})} : @{/internal/job-postings/create}"
@@ -94,7 +68,7 @@
                         <!-- Hình thức và Mô hình: điền sẵn từ yêu cầu, HR đổi được cho riêng tin này -->
                         <div class="jpf-pair">
                             <div class="jpf-field">
-                                <div class="jpf-lblrow"><label class="form-label" for="employmentType">Hình thức <span
+                                <div class="jpf-lblrow"><label class="form-label" for="employmentType">Hình thức làm việc <span
                                             class="required-asterisk">*</span></label>
                                     <span class="jpf-from" data-from="employmentType"
                                         th:data-source="*{sourceEmploymentType}"></span>
@@ -110,7 +84,7 @@
                                     th:text="${#fields.hasErrors('employmentType')} ? ${#fields.errors('employmentType')[0]} : ''"></small>
                             </div>
                             <div class="jpf-field">
-                                <div class="jpf-lblrow"><label class="form-label" for="workModel">Mô hình <span
+                                <div class="jpf-lblrow"><label class="form-label" for="workModel">Mô hình làm việc <span
                                             class="required-asterisk">*</span></label>
                                     <span class="jpf-from" data-from="workModel"
                                         th:data-source="*{sourceWorkModel}"></span>
@@ -164,13 +138,13 @@
 
 
 
-                        <!-- Số lượng và Thời hạn ứng tuyển nằm cùng 1 hàng (màn hẹp tự xuống dòng) -->
+                        <!-- Số lượng và Hạn ứng tuyển nằm cùng 1 hàng (màn hẹp tự xuống dòng) -->
                         <div class="jpf-pair jpf-pair--positions-deadline">
                             <div class="jpf-field">
                                 <!-- Luôn hiển thị số lượng (bỏ nút bật/tắt); tin cũ đang tắt thì điền lại từ yêu cầu. -->
                                 <input type="hidden" name="showPositions" value="true">
-                                <div class="jpf-lblrow"><label class="form-label" for="numberOfPositionsDisplay">Số
-                                        lượng <span class="required-asterisk">*</span></label>
+                                <div class="jpf-lblrow"><label class="form-label" for="numberOfPositionsDisplay">Số lượng cần
+                                        tuyển <span class="required-asterisk">*</span></label>
                                     <span class="jpf-from" data-from="numberOfPositionsDisplay"
                                         th:data-source="*{sourcePositionsDisplay}"></span>
                                 </div>
@@ -184,7 +158,7 @@
                                     th:text="${#fields.hasErrors('numberOfPositionsDisplay')} ? ${#fields.errors('numberOfPositionsDisplay')[0]} : ''"></small>
                             </div>
                             <div class="jpf-field">
-                                <label class="form-label" for="applicationDeadline">Thời hạn ứng tuyển <span
+                                <label class="form-label" for="applicationDeadline">Hạn ứng tuyển <span
                                         class="required-asterisk">*</span></label>
                                 <input class="form-input jpf-short" type="date" th:field="*{applicationDeadline}"
                                     th:min="${today}" aria-describedby="applicationDeadline-error">

@@ -157,7 +157,6 @@ public class JobPostingMapper {
                         .totalApplications(stats.total())
                         .applicationsLast7Days(stats.last7Days())
                         .pendingApplications(stats.pending())
-                        .passedCvRoundApplications(stats.passedCvRound())
                         .interviewingApplications(stats.interviewing())
                         .hiredApplications(stats.hired())
                         .recentApplications(stats.recent())

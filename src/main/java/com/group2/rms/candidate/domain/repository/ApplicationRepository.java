@@ -75,18 +75,6 @@ public interface ApplicationRepository extends JpaRepository<Application, Intege
         boolean existsByJobPosting_JobPostingId(Integer jobPostingId);
 
         /**
-         * Số đơn chính thức của tin đã qua vòng CV: HR từng cho Đạt (kể cả đơn bị loại ở bước sau), hoặc đang ở
-         * bước sau vòng CV (đơn đi đường talent pool lên thẳng {@code HM_Passed}, không có lượt HR).
-         */
-        @Query("SELECT COUNT(a) FROM Application a WHERE a.jobPosting.jobPostingId = :jobPostingId AND "
-                        + FORMAL_FILTER + """
-                         AND (a.applicationStatus IN ('HR_Passed', 'HM_Passed', 'Interviewing', 'Offered', 'Hired')
-                              OR EXISTS (SELECT r.reviewId FROM ApplicationReview r WHERE r.application = a
-                                         AND r.reviewerRole = 'HR' AND r.decision = 'Pass'))
-                        """)
-        long countPastCvRoundByJobPosting(@Param("jobPostingId") Integer jobPostingId);
-
-        /**
          * Đổi trạng thái khi duyệt, chỉ khi đơn còn ở một trong các trạng thái
          * {@code from}
          * (người khác vừa xử lý thì không đè). Tự gán {@code updatedAt} vì câu update

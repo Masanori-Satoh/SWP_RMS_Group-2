@@ -261,7 +261,7 @@ public class JobPostingListService {
                     List.of("creatorId")));
         }
         if (filter.deadline() != null) {
-            chips.add(new FilterChip("Hạn nộp: " + JobPostingLabels.deadlineFilterLabel(filter.deadline()),
+            chips.add(new FilterChip("Hạn ứng tuyển: " + JobPostingLabels.deadlineFilterLabel(filter.deadline()),
                     List.of("deadline")));
         }
         if (filter.postedFrom() != null || filter.postedTo() != null) {

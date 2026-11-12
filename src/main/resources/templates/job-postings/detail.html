@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org"
-      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-      layout:decorate="~{layout/internal}">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layout/internal}">
+
 <head>
     <title th:text="${posting.postingTitle}">Chi tiết tin tuyển dụng</title>
     <th:block layout:fragment="styles">
@@ -10,209 +10,275 @@
         <link rel="stylesheet" th:href="@{/css/pages/flash-toast.css}">
     </th:block>
 </head>
+
 <body>
-<main id="main" layout:fragment="content" class="page-content container adw-page" tabindex="-1"
-      th:with="p=${posting}, applicationsUrl=@{/applications(jobPostingId=${posting.jobPostingId})}">
-    <th:block th:replace="~{fragments/ui/admin-workspace :: scene}"></th:block>
+    <main id="main" layout:fragment="content" class="page-content container adw-page" tabindex="-1"
+        th:with="p=${posting}, applicationsUrl=@{/applications(jobPostingId=${posting.jobPostingId})}">
+        <th:block th:replace="~{fragments/ui/admin-workspace :: scene}"></th:block>
 
-    <!-- Thông báo sau thao tác: khung nổi góc phải, tự tắt sau 3 giây (dùng chung với màn Yêu cầu) -->
-    <th:block th:replace="~{fragments/ui/flash-toast :: flashToast(${successMessage ?: message}, ${errorMessage})}"></th:block>
+        <!-- Thông báo sau thao tác: khung nổi góc phải, tự tắt sau 3 giây (dùng chung với màn Yêu cầu) -->
+        <th:block th:replace="~{fragments/ui/flash-toast :: flashToast(${successMessage ?: message}, ${errorMessage})}">
+        </th:block>
 
-    <!-- ===== 1. ĐẦU TRANG: tiêu đề + nút theo trạng thái ===== -->
-    <header class="jpd-head adw-heading">
-        <div class="jpd-title">
-            <h1 class="adw-title" th:text="${p.postingTitle}">Product Owner (SaaS)</h1>
-            <div class="jpd-meta">
-                <span class="badge" th:classappend="|badge--${p.statusTone}|" th:text="${p.postingStatusLabel}">Đang đăng</span>
-                <span class="jpd-pno" th:text="|Lần ${p.postingNo}|">Lần 2</span>
-                <span th:text="${p.departmentName}">Product &amp; Design</span>
-                <span aria-hidden="true">·</span>
-                <span th:text="${p.employmentType}">Toàn thời gian</span>
+        <!-- ===== 1. ĐẦU TRANG: tiêu đề + nút theo trạng thái ===== -->
+        <header class="jpd-head adw-heading">
+            <div class="jpd-title">
+                <h1 class="adw-title" th:text="${p.postingTitle}">Product Owner (SaaS)</h1>
+                <div class="jpd-meta">
+                    <span class="badge" th:classappend="|badge--${p.statusTone}|" th:text="${p.postingStatusLabel}">Đang
+                        đăng</span>
+                    <span class="jpd-pno" th:text="|Lần đăng ${p.postingNo}|">Lần đăng 2</span>
+                    <span th:text="|Phòng ${p.departmentName}|">Product &amp; Design</span>
+
+                </div>
             </div>
-        </div>
-        <!-- Nút ghi đều hỏi xác nhận trước (pages/job-posting-actions.js); server kiểm tra lại quyền + trạng thái -->
-        <div class="jpd-actions" role="group" aria-label="Thao tác với tin">
-            <a th:if="${p.publicViewable}" class="btn btn--secondary" th:href="@{/jobs/{id}(id=${p.jobPostingId})}"
-               target="_blank" rel="noopener">Xem trên trang tuyển dụng ↗</a>
-            <button th:if="${p.publishable}" class="btn btn--primary" type="button" data-jp-action
-                    th:data-url="@{/internal/job-postings/{id}/publish(id=${p.jobPostingId})}" th:data-title="${p.postingTitle}"
-                    data-heading="Đăng tin tuyển dụng?" data-message="Tin sẽ hiện trên trang tuyển dụng và ứng viên có thể nộp hồ sơ ngay."
+            <!-- Nút ghi đều hỏi xác nhận trước (pages/job-posting-actions.js); server kiểm tra lại quyền + trạng thái -->
+            <div class="jpd-actions" role="group" aria-label="Thao tác với tin">
+                <a th:if="${p.publicViewable}" class="btn btn--secondary" th:href="@{/jobs/{id}(id=${p.jobPostingId})}"
+                    target="_blank" rel="noopener">Xem trên trang tuyển dụng ↗</a>
+                <button th:if="${p.publishable}" class="btn btn--primary" type="button" data-jp-action
+                    th:data-url="@{/internal/job-postings/{id}/publish(id=${p.jobPostingId})}"
+                    th:data-title="${p.postingTitle}" data-heading="Đăng tin tuyển dụng?"
+                    data-message="Tin sẽ hiện trên trang tuyển dụng và ứng viên có thể nộp hồ sơ ngay."
                     data-confirm="Đăng tin">Đăng tin</button>
-            <button th:if="${p.reopenable}" class="btn btn--primary" type="button" data-jp-action
-                    th:data-url="@{/internal/job-postings/{id}/publish(id=${p.jobPostingId})}" th:data-title="${p.postingTitle}"
-                    data-heading="Mở lại nhận hồ sơ?" data-message="Tin sẽ hiện lại trên trang tuyển dụng."
-                    data-confirm="Mở lại">Mở lại</button>
-            <a th:if="${p.repostable}" class="btn btn--primary"
-               th:href="@{/internal/job-postings/create(fromPostingId=${p.jobPostingId})}">Đăng lại tin</a>
-            <a th:if="${p.editable}" class="btn btn--secondary" th:href="@{/internal/job-postings/{id}/edit(id=${p.jobPostingId})}">Chỉnh sửa</a>
-            <button th:if="${p.pausable}" class="btn btn--secondary" type="button" data-jp-action
-                    th:data-url="@{/internal/job-postings/{id}/pause(id=${p.jobPostingId})}" th:data-title="${p.postingTitle}"
-                    data-heading="Tạm dừng nhận hồ sơ?" data-message="Tin bị ẩn khỏi trang tuyển dụng. Hồ sơ đã nộp vẫn được xử lý bình thường."
+                <button th:if="${p.reopenable}" class="btn btn--primary" type="button" data-jp-action
+                    th:data-url="@{/internal/job-postings/{id}/publish(id=${p.jobPostingId})}"
+                    th:data-title="${p.postingTitle}" data-heading="Mở lại nhận hồ sơ?"
+                    data-message="Tin sẽ hiện lại trên trang tuyển dụng." data-confirm="Mở lại">Mở lại</button>
+                <a th:if="${p.repostable}" class="btn btn--primary"
+                    th:href="@{/internal/job-postings/create(fromPostingId=${p.jobPostingId})}">Đăng lại tin</a>
+                <a th:if="${p.editable}" class="btn btn--secondary"
+                    th:href="@{/internal/job-postings/{id}/edit(id=${p.jobPostingId})}">Chỉnh sửa</a>
+                <button th:if="${p.pausable}" class="btn btn--secondary" type="button" data-jp-action
+                    th:data-url="@{/internal/job-postings/{id}/pause(id=${p.jobPostingId})}"
+                    th:data-title="${p.postingTitle}" data-heading="Tạm dừng nhận hồ sơ?"
+                    data-message="Tin bị ẩn khỏi trang tuyển dụng. Hồ sơ đã nộp vẫn được xử lý bình thường."
                     data-confirm="Tạm dừng">Tạm dừng nhận hồ sơ</button>
-            <button th:if="${p.closable}" class="btn btn--danger" type="button" data-jp-action data-danger
-                    th:data-url="@{/internal/job-postings/{id}/close(id=${p.jobPostingId})}" th:data-title="${p.postingTitle}"
-                    data-heading="Đóng tin tuyển dụng?"
+                <button th:if="${p.closable}" class="btn btn--danger" type="button" data-jp-action data-danger
+                    th:data-url="@{/internal/job-postings/{id}/close(id=${p.jobPostingId})}"
+                    th:data-title="${p.postingTitle}" data-heading="Đóng tin tuyển dụng?"
                     data-message="Hồ sơ đang xử lý sẽ dừng, lịch chưa diễn ra được hủy. Hồ sơ đã nhận việc và thư mời đã chấp nhận được giữ lại. Hệ thống chặn đóng nếu còn thư mời chưa kết thúc."
                     data-confirm="Đóng tin">Đóng tin</button>
-            <button th:if="${p.deletable}" class="btn btn--danger" type="button" data-jp-action data-danger
-                    th:data-url="@{/internal/job-postings/delete/{id}(id=${p.jobPostingId})}" th:data-title="${p.postingTitle}"
-                    data-heading="Xóa bản nháp?" data-message="Bản nháp sẽ bị xóa và không thể hoàn tác."
-                    data-confirm="Xóa bản nháp">Xóa bản nháp</button>
+                <button th:if="${p.deletable}" class="btn btn--danger" type="button" data-jp-action data-danger
+                    th:data-url="@{/internal/job-postings/delete/{id}(id=${p.jobPostingId})}"
+                    th:data-title="${p.postingTitle}" data-heading="Xóa bản nháp?"
+                    data-message="Bản nháp sẽ bị xóa và không thể hoàn tác." data-confirm="Xóa bản nháp">Xóa bản
+                    nháp</button>
+            </div>
+        </header>
+
+        <!-- ===== 2. DẢI THÔNG BÁO THEO TRẠNG THÁI ===== -->
+        <div class="jpd-banner jpd-banner--muted" th:if="${p.draftBanner}" role="status">
+            <p><strong>Bản nháp, ứng viên chưa nhìn thấy.</strong> Kiểm tra nội dung rồi bấm "Đăng tin".</p>
         </div>
-    </header>
+        <div class="jpd-banner jpd-banner--warning" th:if="${p.pausedBanner}" role="status">
+            <p><strong>Đang tạm dừng nhận hồ sơ.</strong> Tin bị ẩn khỏi trang tuyển dụng. Hồ sơ đã nộp vẫn được xử lý
+                bình thường.</p>
+        </div>
+        <div class="jpd-banner jpd-banner--warning" role="status" th:if="${p.deadlineSoonBanner}">
+            <p><strong th:text="|Còn ${p.daysUntilDeadline} ngày là hết hạn nộp hồ sơ.|">Còn 7 ngày là hết hạn nộp hồ
+                    sơ.</strong>
+                <span th:if="${p.numberOfPositions != null}"
+                    th:text="|Đã tuyển ${p.hiredApplications}/${p.numberOfPositions} vị trí.|">Đã tuyển 0/1 vị
+                    trí.</span>
+                <span th:if="${p.canManage}">Cân nhắc gia hạn bằng cách sửa hạn nộp.</span>
+            </p>
+        </div>
+        <div class="jpd-banner jpd-banner--danger" role="status" th:if="${p.deadlinePassedBanner}">
+            <p><strong>Đã quá hạn nộp hồ sơ.</strong> Ứng viên không nộp thêm được.
+                <span th:if="${p.canManage}">Sửa hạn nộp để nhận thêm hồ sơ, hoặc đóng tin.</span>
+            </p>
+        </div>
 
-    <!-- ===== 2. DẢI THÔNG BÁO THEO TRẠNG THÁI ===== -->
-    <div class="jpd-banner jpd-banner--muted" th:if="${p.draftBanner}" role="status">
-        <p><strong>Bản nháp, ứng viên chưa nhìn thấy.</strong> Kiểm tra nội dung rồi bấm "Đăng tin".</p>
-    </div>
-    <div class="jpd-banner jpd-banner--warning" th:if="${p.pausedBanner}" role="status">
-        <p><strong>Đang tạm dừng nhận hồ sơ.</strong> Tin bị ẩn khỏi trang tuyển dụng. Hồ sơ đã nộp vẫn được xử lý bình thường.</p>
-    </div>
-    <div class="jpd-banner jpd-banner--warning" role="status"
-         th:if="${p.deadlineSoonBanner}">
-        <p><strong th:text="|Còn ${p.daysUntilDeadline} ngày là hết hạn nộp hồ sơ.|">Còn 7 ngày là hết hạn nộp hồ sơ.</strong>
-            <span th:if="${p.numberOfPositions != null}" th:text="|Đã tuyển ${p.hiredApplications}/${p.numberOfPositions} vị trí.|">Đã tuyển 0/1 vị trí.</span>
-            <span th:if="${p.canManage}">Cân nhắc gia hạn bằng cách sửa hạn nộp.</span></p>
-    </div>
-    <div class="jpd-banner jpd-banner--danger" role="status"
-         th:if="${p.deadlinePassedBanner}">
-        <p><strong>Đã quá hạn nộp hồ sơ.</strong> Ứng viên không nộp thêm được.
-            <span th:if="${p.canManage}">Sửa hạn nộp để nhận thêm hồ sơ, hoặc đóng tin.</span></p>
-    </div>
-
-    <!-- ===== 3. SỐ LIỆU HỒ SƠ (chỉ khi tin đã lên trang tuyển dụng) ===== -->
-    <section class="jpd-kpis" th:if="${p.live}" aria-label="Số liệu hồ sơ">
-        <div class="card jpd-kpi adw-surface"><span>Tổng hồ sơ</span><b th:text="${p.totalApplications}">14</b>
-            <small th:text="|+${p.applicationsLast7Days} trong 7 ngày|">+2 trong 7 ngày</small></div>
-        <div class="card jpd-kpi adw-surface"><span>Chờ xử lý</span><b th:text="${p.pendingApplications}">9</b>
-            <small>chờ HR sàng lọc</small></div>
-        <div class="card jpd-kpi adw-surface"><span>Qua vòng CV</span><b th:text="${p.passedCvRoundApplications}">7</b>
-            <small>HR đã cho đạt</small></div>
-        <div class="card jpd-kpi adw-surface"><span>Đang phỏng vấn</span><b th:text="${p.interviewingApplications}">2</b>
-            <small>đang trong vòng phỏng vấn</small></div>
-        <div class="card jpd-kpi jpd-kpi--goal adw-surface"><span>Đã tuyển</span>
-            <b><th:block th:text="${p.hiredApplications}">0</th:block> <small th:if="${p.numberOfPositions != null}" th:text="|/ ${p.numberOfPositions}|">/ 1</small></b>
-            <small th:text="|theo yêu cầu ${p.requisitionCode}|">theo yêu cầu REQ-0016</small></div>
-    </section>
-
-    <div class="jpd-layout">
-        <!-- ===== 4. CỘT CHÍNH: tab Nội dung tin / Ứng viên ===== -->
-        <section class="card jpd-main adw-surface" data-tabs>
-            <div class="jpd-tabs" role="tablist" aria-label="Nội dung tin và ứng viên">
-                <button type="button" role="tab" id="tab-content" aria-controls="panel-content" aria-selected="true" data-tab="content">Nội dung tin</button>
-                <button type="button" role="tab" id="tab-candidates" aria-controls="panel-candidates" aria-selected="false" data-tab="candidates">
-                    Ứng viên <span class="jpd-count" th:text="${p.totalApplications}">14</span></button>
-            </div>
-
-            <div id="panel-content" role="tabpanel" aria-labelledby="tab-content" data-panel="content">
-                <div class="jpd-sec">
-                    <dl class="jpd-facts">
-                        <div><dt>Mức lương</dt><dd th:text="${p.salaryDisplay}">35 – 45 triệu VND/tháng</dd></div>
-                        <div><dt>Số lượng</dt><dd>
-                            <span th:if="${p.numberOfPositionsDisplay != null}" th:text="${p.numberOfPositionsDisplay}">1 người</span>
-                            <span th:unless="${p.numberOfPositionsDisplay != null}" class="jpd-muted">Không hiển thị</span></dd></div>
-                        <div><dt>Hình thức</dt><dd th:text="|${p.employmentType} · ${p.workModelLabel}|">Toàn thời gian · Kết hợp</dd></div>
-                        <div><dt>Yêu cầu giới tính</dt><dd th:text="${p.genderLabel}">Không yêu cầu</dd></div>
-                        <div th:unless="${#strings.isEmpty(p.probationPeriod)}"><dt>Thử việc</dt><dd th:text="${p.probationPeriod}">2 tháng</dd></div>
-                        <div><dt>Hạn nộp</dt><dd th:text="${p.applicationDeadline != null ? #temporals.format(p.applicationDeadline, 'dd/MM/yyyy') : 'Chưa có'}">24/10/2026</dd></div>
-                    </dl>
-                </div>
-                <div class="jpd-sec"><h2>Mô tả công việc</h2><p class="jpd-prose" th:text="${p.jobDescription}">...</p></div>
-                <div class="jpd-sec"><h2>Yêu cầu ứng viên</h2><p class="jpd-prose" th:text="${p.jobRequirements}">...</p></div>
-                <div class="jpd-sec" th:if="${p.benefits != null and !#strings.isEmpty(p.benefits)}"><h2>Quyền lợi ứng viên</h2>
-                    <p class="jpd-prose" th:text="${p.benefits}">...</p></div>
-                <!-- Địa điểm và thời gian: cùng thứ tự với trang ứng viên /jobs/{id}, dòng nào trống thì ẩn -->
-                <div class="jpd-sec" th:if="${!#strings.isEmpty(p.workLocation) or !#strings.isEmpty(p.workingHours)}">
-                    <h2>Địa điểm và thời gian</h2>
-                    <th:block th:unless="${#strings.isEmpty(p.workLocation)}">
-                    <h3>Địa điểm làm việc</h3>
-                    <div class="jpd-loc">
-                        <b th:text="${p.workLocation}">Tầng 8, RMS Tower</b>
-                        <span class="jpd-muted" th:text="${p.workModelLabel}">Kết hợp</span>
-                    </div>
-                    </th:block>
-                    <th:block th:unless="${#strings.isEmpty(p.workingHours)}">
-                    <h3>Thời gian làm việc</h3>
-                    <p class="jpd-prose" th:text="${p.workingHours}">Thứ 2 - Thứ 6 (09:00 - 18:00)</p>
-                    </th:block>
-                </div>
-            </div>
-
-            <div id="panel-candidates" role="tabpanel" aria-labelledby="tab-candidates" data-panel="candidates" hidden>
-                <div class="jpd-sec" th:unless="${p.live}"><p class="jpd-empty">Chưa có hồ sơ vì tin chưa được đăng.</p></div>
-                <div class="jpd-sec" th:if="${p.live}">
-                    <div class="jpd-sec-head"><h2>Hồ sơ gần đây</h2>
-                        <a class="jpd-link" th:if="${p.totalApplications > 0}" th:href="${applicationsUrl}"
-                           th:text="|Xem tất cả ${p.totalApplications} hồ sơ →|">Xem tất cả 14 hồ sơ →</a></div>
-                    <p class="jpd-empty" th:if="${#lists.isEmpty(p.recentApplications)}">Chưa có hồ sơ nào.</p>
-                    <div class="table-wrapper" th:unless="${#lists.isEmpty(p.recentApplications)}" role="region"
-                         aria-label="Hồ sơ gần đây" tabindex="0">
-                        <table class="jpd-apps adw-data-table">
-                            <thead><tr><th scope="col">Ứng viên</th><th scope="col">Trạng thái</th><th scope="col">Ngày nộp</th></tr></thead>
-                            <tbody>
-                            <tr th:each="app : ${p.recentApplications}">
-                                <td><a th:href="@{/applications/{id}(id=${app.applicationId})}" th:text="${app.candidateName}">Trần Quốc Bảo</a></td>
-                                <td><span class="badge" th:classappend="${app.statusBadge}" th:text="${app.statusLabel}">Đang phỏng vấn</span></td>
-                                <td class="nowrap" th:text="${#temporals.format(app.submittedAt, 'dd/MM/yyyy')}">03/10/2026</td>
-                            </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
+        <!-- ===== 3. SỐ LIỆU HỒ SƠ (chỉ khi tin đã lên trang tuyển dụng) ===== -->
+        <section class="jpd-kpis" th:if="${p.live}" aria-label="Số liệu hồ sơ">
+            <a class="card jpd-kpi adw-surface" th:href="${applicationsUrl}"><span>Tổng hồ sơ</span><b
+                    th:text="${p.totalApplications}">14</b>
+            </a>
+            <a class="card jpd-kpi adw-surface"
+                th:href="@{/applications(jobPostingId=${p.jobPostingId}, status='Applied')}"><span>Chờ xử lý</span><b
+                    th:text="${p.pendingApplications}">9</b>
+            </a>
+            <a class="card jpd-kpi adw-surface"
+                th:href="@{/applications(jobPostingId=${p.jobPostingId}, status='Interviewing')}"><span>Đang phỏng
+                    vấn</span><b th:text="${p.interviewingApplications}">2</b>
+            </a>
+            <a class="card jpd-kpi jpd-kpi--goal adw-surface"
+                th:href="@{/applications(jobPostingId=${p.jobPostingId}, status='Hired')}"><span>Đã tuyển</span>
+                <b>
+                    <th:block th:text="${p.hiredApplications}">0</th:block> <small
+                        th:if="${p.numberOfPositions != null}" th:text="|/ ${p.numberOfPositions}|">/ 1</small>
+                </b>
+            </a>
         </section>
 
-        <!-- ===== 5. CỘT PHẢI ===== -->
-        <aside class="jpd-rail" aria-label="Thông tin bổ sung">
-            <section class="card jpd-sec adw-surface">
-                <h3>Yêu cầu tuyển dụng</h3>
-                <dl class="jpd-kv">
-                    <div><dt>Mã</dt><dd class="jpd-code" th:text="${p.requisitionCode}">REQ-0016</dd></div>
-                    <div><dt>Vị trí</dt><dd th:text="${p.requisitionTitle}">Product Owner</dd></div>
-                    <div><dt>Số lượng cần</dt><dd th:text="${p.numberOfPositions != null ? p.numberOfPositions + ' người' : '—'}">1 người</dd></div>
-                    <div><dt>Hiring Manager</dt><dd th:text="${p.hiringManagerName}">Lê Thu Trang</dd></div>
-                </dl>
-                <a class="jpd-link" th:if="${p.requisitionId != null}" th:href="@{/requisitions/{id}(id=${p.requisitionId})}">Xem yêu cầu gốc →</a>
-            </section>
+        <div class="jpd-layout">
+            <!-- ===== 4. CỘT CHÍNH: tab Nội dung tin / Ứng viên ===== -->
+            <section class="card jpd-main adw-surface" data-tabs>
+                <div class="jpd-tabs" role="tablist" aria-label="Nội dung tin và ứng viên">
+                    <button type="button" role="tab" id="tab-content" aria-controls="panel-content" aria-selected="true"
+                        data-tab="content">Nội dung tin</button>
+                    <button type="button" role="tab" id="tab-candidates" aria-controls="panel-candidates"
+                        aria-selected="false" data-tab="candidates">
+                        Ứng viên <span class="jpd-count" th:text="${p.totalApplications}">14</span></button>
+                </div>
 
-            <!-- Ứng viên tiềm năng / gợi ý (module talent pool của nhóm): HR và HM (cờ talentPoolVisible) -->
-            <section class="card jpd-sec adw-surface" th:if="${p.talentPoolVisible}">
-                <h3>Ứng viên tiềm năng</h3>
-                <div class="jpd-links">
-                    <a class="btn btn--secondary btn--sm" th:href="@{/talent-pool/jobs/{id}/suggestions(id=${p.jobPostingId})}">
-                        <span th:text="${p.suggestionsLinkLabel}">Ứng viên tiềm năng</span>
-                        <span class="badge badge--neutral" th:text="${suggestedCandidateCount}">0</span>
-                    </a>
-                    <a class="btn btn--secondary btn--sm" th:href="@{/talent-pool/jobs/{id}/recommendations(id=${p.jobPostingId})}">
-                        <span th:text="${p.recommendationsLinkLabel}">Gợi ý từ HR</span>
-                        <span th:if="${hrRecommendationCount != null and hrRecommendationCount > 0}" class="badge badge--warning"
-                              th:text="${hrRecommendationCount}">2</span></a>
+                <div id="panel-content" role="tabpanel" aria-labelledby="tab-content" data-panel="content">
+                    <!-- Cùng nhóm, tên và thứ tự ô với form tạo/sửa tin (create.html) -->
+                    <div class="jpd-sec">
+                        <h2>Tổng quan</h2>
+                        <dl class="jpd-facts">
+                            <div>
+                                <dt>Hình thức làm việc</dt>
+                                <dd th:text="${p.employmentType}">Toàn thời gian</dd>
+                            </div>
+                            <div>
+                                <dt>Mô hình làm việc</dt>
+                                <dd th:text="${p.workModelLabel}">Kết hợp</dd>
+                            </div>
+                            <div>
+                                <dt>Thời gian thử việc</dt>
+                                <dd
+                                    th:text="${#strings.isEmpty(p.probationPeriod) ? 'Không thử việc' : p.probationPeriod}">
+                                    30 ngày</dd>
+                            </div>
+                            <div>
+                                <dt>Yêu cầu giới tính</dt>
+                                <dd th:text="${p.genderLabel}">Không yêu cầu</dd>
+                            </div>
+                            <div>
+                                <dt>Số lượng cần tuyển</dt>
+                                <dd>
+                                    <span th:if="${p.numberOfPositionsDisplay != null}"
+                                        th:text="${p.numberOfPositionsDisplay}">1 người</span>
+                                    <span th:unless="${p.numberOfPositionsDisplay != null}" class="jpd-muted">Không hiển
+                                        thị</span>
+                                </dd>
+                            </div>
+                            <div>
+                                <dt>Hạn ứng tuyển</dt>
+                                <dd
+                                    th:text="${p.applicationDeadline != null ? #temporals.format(p.applicationDeadline, 'dd/MM/yyyy') : 'Chưa có'}">
+                                    24/10/2026</dd>
+                            </div>
+                            <div>
+                                <dt>Khoảng lương</dt>
+                                <dd th:text="${p.salaryDisplay}">35 – 45 triệu VND/tháng</dd>
+                            </div>
+                        </dl>
+                    </div>
+                    <div class="jpd-sec">
+                        <h2>Mô tả công việc</h2>
+                        <p class="jpd-prose" th:text="${p.jobDescription}">...</p>
+                    </div>
+                    <div class="jpd-sec">
+                        <h2>Yêu cầu ứng viên</h2>
+                        <p class="jpd-prose" th:text="${p.jobRequirements}">...</p>
+                    </div>
+                    <div class="jpd-sec" th:if="${p.benefits != null and !#strings.isEmpty(p.benefits)}">
+                        <h2>Quyền lợi ứng viên</h2>
+                        <p class="jpd-prose" th:text="${p.benefits}">...</p>
+                    </div>
+                    <!-- Địa điểm và thời gian: cùng thứ tự với trang ứng viên /jobs/{id}, dòng nào trống thì ẩn -->
+                    <div class="jpd-sec"
+                        th:if="${!#strings.isEmpty(p.workLocation) or !#strings.isEmpty(p.workingHours)}">
+                        <h2>Địa điểm và thời gian</h2>
+                        <th:block th:unless="${#strings.isEmpty(p.workLocation)}">
+                            <h3>Địa điểm làm việc</h3>
+                            <p class="jpd-prose" th:text="${p.workLocation}">Tầng 8, RMS Tower</p>
+                        </th:block>
+                        <th:block th:unless="${#strings.isEmpty(p.workingHours)}">
+                            <h3>Thời gian làm việc</h3>
+                            <p class="jpd-prose" th:text="${p.workingHours}">Thứ 2 - Thứ 6 (09:00 - 18:00)</p>
+                        </th:block>
+                    </div>
+                </div>
+
+                <div id="panel-candidates" role="tabpanel" aria-labelledby="tab-candidates" data-panel="candidates"
+                    hidden>
+                    <div class="jpd-sec" th:unless="${p.live}">
+                        <p class="jpd-empty">Chưa có hồ sơ vì tin chưa được đăng.</p>
+                    </div>
+                    <div class="jpd-sec" th:if="${p.live}">
+                        <div class="jpd-sec-head">
+                            <h2>Hồ sơ gần đây</h2>
+                            <a class="jpd-link" th:if="${p.totalApplications > 0}" th:href="${applicationsUrl}"
+                                th:text="|Xem tất cả ${p.totalApplications} hồ sơ →|">Xem tất cả 14 hồ sơ →</a>
+                        </div>
+                        <p class="jpd-empty" th:if="${#lists.isEmpty(p.recentApplications)}">Chưa có hồ sơ nào.</p>
+                        <div class="table-wrapper" th:unless="${#lists.isEmpty(p.recentApplications)}" role="region"
+                            aria-label="Hồ sơ gần đây" tabindex="0">
+                            <table class="jpd-apps adw-data-table">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">Ứng viên</th>
+                                        <th scope="col">Trạng thái</th>
+                                        <th scope="col">Ngày nộp</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="app : ${p.recentApplications}">
+                                        <td><a th:href="@{/applications/{id}(id=${app.applicationId})}"
+                                                th:text="${app.candidateName}">Trần Quốc Bảo</a></td>
+                                        <td><span class="badge" th:classappend="${app.statusBadge}"
+                                                th:text="${app.statusLabel}">Đang phỏng vấn</span></td>
+                                        <td class="nowrap"
+                                            th:text="${#temporals.format(app.submittedAt, 'dd/MM/yyyy')}">03/10/2026
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </section>
 
-            <section class="card jpd-sec adw-surface">
-                <h3>Lịch sử</h3>
-                <ol class="jpd-timeline" th:unless="${#lists.isEmpty(p.activityHistory)}">
-                    <li th:each="act : ${p.activityHistory}">
-                        <div class="jpd-what" th:text="${act.action}">Tạo bản nháp</div>
-                        <div class="jpd-muted" th:text="|${act.performedBy} · ${#temporals.format(act.timestamp, 'dd/MM/yyyy HH:mm')}|">Lê Thị Mai Lan · 30/09/2026</div>
-                    </li>
-                </ol>
-                <p class="jpd-empty" th:if="${#lists.isEmpty(p.activityHistory)}">Chưa có lịch sử.</p>
-            </section>
-        </aside>
-    </div>
+            <!-- ===== 5. CỘT PHẢI ===== -->
+            <aside class="jpd-rail" aria-label="Thông tin bổ sung">
 
-    <!-- Hộp xác nhận dùng chung cho mọi thao tác ghi (phải nằm TRONG fragment "content") -->
-    <dialog th:replace="~{job-postings/fragments :: confirmDialog}"></dialog>
-</main>
+                <!-- Ứng viên tiềm năng / gợi ý (module talent pool của nhóm): HR và HM (cờ talentPoolVisible) -->
+                <section class="card jpd-sec adw-surface" th:if="${p.talentPoolVisible}">
+                    <h3>Ứng viên tiềm năng</h3>
+                    <div class="jpd-links">
+                        <a class="btn btn--secondary btn--sm"
+                            th:href="@{/talent-pool/jobs/{id}/suggestions(id=${p.jobPostingId})}">
+                            <span th:text="${p.suggestionsLinkLabel}">Ứng viên tiềm năng</span>
+                            <span class="badge badge--neutral" th:text="${suggestedCandidateCount}">0</span>
+                        </a>
+                        <a class="btn btn--secondary btn--sm"
+                            th:href="@{/talent-pool/jobs/{id}/recommendations(id=${p.jobPostingId})}">
+                            <span th:text="${p.recommendationsLinkLabel}">Gợi ý từ HR</span>
+                            <span th:if="${hrRecommendationCount != null and hrRecommendationCount > 0}"
+                                class="badge badge--warning" th:text="${hrRecommendationCount}">2</span></a>
+                    </div>
+                </section>
 
-<th:block layout:fragment="scripts">
-    <th:block th:replace="~{fragments/ui/admin-workspace :: scripts}"></th:block>
-    <script th:src="@{/js/pages/job-posting-actions.js}" defer></script>
-    <script th:src="@{/js/pages/job-posting-detail.js}" defer></script>
-    <!-- flash-toast.js: thông báo sau thao tác tự tắt sau 3 giây -->
-    <script th:src="@{/js/pages/flash-toast.js}" defer></script>
-</th:block>
+                <section class="card jpd-sec adw-surface">
+                    <h3>Lịch sử</h3>
+                    <ol class="jpd-timeline" th:unless="${#lists.isEmpty(p.activityHistory)}">
+                        <li th:each="act : ${p.activityHistory}">
+                            <div class="jpd-what" th:text="${act.action}">Tạo bản nháp</div>
+                            <div class="jpd-muted"
+                                th:text="|${act.performedBy} · ${#temporals.format(act.timestamp, 'dd/MM/yyyy HH:mm')}|">
+                                Lê Thị Mai Lan · 30/09/2026</div>
+                        </li>
+                    </ol>
+                    <p class="jpd-empty" th:if="${#lists.isEmpty(p.activityHistory)}">Chưa có lịch sử.</p>
+                </section>
+            </aside>
+        </div>
+
+        <!-- Hộp xác nhận dùng chung cho mọi thao tác ghi (phải nằm TRONG fragment "content") -->
+        <dialog th:replace="~{job-postings/fragments :: confirmDialog}"></dialog>
+    </main>
+
+    <th:block layout:fragment="scripts">
+        <th:block th:replace="~{fragments/ui/admin-workspace :: scripts}"></th:block>
+        <script th:src="@{/js/pages/job-posting-actions.js}" defer></script>
+        <script th:src="@{/js/pages/job-posting-detail.js}" defer></script>
+        <!-- flash-toast.js: thông báo sau thao tác tự tắt sau 3 giây -->
+        <script th:src="@{/js/pages/flash-toast.js}" defer></script>
+    </th:block>
 </body>
+
 </html>

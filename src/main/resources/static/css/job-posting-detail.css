@@ -19,8 +19,10 @@
 .jp-detail-page .jpd-banner--danger { border-left-color:var(--error); background:var(--error-soft); }
 
 /* ----- 3. Số liệu + tiến trình hồ sơ ----- */
-.jp-detail-page .jpd-kpis { display:grid; grid-template-columns:repeat(5, minmax(0,1fr)); gap:var(--s3); margin-bottom:var(--s4); }
-.jp-detail-page .jpd-kpi { display:grid; gap:2px; padding:var(--s3) var(--s4); }
+.jp-detail-page .jpd-kpis { display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:var(--s3); margin-bottom:var(--s4); }
+.jp-detail-page .jpd-kpi { display:grid; gap:2px; padding:var(--s3) var(--s4); color:inherit; text-decoration:none; }
+.jp-detail-page a.jpd-kpi:hover { border-color:var(--brand); }
+.jp-detail-page a.jpd-kpi:focus-visible { outline:2px solid var(--brand); outline-offset:2px; }
 .jp-detail-page .jpd-kpi span { color:var(--muted); font-size:var(--font-xs); font-weight:700; }
 .jp-detail-page .jpd-kpi b { font-size:24px; font-variant-numeric:tabular-nums; }
 .jp-detail-page .jpd-kpi small { color:var(--muted); font-size:var(--font-xs); }
@@ -56,7 +58,6 @@
 .jp-detail-page .jpd-facts dd { margin:0; font-weight:600; overflow-wrap:anywhere; }
 .jp-detail-page .jpd-prose { margin:0; max-width:75ch; white-space:pre-line; overflow-wrap:anywhere; line-height:1.65; }
 /* Địa điểm: địa chỉ dạng chữ */
-.jp-detail-page .jpd-loc { display:grid; min-width:0; overflow-wrap:anywhere; }
 
 /* Bảng hồ sơ gần đây */
 .jp-detail-page .jpd-apps { width:100%; border-collapse:collapse; }
@@ -84,7 +85,7 @@
 
 /* ----- Màn hình hẹp ----- */
 @media (max-width:1100px) {
-    .jp-detail-page .jpd-kpis { grid-template-columns:repeat(3, minmax(0,1fr)); }
+    .jp-detail-page .jpd-kpis { grid-template-columns:repeat(2, minmax(0,1fr)); }
 }
 @media (max-width:1024px) {
     .jp-detail-page .jpd-layout { grid-template-columns:minmax(0,1fr); }

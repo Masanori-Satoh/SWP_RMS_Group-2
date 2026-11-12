@@ -70,7 +70,7 @@
                         </div>
 
                         <div class="mft-field" th:if="${list.options.showDeadline}">
-                            <label class="form-label" for="filter-deadline">Hạn nộp</label>
+                            <label class="form-label" for="filter-deadline">Hạn ứng tuyển</label>
                             <select class="form-select" id="filter-deadline" name="deadline">
                                 <option value="">Tất cả</option>
                                 <option th:each="option : ${list.options.deadlines}" th:value="${option.value}"
@@ -130,6 +130,10 @@
                 <input class="form-control mft-search-input" id="posting-search" type="search" name="q"
                     th:value="${list.filter.q}" maxlength="120" placeholder="Tìm theo tiêu đề tin hoặc phòng ban">
             </div>
+            <button type="submit" class="btn btn--primary mft-filter-submit">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                <span>Tìm kiếm</span>
+            </button>
         </form>
 
         <!-- Mỗi bộ lọc đang bật là một chip; bấm để bỏ riêng bộ lọc đó -->
@@ -164,7 +168,7 @@
                                 <th scope="col">Phòng ban</th>
                                 <th scope="col" class="num">Hồ sơ</th>
                                 <th scope="col">Ngày đăng</th>
-                                <th scope="col">Hạn nộp</th>
+                                <th scope="col">Hạn ứng tuyển</th>
                                 <th scope="col">Trạng thái</th>
                                 <th scope="col" th:if="${showCreator}">Người tạo</th>
                                 <th scope="col">Thao tác</th>

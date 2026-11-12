@@ -151,7 +151,7 @@
         // Nhãn đang chọn ở ô Hình thức / Mô hình (HR đổi được), cộng phòng ban của yêu cầu
         const selectedLabel = id => $(id).selectedOptions[0]?.textContent.trim();
         const tags = [selectedLabel('employmentType'), selectedLabel('workModel'), form.dataset.department].filter(Boolean);
-        const facts = [['Mức lương', salaryText() || '—'], ['Thời hạn ứng tuyển', deadline.value ? viDate(deadline.value) : '—']];
+        const facts = [['Mức lương', salaryText() || '—'], ['Hạn ứng tuyển', deadline.value ? viDate(deadline.value) : '—']];
         if ($('numberOfPositionsDisplay').value.trim()) {
             facts.push(['Số lượng', $('numberOfPositionsDisplay').value.trim()]);
         }

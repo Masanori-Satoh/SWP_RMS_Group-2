@@ -75,7 +75,6 @@ public record InternalJobPostingDetailResponse(
         long totalApplications,
         long applicationsLast7Days,
         long pendingApplications,
-        long passedCvRoundApplications,
         long interviewingApplications,
         long hiredApplications,
         List<RecentApplication> recentApplications,
@@ -98,12 +97,12 @@ public record InternalJobPostingDetailResponse(
 
     /** Số liệu hồ sơ của tin, service tra rồi truyền cho JobPostingMapper#toDetail. */
     @Builder
-    public record ApplicationStats(long total, long last7Days, long pending, long passedCvRound,
+    public record ApplicationStats(long total, long last7Days, long pending,
             long interviewing, long hired, List<RecentApplication> recent) {
 
         /** Tin chưa lên trang tuyển dụng: chưa có số liệu. */
         public static ApplicationStats empty() {
-            return new ApplicationStats(0, 0, 0, 0, 0, 0, List.of());
+            return new ApplicationStats(0, 0, 0, 0, 0, List.of());
         }
     }
 }

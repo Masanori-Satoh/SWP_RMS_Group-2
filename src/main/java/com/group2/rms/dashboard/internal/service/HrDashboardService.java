@@ -14,7 +14,6 @@ import com.group2.rms.dashboard.internal.repository.DashboardListRepository.Awai
 import com.group2.rms.dashboard.internal.repository.DashboardListRepository.PostingActionRow;
 import com.group2.rms.jobposting.service.JobPostingAccess;
 import com.group2.rms.dashboard.internal.repository.InternalMetricsRepository;
-import com.group2.rms.requisition.service.RequisitionLabels;
 import com.group2.rms.user.entity.User;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

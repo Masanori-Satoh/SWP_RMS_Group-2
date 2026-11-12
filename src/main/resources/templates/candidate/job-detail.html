@@ -62,7 +62,7 @@
                                 <line x1="8" y1="2" x2="8" y2="6"></line>
                                 <line x1="3" y1="10" x2="21" y2="10"></line>
                             </svg>
-                            <span>Hạn nộp: <strong th:text="${#temporals.format(job.applicationDeadline, 'dd/MM/yyyy')}">31/12/2026</strong></span>
+                            <span>Hạn ứng tuyển: <strong th:text="${#temporals.format(job.applicationDeadline, 'dd/MM/yyyy')}">31/12/2026</strong></span>
                         </div>
                     </div>
                 </div>
@@ -144,7 +144,7 @@
                             <span class="summary-value" th:text="${job.salaryDisplay}">Thỏa thuận</span>
                         </li>
                         <li th:if="${job.applicationDeadline != null}">
-                            <span class="summary-label">Hạn nộp</span>
+                            <span class="summary-label">Hạn ứng tuyển</span>
                             <span class="summary-value"
                                   th:text="${#temporals.format(job.applicationDeadline, 'dd/MM/yyyy')}">31/12/2026</span>
                         </li>
