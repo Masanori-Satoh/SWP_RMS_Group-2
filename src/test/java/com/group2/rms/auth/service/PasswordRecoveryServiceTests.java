@@ -226,6 +226,8 @@ class PasswordRecoveryServiceTests {
             PasswordRecoveryFlowException error = assertThrows(PasswordRecoveryFlowException.class,
                 () -> service.verifyOtp("123456", session));
             assertEquals("OTP_INVALID", error.getErrorCode());
+            assertEquals("Mã xác minh không đúng. Bạn đã nhập sai %d lần, còn %d lần thử. Vui lòng nhập lại."
+                .formatted(attempt, 5 - attempt), error.getMessage());
         }
 
         // When: Lần sai thứ 5.
@@ -234,6 +236,8 @@ class PasswordRecoveryServiceTests {
 
         // Then: xóa trạng thái recovery và chưa đổi mật khẩu.
         assertEquals("OTP_ATTEMPTS_EXCEEDED", error.getErrorCode());
+        assertEquals("Mã xác minh không đúng. Bạn đã nhập sai 5 lần, còn 0 lần thử. Vui lòng yêu cầu mã mới.",
+            error.getMessage());
         assertEquals(false, service.hasPendingReset(session));
         assertEquals(false, service.canResetPassword(session));
         verify(resetService, times(0)).changePassword(any(), anyString(), any());

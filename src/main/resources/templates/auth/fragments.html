@@ -139,16 +139,13 @@
     'This account is not active.': 'Tài khoản này hiện không hoạt động.',
     'A reset email is already being sent. Please wait.': 'Email xác minh đang được gửi. Vui lòng chờ.',
     'Please wait before requesting another code.': 'Vui lòng chờ trước khi yêu cầu gửi lại mã.',
-    'Too many incorrect attempts. Request a new code.': 'Bạn đã nhập sai mã 5 lần. Vui lòng yêu cầu mã mới.',
-    'The verification code is incorrect.': 'Mã xác minh không đúng. Vui lòng nhập lại.',
     'Verify your email code before resetting your password.': 'Vui lòng xác minh mã gửi qua email trước khi đặt mật khẩu mới.',
     'Your reset request is invalid or expired. Request a new code.': 'Yêu cầu đặt lại mật khẩu không hợp lệ hoặc đã hết hạn. Vui lòng yêu cầu mã mới.',
     'Unable to send the verification email. Please try again later.': 'Chưa thể gửi email xác minh. Vui lòng thử lại sau.',
     'Your registration request is invalid or expired. Register again.': 'Yêu cầu đăng ký đã hết hạn hoặc không hợp lệ. Vui lòng đăng ký lại.',
-    'Too many incorrect attempts. Register again.': 'Bạn đã nhập sai mã 5 lần. Vui lòng đăng ký lại.',
     'A registration email is already being sent. Please wait.': 'Mã xác minh đăng ký đang được gửi. Vui lòng chờ.'
   } }"
-    th:text="${translations.get(text) != null ? translations.get(text) : (translations.containsValue(text) or #strings.startsWith(text, 'Độ dài phải từ ') ? text : 'Không thể hoàn tất yêu cầu. Vui lòng kiểm tra thông tin và thử lại.')}"></span>
+    th:text="${translations.get(text) != null ? translations.get(text) : (translations.containsValue(text) or #strings.startsWith(text, 'Độ dài phải từ ') or #strings.startsWith(text, 'Mã xác minh không đúng. Bạn đã nhập sai ') ? text : 'Không thể hoàn tất yêu cầu. Vui lòng kiểm tra thông tin và thử lại.')}"></span>
   <footer class="auth-footer" th:fragment="footer">
     <p class="auth-container">Mộc Tuyển dụng · Đồng hành cùng sự nghiệp của bạn.</p>
   </footer>
