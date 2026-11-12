@@ -19,7 +19,9 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.beans.PropertyAccessException;
 import org.springframework.validation.BindingResult;
+import org.springframework.validation.DefaultBindingErrorProcessor;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -93,6 +95,22 @@ public class RequisitionController {
         };
         binder.registerCustomEditor(BigDecimal.class, "minSalary", salaryEditor);
         binder.registerCustomEditor(BigDecimal.class, "maxSalary", salaryEditor);
+
+        // Nhập "1.5" / "abc" / "@#" vào ô số nguyên: báo câu lỗi riêng theo từng trường hợp
+        binder.setBindingErrorProcessor(new DefaultBindingErrorProcessor() {
+            @Override
+            public void processPropertyAccessException(PropertyAccessException ex, BindingResult bindingResult) {
+                String field = ex.getPropertyName();
+                String label = "recruitmentRound".equals(field) ? RequisitionValidator.ROUND_LABEL
+                        : "numberOfPositions".equals(field) ? RequisitionValidator.POSITIONS_LABEL : null;
+                if (label == null) {
+                    super.processPropertyAccessException(ex, bindingResult);
+                    return;
+                }
+                bindingResult.addError(new FieldError(bindingResult.getObjectName(), field, ex.getValue(), true,
+                        null, null, RequisitionValidator.integerFormatMessage(label, ex.getValue())));
+            }
+        });
     }
 
     @ModelAttribute
@@ -361,9 +379,7 @@ public class RequisitionController {
         model.addAttribute("probationLimit", RequisitionValidator.PROBATION_CHAR_LIMIT);
         // Giới hạn số lượng cần tuyển, dùng cho min/max của ô số lượng và nút −/+
         model.addAttribute("positionsMin", RequisitionValidator.POSITIONS_MIN);
-        model.addAttribute("positionsMax", RequisitionValidator.POSITIONS_MAX);
         model.addAttribute("roundMin", RequisitionValidator.ROUND_MIN);
-        model.addAttribute("roundMax", RequisitionValidator.ROUND_MAX);
     }
 
     private void addErrors(BindingResult errors, RequisitionValidationException e) {

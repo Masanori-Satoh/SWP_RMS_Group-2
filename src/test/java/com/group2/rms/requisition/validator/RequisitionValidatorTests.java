@@ -26,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * - Tên test: hàm_shouldKếtQuả_whenĐiềuKiện; @DisplayName tiếng Việt "điều kiện -> kết quả".
  * - Mỗi quy tắc có test hợp lệ + sai, nhất là ở biên (đúng giới hạn / giới hạn + 1),
  *   null, rỗng, chỉ khoảng trắng, giá trị ngoài danh mục, trùng, ID giả.
- * - Dùng hằng số của validator (POSITIONS_MAX + 1) thay vì gõ số, đổi giới hạn thì test vẫn đúng ý.
+ * - Dùng hằng số của validator (POSITIONS_MIN - 1) thay vì gõ số, đổi giới hạn thì test vẫn đúng ý.
  * - Kiểm tra đúng key lỗi (ví dụ "numberOfPositions"): key quyết định lỗi hiện ở ô nào.
  *
  * Hàm hỗ trợ: valid() = gửi duyệt hợp lệ đủ trường; minimalDraft() = nháp chỉ có 4 trường NOT NULL;
@@ -224,20 +224,36 @@ class RequisitionValidatorTests {
     }
 
     @Test
-    @DisplayName("Số lượng đúng bằng tối đa -> Hợp lệ")
-    void validate_shouldPass_whenPositionsEqualsMaximum() {
+    @DisplayName("Số lượng rất lớn -> Hợp lệ (chỉ có giới hạn dưới)")
+    void validate_shouldPass_whenPositionsIsLarge() {
         var d = minimalDraft();
-        d.setNumberOfPositions(RequisitionValidator.POSITIONS_MAX);
+        d.setNumberOfPositions(5000);
         assertDoesNotThrow(() -> validator.validate(d));
     }
 
     @Test
-    @DisplayName("Số lượng tối đa + 1 -> Báo lỗi")
-    void validate_shouldReject_whenPositionsExceedsMaximumByOne() {
+    @DisplayName("Đợt / số lượng = 0, âm, trống -> đúng câu lỗi")
+    void validate_shouldUseSpecMessages_forRoundAndPositions() {
         var d = minimalDraft();
-        d.setNumberOfPositions(RequisitionValidator.POSITIONS_MAX + 1);
-        assertEquals("Số lượng cần tuyển phải từ 1 đến 30 người.",
-                expectFail(d).getErrors().get("numberOfPositions"));
+        d.setRecruitmentRound(0);
+        d.setNumberOfPositions(-2);
+        var errors = expectFail(d).getErrors();
+        assertEquals("Đợt tuyển dụng phải lớn hơn hoặc bằng 1.", errors.get("recruitmentRound"));
+        assertEquals("Số lượng cần tuyển phải lớn hơn hoặc bằng 1.", errors.get("numberOfPositions"));
+
+        var empty = minimalDraft();
+        empty.setNumberOfPositions(null);
+        assertEquals("Số lượng cần tuyển là bắt buộc.", expectFail(empty).getErrors().get("numberOfPositions"));
+    }
+
+    @Test
+    @DisplayName("Ô số nguyên nhận thập phân / chữ / ký tự đặc biệt -> đúng câu lỗi")
+    void integerFormatMessage_shouldDistinguishDecimalFromText() {
+        assertEquals("Đợt tuyển dụng phải là số nguyên.", RequisitionValidator.integerFormatMessage("Đợt tuyển dụng", "1.5"));
+        assertEquals("Đợt tuyển dụng phải là số nguyên.", RequisitionValidator.integerFormatMessage("Đợt tuyển dụng", "-2,5"));
+        assertEquals("Đợt tuyển dụng chỉ được chứa số nguyên.", RequisitionValidator.integerFormatMessage("Đợt tuyển dụng", "abc"));
+        assertEquals("Đợt tuyển dụng chỉ được chứa số nguyên.", RequisitionValidator.integerFormatMessage("Đợt tuyển dụng", "@#"));
+        assertEquals("Đợt tuyển dụng quá lớn.", RequisitionValidator.integerFormatMessage("Đợt tuyển dụng", "99999999999"));
     }
 
     // VAL-004 — Action draft/submit
@@ -566,8 +582,8 @@ class RequisitionValidatorTests {
     }
 
     @ParameterizedTest
-    @ValueSource(ints = { RequisitionValidator.ROUND_MIN, RequisitionValidator.ROUND_MAX })
-    @DisplayName("Đợt tuyển dụng ở biên 1 / 99 -> Hợp lệ")
+    @ValueSource(ints = { RequisitionValidator.ROUND_MIN, 1000 })
+    @DisplayName("Đợt tuyển dụng = 1 hoặc rất lớn -> Hợp lệ (chỉ có giới hạn dưới)")
     void validate_shouldPass_whenRoundAtBoundary(int round) {
         var d = valid();
         d.setRecruitmentRound(round);
@@ -575,8 +591,8 @@ class RequisitionValidatorTests {
     }
 
     @ParameterizedTest
-    @ValueSource(ints = { RequisitionValidator.ROUND_MIN - 1, RequisitionValidator.ROUND_MAX + 1 })
-    @DisplayName("Đợt tuyển dụng ngoài 1..99 -> Báo lỗi ở ô đợt")
+    @ValueSource(ints = { RequisitionValidator.ROUND_MIN - 1, -5 })
+    @DisplayName("Đợt tuyển dụng < 1 -> Báo lỗi ở ô đợt")
     void validate_shouldReject_whenRoundOutOfRange(int round) {
         var d = valid();
         d.setRecruitmentRound(round);
@@ -772,13 +788,10 @@ class RequisitionValidatorTests {
     }
 
     @Test
-    @DisplayName("Tên vị trí dưới 3 ký tự -> báo lỗi; đủ 3 ký tự -> hợp lệ")
-    void validate_shouldRejectTitle_whenShorterThanThreeChars() {
-        var d = valid();
-        d.setTitle(" QA ");
-        assertEquals("Tên vị trí tuyển dụng phải có ít nhất 3 ký tự.", expectFail(d).getErrors().get("title"));
+    @DisplayName("Tên vị trí 1 ký tự -> hợp lệ (chỉ bắt buộc không để trống)")
+    void validate_shouldAcceptTitle_whenOneChar() {
         var ok = valid();
-        ok.setTitle("Dev");
+        ok.setTitle(" Q ");
         assertDoesNotThrow(() -> validator.validate(ok));
     }
 

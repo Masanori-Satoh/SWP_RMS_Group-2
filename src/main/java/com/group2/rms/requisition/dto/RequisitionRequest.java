@@ -4,7 +4,6 @@ import com.group2.rms.requisition.validator.RequisitionValidator;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Digits;
-import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -27,16 +26,19 @@ public class RequisitionRequest {
     @Size(max = RequisitionValidator.TITLE_CHAR_LIMIT, message = RequisitionValidator.TITLE_TOO_LONG)
     private String title;
     private Integer departmentId;
-    @Min(value = RequisitionValidator.ROUND_MIN, message = RequisitionValidator.ROUND_RANGE_MESSAGE)
-    @Max(value = RequisitionValidator.ROUND_MAX, message = RequisitionValidator.ROUND_RANGE_MESSAGE)
+    @Min(value = RequisitionValidator.ROUND_MIN, message = RequisitionValidator.ROUND_MIN_MESSAGE)
     private Integer recruitmentRound;
-    /** Phiếu nguồn khi sao chép; server tự quy về phiếu đợt 1 và tính lại số đợt. */
+    /**
+     * Phiếu nguồn khi sao chép; server tự quy về phiếu đợt 1 và tính lại số đợt.
+     */
     private Integer originalRequisitionId;
-    /** Tên vị trí của phiếu đợt 1, chỉ để form đổi số đợt hiển thị; server không dùng. */
+    /**
+     * Tên vị trí của phiếu đợt 1, chỉ để form đổi số đợt hiển thị; server không
+     * dùng.
+     */
     private String originalTitle;
 
-    @Min(value = RequisitionValidator.POSITIONS_MIN, message = RequisitionValidator.POSITIONS_RANGE_MESSAGE)
-    @Max(value = RequisitionValidator.POSITIONS_MAX, message = RequisitionValidator.POSITIONS_RANGE_MESSAGE)
+    @Min(value = RequisitionValidator.POSITIONS_MIN, message = RequisitionValidator.POSITIONS_MIN_MESSAGE)
     private Integer numberOfPositions;
     private String employmentType;
 
@@ -57,7 +59,6 @@ public class RequisitionRequest {
     @Size(max = RequisitionValidator.PROBATION_CHAR_LIMIT, message = RequisitionValidator.PROBATION_TOO_LONG)
     private String probationPeriod;
 
-    // Không đặt @Size cho 3 ô nhiều dòng: \r\n đếm 2 ký tự trước khi validator đổi về \n
     private String reasonForHiring;
     private String jobDescription;
     private String requirementDetails;

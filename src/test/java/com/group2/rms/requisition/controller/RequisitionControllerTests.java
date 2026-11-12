@@ -418,11 +418,11 @@ class RequisitionControllerTests {
 
         @Test
         @WithMockUser(username = "hm", roles = "HIRING_MANAGER")
-        @DisplayName("POST /requisitions/create -> Số lượng POSITIONS_MAX + 1, lương quá 1 tỷ, trọng số 150 -> Lỗi đúng từng ô, không gọi service")
+        @DisplayName("POST /requisitions/create -> Số lượng 0, lương quá 1 tỷ -> Lỗi đúng từng ô, không gọi service")
         void create_shouldShowFieldErrors_whenNumbersAreOutOfRange() throws Exception {
                 mvc.perform(post("/requisitions/create").with(csrf())
                                 .param("action", RequisitionValidator.ACTION_DRAFT).param("title", "New Dev")
-                                .param("numberOfPositions", String.valueOf(RequisitionValidator.POSITIONS_MAX + 1))
+                                .param("numberOfPositions", String.valueOf(RequisitionValidator.POSITIONS_MIN - 1))
                                 .param("maxSalary", "1000000001"))
                                 .andExpect(status().isOk())
                                 .andExpect(view().name("requisitions/form"))
@@ -475,6 +475,20 @@ class RequisitionControllerTests {
                 ArgumentCaptor<RequisitionRequest> captor = ArgumentCaptor.forClass(RequisitionRequest.class);
                 verify(service).createRequisition(captor.capture());
                 assertEquals(3, captor.getValue().getRecruitmentRound(), "Đợt tuyển dụng do HM nhập tay");
+        }
+
+        @Test
+        @WithMockUser(username = "hm", roles = "HIRING_MANAGER")
+        @DisplayName("POST /requisitions/create -> Nhập thập phân / chữ vào ô số nguyên thì báo đúng câu lỗi")
+        void create_shouldShowIntegerFormatMessages_whenNumberFieldsAreNotIntegers() throws Exception {
+                mvc.perform(post("/requisitions/create").with(csrf())
+                                .param("action", RequisitionValidator.ACTION_DRAFT).param("title", "New Dev")
+                                .param("recruitmentRound", "1.5").param("numberOfPositions", "abc"))
+                                .andExpect(status().isOk())
+                                .andExpect(model().attributeHasFieldErrors("form", "recruitmentRound", "numberOfPositions"))
+                                .andExpect(content().string(org.hamcrest.Matchers.containsString("Đợt tuyển dụng phải là số nguyên.")))
+                                .andExpect(content().string(org.hamcrest.Matchers.containsString("Số lượng cần tuyển chỉ được chứa số nguyên.")));
+                verify(service, never()).createRequisition(any());
         }
 
         @Test

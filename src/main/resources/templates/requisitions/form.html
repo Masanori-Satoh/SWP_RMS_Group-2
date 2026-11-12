@@ -90,7 +90,7 @@
                                         <button type="button" data-step="-1" data-step-target="recruitmentRound"
                                             aria-label="Giảm đợt">−</button>
                                         <input type="number" th:field="*{recruitmentRound}" th:min="${roundMin}"
-                                            th:max="${roundMax}" step="1" inputmode="numeric"
+                                            step="1" inputmode="numeric"
                                             aria-describedby="recruitmentRound-error"
                                             th:attr="aria-invalid=${#fields.hasErrors('recruitmentRound')}">
                                         <button type="button" data-step="1" data-step-target="recruitmentRound"
@@ -106,7 +106,7 @@
                                         <button type="button" data-step="-1" data-step-target="numberOfPositions"
                                             aria-label="Giảm số lượng">−</button>
                                         <input type="number" th:field="*{numberOfPositions}" th:min="${positionsMin}"
-                                            th:max="${positionsMax}" step="1" inputmode="numeric"
+                                            step="1" inputmode="numeric"
                                             aria-describedby="numberOfPositions-error"
                                             th:attr="aria-invalid=${#fields.hasErrors('numberOfPositions')}">
                                         <button type="button" data-step="1" data-step-target="numberOfPositions"
@@ -187,7 +187,7 @@
                                 <label class="form-label" for="probationChoice">Thời gian thử việc</label>
                                 <!-- Dropdown chỉ để chọn nhanh; giá trị gửi lên server vẫn là ô probationPeriod (chuỗi tự do). -->
                                 <select class="form-select" id="probationChoice"
-                                    th:with="p=*{probationPeriod}, presets=${ {'6 ngày làm việc','15 ngày','30 ngày'} },
+                                    th:with="p=*{probationPeriod}, presets=${ {'6 ngày ','15 ngày','30 ngày'} },
                                              other=${p != null and !#strings.isEmpty(p) and !#lists.contains(presets, p)}">
                                     <option value="" th:selected="${p == null or #strings.isEmpty(p)}">Không thử việc
                                     </option>

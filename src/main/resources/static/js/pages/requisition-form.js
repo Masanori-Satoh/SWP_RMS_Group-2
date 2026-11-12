@@ -12,20 +12,26 @@
         return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
     };
 
+    // Lỗi định dạng / nhỏ hơn min của ô số nguyên; '' nếu hợp lệ (không có giới hạn trên).
+    function integerMessage(label, value, min) {
+        const raw = String(value).trim();
+        if (/^[-+]?\d+[.,]\d+$/.test(raw)) return `${label} phải là số nguyên.`;
+        if (!/^[-+]?\d+$/.test(raw)) return `${label} chỉ được chứa số nguyên.`;
+        return Number(raw) < min ? `${label} phải lớn hơn hoặc bằng ${min}.` : '';
+    }
+
     const FIELD_RULES = [
         {
-            id: 'title', label: 'Tên vị trí tuyển dụng', section: 'rqf-position', requiredForDraft: true,
-            errorOf: value => value.length < 3 ? 'Tên vị trí tuyển dụng phải có ít nhất 3 ký tự.' : ''
+            id: 'title', label: 'Vị trí tuyển dụng', section: 'rqf-position', requiredForDraft: true,
+            // Khớp RequisitionValidator.PLACEHOLDER_TITLE: lưu nháp được, gửi duyệt thì không
+            submitErrorOf: value => value.toLowerCase() === 'chưa nhập vị trí'
+                ? 'Vui lòng nhập chức danh công việc cụ thể trước khi gửi duyệt.' : ''
         },
         {
-            id: 'numberOfPositions', label: 'Số lượng', section: 'rqf-position', requiredForDraft: true,
+            id: 'numberOfPositions', label: 'Số lượng cần tuyển', section: 'rqf-position', requiredForDraft: true,
             errorOf: value => {
                 const input = document.getElementById('numberOfPositions');
-                const min = Number(input.min) || 1;
-                const max = Number(input.max) || 30;
-                const count = Number(value);
-                return Number.isInteger(count) && count >= min && count <= max
-                    ? '' : `Số lượng cần tuyển phải từ ${min} đến ${max} người.`;
+                return integerMessage('Số lượng cần tuyển', value, Number(input.min) || 1);
             }
         },
         { id: 'employmentType', label: 'Hình thức làm việc', section: 'rqf-work', requiredForDraft: true },
@@ -83,7 +89,9 @@
         const required = rule.requiredForDraft || (action === 'submit' && rule.requiredForSubmit);
         let message = '';
 
-        if (required && !value) {
+        if (rule.id === 'numberOfPositions' && document.getElementById(rule.id)?.validity.badInput) {
+            message = 'Số lượng cần tuyển chỉ được chứa số nguyên.';
+        } else if (required && !value) {
             if (rule.id === 'title') {
                 message = 'Tên vị trí không được để trống.';
             } else if (rule.id === 'departmentId') {
@@ -91,7 +99,7 @@
             } else if (rule.id === 'workLocation') {
                 message = 'Địa điểm làm việc không được để trống.';
             } else if (rule.id === 'numberOfPositions') {
-                message = 'Vui lòng nhập số lượng cần tuyển.';
+                message = 'Số lượng cần tuyển là bắt buộc.';
             } else {
                 message = 'Vui lòng nhập trường này.';
             }
@@ -178,6 +186,10 @@
         const target = document.getElementById(rule.id);
         target?.addEventListener('change', () => validateField(rule, 'draft'));
         target?.addEventListener('blur', () => validateField(rule, 'submit'), true);
+        // Ô đang báo lỗi thì kiểm tra lại ngay khi sửa (kể cả bấm +/− của ô số lượng), để lỗi cũ không bị kẹt lại
+        target?.addEventListener('input', () => {
+            if (target.classList.contains('is-invalid')) validateField(rule, 'submit');
+        });
     });
     workModel.addEventListener('change', syncWorkLocation);
 
@@ -203,7 +215,8 @@
         if (input.value === '' && input.dataset.stepStart) {
             input.value = input.dataset.stepStart;
         } else {
-            const current = input.value === '' ? min - Number(button.dataset.step) : Number(input.value);
+            const typed = Number(input.value);
+            const current = input.value === '' || !Number.isFinite(typed) ? min - Number(button.dataset.step) : typed;
             input.value = Math.min(max, Math.max(min, current + Number(button.dataset.step)));
         }
         input.dispatchEvent(new Event('input', { bubbles: true }));
@@ -227,8 +240,8 @@
         const isFieldDone = rule => {
             const value = readFieldValue(rule);
             if (!value) return false;
-            if (rule.errorOf) return !rule.errorOf(value);
-            return true;
+            // Checklist là điều kiện gửi duyệt nên tính cả lỗi chỉ áp dụng khi gửi duyệt
+            return !(rule.errorOf && rule.errorOf(value)) && !(rule.submitErrorOf && rule.submitErrorOf(value));
         };
         const items = FIELD_RULES.filter(rule => rule.id !== 'workLocation' || !isRemote())
             .map(rule => ({ label: rule.label, target: rule.id, done: isFieldDone(rule) }));
@@ -255,16 +268,15 @@
     form.addEventListener('input', refreshChecklist);
     form.addEventListener('change', refreshChecklist);
 
-    // Đợt tuyển dụng không bắt buộc (trống = đợt 1), nhưng đã nhập thì phải là số nguyên trong khoảng min..max.
+    // Đợt tuyển dụng không bắt buộc (trống = đợt 1), nhưng đã nhập thì phải là số nguyên >= min.
     const roundInput = document.getElementById('recruitmentRound');
     function validateRound() {
         if (!roundInput) return true;
         const value = roundInput.value.trim();
-        const round = Number(value);
-        const ok = roundInput.validity.valid && (!value || (Number.isInteger(round)
-            && round >= Number(roundInput.min || 1) && round <= Number(roundInput.max || 99)));
-        showError('recruitmentRound', ok ? '' : `Đợt tuyển dụng phải từ ${roundInput.min || 1} đến ${roundInput.max || 99}.`);
-        return ok;
+        const message = roundInput.validity.badInput ? 'Đợt tuyển dụng chỉ được chứa số nguyên.'
+            : !value ? '' : integerMessage('Đợt tuyển dụng', value, Number(roundInput.min || 1));
+        showError('recruitmentRound', message);
+        return !message;
     }
     roundInput?.addEventListener('input', validateRound);
 

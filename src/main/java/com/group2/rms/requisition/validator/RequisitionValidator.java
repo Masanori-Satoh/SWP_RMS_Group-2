@@ -28,7 +28,6 @@ public class RequisitionValidator {
 
     public static final int REASON_CHAR_LIMIT = 2000;
     public static final int TITLE_CHAR_LIMIT = 200;
-    public static final int TITLE_MIN_CHARS = 3;
     public static final int TEXT_FIELD_CHAR_LIMIT = 2000;
     public static final int SHORT_FIELD_CHAR_LIMIT = 255;
     public static final int COMMENT_CHAR_LIMIT = 1000;
@@ -36,8 +35,6 @@ public class RequisitionValidator {
     public static final int PROBATION_CHAR_LIMIT = 100;
     public static final int POSITIONS_MIN = 1;
     public static final int ROUND_MIN = 1;
-    public static final int ROUND_MAX = 99;
-    public static final int POSITIONS_MAX = 30;
     public static final String SALARY_MAX_TEXT = "1000000000";
     public static final BigDecimal SALARY_MAX = new BigDecimal(SALARY_MAX_TEXT);
 
@@ -45,9 +42,11 @@ public class RequisitionValidator {
     public static final String TITLE_TOO_LONG = "Nội dung quá " + TITLE_CHAR_LIMIT + " ký tự";
     public static final String SHORT_FIELD_TOO_LONG = "Nội dung quá " + SHORT_FIELD_CHAR_LIMIT + " ký tự";
     public static final String PROBATION_TOO_LONG = "Nội dung quá " + PROBATION_CHAR_LIMIT + " ký tự";
-    public static final String ROUND_RANGE_MESSAGE = "Đợt tuyển dụng phải từ " + ROUND_MIN + " đến " + ROUND_MAX + ".";
-    public static final String POSITIONS_RANGE_MESSAGE = "Số lượng cần tuyển phải từ " + POSITIONS_MIN + " đến "
-            + POSITIONS_MAX + " người.";
+    public static final String ROUND_LABEL = "Đợt tuyển dụng";
+    public static final String POSITIONS_LABEL = "Số lượng cần tuyển";
+    public static final String ROUND_MIN_MESSAGE = ROUND_LABEL + " phải lớn hơn hoặc bằng " + ROUND_MIN + ".";
+    public static final String POSITIONS_MIN_MESSAGE = POSITIONS_LABEL + " phải lớn hơn hoặc bằng " + POSITIONS_MIN + ".";
+    public static final String POSITIONS_REQUIRED_MESSAGE = POSITIONS_LABEL + " là bắt buộc.";
     public static final String SALARY_FORMAT_MESSAGE = "Mức lương phải lớn hơn 0 với tối đa 2 chữ số thập phân.";
     public static final String SALARY_MAX_MESSAGE = "Mức lương không được vượt quá 1.000.000.000 VND/tháng.";
 
@@ -96,9 +95,6 @@ public class RequisitionValidator {
 
         // Rule: tên vị trí bắt buộc cả khi lưu nháp
         validateTextField(errors, "title", requisitionRequest.getTitle(), TITLE_CHAR_LIMIT, true);
-        if (requisitionRequest.getTitle() != null && requisitionRequest.getTitle().length() < TITLE_MIN_CHARS) {
-            errors.put("title", "Tên vị trí tuyển dụng phải có ít nhất " + TITLE_MIN_CHARS + " ký tự.");
-        }
         validateTextField(errors, "reasonForHiring", requisitionRequest.getReasonForHiring(), REASON_CHAR_LIMIT,
                 isSubmitAction);
 
@@ -127,16 +123,16 @@ public class RequisitionValidator {
         Integer round = requisitionRequest.getRecruitmentRound();
         if (round == null) {
             requisitionRequest.setRecruitmentRound(ROUND_MIN);
-        } else if (round < ROUND_MIN || round > ROUND_MAX) {
-            errors.put("recruitmentRound", ROUND_RANGE_MESSAGE);
+        } else if (round < ROUND_MIN) {
+            errors.put("recruitmentRound", ROUND_MIN_MESSAGE);
         }
 
         // Rule: Số lượng tuyển dụng bắt buộc
         Integer numberOfPositions = requisitionRequest.getNumberOfPositions();
         if (numberOfPositions == null) {
-            errors.put("numberOfPositions", "Vui lòng nhập số lượng cần tuyển.");
-        } else if (numberOfPositions < POSITIONS_MIN || numberOfPositions > POSITIONS_MAX) {
-            errors.put("numberOfPositions", POSITIONS_RANGE_MESSAGE);
+            errors.put("numberOfPositions", POSITIONS_REQUIRED_MESSAGE);
+        } else if (numberOfPositions < POSITIONS_MIN) {
+            errors.put("numberOfPositions", POSITIONS_MIN_MESSAGE);
         }
 
         // Rule: Mức lương phải lớn hơn 0 và lương tối đa >= lương tối thiểu
@@ -150,6 +146,16 @@ public class RequisitionValidator {
         if (!errors.isEmpty()) {
             throw new RequisitionValidationException(errors);
         }
+    }
+
+    /** Câu lỗi khi ô số nguyên nhận giá trị không parse được: số thập phân hay chữ/ký tự đặc biệt. */
+    public static String integerFormatMessage(String label, Object rawValue) {
+        String raw = rawValue == null ? "" : String.valueOf(rawValue).trim();
+        if (raw.matches("[-+]?\\d+[.,]\\d+")) {
+            return label + " phải là số nguyên.";
+        }
+        // Toàn chữ số mà vẫn không đọc được = vượt giới hạn kiểu INT
+        return raw.matches("[-+]?\\d+") ? label + " quá lớn." : label + " chỉ được chứa số nguyên.";
     }
 
     public static String cleanString(String textValue) {

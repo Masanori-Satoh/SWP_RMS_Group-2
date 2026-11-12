@@ -539,6 +539,46 @@ class RequisitionServiceTests {
     class UpdateRequisition {
 
         @Test
+        @DisplayName("Đổi tên nháp thành tên của nháp khác cùng phòng -> Không lưu, không ghi audit")
+        void updateRequisition_shouldReject_whenAnotherDraftHasSameTitle() {
+            JobRequisition requisition = requisitionWithStatus(70, RequisitionAccess.STATUS_DRAFT);
+            RequisitionRequest request = draft("Java Engineer");
+            when(requisitions.existsDraftByTitleAndDepartment("Java Engineer", 1, 70)).thenReturn(true);
+
+            RequisitionValidationException error = assertThrows(RequisitionValidationException.class,
+                    () -> service.updateRequisition(70, request));
+
+            assertTrue(error.getErrors().containsKey("title"));
+            assertEquals("Senior Java", requisition.getTitle());
+            verify(requisitions, never()).saveAndFlush(any());
+            verifyNoInteractions(audit, notificationService);
+        }
+
+        @Test
+        @DisplayName("Giữ tên nháp của chính mình -> Không coi là trùng với bản ghi đang sửa")
+        void updateRequisition_shouldExcludeCurrentId_whenCheckingDuplicateDraft() {
+            JobRequisition requisition = requisitionWithStatus(70, RequisitionAccess.STATUS_DRAFT);
+
+            service.updateRequisition(70, draft("Senior Java"));
+
+            verify(requisitions).existsDraftByTitleAndDepartment("Senior Java", 1, 70);
+            assertEquals(RequisitionAccess.STATUS_DRAFT, requisition.getApprovalStatus());
+        }
+
+        @Test
+        @DisplayName("Phiếu bị từ chối lưu lại thành nháp -> Draft, chưa gửi thông báo duyệt")
+        void updateRequisition_shouldSaveDraftWithoutNotification_whenRejectedRequestIsEdited() {
+            JobRequisition requisition = requisitionWithStatus(71, RequisitionAccess.STATUS_REJECTED);
+
+            service.updateRequisition(71, draft("Senior Java revised"));
+
+            assertEquals(RequisitionAccess.STATUS_DRAFT, requisition.getApprovalStatus());
+            assertEquals("Senior Java revised", requisition.getTitle());
+            verify(requisitions).saveAndFlush(requisition);
+            verifyNoInteractions(approvals, notificationService);
+        }
+
+        @Test
         @DisplayName("HM sửa phiếu, chuyển sang phòng mình thuộc về/quản lý -> Đổi được phòng ban")
         void updateRequisition_shouldMoveDepartment_whenHiringManagerPicksManagedDepartment() {
             // Arrange: phiếu đang ở Sales, HM (thuộc IT) chọn IT

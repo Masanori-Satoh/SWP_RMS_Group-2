@@ -10,6 +10,7 @@ import com.group2.rms.requisition.repository.JobRequisitionRepository;
 import com.group2.rms.requisition.repository.RequisitionApprovalRepository;
 import com.group2.rms.requisition.service.RequisitionAccess;
 import com.group2.rms.requisition.service.RequisitionListService;
+import com.group2.rms.requisition.service.RequisitionLabels;
 import com.group2.rms.requisition.service.RequisitionService;
 import com.group2.rms.requisition.validator.RequisitionValidator;
 import com.group2.rms.user.entity.Department;
@@ -230,6 +231,40 @@ class RequisitionIntegrationTests {
                 assertNull(rowB.jobPostingId());
                 assertEquals("Chưa có tin", rowB.postingLabel());
                 assertEquals("HM Tester", rowB.hiringManagerName());
+        }
+
+        @Test
+        @WithMockUser(username = "it_hm", roles = "HIRING_MANAGER")
+        @DisplayName("Lọc đồng thời từ khóa, trạng thái phiếu và trạng thái tin mới nhất")
+        void getListPage_shouldCombineKeywordStatusAndLatestPostingFilter() {
+                JobRequisition matching = saveRequisition("Filter combo matching", hiringManager, department,
+                                RequisitionAccess.STATUS_APPROVED);
+                JobRequisition wrongStatus = saveRequisition("Filter combo draft", hiringManager, department,
+                                RequisitionAccess.STATUS_DRAFT);
+                JobRequisition wrongLatestPosting = saveRequisition("Filter combo closed", hiringManager, department,
+                                RequisitionAccess.STATUS_APPROVED);
+                savePosting(matching, 1, RequisitionLabels.POSTING_CLOSED);
+                savePosting(matching, 2, RequisitionLabels.POSTING_PUBLISHED);
+                savePosting(wrongLatestPosting, 1, RequisitionLabels.POSTING_PUBLISHED);
+                savePosting(wrongLatestPosting, 2, RequisitionLabels.POSTING_CLOSED);
+                entityManager.flush();
+                entityManager.clear();
+
+                var statusOnly = listService.getListPage(new RequisitionSearchRequest(
+                                "Filter combo", List.of(RequisitionAccess.STATUS_APPROVED),
+                                null, null, null, null, null, "newest", 0, 10, null));
+                assertFalse(statusOnly.page().getContent().stream()
+                                .anyMatch(row -> row.requisitionId().equals(wrongStatus.getRequisitionId())));
+                assertEquals(2, statusOnly.page().getContent().size());
+
+                var result = listService.getListPage(new RequisitionSearchRequest(
+                                "Filter combo", List.of(RequisitionAccess.STATUS_APPROVED),
+                                RequisitionLabels.POSTING_PUBLISHED, null, null, null, null,
+                                "newest", 0, 10, null));
+
+                assertTrue(result.errors().isEmpty());
+                assertEquals(List.of(matching.getRequisitionId()), result.page().getContent().stream()
+                                .map(RequisitionResponse::requisitionId).toList());
         }
 
         // ----- Chuyển trạng thái -----

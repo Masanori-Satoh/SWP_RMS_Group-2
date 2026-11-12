@@ -43,6 +43,7 @@
 .req-list-page .req-toolbar .mft-search { order:2; flex:0 1 300px; min-width:min(100%, 230px); max-width:320px; margin-left:auto; }
 .req-list-page .req-toolbar .mft-search { flex-wrap:wrap; }
 .req-list-page .req-toolbar .mft-search-error { flex:0 0 100%; margin:0 var(--s3) var(--s2); }
+.req-list-page .req-toolbar .mft-filter-submit { order:3; flex:none; align-self:flex-start; }
 .req-list-page .req-toolbar .mft-popover { left:var(--s4); right:auto; }
 @media (max-width:760px) {
     .req-list-page .req-toolbar .mft-status-tabs { order:1; flex:1 1 100%; flex-wrap:wrap; white-space:normal; border-radius:var(--radius-lg); }
