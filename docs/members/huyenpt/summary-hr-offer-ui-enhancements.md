@@ -1,3 +1,5 @@
+> Ghi chú 11/11/2026: đường dẫn và package test đã được cập nhật theo tầng kiểm thử; kết quả Task/PR lịch sử giữ nguyên.
+
 # TỔNG KẾT NỘI DUNG HOÀN THIỆN PHÂN HỆ QUẢN LÝ ĐỀ XUẤT OFFER (HR OFFER ENHANCEMENTS)
 
 - **Dự án:** Hệ Thống Quản Lý Tuyển Dụng — SWP_RMS_Group-2 (Mộc RMS)
@@ -141,7 +143,7 @@ Nhánh `feat/huyenpt/inte2/hr-offer-ui-enhancements` được thực hiện nh�
 | 9 | `src/main/resources/templates/offers/list.html` | Modified | Tích hợp 4 pop-up modals (`Export`, `Create`, `Detail`, `Edit`), thanh `selectionToolbar`, icon thao tác |
 | 10 | `src/main/resources/static/css/offers.css` | Modified | Bổ sung styles cho Selection Toolbar, Modals, Export dialog, Stats cards, Toast |
 | 11 | `src/main/resources/static/js/offers.js` | Modified | Xử lý logic toàn bộ pop-up modals, checkbox đa chọn, gọi AJAX RESTful, tải file blob Excel |
-| 12 | `src/test/java/com/group2/rms/offer/OfferExportServiceTests.java` | **Created** | 7 Unit test cases kiểm tra dịch vụ xuất Excel |
+| 12 | `src/test/java/com/group2/rms/offer/service/OfferExportServiceTests.java` | **Created** | 7 Unit test cases kiểm tra dịch vụ xuất Excel |
 | 13 | `src/test/java/com/group2/rms/offer/OfferIntegrationTest.java` | Modified | 15 Integration test cases kiểm tra đầy đủ các API và luồng của OfferController |
 | 14 | `src/test/java/com/group2/rms/service/OfferServiceTests.java` | Modified | 57 Unit test cases kiểm tra nghiệp vụ lõi của OfferService |
 

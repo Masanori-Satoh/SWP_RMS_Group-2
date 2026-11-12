@@ -1,3 +1,9 @@
+> Ghi chú 11/11/2026: đường dẫn và package test đã được cập nhật theo tầng kiểm thử; kết quả Task/PR lịch sử giữ nguyên.
+
+> Ghi chú 11/11/2026: đường dẫn JavaScript đã được cập nhật theo vị trí hiện hành; kết quả thực hiện lịch sử không thay đổi.
+
+> Ghi chú 11/11/2026: đường dẫn CSS trong tài liệu đã được cập nhật theo vị trí hiện hành; các kết quả Task/PR lịch sử được giữ nguyên.
+
 # Hoàn thiện giao diện, nghiệp vụ và giao dịch Offer
 
 **Nhánh:** `feat/huyenpt/offer-workflow-completion`.
@@ -83,14 +89,14 @@ Log cục bộ không commit: scratch/offer-workflow-completion-tests.log, scrat
 | `src/main/java/com/group2/rms/offer/service/OfferServiceImpl.java` | Gọn workflow, đúng ngày/thử việc, chống race và cách ly notification. | 212 / 316 |
 | `src/main/resources/static/css/pages/candidate-offer-detail.css` | CSS riêng trang chi tiết Candidate. | 897 / 0 |
 | `src/main/resources/static/css/pages/candidate-offers.css` | Giữ CSS danh sách, bỏ phần chi tiết đã tách và rule dư. | 32 / 1243 |
-| `src/main/resources/static/css/pages/offers/offer-common.css` | Dùng token, thành phần chung và dọn CSS dư. | 142 / 288 |
-| `src/main/resources/static/css/pages/offers/offer-director.css` | Đồng bộ popup Director, bỏ selector không dùng. | 43 / 201 |
-| `src/main/resources/static/css/pages/offers/offer-hr.css` | Chuẩn hóa form/export và nút chọn cột, bỏ rule dư. | 17 / 94 |
+| `src/main/resources/static/css/pages/offer-common.css` | Dùng token, thành phần chung và dọn CSS dư. | 142 / 288 |
+| `src/main/resources/static/css/pages/offer-director.css` | Đồng bộ popup Director, bỏ selector không dùng. | 43 / 201 |
+| `src/main/resources/static/css/pages/offer-hr.css` | Chuẩn hóa form/export và nút chọn cột, bỏ rule dư. | 17 / 94 |
 | `src/main/resources/static/js/pages/candidate-offers.js` | Đồng bộ popup phản hồi và xử lý giao diện Candidate. | 16 / 13 |
-| `src/main/resources/static/js/pages/offers/offer-common.js` | Helper JSON/CSRF/toast và phát hành dùng chung. | 56 / 39 |
-| `src/main/resources/static/js/pages/offers/offer-director.js` | Gom xử lý quyết định, feedback và popup. | 48 / 221 |
-| `src/main/resources/static/js/pages/offers/offer-form.js` | Tách logic form, giữ dữ liệu nhập và làm tròn gợi ý lương. | 174 / 0 |
-| `src/main/resources/static/js/pages/offers/offer-hr.js` | Giảm handler trùng, bộ lọc GET và payload Excel đúng backend. | 37 / 265 |
+| `src/main/resources/static/js/pages/offer-common.js` | Helper JSON/CSRF/toast và phát hành dùng chung. | 56 / 39 |
+| `src/main/resources/static/js/pages/offer-director.js` | Gom xử lý quyết định, feedback và popup. | 48 / 221 |
+| `src/main/resources/static/js/pages/offer-form.js` | Tách logic form, giữ dữ liệu nhập và làm tròn gợi ý lương. | 174 / 0 |
+| `src/main/resources/static/js/pages/offer-hr.js` | Giảm handler trùng, bộ lọc GET và payload Excel đúng backend. | 37 / 265 |
 | `src/main/resources/templates/offers/candidate-detail.html` | CSS riêng và popup phản hồi đồng nhất. | 3 / 2 |
 | `src/main/resources/templates/offers/candidate-list.html` | Thuật ngữ/trạng thái và popup Candidate. | 4 / 4 |
 | `src/main/resources/templates/offers/detail.html` | Nhãn hết hạn, popup/nút theo quyền và ngôn ngữ thống nhất. | 32 / 43 |
@@ -99,8 +105,8 @@ Log cục bộ không commit: scratch/offer-workflow-completion-tests.log, scrat
 | `src/main/resources/templates/offers/fragments/confirmations.html` | Fragment xác nhận gửi/xóa dùng chung trong Offer. | 34 / 0 |
 | `src/main/resources/templates/offers/list.html` | Bộ lọc, thuật ngữ, export, popup và trạng thái hết hạn. | 56 / 70 |
 | `src/test/java/com/group2/rms/notification/service/NotificationServiceImplTests.java` | Test link nhận/từ chối theo người nhận. | 25 / 2 |
-| `src/test/java/com/group2/rms/offer/OfferExportServiceTests.java` | Hợp đồng export, số liệu và workbook nhiều dòng. | 363 / 0 |
-| `src/test/java/com/group2/rms/offer/OfferIntegrationTests.java` | HTTP/form/JSON, quyền và render UI; giữ regression PR #161. | 189 / 100 |
+| `src/test/java/com/group2/rms/offer/service/OfferExportServiceTests.java` | Hợp đồng export, số liệu và workbook nhiều dòng. | 363 / 0 |
+| `src/test/java/com/group2/rms/offer/controller/OfferIntegrationTests.java` | HTTP/form/JSON, quyền và render UI; giữ regression PR #161. | 189 / 100 |
 | `src/test/java/com/group2/rms/offer/controller/OfferControllerBugTests.java` | Đồng bộ fixture cho hợp đồng controller. | 1 / 1 |
 | `src/test/java/com/group2/rms/offer/repository/CandidateOfferQueryTests.java` | Đồng bộ câu query và phản hồi với contract mới. | 8 / 3 |
 | `src/test/java/com/group2/rms/offer/repository/OfferPersistenceRegressionTests.java` | Regression SQL riêng cho query, race, rollback, notification và hết hạn. | 601 / 0 |

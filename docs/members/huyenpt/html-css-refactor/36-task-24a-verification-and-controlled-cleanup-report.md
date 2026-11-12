@@ -1,3 +1,5 @@
+> Ghi chú 11/11/2026: đường dẫn JavaScript đã được cập nhật theo vị trí hiện hành; kết quả thực hiện lịch sử không thay đổi.
+
 # Task 24A — Kiểm chứng và sửa có kiểm soát luồng Offer
 
 > **Lưu ý khi đọc:** Tài liệu lịch sử: phản ánh thời điểm audit/refactor; tên hàm, đường dẫn và đề xuất có thể khác code đã merge. Xem [mục lục và hướng dẫn hiện hành](../README.md).
@@ -91,9 +93,9 @@ Không mở Candidate Detail, vì GET có thể đánh dấu notification đã �
 
 | Production file | Dòng trước → sau | Byte trước → sau |
 |---|---:|---:|
-| `src/main/resources/static/js/pages/offers/offer-common.js` | 206 → 193 | 8.880 → 8.363 |
-| `src/main/resources/static/js/pages/offers/offer-hr.js` | 573 → 573 | 22.467 → 22.471 |
-| `src/main/resources/static/js/pages/offers/offer-director.js` | 479 → 479 | 20.083 → 20.091 |
+| `src/main/resources/static/js/pages/offer-common.js` | 206 → 193 | 8.880 → 8.363 |
+| `src/main/resources/static/js/pages/offer-hr.js` | 573 → 573 | 22.467 → 22.471 |
+| `src/main/resources/static/js/pages/offer-director.js` | 479 → 479 | 20.083 → 20.091 |
 | `src/main/resources/templates/offers/list.html` | 510 → 454 | 38.311 → 34.116 |
 
 Tổng JS 1.543 → 1.530 dòng, 62.211 → 61.706 byte. J01 thêm ròng 2 dòng vào common, J02 giảm ròng 15 dòng. CSS giữ 4.886 dòng / 101.616 byte. Không tạo thêm asset production. Ngoài bốn tệp trên, Task 24A thêm `scratch/task24a-toast-browser.cjs` và chính báo cáo này. Probe Java dưới `target/task24a-layout` là build artifact ignored. Không stage hoặc commit.

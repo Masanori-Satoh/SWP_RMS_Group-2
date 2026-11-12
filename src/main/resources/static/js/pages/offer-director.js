@@ -3,12 +3,23 @@
  * Trách nhiệm luồng nghiệp vụ của Giám đốc (Director Approval Workflows):
  * - SECTION A: Hộp thoại phê duyệt / từ chối nhanh (Quick Decision Modal trên List & Director List)
  * - SECTION C: Các thao tác ra quyết định trên màn hình xem chi tiết (Offer Detail Decision)
- * - SECTION D: Xuất khẩu toàn cục ra window để tương thích thuộc tính inline của Thymeleaf
  */
 
 // =========================================================================
 // SECTION A — DIRECTOR QUICK DECISION MODAL (Screen 30 & Screen 30D)
 // =========================================================================
+
+bindOfferEvents({
+    'director-scroll': () => scrollToDirectorDecision(),
+    'quick-open': el => openDirectorDecisionModal(el.dataset.offerId, el.dataset.offerDecision),
+    'quick-close': () => closeDirectorDecisionModal(),
+    'quick-submit': () => submitDirectorDecision(),
+    'detail-decision': el => submitDirectorDecisionFromScreen(el.dataset.offerId, el.dataset.offerDecision),
+    'approve-confirm': () => confirmDirectorApproveAction(),
+    'reject-confirm': () => confirmDirectorRejectAction(),
+    'quick-comment': el => handleDirectorDecisionCommentInput(el),
+    'detail-comment': el => updateDirectorDetailCommentCounter(el)
+});
 
 /**
  * Mở modal quyết định nhanh trên danh sách; APPROVE cho nhận xét tùy chọn, REJECT bắt buộc lý do.
@@ -289,18 +300,3 @@ async function executeDirectorDecisionApi(url, comments, onSuccess = () => { win
         showFlashToast(error.message, 'error');
     }
 }
-
-// =========================================================================
-// SECTION D — WINDOW GLOBAL EXPORTS
-// =========================================================================
-window.openDirectorDecisionModal = openDirectorDecisionModal;
-window.handleDirectorDecisionCommentInput = handleDirectorDecisionCommentInput;
-window.closeDirectorDecisionModal = closeDirectorDecisionModal;
-window.submitDirectorDecision = submitDirectorDecision;
-
-
-window.updateDirectorDetailCommentCounter = updateDirectorDetailCommentCounter;
-window.scrollToDirectorDecision = scrollToDirectorDecision;
-window.submitDirectorDecisionFromScreen = submitDirectorDecisionFromScreen;
-window.confirmDirectorApproveAction = confirmDirectorApproveAction;
-window.confirmDirectorRejectAction = confirmDirectorRejectAction;

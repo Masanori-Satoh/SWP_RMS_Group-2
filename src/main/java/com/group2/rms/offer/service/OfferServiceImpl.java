@@ -44,7 +44,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -84,8 +83,28 @@ public class OfferServiceImpl implements OfferService {
     @Override
     @Transactional(readOnly = true)
     public OfferResponse getOfferById(Integer offerId) {
-        OfferProposal offer = findActiveOffer(offerId);
+        OfferProposal offer = findVisibleOffer(offerId);
         return mapToResponse(offer);
+    }
+
+    /** Quyền trên bản ghi áp dụng cả HTML/JSON, không phụ thuộc bản ghi có xuất hiện trong danh sách. */
+    private OfferProposal findVisibleOffer(Integer id) {
+        User viewer = currentUserService.requireUser();
+        if (CurrentUserService.hasRole(viewer, "HR")) return findActiveOffer(id);
+        if (CurrentUserService.hasRole(viewer, "Director")) {
+            return offerProposalRepository.findOne(OfferProposalRepository.visibleToDirector(viewer.getUserId())
+                            .and((root, query, builder) -> builder.equal(root.get("offerId"), id)))
+                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy thư mời nhận việc với ID: " + id));
+        }
+        throw new org.springframework.security.access.AccessDeniedException("Bạn không có quyền xem thư mời nhận việc nội bộ.");
+    }
+
+    private User requireDirector() {
+        User viewer = currentUserService.requireUser();
+        if (!CurrentUserService.hasRole(viewer, "Director")) {
+            throw new org.springframework.security.access.AccessDeniedException("Chỉ Giám đốc được xem danh sách phê duyệt.");
+        }
+        return viewer;
     }
 
 
@@ -284,20 +303,7 @@ public class OfferServiceImpl implements OfferService {
     @Override
     @Transactional(readOnly = true)
     public Page<OfferResponse> getAllOffersForHr(String search, String status, String timeSort, Pageable pageable) {
-        boolean hasSearch = search != null && !search.trim().isEmpty();
-        boolean hasStatus = status != null && !status.trim().isEmpty() && !"ALL".equalsIgnoreCase(status.trim());
-        boolean hasCustomSort = timeSort != null && !timeSort.trim().isEmpty() && !"DEFAULT".equalsIgnoreCase(timeSort.trim());
-
-        // Fast-path: Nếu không tìm kiếm theo từ khóa và không chọn sắp xếp tùy biến
-        if (!hasSearch && !hasCustomSort) {
-            Page<OfferProposal> pagedEntities;
-            if (!hasStatus) {
-                pagedEntities = offerProposalRepository.findAllActiveByOrderByOfferIdAsc(pageable);
-            } else {
-                pagedEntities = offerProposalRepository.findActiveByStatusOrderByOfferIdAsc(status.trim(), pageable);
-            }
-            return pagedEntities.map(this::mapToResponse);
-        }
+        LocalDateTime now = LocalDateTime.now(clock);
 
         // Cấu hình sắp xếp theo thời gian (EARLIEST / LATEST / DEFAULT)
         Sort sort;
@@ -311,10 +317,10 @@ public class OfferServiceImpl implements OfferService {
 
         Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
 
-        Specification<OfferProposal> spec = OfferProposalRepository.matchingFilters(search, status);
+        Specification<OfferProposal> spec = OfferProposalRepository.matchingFilters(search, status, now);
 
         Page<OfferProposal> pagedEntities = offerProposalRepository.findAll(spec, sortedPageable);
-        return pagedEntities.map(this::mapToResponse);
+        return pagedEntities.map(entity -> mapToResponse(entity, now));
     }
 
     @Override
@@ -324,7 +330,7 @@ public class OfferServiceImpl implements OfferService {
         stats.put("statTotal", offerProposalRepository.countActiveOffers());
         stats.put("statPending", offerProposalRepository.countPendingDirector());
         stats.put("statApproved", offerProposalRepository.countDirectorApproved());
-        stats.put("statSent", offerProposalRepository.countSentCandidate());
+        stats.put("statSent", offerProposalRepository.count(OfferProposalRepository.matchingFilters(null, "Sent_Candidate", LocalDateTime.now(clock))));
         stats.put("statAccepted", offerProposalRepository.countAccepted());
         return stats;
     }
@@ -336,7 +342,7 @@ public class OfferServiceImpl implements OfferService {
     @Override
     @Transactional(readOnly = true)
     public OfferDetailResponse getOfferDetailForHr(Integer id) {
-        OfferProposal offer = findActiveOffer(id);
+        OfferProposal offer = findVisibleOffer(id);
 
         var app = offer.getApplication();
         var cand = app != null ? app.getCandidate() : null;
@@ -667,6 +673,10 @@ public class OfferServiceImpl implements OfferService {
 
 
     private OfferResponse mapToResponse(OfferProposal entity) {
+        return mapToResponse(entity, LocalDateTime.now(clock));
+    }
+
+    private OfferResponse mapToResponse(OfferProposal entity, LocalDateTime now) {
         String candidateName = null;
         String candidateEmail = null;
         if (entity.getApplication() != null && entity.getApplication().getCandidate() != null) {
@@ -698,7 +708,7 @@ public class OfferServiceImpl implements OfferService {
                 .benefitsPackage(entity.getBenefitsPackage())
                 .responsePeriodDays(entity.getResponsePeriodDays())
                 .responseDeadline(entity.getResponseDeadline())
-                .responseExpired(entity.isResponseExpiredAt(LocalDateTime.now(clock)))
+                .responseExpired(entity.isResponseExpiredAt(now))
                 .proposedById(proposedById)
                 .proposedByName(proposedByName)
                 .offerStatus(entity.getOfferStatus())
@@ -793,8 +803,8 @@ public class OfferServiceImpl implements OfferService {
     @Override
     @Transactional(readOnly = true)
     public Map<String, Long> getDirectorOfferStats() {
-        User director = currentUserService.requireUser();
-        Integer directorId = director != null ? director.getUserId() : 0;
+        User director = requireDirector();
+        Integer directorId = director.getUserId();
         
         Map<String, Long> stats = new HashMap<>();
         stats.put("statPending", offerProposalRepository.countPendingDirector());
@@ -806,26 +816,28 @@ public class OfferServiceImpl implements OfferService {
     @Override
     @Transactional(readOnly = true)
     public Map<String, Long> getDirectorStatusCounts() {
+        var visible = OfferProposalRepository.visibleToDirector(requireDirector().getUserId());
+        LocalDateTime now = LocalDateTime.now(clock);
         Map<String, Long> counts = new HashMap<>();
-        counts.put("ALL", offerProposalRepository.countAllNonDraft());
-        counts.put("Pending_Director", offerProposalRepository.countPendingDirector());
-        counts.put("Director_Approved", offerProposalRepository.countDirectorApproved());
-        counts.put("Sent_Candidate", offerProposalRepository.countSentCandidate());
-        counts.put("Expired", offerProposalRepository.countExpired());
-        counts.put("Accepted", offerProposalRepository.countAccepted());
-        counts.put("Declined", offerProposalRepository.countDeclined());
-        counts.put("Director_Rejected", offerProposalRepository.countDirectorRejected());
+        counts.put("ALL", offerProposalRepository.count(visible));
+        for (String status : List.of("Pending_Director", "Director_Approved", "Sent_Candidate", "Expired",
+                "Accepted", "Declined", "Director_Rejected")) {
+            counts.put(status, offerProposalRepository.count(visible.and(OfferProposalRepository.matchingStatus(status, now))));
+        }
         return counts;
     }
 
     /**
-     * Danh sách Giám đốc luôn ẩn Draft. Nhóm đã duyệt còn bao gồm các Offer đã gửi/được nhận/bị ứng viên từ chối.
+     * Giám đốc xem Pending_Director và lịch sử mình đã quyết định, không thấy Draft/xóa mềm.
+     * Nhóm đã duyệt còn bao gồm các Offer đã gửi/được nhận/bị ứng viên từ chối.
      * Đây là nhóm nghiệp vụ khác bộ lọc Approved của HR/Excel, nên không gộp máy móc hai điều kiện.
      * Tìm kiếm hỗ trợ thêm mã Offer; sắp xếp mặc định mới nhất theo ID, khác HR mặc định tăng dần.
      */
     @Override
     @Transactional(readOnly = true)
     public Page<OfferResponse> getDirectorOffers(String search, String status, String timeSort, Pageable pageable) {
+        var visible = OfferProposalRepository.visibleToDirector(requireDirector().getUserId());
+        LocalDateTime now = LocalDateTime.now(clock);
         boolean hasSearch = search != null && !search.trim().isEmpty();
         boolean hasStatus = status != null && !status.trim().isEmpty() && !"ALL".equalsIgnoreCase(status.trim());
 
@@ -843,14 +855,8 @@ public class OfferServiceImpl implements OfferService {
         Specification<OfferProposal> spec = (root, query, builder) -> {
             List<Predicate> predicates = new ArrayList<>();
 
-            // 1. Chỉ lấy các bản ghi chưa bị xóa mềm
-            predicates.add(builder.or(
-                    builder.isNull(root.get("isDeleted")),
-                    builder.isFalse(root.get("isDeleted"))
-            ));
-
-            // 2. Không hiển thị bản nháp cho Director (chỉ các đề xuất đã được HR trình lên)
-            predicates.add(builder.notEqual(builder.lower(root.get("offerStatus")), "draft"));
+            // Dùng cùng phạm vi bản ghi với chi tiết và bộ đếm trạng thái.
+            predicates.add(visible.toPredicate(root, query, builder));
 
             // 3. Dùng chung keyword với HR/Excel; giữ phạm vi trạng thái riêng của Giám đốc.
             if (hasSearch) {
@@ -877,7 +883,7 @@ public class OfferServiceImpl implements OfferService {
                             builder.equal(builder.lower(root.get("offerStatus")), "rejected")
                     ));
                 } else {
-                    predicates.add(builder.equal(builder.lower(root.get("offerStatus")), s.toLowerCase(Locale.ROOT)));
+                    predicates.add(OfferProposalRepository.matchingStatus(s, now).toPredicate(root, query, builder));
                 }
             }
 
@@ -885,7 +891,7 @@ public class OfferServiceImpl implements OfferService {
         };
 
         Page<OfferProposal> pagedEntities = offerProposalRepository.findAll(spec, sortedPageable);
-        return pagedEntities.map(this::mapToResponse);
+        return pagedEntities.map(entity -> mapToResponse(entity, now));
     }
 
 

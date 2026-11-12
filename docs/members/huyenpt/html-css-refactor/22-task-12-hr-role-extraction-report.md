@@ -1,3 +1,5 @@
+> Ghi chú 11/11/2026: đường dẫn JavaScript đã được cập nhật theo vị trí hiện hành; kết quả thực hiện lịch sử không thay đổi.
+
 # BÁO CÁO TRÍCH XUẤT JAVASCRIPT THEO VAI TRÒ HR, LOẠI BỎ MÃ CHẾT & KIỂM THỬ HỒI QUY (TASK 12)
 
 > **Lưu ý khi đọc:** Tài liệu lịch sử: phản ánh thời điểm audit/refactor; tên hàm, đường dẫn và đề xuất có thể khác code đã merge. Xem [mục lục và hướng dẫn hiện hành](../README.md).
@@ -12,7 +14,7 @@
 Tuân thủ nghiêm ngặt lộ trình tái cấu trúc theo vai trò (Role-Based Architecture) đã phê duyệt từ Task 11, **Batch 02** đã hoàn thành trọn vẹn 3 mục tiêu cốt lõi:
 
 1. **Khởi tạo và quy hoạch tệp `offer-hr.js`:**
-   - Tạo mới tệp [`src/main/resources/static/js/pages/offers/offer-hr.js`](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/main/resources/static/js/pages/offers/offer-hr.js) (591 dòng).
+   - Tạo mới tệp [`src/main/resources/static/js/pages/offer-hr.js`](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/main/resources/static/js/pages/offer-hr.js) (591 dòng).
    - Gom toàn bộ logic của Chuyên viên Tuyển dụng (HR / Recruiter) thành 4 khu vực nghiệp vụ có cấu trúc chặt chẽ:
      - `SECTION A — HR OFFER LIST`: Bộ lọc tìm kiếm, đổi tab trạng thái, chọn hàng loạt, thanh thao tác, xóa bản nháp.
      - `SECTION B — CREATE / EDIT OFFER FORM`: Autofill ứng viên (Group A), tự động tính 85% lương thử việc theo Luật Lao Động 2019, cập nhật động ngày bắt đầu tối thiểu (`min = today + days + 1`).
@@ -130,8 +132,8 @@ graph TD
 ## 5. KẾT QUẢ KIỂM THỬ HỒI QUY TOÀN DIỆN (REGRESSION RESULTS)
 
 ### 5.1. Kiểm tra cú pháp JavaScript (Node.js Syntax Check)
-- `node --check src/main/resources/static/js/pages/offers/offer-common.js` -> **PASS (code=0)**
-- `node --check src/main/resources/static/js/pages/offers/offer-hr.js` -> **PASS (code=0)**
+- `node --check src/main/resources/static/js/pages/offer-common.js` -> **PASS (code=0)**
+- `node --check src/main/resources/static/js/pages/offer-hr.js` -> **PASS (code=0)**
 - `node --check src/main/resources/static/js/offers.js` -> **PASS (code=0)**
 
 ### 5.2. Kiểm thử tự động Backend (7 Maven Test Suites)
@@ -159,8 +161,8 @@ graph TD
 - **Lỗi Console:** **0 lỗi**.
 
 ### 5.4. Kiểm tra mã phản hồi HTTP của tài nguyên tĩnh
-- `GET /js/pages/offers/offer-common.js` -> **HTTP 200 OK** (9.131 bytes)
-- `GET /js/pages/offers/offer-hr.js` -> **HTTP 200 OK** (23.305 bytes)
+- `GET /js/pages/offer-common.js` -> **HTTP 200 OK** (9.131 bytes)
+- `GET /js/pages/offer-hr.js` -> **HTTP 200 OK** (23.305 bytes)
 - `GET /js/offers.js` -> **HTTP 200 OK** (24.667 bytes)
 
 ---
@@ -193,7 +195,7 @@ graph TD
 
 ## 8. ĐỀ XUẤT CHO TASK 13 (RECOMMENDATION FOR TASK 13 / BATCH 03)
 
-- **Mục tiêu Batch 03:** Trích xuất toàn bộ luồng phê duyệt của Giám đốc thành `src/main/resources/static/js/pages/offers/offer-director.js` (~300–350 dòng).
+- **Mục tiêu Batch 03:** Trích xuất toàn bộ luồng phê duyệt của Giám đốc thành `src/main/resources/static/js/pages/offer-director.js` (~300–350 dòng).
 - **Phạm vi chuyển dịch:**
   - Hộp thoại quyết định nhanh (`openDirectorDecisionModal`, `handleDirectorDecisionCommentInput`, `closeDirectorDecisionModal`, `submitDirectorDecision`).
   - Bộ lọc danh sách Giám đốc (`applyDirectorFilters`, `filterDirectorOffersByStatus`, `clearDirectorSearch`).

@@ -1,3 +1,5 @@
+> Ghi chú 11/11/2026: đường dẫn và package test đã được cập nhật theo tầng kiểm thử; kết quả Task/PR lịch sử giữ nguyên.
+
 # PR 02/08 — Phân quyền và validation nghiệp vụ Offer
 
 **Base:** `main`, commit `586d6c44` đã chứa PR #160.
@@ -22,7 +24,7 @@ Sau thay đổi:
 | `src/main/java/com/group2/rms/core/config/SecurityConfig.java` | Thêm đúng chín dòng matcher Offer để giới hạn GET tạo/sửa và POST/PUT/DELETE quản lý cho HR; giữ quyền duyệt/từ chối của Director và các matcher module khác |
 | `src/main/java/com/group2/rms/offer/service/OfferServiceImpl.java` | Gom tìm Offer chưa xóa; kiểm tra Passed và hồ sơ chưa kết thúc; dùng CurrentUserService thay tra UserRepository/fallback; bỏ tin cậy proposedById; kiểm tra lý do và độ dài phản hồi tại service |
 | `src/main/resources/templates/offers/detail.html` | Nút xóa nháp, phát hành và dialog phát hành chỉ hiện cho HR khi trạng thái phù hợp; không đổi CSS/layout |
-| `src/test/java/com/group2/rms/offer/OfferIntegrationTests.java` | Chặn Director ở tám URL/method với cả JSON và form; kiểm tra bốn trường hợp hiển thị nút theo HR/Director và trạng thái |
+| `src/test/java/com/group2/rms/offer/controller/OfferIntegrationTests.java` | Chặn Director ở tám URL/method với cả JSON và form; kiểm tra bốn trường hợp hiển thị nút theo HR/Director và trạng thái |
 | `src/test/java/com/group2/rms/offer/service/OfferServiceTests.java` | Hồi quy Passed/xóa mềm/người tạo; thêm actor anonymous/missing/inactive, giới hạn phản hồi, hồ sơ kết thúc; cập nhật fixture Active và sửa các test cũ từng cho từ chối không lý do |
 | `docs/architecture/ARCHITECTURE_GUIDE.md` | Bổ sung hai dòng bảng quyền URL Offer tương ứng với SecurityConfig; không đổi quy tắc kiến trúc khác |
 | `docs/members/huyenpt/pr-review/02-permissions-validation.md` | Báo cáo phạm vi, file thay đổi và bằng chứng kiểm thử của PR |

@@ -1,3 +1,7 @@
+> Ghi chú 11/11/2026: đường dẫn và package test đã được cập nhật theo tầng kiểm thử; kết quả Task/PR lịch sử giữ nguyên.
+
+> Ghi chú 11/11/2026: đường dẫn CSS trong tài liệu đã được cập nhật theo vị trí hiện hành; các kết quả Task/PR lịch sử được giữ nguyên.
+
 # BÁO CÁO KỸ THUẬT TASK 15: TÁCH CSS VAI TRÒ HR, BẢO TOÀN CASCADE VÀ KIỂM CHỨNG BẰNG SO SÁNH PIXEL THỰC TẾ
 
 > **Lưu ý khi đọc:** Tài liệu lịch sử: phản ánh thời điểm audit/refactor; tên hàm, đường dẫn và đề xuất có thể khác code đã merge. Xem [mục lục và hướng dẫn hiện hành](../README.md).
@@ -18,7 +22,7 @@ Sau khi hoàn thành thành công việc tái cấu trúc mã nguồn JavaScript
    - **Vấn đề A (Tính chuẩn xác của so sánh ảnh):** Không dùng kích thước tệp PNG (byte size) làm bằng chứng tương đương giao diện. Thay vào đó, xây dựng công cụ kiểm tra vi sai cấp độ pixel thực tế (`scratch/pixel_compare.py`) dựa trên thư viện Pillow Python để tính toán chính xác số pixel khác biệt, tỷ lệ phần trăm, độ lệch trung bình tuyệt đối (MAE) và bounding box của từng vùng thay đổi.
    - **Vấn đề B (Độ rộng Modal trong tầng Cascade):** Sửa chữa hiện tượng kích thước modal bị thay đổi (Modal Giám đốc bị co về 500px và Modal Xuất Excel bị nhảy lên 680px) do thứ tự nạp trong tầng Cascade của Task 14. Khôi phục chuẩn mực `max-width: 620px` và đổ bóng chuẩn hệ thống `box-shadow: var(--shadow-lg)` cho cả hai modal, đảm bảo khớp 100% hình thái cơ sở (baseline).
 2. **Khởi tạo tệp CSS dành riêng cho vai trò HR:**
-   - `src/main/resources/static/css/pages/offers/offer-hr.css` (879 dòng)
+   - `src/main/resources/static/css/pages/offer-hr.css` (879 dòng)
    - Tổ chức mạch lạc thành 4 phân khu (Section A: HR List & Workspace, Section B: Create/Edit Form, Section C: Excel Export, Section D: Responsive Breakpoints).
 3. **Thực hiện di chuyển có kiểm soát qua 3 Checkpoint nội bộ:**
    - **Checkpoint A:** Biểu mẫu Tạo / Sửa đề xuất (`form.html`).
@@ -117,10 +121,10 @@ Trong `form.html` và `list.html`, tệp `offer-hr.css` được nhúng vào v�
 
 ```html
 <th:block layout:fragment="styles">
-  <link rel="stylesheet" th:href="@{/css/pages/offers/offer-common.css}">
+  <link rel="stylesheet" th:href="@{/css/pages/offer-common.css}">
   <link rel="stylesheet" th:href="@{/css/offers.css}">
   <link rel="stylesheet" th:href="@{/css/pages/offer-workspace.css}">
-  <link rel="stylesheet" th:href="@{/css/pages/offers/offer-hr.css}">
+  <link rel="stylesheet" th:href="@{/css/pages/offer-hr.css}">
   <link rel="stylesheet" th:href="@{/css/pages/flash-toast.css}">
 </th:block>
 ```
@@ -144,7 +148,7 @@ Trong `form.html` và `list.html`, tệp `offer-hr.css` được nhúng vào v�
 
 ### 6.1. Kiểm thử Tự động Maven (Backend & Integration Contracts)
 Toàn bộ 7 bộ kiểm thử đặc thù của phân hệ Offer chạy thành công tuyệt đối:
-- `com.group2.rms.offer.CandidateOfferWebTests`: 14 tests PASS.
+- `com.group2.rms.offer.controller.CandidateOfferWebTests`: 14 tests PASS.
 - `com.group2.rms.offer.controller.OfferControllerBugTests`: 10 tests PASS.
 - `com.group2.rms.offer.controller.OfferExportServiceTests`: 15 tests PASS.
 - `com.group2.rms.offer.integration.OfferIntegrationTests`: 30 tests PASS.

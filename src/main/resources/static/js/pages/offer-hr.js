@@ -10,40 +10,19 @@
 // SECTION A — HR OFFER LIST (Screen 30 List Filters & Row Selection)
 // =========================================================================
 
-/**
- * Xác nhận và gọi API xóa bản nháp đề xuất (Chỉ áp dụng cho trạng thái Draft)
- */
-function confirmDeleteOffer(offerId) {
-    const dialog = document.getElementById('deleteOfferDialog');
-    if (!offerId || !dialog || dialog.open) return;
-    dialog.dataset.offerId = offerId;
-    dialog.showModal();
-}
-
-/**
- * Xóa nháp bằng DELETE sau khi người dùng xác nhận; server mới quyết định bản ghi có được xóa hay không.
- * Khóa nút trong lúc chờ, mở lại khi hoàn tất; chỉ reload khi ApiResponse báo thành công.
- */
-function executeDeleteOffer(button) {
-    const dialog = button.closest('dialog');
-    const offerId = dialog.dataset.offerId;
-    if (!offerId || button.disabled) return;
-    button.disabled = true;
-
-    offerRequest(`/offers/${offerId}`, { method: 'DELETE' })
-        .then(res => {
-            queueOfferToast(res.message || 'Đã xóa bản nháp thư mời thành công.');
-            window.location.reload();
-        })
-        .catch(err => {
-            if (typeof showFlashToast === 'function') {
-                showFlashToast(err.message, 'error');
-            }
-        })
-        .finally(() => {
-            button.disabled = false;
-        });
-}
+bindOfferEvents({
+    'export-open': () => openExportModal(),
+    'export-selected': () => openExportModalWithScope('SELECTED'),
+    'export-close': () => closeExportModal(),
+    'export-backdrop': (el, event) => handleExportModalBackdropClick(event),
+    'selection-clear': () => deselectAllOffers(),
+    'selection-all': el => toggleSelectAllOffers(el.checked),
+    'selection-row': () => handleOfferRowSelectionChange(),
+    'columns-all': () => selectAllColumns(),
+    'columns-default': () => resetDefaultColumns(),
+    'columns-clear': () => deselectAllColumns(),
+    export: () => executeOfferExport()
+});
 
 /**
  * Lấy danh sách ID các Offer đang được chọn qua checkbox
@@ -323,24 +302,3 @@ if (document.readyState === 'loading') {
 } else {
     initOfferHrPage();
 }
-
-// =========================================================================
-// SECTION E — WINDOW GLOBAL EXPORTS
-// =========================================================================
-window.confirmDeleteOffer = confirmDeleteOffer;
-window.executeDeleteOffer = executeDeleteOffer;
-window.getSelectedOfferIds = getSelectedOfferIds;
-window.toggleSelectAllOffers = toggleSelectAllOffers;
-window.handleOfferRowSelectionChange = handleOfferRowSelectionChange;
-window.deselectAllOffers = deselectAllOffers;
-window.updateSelectionToolbar = updateSelectionToolbar;
-
-
-window.openExportModal = openExportModal;
-window.openExportModalWithScope = openExportModalWithScope;
-window.closeExportModal = closeExportModal;
-window.handleExportModalBackdropClick = handleExportModalBackdropClick;
-window.selectAllColumns = selectAllColumns;
-window.deselectAllColumns = deselectAllColumns;
-window.resetDefaultColumns = resetDefaultColumns;
-window.executeOfferExport = executeOfferExport;

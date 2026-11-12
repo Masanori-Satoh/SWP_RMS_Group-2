@@ -66,6 +66,87 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class OfferServiceTests {
 
+    private void readAs(int userId, String role) {
+        doReturn(User.builder().userId(userId).accountStatus("Active")
+                .role(Role.builder().roleName(role).build()).build()).when(currentUserService).requireUser();
+    }
+
+    @SuppressWarnings("unchecked")
+    private void assertDirectorScope(org.springframework.data.jpa.domain.Specification<OfferProposal> spec, int directorId) {
+        var root = (jakarta.persistence.criteria.Root<OfferProposal>) mock(jakarta.persistence.criteria.Root.class, RETURNS_DEEP_STUBS);
+        var query = mock(jakarta.persistence.criteria.CriteriaQuery.class);
+        var history = (jakarta.persistence.criteria.Subquery<Integer>) mock(jakarta.persistence.criteria.Subquery.class, RETURNS_SELF);
+        var approval = (jakarta.persistence.criteria.Root<OfferApproval>) mock(jakarta.persistence.criteria.Root.class, RETURNS_DEEP_STUBS);
+        var builder = mock(jakarta.persistence.criteria.CriteriaBuilder.class, RETURNS_DEEP_STUBS);
+        when(query.subquery(Integer.class)).thenReturn(history);
+        when(history.from(OfferApproval.class)).thenReturn(approval);
+        spec.toPredicate(root, query, builder);
+        var offerStatus = builder.lower(root.get("offerStatus"));
+        verify(builder).equal(approval.get("director").get("userId"), directorId);
+        verify(builder).exists(history);
+        verify(builder).notEqual(offerStatus, "draft");
+        verify(builder).equal(offerStatus, "pending_director");
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {101, 202})
+    @SuppressWarnings("unchecked")
+    void directorDetailAndSummaryUseTheSameScopedQuery(int directorId) {
+        readAs(directorId, "Director");
+        when(offerProposalRepository.findOne(any(org.springframework.data.jpa.domain.Specification.class)))
+                .thenReturn(Optional.of(OfferProposal.builder().offerId(7).offerStatus("Pending_Director").build()));
+        assertEquals("Pending_Director", offerService.getOfferDetailForHr(7).getOfferStatus());
+        assertEquals("Pending_Director", offerService.getOfferById(7).getOfferStatus());
+        var scopes = ArgumentCaptor.forClass(org.springframework.data.jpa.domain.Specification.class);
+        verify(offerProposalRepository, times(2)).findOne(scopes.capture());
+        for (var spec : scopes.getAllValues()) assertDirectorScope(spec, directorId);
+        verify(offerProposalRepository, never()).findById(anyInt());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"Draft", "Director_Approved", "Director_Rejected", "Sent_Candidate", "Expired", "Accepted", "Declined"})
+    void directorCannotReadDraftOrOtherDirectorsHistory(String status) {
+        readAs(101, "Director");
+        lenient().when(offerProposalRepository.findById(7)).thenReturn(Optional.of(
+                OfferProposal.builder().offerId(7).offerStatus(status).build()));
+        when(offerProposalRepository.findOne(any(org.springframework.data.jpa.domain.Specification.class)))
+                .thenReturn(Optional.empty());
+        assertThrows(ResourceNotFoundException.class, () -> offerService.getOfferDetailForHr(7));
+        assertThrows(ResourceNotFoundException.class, () -> offerService.getOfferById(7));
+        verify(offerProposalRepository, never()).findById(anyInt());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"Director_Approved", "Director_Rejected", "Sent_Candidate", "Expired", "Accepted", "Declined"})
+    void directorCanReadOwnDecisionHistory(String status) {
+        readAs(101, "Director");
+        when(offerProposalRepository.findOne(any(org.springframework.data.jpa.domain.Specification.class)))
+                .thenReturn(Optional.of(OfferProposal.builder().offerId(7).offerStatus(status).build()));
+        assertEquals(status, offerService.getOfferDetailForHr(7).getOfferStatus());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"Candidate", "Hiring Manager", "Interviewer", "System Admin"})
+    void internalDetailRejectsNonOfferRoles(String role) {
+        readAs(101, role);
+        assertThrows(org.springframework.security.access.AccessDeniedException.class,
+                () -> offerService.getOfferDetailForHr(7));
+        verifyNoInteractions(offerProposalRepository);
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {101, 202})
+    @SuppressWarnings("unchecked")
+    void directorListUsesCurrentDirectorScope(int directorId) {
+        readAs(directorId, "Director");
+        when(offerProposalRepository.findAll(any(org.springframework.data.jpa.domain.Specification.class), any(Pageable.class)))
+                .thenReturn(Page.empty());
+        offerService.getDirectorOffers(null, "HISTORY", null, PageRequest.of(0, 10));
+        var scope = ArgumentCaptor.forClass(org.springframework.data.jpa.domain.Specification.class);
+        verify(offerProposalRepository).findAll(scope.capture(), any(Pageable.class));
+        assertDirectorScope(scope.getValue(), directorId);
+    }
+
     @ParameterizedTest
     @CsvSource({"36.000.000 VNĐ,36000000", "36.000.000 VND,36000000", "36.000.000,36000000",
             "36000000 VNĐ,36000000", "36.000.000vnd,36000000", "'  36.000.000   vnđ  ',36000000",
@@ -977,6 +1058,7 @@ class OfferServiceTests {
             "Accepted, -1, -1, false"
     })
     void internalOfferResponseUsesExpiryRules(String status, Integer deadlineSeconds, int startDays, boolean expired) {
+        readAs(10, "HR");
         LocalDateTime now = LocalDateTime.of(2026, 11, 5, 10, 0);
         when(clock.instant()).thenReturn(now.atZone(ZoneId.systemDefault()).toInstant());
         OfferProposal offer = OfferProposal.builder().offerId(1).offerStatus(status)
@@ -991,6 +1073,7 @@ class OfferServiceTests {
     @Test
     @DisplayName("getOfferById: Tìm thấy Offer thành công trả về OfferResponse")
     void testGetOfferById_found_returnsOfferResponse() {
+        readAs(10, "HR");
         OfferProposal offer = OfferProposal.builder()
                 .offerId(1)
                 .offeredPositionTitle("Senior Developer")
@@ -1011,6 +1094,7 @@ class OfferServiceTests {
     @Test
     @DisplayName("getOfferById: Không tìm thấy Offer ném ResourceNotFoundException")
     void testGetOfferById_notFound_throwsException() {
+        readAs(10, "HR");
         when(offerProposalRepository.findById(999)).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class, () -> {
@@ -1027,7 +1111,7 @@ class OfferServiceTests {
         OfferProposal offer = OfferProposal.builder().offerId(1).offerStatus("Draft").build();
         Page<OfferProposal> page = new PageImpl<>(List.of(offer), pageable, 1);
 
-        when(offerProposalRepository.findAllActiveByOrderByOfferIdAsc(pageable)).thenReturn(page);
+        when(offerProposalRepository.findAll(any(org.springframework.data.jpa.domain.Specification.class), any(Pageable.class))).thenReturn(page);
 
         Page<OfferResponse> resultAll = offerService.getAllOffersForHr("ALL", pageable);
         assertNotNull(resultAll);
@@ -1045,7 +1129,7 @@ class OfferServiceTests {
         OfferProposal offer = OfferProposal.builder().offerId(2).offerStatus("Pending_Director").build();
         Page<OfferProposal> page = new PageImpl<>(List.of(offer), pageable, 1);
 
-        when(offerProposalRepository.findActiveByStatusOrderByOfferIdAsc("Pending_Director", pageable)).thenReturn(page);
+        when(offerProposalRepository.findAll(any(org.springframework.data.jpa.domain.Specification.class), any(Pageable.class))).thenReturn(page);
 
         Page<OfferResponse> result = offerService.getAllOffersForHr("Pending_Director", pageable);
         assertNotNull(result);
@@ -1074,7 +1158,7 @@ class OfferServiceTests {
         when(offerProposalRepository.countActiveOffers()).thenReturn(14L);
         when(offerProposalRepository.countPendingDirector()).thenReturn(3L);
         when(offerProposalRepository.countDirectorApproved()).thenReturn(5L);
-        when(offerProposalRepository.countSentCandidate()).thenReturn(2L);
+        when(offerProposalRepository.count(any(org.springframework.data.jpa.domain.Specification.class))).thenReturn(2L);
         when(offerProposalRepository.countAccepted()).thenReturn(4L);
 
         Map<String, Long> stats = offerService.getOfferStats();
@@ -1089,6 +1173,7 @@ class OfferServiceTests {
     @Test
     @DisplayName("getOfferDetailForHr: Lấy chi tiết Offer đầy đủ Candidate và Lịch sử duyệt của Director")
     void testGetOfferDetailForHr_returnsComprehensiveDetails() {
+        readAs(10, "HR");
         Department dept = Department.builder().departmentId(1).departmentName("Phòng Công Nghệ").build();
         JobRequisition req = JobRequisition.builder().requisitionId(10).department(dept).build();
         JobPosting jp = JobPosting.builder().jobPostingId(20).postingTitle("Backend Engineer").requisition(req).build();
@@ -1139,6 +1224,7 @@ class OfferServiceTests {
 
     @Test
     void deletedOfferIsUnavailableByDirectId() {
+        readAs(10, "HR");
         OfferProposal deleted = OfferProposal.builder().isDeleted(true).offerStatus("Draft").build();
         when(offerProposalRepository.findById(1)).thenReturn(Optional.of(deleted));
 
@@ -1393,13 +1479,9 @@ class OfferServiceTests {
     @Test
     @DisplayName("getDirectorStatusCounts: Trả về đầy đủ số lượng cho các nhóm trạng thái của Director")
     void testGetDirectorStatusCounts() {
-        when(offerProposalRepository.countAllNonDraft()).thenReturn(15L);
-        when(offerProposalRepository.countPendingDirector()).thenReturn(3L);
-        when(offerProposalRepository.countDirectorApproved()).thenReturn(5L);
-        when(offerProposalRepository.countSentCandidate()).thenReturn(2L);
-        when(offerProposalRepository.countAccepted()).thenReturn(3L);
-        when(offerProposalRepository.countDeclined()).thenReturn(1L);
-        when(offerProposalRepository.countDirectorRejected()).thenReturn(1L);
+        readAs(101, "Director");
+        when(offerProposalRepository.count(any(org.springframework.data.jpa.domain.Specification.class)))
+                .thenReturn(15L, 3L, 5L, 2L, 0L, 3L, 1L, 1L);
 
         Map<String, Long> counts = offerService.getDirectorStatusCounts();
 
@@ -1411,11 +1493,15 @@ class OfferServiceTests {
         assertEquals(3L, counts.get("Accepted"));
         assertEquals(1L, counts.get("Declined"));
         assertEquals(1L, counts.get("Director_Rejected"));
+        var scopes = ArgumentCaptor.forClass(org.springframework.data.jpa.domain.Specification.class);
+        verify(offerProposalRepository, times(8)).count(scopes.capture());
+        for (var scope : scopes.getAllValues()) assertDirectorScope(scope, 101);
     }
 
     @Test
     @DisplayName("getDirectorOffers: Tìm kiếm và lọc trạng thái cho Director")
     void testGetDirectorOffers() {
+        readAs(101, "Director");
         OfferProposal offer = OfferProposal.builder()
                 .offerId(10)
                 .offerStatus("Accepted")
@@ -1799,15 +1885,15 @@ class OfferServiceTests {
     }
 
     @Test
-    @DisplayName("getAllOffersForHr: Blank search string with default status queries active offers via fast-path")
-    void getAllOffersForHr_blankSearch_queriesActiveFastPath() {
-        when(offerProposalRepository.findAllActiveByOrderByOfferIdAsc(any(Pageable.class)))
+    @DisplayName("getAllOffersForHr: Blank search uses the same specification as filtered search")
+    void getAllOffersForHr_blankSearch_queriesSharedSpecification() {
+        when(offerProposalRepository.findAll(any(org.springframework.data.jpa.domain.Specification.class), any(Pageable.class)))
                 .thenReturn(Page.empty());
 
         Page<OfferResponse> result = offerService.getAllOffersForHr("   ", "ALL", "DEFAULT", PageRequest.of(0, 10));
 
         assertNotNull(result);
-        verify(offerProposalRepository).findAllActiveByOrderByOfferIdAsc(any(Pageable.class));
+        verify(offerProposalRepository).findAll(any(org.springframework.data.jpa.domain.Specification.class), any(Pageable.class));
     }
 
     @org.junit.jupiter.api.AfterEach

@@ -1,3 +1,5 @@
+> Ghi chú 11/11/2026: đường dẫn và package test đã được cập nhật theo tầng kiểm thử; kết quả Task/PR lịch sử giữ nguyên.
+
 # BÁO CÁO ĐỒNG BỘ GIAO DIỆN PHÂN HỆ OFFER (HR) THEO LAYOUT ADMIN WORKSPACE
 
 - **Dự án:** Hệ Thống Quản Lý Tuyển Dụng — SWP_RMS_Group-2 (Mộc RMS)
@@ -136,7 +138,7 @@ Tệp [offer-workspace.css](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS
 [INFO] -------------------------------------------------------
 [INFO] Running com.group2.rms.offer.controller.OfferControllerBugTests
 [INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 20.63 s
-[INFO] Running com.group2.rms.offer.OfferIntegrationTests
+[INFO] Running com.group2.rms.offer.controller.OfferIntegrationTests
 [INFO] Tests run: 31, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 2.046 s
 [INFO] 
 [INFO] Results:
