@@ -89,14 +89,16 @@ public class RegistrationVerificationService {
         PendingRegistration pending = requirePending(session);
         // check if otp is not null and otp is 6 digits and otp is not matched
         if (otp == null || !otp.matches("[0-9]{6}") || !passwordEncoder.matches(otp, pending.otpHash)) {
-            // check if exceed failed attemp
-            if (++pending.failedAttempts >= MAX_FAILED_ATTEMPTS) {
+            int failedAttempts = ++pending.failedAttempts;
+            if (failedAttempts >= MAX_FAILED_ATTEMPTS) {
                 session.removeAttribute(REGISTER_STATE);
                 throw failure(Step.REGISTER, null, "REGISTER_OTP_ATTEMPTS_EXCEEDED",
-                        "Too many incorrect attempts. Register again.", 0, pending.registration);
+                        OtpAttemptMessage.format(failedAttempts, MAX_FAILED_ATTEMPTS, "Vui lòng đăng ký lại."),
+                        0, pending.registration);
             }
             throw failure(Step.OTP, "otp", "REGISTER_OTP_INVALID",
-                    "The verification code is incorrect.", 0, pending.registration);
+                    OtpAttemptMessage.format(failedAttempts, MAX_FAILED_ATTEMPTS, "Vui lòng nhập lại."),
+                    0, pending.registration);
         }
         int userId;
         try {

@@ -1,6 +1,8 @@
 package com.group2.rms.auth;
 
 import com.group2.rms.auth.controller.*;
+import com.group2.rms.auth.exception.PasswordRecoveryFlowException;
+import com.group2.rms.auth.exception.RegistrationFlowException;
 import com.group2.rms.auth.service.*;
 import com.group2.rms.core.config.SecurityConfig;
 import com.group2.rms.core.security.DatabaseUserDetailsService;
@@ -108,6 +110,31 @@ class AuthBotanicalWebTests {
                 .andExpect(content().string(containsString("name=\"password\"")))
                 .andExpect(content().string(containsString("name=\"confirmPassword\"")))
                 .andExpect(content().string(containsString("name=\"_csrf\""))).andReturn());
+    }
+    @Test void otpAttemptCountsRenderInTheExistingErrorSummaryAfterRedirect() throws Exception {
+        String retryMessage = "Mã xác minh không đúng. Bạn đã nhập sai 1 lần, còn 4 lần thử. Vui lòng nhập lại.";
+        String exhaustedMessage = "Mã xác minh không đúng. Bạn đã nhập sai 5 lần, còn 0 lần thử. Vui lòng yêu cầu mã mới.";
+        when(registration.getPendingRegistrationEmail(any())).thenReturn("ungvien@example.test");
+        when(registration.verifyAndRegister(eq("123456"), any())).thenThrow(
+                new RegistrationFlowException(RegistrationFlowException.Step.OTP, "otp", "REGISTER_OTP_INVALID", retryMessage));
+        when(recovery.hasPendingReset(any())).thenReturn(true);
+        doThrow(new PasswordRecoveryFlowException(
+                PasswordRecoveryFlowException.Step.FORGOT, null, "OTP_ATTEMPTS_EXCEEDED", exhaustedMessage))
+                .when(recovery).verifyOtp(eq("123456"), any());
+
+        assertOtpErrorAfterRedirect("/register/otp", "/register/otp", retryMessage);
+        assertOtpErrorAfterRedirect("/reset-password/otp", "/forgot-password", exhaustedMessage);
+    }
+
+    private void assertOtpErrorAfterRedirect(String submitPath, String target, String message) throws Exception {
+        var result = mvc.perform(post(submitPath).with(csrf()).param("otp", "123456"))
+                .andExpect(status().isSeeOther())
+                .andExpect(redirectedUrl(target))
+                .andReturn();
+        mvc.perform(get(target).flashAttrs(result.getFlashMap()))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("auth-error-summary")))
+                .andExpect(content().string(containsString(message)));
     }
     @Test void candidateAndInternalAccountsStillUseSpringSecurityLogin() throws Exception {
         for(String role:new String[]{"Candidate","HR"}) {
