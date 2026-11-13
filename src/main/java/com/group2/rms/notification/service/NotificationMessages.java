@@ -75,6 +75,15 @@ public final class NotificationMessages {
         return offer.getOfferedPositionTitle();
     }
 
+    public static String offerExpiredContent(OfferProposal offer) {
+        String deadline = offer.getResponseDeadline() != null ? displayTime(offer.getResponseDeadline()) : "chưa xác định";
+        String startDate = offer.getExpectedStartDate() != null ? offer.getExpectedStartDate().format(DISPLAY_DATE) : "chưa xác định";
+        return String.format("Thư mời #%s cho ứng viên %s, vị trí \"%s\", đã hết hạn phản hồi "
+                        + "hoặc đã qua ngày bắt đầu dự kiến. Hạn phản hồi: %s. Ngày bắt đầu dự kiến: %s. "
+                        + "Ứng viên không còn có thể nhận hoặc từ chối thư mời này.",
+                offer.getOfferId(), candidateName(offer.getApplication()), positionTitle(offer), deadline, startDate);
+    }
+
     public static String requisitionPendingContent(JobRequisition requisition, String hmName) {
         String deptName = "Chưa xác định";
         if (requisition.getDepartment() != null) {

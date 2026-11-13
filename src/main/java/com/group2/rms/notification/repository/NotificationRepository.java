@@ -26,6 +26,22 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
 
     boolean existsByRecipient_UserIdAndEventId(Integer recipientId, String eventId);
 
+    /** Khóa key-range trên unique index để kiểm tra-và-chèn nguyên tử cả khi có nhiều worker. */
+    @Modifying
+    @Query(value = """
+            INSERT INTO Notification
+                (RecipientId, ActorId, Title, Content, EventType, ReferenceId, LinkUrl, IsRead, EventId, CreatedAt)
+            SELECT :recipientId, NULL, :title, :content, 'OFFER_EXPIRED', :referenceId, :linkUrl, 0, :eventId, :createdAt
+            WHERE NOT EXISTS (
+                SELECT 1 FROM Notification WITH (UPDLOCK, HOLDLOCK)
+                WHERE RecipientId = :recipientId AND EventId = :eventId
+            )
+            """, nativeQuery = true)
+    int insertOfferExpiredIfAbsent(@Param("recipientId") Integer recipientId,
+                                  @Param("title") String title, @Param("content") String content,
+                                  @Param("referenceId") String referenceId, @Param("linkUrl") String linkUrl,
+                                  @Param("eventId") String eventId, @Param("createdAt") LocalDateTime createdAt);
+
     @Modifying
     @Query("UPDATE Notification n SET n.isRead = true, n.readAt = :readAt WHERE n.recipient.userId = :userId AND n.isRead = false")
     int markAllAsReadByUserId(@Param("userId") Integer userId, @Param("readAt") LocalDateTime readAt);
