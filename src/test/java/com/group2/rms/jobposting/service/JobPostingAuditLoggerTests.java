@@ -5,6 +5,7 @@ import com.group2.rms.admin.repository.AuditLogRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.group2.rms.core.util.FieldChanges;
 import com.group2.rms.jobposting.entity.JobPosting;
+import com.group2.rms.requisition.entity.JobRequisition;
 import com.group2.rms.user.entity.User;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -94,6 +95,29 @@ class JobPostingAuditLoggerTests {
         assertEquals("Java Dev (Spring)", new ObjectMapper().readTree(captor.getValue().getNewValue()).get("Title").asText());
         assertEquals(1, new ObjectMapper().readTree(captor.getValue().getNewValue()).size());
         assertTrue(before.containsKey("ExpiresAt"));
+    }
+
+    @Test
+    @DisplayName("Lưu lại tin cũ: CRLF thành LF, hình thức NULL thành giá trị của yêu cầu -> Không coi là thay đổi")
+    void snapshot_shouldIgnoreLineEndingsAndInheritedValues_whenOnlyStorageFormatChanges() {
+        // Arrange: seed data uses CRLF and leaves EmploymentType, WorkModel NULL to inherit from the requisition
+        JobRequisition requisition = JobRequisition.builder().employmentType("Full-time").workModel("On-site").build();
+        JobPosting posting = JobPosting.builder().jobPostingId(3).postingTitle("QA Automation Engineer")
+                .jobDescription("Dòng 1\r\nDòng 2").jobRequirements("- A\r\n- B").benefits("- Lương tháng 13\r\n- Bảo hiểm")
+                .requisition(requisition).postingStatus(JobPostingAccess.STATUS_PUBLISHED).build();
+        Map<String, String> before = auditLogger().snapshot(posting);
+
+        // Act: the edit form saves LF and the explicit values, plus one real change
+        posting.setJobDescription("Dòng 1\nDòng 2");
+        posting.setJobRequirements("- A\n- B");
+        posting.setBenefits("- Lương tháng 13\n- Bảo hiểm");
+        posting.setEmploymentType("Full-time");
+        posting.setWorkModel("On-site");
+        posting.setWorkingHours("Thứ 2 đến Thứ 6, 8:30 - 17:30");
+        List<String> changed = FieldChanges.changedKeys(before, auditLogger().snapshot(posting));
+
+        // Assert
+        assertEquals(List.of("WorkingHours"), changed);
     }
 
     @Test

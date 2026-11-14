@@ -71,20 +71,26 @@ public class JobPostingAuditLogger {
     public Map<String, String> snapshot(JobPosting posting) {
         Map<String, String> snapshot = new LinkedHashMap<>();
         snapshot.put("Title", posting.getPostingTitle());
-        snapshot.put("JobDescription", posting.getJobDescription());
-        snapshot.put("JobRequirements", posting.getJobRequirements());
-        snapshot.put("Benefits", posting.getBenefits());
+        // Seed data stores CRLF while the form saves LF; compare text, not line endings.
+        snapshot.put("JobDescription", lf(posting.getJobDescription()));
+        snapshot.put("JobRequirements", lf(posting.getJobRequirements()));
+        snapshot.put("Benefits", lf(posting.getBenefits()));
         snapshot.put("SalaryDisplay", posting.getSalaryDisplay());
         snapshot.put("NumberOfPositions", posting.getNumberOfPositionsDisplay() == null
                 ? null : posting.getNumberOfPositionsDisplay().toString());
         snapshot.put("WorkLocation", posting.getWorkLocation());
         snapshot.put("WorkingHours", posting.getWorkingHours());
-        snapshot.put("EmploymentType", posting.getEmploymentType());
-        snapshot.put("WorkModel", posting.getWorkModel());
+        // NULL means "same as the requisition", so audit the value the posting actually shows.
+        snapshot.put("EmploymentType", posting.effectiveEmploymentType());
+        snapshot.put("WorkModel", posting.effectiveWorkModel());
         snapshot.put("ExpiresAt", posting.getApplicationDeadline() == null
                 ? null : posting.getApplicationDeadline().toLocalDate().toString());
         snapshot.put("Status", posting.getPostingStatus());
         return snapshot;
+    }
+
+    private static String lf(String text) {
+        return text == null ? null : text.replace("\r\n", "\n");
     }
 
     private String json(Map<String, String> fields, boolean includeNulls) {
