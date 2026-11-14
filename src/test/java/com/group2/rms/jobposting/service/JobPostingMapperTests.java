@@ -300,9 +300,11 @@ class JobPostingMapperTests {
             // Assert
             assertEquals(5, form.getRequisitionId());
             assertEquals("Java Dev", form.getPostingTitle());
+            assertEquals("Java Dev", form.getSourcePostingTitle());
             assertEquals(JobPostingRequest.SALARY_RANGE, form.getSalaryMode());
             assertEquals("20 – 30 triệu VND/tháng", form.getSalaryRangeLabel());
             assertEquals(2, form.getNumberOfPositionsDisplay());
+            assertEquals(2, form.getSourcePositionsDisplay());
             assertEquals(java.time.LocalDate.of(2026, 12, 1), form.getExpectedStartDate());
             assertEquals(java.time.LocalDate.of(2026, 11, 1), form.getApplicationDeadline());
             assertEquals(JobPostingValidator.ACTION_DRAFT, form.getAction());
@@ -345,6 +347,8 @@ class JobPostingMapperTests {
             assertEquals(11, form.getJobPostingId());
             assertEquals(JobPostingRequest.SALARY_CUSTOM, form.getSalaryMode());
             assertEquals("Lên đến 30 triệu + hoa hồng", form.getSalaryCustom());
+            assertEquals("Java Dev", form.getSourcePostingTitle());
+            assertEquals("20 – 30 triệu VND/tháng", form.getSalaryRangeLabel());
             assertEquals(Boolean.FALSE, form.getShowPositions());
             assertTrue(form.isLive());
             assertFalse(form.isDraftOrNew());

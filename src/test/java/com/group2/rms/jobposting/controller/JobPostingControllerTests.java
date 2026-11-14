@@ -305,13 +305,18 @@ class JobPostingControllerTests {
     @DisplayName("GET form sửa -> Dùng chung template form, không có ô 'Đổi yêu cầu'")
     void showEditForm_shouldRenderSharedForm() throws Exception {
         JobPostingRequest dto = JobPostingRequest.builder().jobPostingId(99).requisitionId(101)
-                .postingTitle("Java Developer").live(true).build();
+                .postingTitle("Java Developer").sourcePostingTitle("Java Developer")
+                .sourcePositionsDisplay(2).salaryRangeLabel("20 – 30 triệu VND/tháng")
+                .live(true).build();
         when(service.prepareEditForm(eq(99), any(User.class))).thenReturn(dto);
 
         mvc.perform(get(BASE + "/99/edit"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("job-postings/create"))
-                .andExpect(model().attribute("requisitionChoices", List.of()));
+                .andExpect(model().attribute("requisitionChoices", List.of()))
+                .andExpect(content().string(containsString("data-from=\"postingTitle\"")))
+                .andExpect(content().string(containsString("data-from=\"numberOfPositionsDisplay\"")))
+                .andExpect(content().string(containsString("data-from=\"salaryCustom\"")));
         verify(service, never()).requisitionChoices(any());
     }
 

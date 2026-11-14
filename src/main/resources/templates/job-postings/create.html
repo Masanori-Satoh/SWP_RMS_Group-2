@@ -55,6 +55,7 @@
                             <div class="jpf-field">
                                 <div class="jpf-lblrow"><label class="form-label" for="postingTitle">Tiêu đề tin <span
                                             class="required-asterisk">*</span></label>
+                                    <span class="jpf-from" data-from="postingTitle" th:data-source="*{sourcePostingTitle}"></span>
                                 </div>
                                 <input class="form-input" th:field="*{postingTitle}" th:maxlength="${titleLimit}"
                                     placeholder="Nhập tiêu đề tin tuyển dụng"
@@ -66,6 +67,7 @@
                                 <input type="hidden" name="showPositions" value="true">
                                 <div class="jpf-lblrow"><label class="form-label" for="numberOfPositionsDisplay">Số lượng cần
                                         tuyển <span class="required-asterisk">*</span></label>
+                                    <span class="jpf-from" data-from="numberOfPositionsDisplay" th:data-source="*{sourcePositionsDisplay}"></span>
                                 </div>
                                 <input class="form-input" type="number" th:field="*{numberOfPositionsDisplay}"
                                     min="1" step="1" inputmode="numeric" placeholder="Nhập số lượng tuyển"
@@ -122,6 +124,7 @@
                                 <input type="hidden" name="salaryMode" value="custom">
                                 <div class="jpf-lblrow"><label class="form-label" for="salaryCustom">Mức lương
                                         <span class="required-asterisk">*</span></label>
+                                    <span class="jpf-from" data-from="salaryCustom" th:data-source="*{salaryRangeLabel}"></span>
                                 </div>
                                 <input class="form-input" id="salaryCustom" name="salaryCustom"
                                     th:value="*{salaryMode == 'range' ? salaryRangeLabel : (salaryMode == 'nego' ? 'Thỏa thuận' : salaryCustom)}"

@@ -43,6 +43,7 @@ public class JobPostingRequest {
     /** Mức lương theo yêu cầu, ví dụ "20 – 30 triệu VND/tháng" (lựa chọn "Theo yêu cầu"). */
     private String salaryRangeLabel;
     // Giá trị gốc từ yêu cầu, cho nút "Khôi phục bản gốc"
+    private String sourcePostingTitle;
     private String sourceWorkLocation;
     private String sourceJobDescription;
     private String sourceRequirements;

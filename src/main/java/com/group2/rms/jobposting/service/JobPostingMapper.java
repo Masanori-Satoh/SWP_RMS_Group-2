@@ -337,6 +337,7 @@ public class JobPostingMapper {
         form.setNumberOfPositions(requisition.getNumberOfPositions());
         form.setHiringManagerName(fullName(requisition.getHiringManager()));
         form.setSalaryRangeLabel(RequisitionLabels.salary(requisition.getMinSalary(), requisition.getMaxSalary()));
+        form.setSourcePostingTitle(requisition.getTitle());
         form.setSourceWorkLocation(Objects.toString(requisition.getWorkLocation(), ""));
         form.setSourceJobDescription(Objects.toString(requisition.getJobDescription(), ""));
         form.setSourceRequirements(requirementsFromRequisition(requisition));
