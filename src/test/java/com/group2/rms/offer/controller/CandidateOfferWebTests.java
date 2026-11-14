@@ -311,6 +311,27 @@ class CandidateOfferWebTests {
                 .andExpect(content().string(not(containsString("style=\""))));
     }
 
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(booleans = {true, false})
+    void sentDateUsesIssuanceDateOrUnknownRatherThanLastUpdate(boolean hasSentAt) throws Exception {
+        var sentAt = java.time.LocalDateTime.of(2026, 11, 14, 9, 15);
+        CandidateOfferDetailResponse detail = new CandidateOfferDetailResponse(
+                15, "Nguyễn Văn A", "nguyenvana@example.com", "0912345678", "Hà Nội",
+                "DevOps Engineer", "DevOps Engineer", "Phòng Kỹ thuật",
+                new BigDecimal("25000000"), new BigDecimal("21250000"), 85, "60 ngày",
+                LocalDate.of(2026, 12, 1), "Hà Nội", "Bảo hiểm",
+                "Accepted", "Đã nhận việc", "badge--success", false,
+                "Nguyễn Tuyển Dụng", "tuyendung@mocrms.com.vn", null, 5, sentAt.plusDays(5),
+                hasSentAt ? sentAt : null, sentAt.plusDays(3));
+        when(candidateOffers.getDetail(15)).thenReturn(detail);
+
+        mvc.perform(get("/portal/offers/15").with(as("an.vo", "Candidate")))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Ngày gửi: <time>"
+                        + (hasSentAt ? "14/11/2026" : "Chưa xác định") + "</time>")))
+                .andExpect(content().string(not(containsString("Ngày gửi: <time>17/11/2026</time>"))));
+    }
+
     private static CandidateOfferResponse offer(int id, String postingTitle, String statusLabel, String badge,
                                                 boolean canRespond) {
         return new CandidateOfferResponse(id, postingTitle, postingTitle, new BigDecimal("20000000"),
