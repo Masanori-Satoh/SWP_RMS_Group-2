@@ -5,8 +5,8 @@
       layout:decorate="~{layout/internal}">
 <head>
   <title>Phê duyệt thư mời nhận việc | Mộc RMS</title>
-  <link rel="stylesheet" th:href="@{/css/pages/offers/offer-common.css}">
-  <link rel="stylesheet" th:href="@{/css/pages/offers/offer-director.css}">
+  <link rel="stylesheet" th:href="@{/css/pages/offer-common.css}">
+  <link rel="stylesheet" th:href="@{/css/pages/offer-director.css}">
   <link rel="stylesheet" th:href="@{/css/pages/flash-toast.css}">
 </head>
 <body>
@@ -26,7 +26,7 @@
     <!-- 3 Stat Cards chuẩn Admin Workspace -->
     <div class="director-stats-grid ofw-director-stats-grid">
         <button type="button" class="director-stat-card adw-surface ofw-stat-card"
-                form="offerFilters" onclick="this.form.elements.status.value = 'Pending_Director'; this.form.requestSubmit()"
+                form="offerFilters" data-offer-click="filter-status" data-offer-status="Pending_Director"
                 th:classappend="${currentStatus == 'Pending_Director'} ? ' ofw-stat-card--active' : ''"
                 th:attr="aria-pressed=${currentStatus == 'Pending_Director' ? 'true' : 'false'}">
             <div class="ofw-stat-label">Chờ duyệt</div>
@@ -39,7 +39,7 @@
         </button>
 
         <button type="button" class="director-stat-card adw-surface ofw-stat-card"
-                form="offerFilters" onclick="this.form.elements.status.value = 'Director_Approved'; this.form.requestSubmit()"
+                form="offerFilters" data-offer-click="filter-status" data-offer-status="Director_Approved"
                 th:classappend="${currentStatus == 'Director_Approved' or currentStatus == 'Approved'} ? ' ofw-stat-card--active' : ''"
                 th:attr="aria-pressed=${currentStatus == 'Director_Approved' or currentStatus == 'Approved' ? 'true' : 'false'}">
             <div class="ofw-stat-label">Đã duyệt</div>
@@ -52,7 +52,7 @@
         </button>
 
         <button type="button" class="director-stat-card adw-surface ofw-stat-card"
-                form="offerFilters" onclick="this.form.elements.status.value = 'Director_Rejected'; this.form.requestSubmit()"
+                form="offerFilters" data-offer-click="filter-status" data-offer-status="Director_Rejected"
                 th:classappend="${currentStatus == 'Director_Rejected' or currentStatus == 'Rejected'} ? ' ofw-stat-card--active' : ''"
                 th:attr="aria-pressed=${currentStatus == 'Director_Rejected' or currentStatus == 'Rejected' ? 'true' : 'false'}">
             <div class="ofw-stat-label">Đã từ chối</div>
@@ -83,16 +83,16 @@
         <div class="ofw-toolbar-left">
             <div class="ofw-search-box">
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                <input type="text" id="searchInput" name="search" class="ofw-search-input" placeholder="Tìm theo tên ứng viên, vị trí, mã thư mời..."
+                <input type="text" id="searchInput" name="search" class="ofw-search-input" maxlength="120" placeholder="Tìm #mã thư mời, ứng viên, email, vị trí, phòng ban…"
                        th:value="${search}">
-                <button type="submit" th:if="${search != null and search != ''}" onclick="this.form.elements.search.value = ''"
+                <button type="submit" th:if="${search != null and search != ''}" data-offer-click="clear-search"
                         class="ofw-search-clear" title="Xóa từ khóa">
                     ✕
                 </button>
             </div>
 
             <!-- Lọc theo trạng thái kèm số lượng ứng viên -->
-            <select id="statusFilter" name="status" class="filter-select ofw-filter-select" onchange="this.form.requestSubmit()">
+            <select id="statusFilter" name="status" class="filter-select ofw-filter-select" data-offer-change="filter">
                 <option th:value="${currentStatus == 'HISTORY' ? 'HISTORY' : 'ALL'}" th:selected="${currentStatus == 'ALL' or currentStatus == 'HISTORY'}"
                         th:text="'-- Tất cả trạng thái -- (' + ${statusCounts != null ? (statusCounts['ALL'] ?: 0) : 0} + ')'">-- Tất cả trạng thái -- (0)</option>
                 <option value="Pending_Director" th:selected="${currentStatus == 'Pending_Director'}"
@@ -111,7 +111,7 @@
             </select>
 
             <!-- Sắp xếp theo thời gian -->
-            <select id="timeSortFilter" name="timeSort" class="filter-select ofw-filter-select" onchange="this.form.requestSubmit()">
+            <select id="timeSortFilter" name="timeSort" class="filter-select ofw-filter-select" data-offer-change="filter">
                 <option value="DEFAULT" th:selected="${currentTimeSort == 'DEFAULT'}">-- Sắp xếp theo thời gian --</option>
                 <option value="LATEST" th:selected="${currentTimeSort == 'LATEST'}">Mới nhất</option>
                 <option value="EARLIEST" th:selected="${currentTimeSort == 'EARLIEST'}">Cũ nhất</option>
@@ -131,7 +131,6 @@
                         th:text="${currentStatus == 'Pending_Director' ? 'Thư mời chờ phê duyệt' : (currentStatus == 'Director_Approved' or currentStatus == 'Approved' ? 'Thư mời đã phê duyệt' : (currentStatus == 'Director_Rejected' or currentStatus == 'Rejected' ? 'Thư mời đã bị từ chối' : 'Lịch sử phê duyệt thư mời'))}">
                         Thư mời chờ phê duyệt
                     </h2>
-                    <span class="ofw-list-count" th:text="${totalElements != null ? totalElements + ' thư mời' : '0 thư mời'}">0 thư mời</span>
                 </div>
             </div>
         </header>
@@ -140,7 +139,7 @@
             <table class="table offers-table adw-data-table ofw-data-table">
                 <thead>
                     <tr>
-                        <th class="ofw-col-id">Mã thư mời</th>
+                        <th class="ofw-col-id ofw-id-cell">Mã thư mời</th>
                         <th>Ứng viên</th>
                         <th>Vị trí đề xuất</th>
                         <th>Lương chính thức</th>
@@ -148,7 +147,7 @@
                         <th>Trạng thái</th>
                         <th>Ngày lập</th>
                         <th>Người tạo thư mời</th>
-                        <th class="ofw-col-action ofw-col-action-wide">Hành động</th>
+                        <th class="ofw-col-action ofw-col-action-wide ofw-action-cell">Hành động</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -161,7 +160,7 @@
                         </td>
                     </tr>
                     <tr th:each="o : ${offers}">
-                        <td class="ofw-col-id">
+                        <td class="ofw-col-id ofw-id-cell">
                             <a th:href="@{/offers/{id}(id=${o.offerId})}" class="offer-id-link" th:text="${o.offerId}">1</a>
                         </td>
                         <td>
@@ -198,7 +197,7 @@
                             <div th:text="${o.proposedByName != null ? o.proposedByName : 'Bộ phận Tuyển dụng'}">Bộ phận Tuyển dụng</div>
                             <div class="cand-email-sub ofw-cand-email">(Bộ phận Tuyển dụng)</div>
                         </td>
-                        <td class="ofw-col-action ofw-col-action-wide">
+                        <td class="ofw-col-action ofw-col-action-wide ofw-action-cell">
                             <div class="offer-actions-cell ofw-actions-cell">
                                 <a th:href="@{/offers/{id}(id=${o.offerId})}"
                                    class="btn-icon ofw-action-btn"
@@ -208,12 +207,12 @@
 
                                 <!-- Nút Phê duyệt / Từ chối nhanh cho Giám đốc khi ở trạng thái Chờ duyệt -->
                                 <th:block th:if="${o.offerStatus == 'Pending_Director'}">
-                                    <button type="button" th:onclick="'openDirectorDecisionModal(' + ${o.offerId} + ', \'APPROVE\')'"
+                                    <button type="button" data-offer-click="quick-open" data-offer-decision="APPROVE" th:attr="data-offer-id=${o.offerId}"
                                             class="btn-icon btn-icon-success ofw-action-btn ofw-action-btn--success"
                                             title="Phê duyệt nhanh">
                                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
                                     </button>
-                                    <button type="button" th:onclick="'openDirectorDecisionModal(' + ${o.offerId} + ', \'REJECT\')'"
+                                    <button type="button" data-offer-click="quick-open" data-offer-decision="REJECT" th:attr="data-offer-id=${o.offerId}"
                                             class="btn-icon btn-icon-danger ofw-action-btn ofw-action-btn--danger"
                                             title="Từ chối thư mời">
                                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -226,7 +225,9 @@
             </table>
         </div>
         <!-- Phân trang chuẩn UI catalog -->
-        <nav th:replace="~{fragments/ui/pagination :: paged(page=${offersPage})}"></nav>
+        <div class="ofw-pagination">
+            <nav th:replace="~{fragments/ui/pagination :: paged(page=${offersPage})}"></nav>
+        </div>
     </div>
 
     <!-- ===========================================================================
@@ -238,7 +239,7 @@
                 <div id="directorDecisionTitle" class="dialog-title ofw-modal-title-group">
                     Phê duyệt thư mời nhận việc
                 </div>
-                <button type="button" class="btn-icon ofw-modal-close" onclick="closeDirectorDecisionModal()" aria-label="Đóng hộp thoại">
+                <button type="button" class="btn-icon ofw-modal-close" data-offer-click="quick-close" aria-label="Đóng hộp thoại">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                 </button>
             </div>
@@ -250,13 +251,13 @@
                     <div class="director-comment-label-row">
                         <label id="directorDecisionCommentsLabel" for="directorDecisionComments">Phản hồi / Ghi chú của Giám đốc (Không bắt buộc)</label>
                         <span class="ofw-counter-label">
-                            <span id="directorDecisionCommentCount">0</span>/500
+                            <span id="directorDecisionCommentCount">0</span>/2000
                         </span>
                     </div>
                     <textarea id="directorDecisionComments" class="input-control director-decision-textarea" rows="4"
                               placeholder="Nhập ghi chú hoặc lý do..."
-                              maxlength="500"
-                              oninput="handleDirectorDecisionCommentInput(this)"></textarea>
+                              maxlength="2000"
+                              data-offer-input="quick-comment"></textarea>
                     <div id="directorDecisionSubnote" class="director-decision-subnote" hidden>
                         * Nếu từ chối thư mời, vui lòng nêu rõ lý do để Bộ phận Tuyển dụng tiếp tục hỗ trợ xử lý.
                     </div>
@@ -267,8 +268,8 @@
                 </div>
             </div>
             <div class="dialog-actions">
-                <button type="button" class="btn btn--secondary" onclick="closeDirectorDecisionModal()">Hủy</button>
-                <button type="button" id="btnSubmitDecision" class="btn btn--primary" onclick="submitDirectorDecision()">Xác Nhận</button>
+                <button type="button" class="btn btn--secondary" data-offer-click="quick-close">Hủy</button>
+                <button type="button" id="btnSubmitDecision" class="btn btn--primary" data-offer-click="quick-submit">Xác Nhận</button>
             </div>
         </div>
     </dialog>
@@ -278,8 +279,8 @@
 <th:block layout:fragment="scripts">
     <th:block th:replace="~{fragments/ui/admin-workspace :: scripts}"></th:block>
     <script th:src="@{/js/pages/flash-toast.js}" defer></script>
-    <script th:src="@{/js/pages/offers/offer-common.js}" defer></script>
-    <script th:src="@{/js/pages/offers/offer-director.js}" defer></script>
+    <script th:src="@{/js/pages/offer-common.js}" defer></script>
+    <script th:src="@{/js/pages/offer-director.js}" defer></script>
 </th:block>
 </body>
 </html>

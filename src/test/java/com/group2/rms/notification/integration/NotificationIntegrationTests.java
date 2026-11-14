@@ -69,6 +69,12 @@ class NotificationIntegrationTests {
     private EntityManager entityManager;
     @Autowired
     private MockMvc mvc;
+    @Autowired
+    private com.group2.rms.offer.repository.OfferProposalRepository offers;
+    @Autowired
+    private org.springframework.jdbc.core.JdbcTemplate jdbc;
+    @Autowired
+    private org.springframework.transaction.PlatformTransactionManager transactions;
 
     private Department department;
     private User userA;
@@ -84,6 +90,88 @@ class NotificationIntegrationTests {
         userB = saveUser("it_noti_b", "Người Nhận B", RequisitionAccess.ROLE_HIRING_MANAGER);
         director = saveUser("it_noti_dir", "Giám Đốc Test", RequisitionAccess.ROLE_DIRECTOR);
         hr = saveUser("it_noti_hr", "HR Test", RequisitionAccess.ROLE_HR);
+    }
+
+    @Test
+    void expiredNotificationInsert_shouldBeIdempotentEvenAfterReadingExistingNotification() {
+        String event = "OFFER_EXPIRED_it_noti_atomic";
+        int first = notifications.insertOfferExpiredIfAbsent(hr.getUserId(), "Hết hạn", "Nội dung", "41",
+                "/offers/41", event, BASE_TIME);
+        assertEquals(1, first);
+        Notification saved = notifications.findByRecipient_UserIdOrderByCreatedAtDesc(hr.getUserId(), PageRequest.of(0, 100))
+                .stream().filter(n -> event.equals(n.getEventId())).findFirst().orElseThrow();
+        assertEquals("OFFER_EXPIRED", saved.getEventType());
+        assertNull(saved.getActor());
+        service.markAsRead(saved.getNotificationId(), hr);
+        entityManager.flush();
+
+        assertEquals(0, notifications.insertOfferExpiredIfAbsent(hr.getUserId(), "Hết hạn", "Nội dung", "41",
+                "/offers/41", event, BASE_TIME.plusHours(1)));
+        assertEquals(1L, jdbc.queryForObject("SELECT COUNT(*) FROM Notification WHERE RecipientId=? AND EventId=?",
+                Long.class, hr.getUserId(), event));
+    }
+
+    @Test
+    void expiredNotificationInsert_shouldCreateOnlyOneRowAcrossConcurrentTransactions() throws Exception {
+        Integer recipient = jdbc.queryForObject("""
+                SELECT TOP 1 u.UserId FROM [User] u JOIN Role r ON r.RoleId=u.RoleId
+                WHERE r.RoleName='HR' AND u.Username NOT LIKE 'it_noti_%' ORDER BY u.UserId
+                """, Integer.class);
+        assertNotNull(recipient, "Concurrency fixture needs a committed HR account");
+        String event = "OFFER_EXPIRED_IT_" + java.util.UUID.randomUUID();
+        var transaction = new org.springframework.transaction.support.TransactionTemplate(transactions);
+        transaction.setPropagationBehavior(org.springframework.transaction.TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+        transaction.setTimeout(10);
+        var start = new java.util.concurrent.CyclicBarrier(2);
+        var workers = java.util.concurrent.Executors.newFixedThreadPool(2);
+        java.util.concurrent.Callable<Integer> insert = () -> {
+            start.await(10, java.util.concurrent.TimeUnit.SECONDS);
+            return transaction.execute(status -> notifications.insertOfferExpiredIfAbsent(recipient,
+                    "Hết hạn", "Nội dung", "41", "/offers/41", event, BASE_TIME));
+        };
+        try {
+            var first = workers.submit(insert);
+            var second = workers.submit(insert);
+            assertEquals(1, first.get(30, java.util.concurrent.TimeUnit.SECONDS)
+                    + second.get(30, java.util.concurrent.TimeUnit.SECONDS));
+            assertEquals(1L, jdbc.queryForObject("SELECT COUNT(*) FROM Notification WHERE RecipientId=? AND EventId=?",
+                    Long.class, recipient, event));
+        } finally {
+            workers.shutdownNow();
+            assertTrue(workers.awaitTermination(15, java.util.concurrent.TimeUnit.SECONDS));
+            // The competing transactions commit; remove only this test's uniquely named event in a separate commit.
+            transaction.executeWithoutResult(status -> jdbc.update(
+                    "DELETE FROM Notification WHERE RecipientId=? AND EventId=?", recipient, event));
+        }
+    }
+
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.CsvSource(value = {
+            "Sent_Candidate,2099-01-01T07:59:59,2099-01-02,false,true",
+            "Sent_Candidate,2099-01-01T08:00:00,2099-01-01,false,false",
+            "Sent_Candidate,2099-01-01T08:00:01,2099-01-02,false,false",
+            "Sent_Candidate,NULL,2098-12-31,false,true",
+            "Sent_Candidate,NULL,2099-01-01,false,false",
+            "Sent_Candidate,NULL,NULL,false,false",
+            "Sent_Candidate,2099-01-01T07:59:59,2099-01-02,true,false",
+            "Accepted,2099-01-01T07:59:59,2099-01-02,false,false",
+            "Declined,2099-01-01T07:59:59,2099-01-02,false,false",
+            "Draft,2099-01-01T07:59:59,2099-01-02,false,false",
+            "Director_Rejected,2099-01-01T07:59:59,2099-01-02,false,false"
+    }, nullValues = "NULL")
+    void expiryQuery_shouldLockOnlySentUndeletedAndStrictlyOverdueOffers(String state, String deadline,
+                                                                       String start, boolean deleted, boolean due) {
+        Integer id = jdbc.queryForObject("SELECT MIN(OfferId) FROM OfferProposal", Integer.class);
+        assertNotNull(id, "Integration fixture requires an OfferProposal");
+        jdbc.update("UPDATE OfferProposal SET OfferStatus=?, ResponseDeadline=?, ExpectedStartDate=?, IsDeleted=? WHERE OfferId=?",
+                state, deadline == null ? null : LocalDateTime.parse(deadline),
+                start == null ? null : java.time.LocalDate.parse(start), deleted, id);
+        entityManager.clear();
+
+        var result = offers.findDueForUpdate(BASE_TIME, BASE_TIME.toLocalDate(), PageRequest.of(0, 10000));
+
+        assertEquals(due, result.stream().anyMatch(o -> id.equals(o.getOfferId())));
+        assertEquals(state, jdbc.queryForObject("SELECT OfferStatus FROM OfferProposal WHERE OfferId=?", String.class, id));
     }
 
     // ----- Hàm hỗ trợ -----

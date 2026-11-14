@@ -1,3 +1,5 @@
+> Ghi chú 11/11/2026: đường dẫn JavaScript đã được cập nhật theo vị trí hiện hành; kết quả thực hiện lịch sử không thay đổi.
+
 # BÁO CÁO KIỂM TOÁN KIẾN TRÚC FRONTEND PHÂN HỆ QUẢN LÝ OFFER (TASK 10)
 
 > **Lưu ý khi đọc:** Tài liệu lịch sử: phản ánh thời điểm audit/refactor; tên hàm, đường dẫn và đề xuất có thể khác code đã merge. Xem [mục lục và hướng dẫn hiện hành](../README.md).
@@ -222,12 +224,12 @@ Khi 402 dòng mã chết được loại bỏ, **1.159 dòng JavaScript nghiệp
 
 | Tệp đích (Target File) | Phạm vi & Trách nhiệm nghiệp vụ | Template sử dụng | Số hàm sống | Ước tính số dòng |
 | :--- | :--- | :--- | :---: | :---: |
-| [`offer-common.js`](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/main/resources/static/js/pages/offers/offer-common.js) | CSRF helper, Toast bridge, Send Offer modal handler | `list.html`, `detail.html` | 5 | **~110 dòng** |
-| [`offer-list.js`](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/main/resources/static/js/pages/offers/offer-list.js) | Bộ lọc tìm kiếm HR, chọn dòng bảng, thanh chọn hàng loạt, xóa bản nháp | `list.html` | 8 | **~175 dòng** |
-| [`offer-export.js`](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/main/resources/static/js/pages/offers/offer-export.js) | Điều khiển modal xuất Excel, 25 checkbox cột, gọi API tải Blob | `list.html` | 9 | **~210 dòng** |
-| [`offer-form.js`](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/main/resources/static/js/pages/offers/offer-form.js) | Autofill ứng viên (Group A), tính 85% lương thử việc, ràng buộc ngày bắt đầu | `form.html` | 5 | **~155 dòng** |
-| [`offer-detail.js`](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/main/resources/static/js/pages/offers/offer-detail.js) | Điều phối quyết định Giám đốc trang chi tiết, bộ đếm ký tự, cuộn trang | `detail.html` | 8 | **~160 dòng** |
-| [`offer-director.js`](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/main/resources/static/js/pages/offers/offer-director.js) | Bộ lọc danh sách Giám đốc, modal phê duyệt/từ chối nhanh (Screen 30/30D) | `director-list.html`, `list.html` | 7 | **~185 dòng** |
+| [`offer-common.js`](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/main/resources/static/js/pages/offer-common.js) | CSRF helper, Toast bridge, Send Offer modal handler | `list.html`, `detail.html` | 5 | **~110 dòng** |
+| [`offer-list.js`](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/main/resources/static/js/pages/offer-list.js) | Bộ lọc tìm kiếm HR, chọn dòng bảng, thanh chọn hàng loạt, xóa bản nháp | `list.html` | 8 | **~175 dòng** |
+| [`offer-export.js`](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/main/resources/static/js/pages/offer-export.js) | Điều khiển modal xuất Excel, 25 checkbox cột, gọi API tải Blob | `list.html` | 9 | **~210 dòng** |
+| [`offer-form.js`](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/main/resources/static/js/pages/offer-form.js) | Autofill ứng viên (Group A), tính 85% lương thử việc, ràng buộc ngày bắt đầu | `form.html` | 5 | **~155 dòng** |
+| [`offer-detail.js`](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/main/resources/static/js/pages/offer-detail.js) | Điều phối quyết định Giám đốc trang chi tiết, bộ đếm ký tự, cuộn trang | `detail.html` | 8 | **~160 dòng** |
+| [`offer-director.js`](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/main/resources/static/js/pages/offer-director.js) | Bộ lọc danh sách Giám đốc, modal phê duyệt/từ chối nhanh (Screen 30/30D) | `director-list.html`, `list.html` | 7 | **~185 dòng** |
 | [`candidate-offers.js`](file:///c:/Users/Admin/Documents/Ky_5/SWP391/SWP_RMS_Group-2/src/main/resources/static/js/pages/candidate-offers.js) | Đồng hồ đếm ngược, chip lý do từ chối, chặn double-submit | `candidate-list.html`, `candidate-detail.html` | 5 | **~285 dòng** |
 
 > [!NOTE] Kết quả cấu trúc sau kiểm toán:

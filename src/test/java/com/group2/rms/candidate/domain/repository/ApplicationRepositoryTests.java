@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /*
- * INTEGRATION TEST: ApplicationRepository#existsActiveByCandidateInSameRequisition trên SQL Server thật (BR-CAN-01).
+ * INTEGRATION TEST: ApplicationRepository#existsActiveByCandidateAndJobPosting trên SQL Server thật (BR-CAN-01).
  * Dựng 1 ứng viên, đợt 1 có tin Lần 1 + Lần 2 ("Đăng lại"), đợt 2 là Requisition mới; rollback sau mỗi test.
  */
 @SpringBootTest(properties = "spring.jpa.hibernate.ddl-auto=validate")
@@ -127,7 +127,7 @@ class ApplicationRepositoryTests {
 
     @Test
     @DisplayName("Đã nộp ở đợt 1 -> Tin của đợt 2 (Requisition mới) vẫn được nộp")
-    void existsActiveByCandidateInSameRequisition_shouldBeFalse_whenTargetIsInNewRound() {
+    void existsActiveByCandidateAndJobPosting_shouldBeFalse_whenTargetIsInNewRound() {
         // Arrange
         savedApplication(roundOnePostingOne, "Rejected");
 
@@ -137,7 +137,7 @@ class ApplicationRepositoryTests {
 
     @Test
     @DisplayName("Chỉ có đề xuất HM_Suggested ở tin cũ -> Không tính là đã ứng tuyển")
-    void existsActiveByCandidateInSameRequisition_shouldBeFalse_whenOnlyHmSuggestion() {
+    void existsActiveByCandidateAndJobPosting_shouldBeFalse_whenOnlyHmSuggestion() {
         // Arrange
         savedApplication(roundOnePostingOne, "HM_Suggested");
 

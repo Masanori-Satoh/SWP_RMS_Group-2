@@ -114,23 +114,22 @@ public class PasswordRecoveryService {
         boolean valid = otp != null && otp.matches("[0-9]{6}") && passwordEncoder.matches(otp, state.otpHash);
         // check if otp is not valid
         if (!valid) {
-            state.failedAttempts++;
-            // check if failed attempts is more than max failed attempts
-            if (state.failedAttempts >= MAX_FAILED_ATTEMPTS) {
+            int failedAttempts = ++state.failedAttempts;
+            if (failedAttempts >= MAX_FAILED_ATTEMPTS) {
                 session.removeAttribute(RESET_STATE);
 
                 throw new PasswordRecoveryFlowException(
                         Step.FORGOT,
                         null,
                         "OTP_ATTEMPTS_EXCEEDED",
-                        "Too many incorrect attempts. Request a new code.");
+                        OtpAttemptMessage.format(failedAttempts, MAX_FAILED_ATTEMPTS, "Vui lòng yêu cầu mã mới."));
             }
 
             throw new PasswordRecoveryFlowException(
                     Step.OTP,
                     "otp",
                     "OTP_INVALID",
-                    "The verification code is incorrect.");
+                    OtpAttemptMessage.format(failedAttempts, MAX_FAILED_ATTEMPTS, "Vui lòng nhập lại."));
         }
 
         state.verified = true;

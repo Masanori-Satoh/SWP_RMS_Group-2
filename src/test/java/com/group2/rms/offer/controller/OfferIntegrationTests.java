@@ -1,4 +1,4 @@
-package com.group2.rms.offer;
+package com.group2.rms.offer.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.group2.rms.core.config.SecurityConfig;
@@ -52,6 +52,193 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(OfferController.class)
 @Import({SecurityConfig.class, DatabaseUserDetailsService.class})
 class OfferIntegrationTests {
+
+    @ParameterizedTest
+    @CsvSource({"-1,50,0,false", "0,10,0,false", "3,10,3,false", "42949672,50,42949672,false",
+            "42949673,50,0,true", "2147483647,50,0,true", "2147483647,10,0,true", "2147483647,1,2147483647,false"})
+    void pageOffsetIsBoundedForBothRolesWithoutLosingFilters(int requestedPage, int size, int expectedPage,
+                                                           boolean warned) throws Exception {
+        when(offerService.getAllOffersForHr(any(), any(), any(), any())).thenReturn(org.springframework.data.domain.Page.empty());
+        when(offerService.getDirectorOffers(any(), any(), any(), any())).thenReturn(org.springframework.data.domain.Page.empty());
+        for (String role : List.of("HR", "DIRECTOR")) {
+            var result = mvc.perform(get("/offers").with(user(role.equals("HR") ? "hr_specialist" : "director_user").roles(role))
+                            .param("page", String.valueOf(requestedPage)).param("size", String.valueOf(size))
+                            .param("search", "Java").param("status", "Sent_Candidate").param("timeSort", "LATEST"))
+                    .andExpect(status().isOk()).andExpect(model().attribute("currentPage", expectedPage))
+                    .andExpect(model().attribute("search", "Java")).andExpect(model().attribute("currentStatus", "Sent_Candidate"))
+                    .andExpect(model().attribute("currentTimeSort", "LATEST"));
+            if (warned) result.andExpect(content().string(org.hamcrest.Matchers.containsString("Đã chuyển về trang đầu.")));
+            else result.andExpect(model().attributeDoesNotExist("errorMessage"));
+        }
+        var pageable = org.mockito.ArgumentCaptor.forClass(org.springframework.data.domain.Pageable.class);
+        org.mockito.Mockito.verify(offerService).getAllOffersForHr(eq("Java"), eq("Sent_Candidate"), eq("LATEST"), pageable.capture());
+        org.mockito.Mockito.verify(offerService).getDirectorOffers(eq("Java"), eq("Sent_Candidate"), eq("LATEST"), pageable.capture());
+        for (var value : pageable.getAllValues()) {
+            org.junit.jupiter.api.Assertions.assertEquals(expectedPage, value.getPageNumber());
+            org.junit.jupiter.api.Assertions.assertEquals(size, value.getPageSize());
+            org.junit.jupiter.api.Assertions.assertTrue(value.getOffset() <= Integer.MAX_VALUE);
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {403, 404, 500})
+    void internalOperationFailuresReachGlobalHandlerWithoutSuccessFeedback(int expected) throws Exception {
+        RuntimeException error = expected == 403 ? new org.springframework.security.access.AccessDeniedException("Denied")
+                : expected == 404 ? new com.group2.rms.core.exception.ResourceNotFoundException("Không tìm thấy thư mời.")
+                : new IllegalStateException("INTERNAL_FAILURE_MARKER");
+        when(offerService.createOfferByHr(any())).thenThrow(error);
+        when(offerService.updateOfferByHr(eq(1), any())).thenThrow(error);
+        when(offerService.getUpdateOfferRequestById(1)).thenThrow(error);
+        org.mockito.Mockito.doThrow(error).when(offerService).deleteDraftOfferByHr(1);
+        when(offerService.sendOfferToCandidate(1)).thenThrow(error);
+        when(offerService.approveOfferByDirector(eq(1), any())).thenThrow(error);
+        when(offerService.rejectOfferByDirector(eq(1), any())).thenThrow(error);
+        var requests = List.of(validSalaryForm("/offers/create", "20000000", "18000000"),
+                validSalaryForm("/offers/1/edit", "20000000", "18000000"),
+                get("/offers/1/edit").accept(MediaType.APPLICATION_JSON),
+                delete("/offers/1").with(csrf()).accept(MediaType.APPLICATION_JSON),
+                post("/offers/1/send").with(csrf()).accept(MediaType.APPLICATION_JSON),
+                post("/offers/1/approve").with(csrf()).contentType(MediaType.APPLICATION_JSON).content("{\"comments\":\"OK\"}"),
+                post("/offers/1/reject").with(csrf()).contentType(MediaType.APPLICATION_JSON).content("{\"comments\":\"Reason\"}"));
+        for (int i = 0; i < requests.size(); i++) {
+            var actor = i >= 5 ? user("director_user").roles("DIRECTOR") : user("hr_specialist").roles("HR");
+            mvc.perform(requests.get(i).with(actor)).andExpect(status().is(expected))
+                    .andExpect(view().name("error/" + expected))
+                    .andExpect(flash().attributeCount(0))
+                    .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("INTERNAL_FAILURE_MARKER"))));
+        }
+    }
+
+    @ParameterizedTest
+    @CsvSource({"delete,400", "send,400", "approve,400", "reject,400", "approve,409", "reject,409"})
+    void moduleBusinessErrorsKeepJsonMessagesAndConflictStatus(String action, int expected) throws Exception {
+        var error = new com.group2.rms.offer.exception.OfferValidationException("Business feedback",
+                expected == 409 ? "OFFER_STATUS_INVALID" : "OFFER_VALIDATION_ERROR");
+        boolean director = action.equals("approve") || action.equals("reject");
+        var request = action.equals("delete") ? delete("/offers/1") : post("/offers/1/" + action);
+        switch (action) {
+            case "delete" -> org.mockito.Mockito.doThrow(error).when(offerService).deleteDraftOfferByHr(1);
+            case "send" -> when(offerService.sendOfferToCandidate(1)).thenThrow(error);
+            case "approve" -> when(offerService.approveOfferByDirector(eq(1), any())).thenThrow(error);
+            case "reject" -> when(offerService.rejectOfferByDirector(eq(1), any())).thenThrow(error);
+        }
+        mvc.perform(request.with(csrf()).with(user(director ? "director_user" : "hr_specialist").roles(director ? "DIRECTOR" : "HR"))
+                        .accept(MediaType.APPLICATION_JSON).contentType(MediaType.APPLICATION_JSON).content("{\"comments\":\"Reason\"}"))
+                .andExpect(status().is(expected)).andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value("Business feedback"));
+    }
+
+    @Test
+    @WithMockUser(username = "hr_specialist", roles = "HR")
+    void editBusinessErrorKeepsEnteredFormAndDraftContext() throws Exception {
+        when(offerService.updateOfferByHr(eq(1), any())).thenThrow(
+                new com.group2.rms.offer.exception.OfferValidationException("Business feedback"));
+        when(offerService.getOfferDetailForHr(1)).thenReturn(OfferDetailResponse.builder().offerId(1).offerStatus("Draft").build());
+        mvc.perform(validSalaryForm("/offers/1/edit", "20000000", "18000000"))
+                .andExpect(status().isOk()).andExpect(view().name("offers/form"))
+                .andExpect(model().attributeHasErrors("offerDto")).andExpect(model().attribute("isEdit", true))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Business feedback")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Entered salary test")));
+    }
+
+    @ParameterizedTest
+    @CsvSource({"approve,500", "reject,500", "approve,501", "reject,501", "approve,2000", "reject,2000", "approve,2001", "reject,2001"})
+    @WithMockUser(username = "director_user", roles = "DIRECTOR")
+    void directorCommentBoundariesMatchBackendLimit(String action, int length) throws Exception {
+        String comments = "ý".repeat(length);
+        var result = mvc.perform(post("/offers/1/" + action).with(csrf()).contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(new DirectorDecisionRequest(comments))));
+        if (length <= 2000) {
+            result.andExpect(status().isOk()).andExpect(jsonPath("$.success").value(true));
+            if ("approve".equals(action)) org.mockito.Mockito.verify(offerService).approveOfferByDirector(1, comments);
+            else org.mockito.Mockito.verify(offerService).rejectOfferByDirector(1, comments);
+        } else {
+            result.andExpect(status().isBadRequest());
+            org.mockito.Mockito.verify(offerService, org.mockito.Mockito.never()).approveOfferByDirector(any(), any());
+            org.mockito.Mockito.verify(offerService, org.mockito.Mockito.never()).rejectOfferByDirector(any(), any());
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"/offers", "/offers/1"})
+    @WithMockUser(username = "director_user", roles = "DIRECTOR")
+    void directorTextareasAndCountersShareThe2000CharacterLimit(String path) throws Exception {
+        when(offerService.getDirectorOffers(any(), any(), any(), any())).thenReturn(org.springframework.data.domain.Page.empty());
+        when(offerService.getOfferDetailForHr(1)).thenReturn(OfferDetailResponse.builder()
+                .offerId(1).offerStatus("Pending_Director").build());
+        String html = mvc.perform(get(path)).andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        String id = path.equals("/offers") ? "directorDecisionComments" : "directorDetailComments";
+        org.junit.jupiter.api.Assertions.assertTrue(java.util.regex.Pattern.compile(
+                "<textarea[^>]*id=\"" + id + "\"[^>]*maxlength=\"2000\"", java.util.regex.Pattern.DOTALL).matcher(html).find());
+        org.junit.jupiter.api.Assertions.assertTrue(html.contains("0</span>/2000"));
+        org.junit.jupiter.api.Assertions.assertFalse(html.contains("0</span>/500"));
+        if (path.endsWith("/1")) writeOfferFixture(html, "director-detail");
+    }
+
+    private static void assertOfferStyles(String html, String roleStylesheet, String page) throws Exception {
+        var matcher = java.util.regex.Pattern.compile("href=\"(/css/[^\"]+\\.css)\"").matcher(html);
+        var links = new java.util.ArrayList<String>();
+        while (matcher.find()) links.add(matcher.group(1));
+        String common = "/css/pages/offer-common.css";
+        String role = "/css/pages/" + roleStylesheet;
+        org.junit.jupiter.api.Assertions.assertEquals(1, java.util.Collections.frequency(links, common));
+        org.junit.jupiter.api.Assertions.assertEquals(1, java.util.Collections.frequency(links, role));
+        org.junit.jupiter.api.Assertions.assertTrue(links.indexOf(common) < links.indexOf(role));
+        org.junit.jupiter.api.Assertions.assertEquals(links.size(), new java.util.HashSet<>(links).size());
+        org.junit.jupiter.api.Assertions.assertFalse(html.contains("/css/pages/" + "offers/"));
+        String offerContent = html.substring(html.indexOf("<main"), html.lastIndexOf("</main>"));
+        org.junit.jupiter.api.Assertions.assertFalse(java.util.regex.Pattern.compile("\\bon(?:click|input|change)=").matcher(offerContent).find());
+        var scriptMatcher = java.util.regex.Pattern.compile("src=\"(/js/pages/[^\"]+\\.js)\"").matcher(html);
+        var scripts = new java.util.ArrayList<String>();
+        while (scriptMatcher.find()) scripts.add(scriptMatcher.group(1));
+        var expectedScripts = switch (page) {
+            case "form" -> List.of("offer-form.js");
+            case "hr" -> List.of("offer-common.js", "offer-hr.js");
+            case "director" -> List.of("offer-common.js", "offer-director.js");
+            default -> List.of("offer-common.js"); // Chi tiết HR không nạp script quyết định của Giám đốc.
+        };
+        for (String file : expectedScripts) {
+            org.junit.jupiter.api.Assertions.assertEquals(1, java.util.Collections.frequency(scripts, "/js/pages/" + file));
+        }
+        if (expectedScripts.size() > 1) {
+            org.junit.jupiter.api.Assertions.assertTrue(scripts.indexOf("/js/pages/" + expectedScripts.get(0))
+                    < scripts.indexOf("/js/pages/" + expectedScripts.get(1)));
+        }
+        org.junit.jupiter.api.Assertions.assertEquals(scripts.size(), new java.util.HashSet<>(scripts).size());
+        org.junit.jupiter.api.Assertions.assertFalse(html.contains("/js/pages/" + "offers/"));
+        writeOfferFixture(html, page);
+    }
+
+    private static void writeOfferFixture(String html, String page) throws Exception {
+        String directory = System.getProperty("offer.styles.evidence.dir");
+        if (directory != null) {
+            var path = java.nio.file.Path.of(directory);
+            java.nio.file.Files.createDirectories(path);
+            java.nio.file.Files.writeString(path.resolve(page + ".html"), html);
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"offer-common.css", "offer-hr.css", "offer-director.css"})
+    void flatOfferStylesAreServedWithoutChangingContent(String filename) throws Exception {
+        byte[] expected = java.nio.file.Files.readAllBytes(
+                java.nio.file.Path.of("src/main/resources/static/css/pages", filename));
+        mvc.perform(get("/css/pages/" + filename))
+                .andExpect(status().isOk()).andExpect(content().contentTypeCompatibleWith("text/css"))
+                .andExpect(content().bytes(expected));
+        mvc.perform(get("/css/pages/" + "offers/" + filename)).andExpect(status().isNotFound());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"offer-common.js", "offer-director.js", "offer-form.js", "offer-hr.js"})
+    void flatOfferScriptsAreServedWithoutChangingContent(String filename) throws Exception {
+        byte[] expected = java.nio.file.Files.readAllBytes(
+                java.nio.file.Path.of("src/main/resources/static/js/pages", filename));
+        mvc.perform(get("/js/pages/" + filename)).andExpect(status().isOk())
+                .andExpect(header().string("Content-Type", org.hamcrest.Matchers.matchesPattern("(?:text|application)/javascript(?:;.*)?")))
+                .andExpect(content().bytes(expected));
+        mvc.perform(get("/js/pages/" + "offers/" + filename)).andExpect(status().isNotFound());
+    }
 
     @ParameterizedTest
     @ValueSource(strings = {"/interviews", "/offers", "/requisitions", "/internal/job-postings", "/applications"})
@@ -209,6 +396,7 @@ class OfferIntegrationTests {
         mvc.perform(get("/offers/create"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("offers/form"))
+                .andExpect(result -> assertOfferStyles(result.getResponse().getContentAsString(java.nio.charset.StandardCharsets.UTF_8), "offer-hr.css", "form"))
                 .andExpect(model().attributeExists("offerDto", "passedCandidates"));
     }
 
@@ -231,6 +419,7 @@ class OfferIntegrationTests {
         mvc.perform(get("/offers/1"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("offers/detail"))
+                .andExpect(result -> assertOfferStyles(result.getResponse().getContentAsString(java.nio.charset.StandardCharsets.UTF_8), "offer-director.css", "detail"))
                 .andExpect(model().attributeExists("detail"));
     }
 
@@ -239,7 +428,7 @@ class OfferIntegrationTests {
             "hr_specialist, HR, Draft, true, false",
             "hr_specialist, HR, Director_Approved, false, true",
             "hr_specialist, HR, Sent_Candidate, false, false",
-            "director_user, DIRECTOR, Draft, false, false",
+            "director_user, DIRECTOR, Pending_Director, false, false",
             "director_user, DIRECTOR, Director_Approved, false, false"
     })
     void sharedConfirmationsKeepRoleAndStatusVisibility(String username, String role, String offerStatus,
@@ -254,33 +443,44 @@ class OfferIntegrationTests {
         org.junit.jupiter.api.Assertions.assertEquals(deleteVisible, html.contains("id=\"deleteOfferDialog\""));
         org.junit.jupiter.api.Assertions.assertEquals(sendVisible, html.contains("id=\"sendOfferConfirmDialog\""));
         if (deleteVisible) {
-            org.junit.jupiter.api.Assertions.assertTrue(html.contains("form=\"deleteOfferForm\""));
+            org.junit.jupiter.api.Assertions.assertTrue(html.contains("data-success-url=\"/offers\""));
         }
         if (sendVisible) {
             org.junit.jupiter.api.Assertions.assertTrue(html.contains("aria-labelledby=\"sendOfferTitle\""));
         }
     }
 
-    @Test
-    @DisplayName("IT-04 POST /offers/{id}/delete: Xóa bản thảo Offer điều hướng về /offers")
-    @WithMockUser(username = "hr_specialist", roles = {"HR"})
-    void it04_deleteDraftOffer_redirectsToList() throws Exception {
-        mvc.perform(post("/offers/1/delete").with(csrf()))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/offers"));
+    @ParameterizedTest
+    @CsvSource({"director_user,1", "director_other,2"})
+    void directorOutOfScopeDetailsReturn404ForHtmlAndJson(String username, int id) throws Exception {
+        when(userRepository.findByUsernameIgnoreCase(username)).thenReturn(Optional.of(User.builder()
+                .userId(id).username(username).accountStatus("Active")
+                .role(Role.builder().roleName("Director").build()).build()));
+        when(offerService.getOfferDetailForHr(id))
+                .thenThrow(new com.group2.rms.core.exception.ResourceNotFoundException("Không tìm thấy thư mời nhận việc."));
+        for (MediaType accept : List.of(MediaType.TEXT_HTML, MediaType.APPLICATION_JSON)) {
+            mvc.perform(get("/offers/" + id).with(user(username).roles("DIRECTOR")).accept(accept))
+                    .andExpect(status().isNotFound())
+                    .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("candidateEmail"))));
+        }
     }
 
     @Test
-    @DisplayName("IT-05 POST /offers/{id}/send: Phát hành Offer Letter điều hướng về /offers/{id}")
-    @WithMockUser(username = "hr_specialist", roles = {"HR"})
-    void it05_sendOffer_redirectsToDetail() throws Exception {
+    @WithMockUser(username = "hr_specialist", roles = "HR")
+    void removedDeleteFormEndpointCannotWrite() throws Exception {
+        mvc.perform(post("/offers/1/delete").with(csrf())).andExpect(status().isNotFound());
+        org.mockito.Mockito.verify(offerService, org.mockito.Mockito.never()).deleteDraftOfferByHr(any());
+    }
+
+    @Test
+    @WithMockUser(username = "hr_specialist", roles = "HR")
+    void sendWithoutAcceptHeaderUsesTheSingleJsonHandler() throws Exception {
         when(offerService.sendOfferToCandidate(1)).thenReturn(OfferResponse.builder()
                 .emailStatus(OfferResponse.EmailStatus.NOT_SENT).build());
-        mvc.perform(post("/offers/1/send").with(csrf()))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/offers/1"))
-                .andExpect(flash().attribute("offerWarningMessage",
-                        "Đã phát hành thư mời nhận việc trên cổng ứng viên. Chưa gửi được email thông báo."));
+        mvc.perform(post("/offers/1/send").with(csrf())).andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.emailStatus").value("NOT_SENT"));
+        org.mockito.Mockito.verify(offerService).sendOfferToCandidate(1);
     }
 
     @Test
@@ -311,14 +511,14 @@ class OfferIntegrationTests {
                 const fs = require('fs'), vm = require('vm');
                 const scope = process.argv[1];
                 const context = {
-                  window: {}, console,
+                  window: {location: {search: '?search=Java&status=Sent_Candidate&timeSort=LATEST'}}, console, URLSearchParams,
                   document: {
                     readyState: 'loading', addEventListener() {},
                     getElementById(id) {
-                      return {searchInput: {value: 'Java'}, statusFilter: {value: 'Sent_Candidate'},
-                              timeSortFilter: {value: 'LATEST'}}[id] || null;
+                      return {searchInput: {value: 'Unsubmitted'}, statusFilter: {value: 'Accepted'},
+                              timeSortFilter: {value: 'EARLIEST'}}[id] || null;
                     },
-                    querySelector() { return {value: scope}; },
+                    querySelector(selector) { return selector.startsWith('meta') ? null : {value: scope}; },
                     querySelectorAll(selector) {
                       if (selector.includes('exportCol')) return [{value: 'offerId'}];
                       if (selector.includes('offer-row-checkbox')) return [{value: '42'}];
@@ -331,7 +531,8 @@ class OfferIntegrationTests {
                   }
                 };
                 vm.createContext(context);
-                vm.runInContext(fs.readFileSync('src/main/resources/static/js/pages/offers/offer-hr.js', 'utf8'), context);
+                vm.runInContext(fs.readFileSync('src/main/resources/static/js/pages/offer-common.js', 'utf8'), context);
+                vm.runInContext(fs.readFileSync('src/main/resources/static/js/pages/offer-hr.js', 'utf8'), context);
                 context.executeOfferExport();
                 """;
         Process process = new ProcessBuilder("node", "-e", script, scope).redirectErrorStream(true).start();
@@ -351,6 +552,45 @@ class OfferIntegrationTests {
             org.mockito.Mockito.verify(offerExportService).exportOffersToExcel(eq(expected), eq("hr_specialist"));
         } finally {
             process.destroyForcibly();
+        }
+    }
+
+    @ParameterizedTest
+    @CsvSource({"hr_specialist,HR,Draft", "director_user,DIRECTOR,Pending_Director"})
+    void keywordSearchKeepsTheExistingToolbarAndRoleFilters(String username, String role, String offerStatus) throws Exception {
+        OfferResponse offer = OfferResponse.builder().offerId(12).candidateName("Ứng viên kiểm thử")
+                .candidateEmail("offer.search@example.test").offeredPositionTitle("Java Backend")
+                .proposedSalary(new BigDecimal("20000000")).probationSalary(new BigDecimal("17000000"))
+                .probationDays(60).offerStatus(offerStatus).createdAt(java.time.LocalDateTime.of(2026, 11, 10, 10, 0)).build();
+        var page = new PageImpl<>(List.of(offer), org.springframework.data.domain.PageRequest.of(0, 10), 25);
+        when(offerService.getAllOffersForHr(any(), any(), any(), any())).thenReturn(page);
+        when(offerService.getDirectorOffers(any(), any(), any(), any())).thenReturn(page);
+        when(offerService.getOfferStats()).thenReturn(Map.of());
+        when(offerService.getDirectorOfferStats()).thenReturn(Map.of());
+        when(offerService.getDirectorStatusCounts()).thenReturn(Map.of());
+        String keyword = "offer.search@example.test";
+        String html = mvc.perform(get("/offers").with(user(username).roles(role))
+                        .queryParam("search", keyword).queryParam("status", offerStatus).queryParam("timeSort", "LATEST"))
+                .andExpect(status().isOk()).andExpect(model().attribute("search", keyword))
+                .andReturn().getResponse().getContentAsString(java.nio.charset.StandardCharsets.UTF_8);
+        org.junit.jupiter.api.Assertions.assertTrue(html.contains("maxlength=\"120\""));
+        assertOfferStyles(html, "HR".equals(role) ? "offer-hr.css" : "offer-director.css", role.toLowerCase());
+        org.junit.jupiter.api.Assertions.assertTrue(html.contains("Tìm #mã thư mời, ứng viên, email, vị trí, phòng ban…"));
+        org.junit.jupiter.api.Assertions.assertEquals(1, html.split("id=\"offerFilters\"", -1).length - 1);
+        org.junit.jupiter.api.Assertions.assertEquals("HR".equals(role), html.contains("id=\"offerExportModal\""));
+        var nextPage = java.util.regex.Pattern.compile("href=\"([^\"]*page=1[^\"]*)\"").matcher(html);
+        org.junit.jupiter.api.Assertions.assertTrue(nextPage.find(), "A second page link must be available");
+        org.junit.jupiter.api.Assertions.assertTrue(nextPage.group(1).contains("search=offer.search"));
+        org.junit.jupiter.api.Assertions.assertTrue(nextPage.group(1).contains("status=" + offerStatus));
+        org.junit.jupiter.api.Assertions.assertTrue(nextPage.group(1).contains("timeSort=LATEST"));
+        if ("HR".equals(role)) org.mockito.Mockito.verify(offerService).getAllOffersForHr(eq(keyword), eq(offerStatus), eq("LATEST"), any());
+        else org.mockito.Mockito.verify(offerService).getDirectorOffers(eq(keyword), eq(offerStatus), eq("LATEST"), any());
+        // Tùy chọn xuất HTML do Thymeleaf render để kiểm tra browser; không tạo dữ liệu database.
+        String evidenceDirectory = System.getProperty("offer.search.evidence.dir");
+        if (evidenceDirectory != null) {
+            var directory = java.nio.file.Path.of(evidenceDirectory);
+            java.nio.file.Files.createDirectories(directory);
+            java.nio.file.Files.writeString(directory.resolve(role.toLowerCase() + ".html"), html);
         }
     }
 
@@ -592,7 +832,7 @@ class OfferIntegrationTests {
 
     @Test
     @WithMockUser(username = "hr_specialist", roles = {"HR"})
-    void unexpectedCreateErrorDoesNotExposeTechnicalDetailsAndPreservesTheForm() throws Exception {
+    void unexpectedCreateErrorReturns500WithoutExposingTechnicalDetails() throws Exception {
         when(offerService.createOfferByHr(any())).thenThrow(new IllegalStateException("SQL_INTERNAL_DETAILS"));
         when(offerService.getPassedCandidatesForOffer()).thenReturn(List.of());
         mvc.perform(post("/offers/create").with(csrf())
@@ -602,14 +842,12 @@ class OfferIntegrationTests {
                         .param("probationDays", "60").param("responsePeriodDays", "5")
                         .param("workLocation", "Hà Nội")
                         .param("expectedStartDate", LocalDate.now().plusDays(14).toString()))
-                .andExpect(status().isOk()).andExpect(view().name("offers/form"))
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("Vui lòng thử lại hoặc liên hệ bộ phận hỗ trợ.")))
-                .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("SQL_INTERNAL_DETAILS"))))
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("Java Dev")));
+                .andExpect(status().isInternalServerError()).andExpect(view().name("error/500"))
+                .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("SQL_INTERNAL_DETAILS"))));
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"validation", "business", "technical"})
+    @ValueSource(strings = {"validation", "business"})
     @WithMockUser(username = "hr_specialist", roles = {"HR"})
     void createErrorsKeepTheLockedCandidateAndEnteredData(String errorKind) throws Exception {
         var candidate = com.group2.rms.offer.dto.PassedCandidateResponse.builder()
@@ -617,10 +855,8 @@ class OfferIntegrationTests {
                 .departmentName("IT").finalDecision("Passed").build();
         when(offerService.getPassedCandidatesForOffer()).thenReturn(List.of(candidate));
         if (!"validation".equals(errorKind)) {
-            RuntimeException error = "business".equals(errorKind)
-                    ? new com.group2.rms.offer.exception.OfferValidationException("Hồ sơ đã được cập nhật.")
-                    : new IllegalStateException("INTERNAL_FAILURE");
-            when(offerService.createOfferByHr(any())).thenThrow(error);
+            when(offerService.createOfferByHr(any())).thenThrow(
+                    new com.group2.rms.offer.exception.OfferValidationException("Hồ sơ đã được cập nhật."));
         }
         mvc.perform(post("/offers/create").with(csrf())
                         .contentType(MediaType.APPLICATION_FORM_URLENCODED)
@@ -675,6 +911,78 @@ class OfferIntegrationTests {
                 .andExpect(model().attribute("currentPage", 0));
     }
 
+    @ParameterizedTest
+    @CsvSource({"-2147483648,1", "-1,1", "0,1", "1,1", "10,10", "50,50", "51,50", "2147483647,50"})
+    void listBoundsPageSizeForHrAndDirector(int requested, int expected) throws Exception {
+        when(offerService.getAllOffersForHr(any(), any(), any(), any())).thenReturn(org.springframework.data.domain.Page.empty());
+        when(offerService.getDirectorOffers(any(), any(), any(), any())).thenReturn(org.springframework.data.domain.Page.empty());
+        for (String role : List.of("HR", "DIRECTOR")) {
+            String username = "HR".equals(role) ? "hr_specialist" : "director_user";
+            mvc.perform(get("/offers").with(user(username).roles(role))
+                            .param("page", "-1").param("size", String.valueOf(requested)))
+                    .andExpect(status().isOk()).andExpect(model().attribute("currentPage", 0));
+        }
+        var pageable = org.mockito.ArgumentCaptor.forClass(org.springframework.data.domain.Pageable.class);
+        org.mockito.Mockito.verify(offerService).getAllOffersForHr(any(), any(), any(), pageable.capture());
+        org.mockito.Mockito.verify(offerService).getDirectorOffers(any(), any(), any(), pageable.capture());
+        for (var value : pageable.getAllValues()) {
+            org.junit.jupiter.api.Assertions.assertEquals(0, value.getPageNumber());
+            org.junit.jupiter.api.Assertions.assertEquals(expected, value.getPageSize());
+        }
+    }
+
+    @ParameterizedTest
+    @CsvSource({"/offers/create,proposedSalary,10000000000000000,9000000000000000",
+            "/offers/create,probationSalary,10000000000000000,10000000000000000",
+            "/offers/create,proposedSalary,20000000.001,18000000",
+            "/offers/create,probationSalary,20000000,18000000.001",
+            "/offers/1/edit,proposedSalary,10000000000000000,9000000000000000",
+            "/offers/1/edit,probationSalary,10000000000000000,10000000000000000",
+            "/offers/1/edit,proposedSalary,20000000.001,18000000",
+            "/offers/1/edit,probationSalary,20000000,18000000.001"})
+    @WithMockUser(username = "hr_specialist", roles = "HR")
+    void salaryOutsideDatabasePrecisionReturnsFormWithoutWriting(String endpoint, String field,
+                                                                 String proposed, String probation) throws Exception {
+        when(offerService.getOfferDetailForHr(1)).thenReturn(OfferDetailResponse.builder()
+                .offerId(1).offerStatus("Draft").build());
+        mvc.perform(validSalaryForm(endpoint, proposed, probation))
+                .andExpect(status().isOk()).andExpect(view().name("offers/form"))
+                .andExpect(model().attributeHasFieldErrors("offerDto", field))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("16 chữ số phần nguyên và 2 chữ số thập phân")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Entered salary test")));
+        org.mockito.Mockito.verify(offerService, org.mockito.Mockito.never()).createOfferByHr(any());
+        org.mockito.Mockito.verify(offerService, org.mockito.Mockito.never()).updateOfferByHr(any(), any());
+    }
+
+    @ParameterizedTest
+    @CsvSource({"/offers/create,20000000.12,18000000.11", "/offers/1/edit,20000000.12,18000000.11",
+            "/offers/create,9999999999999999.99,9999999999999999.99",
+            "/offers/1/edit,9999999999999999.99,9999999999999999.99"})
+    @WithMockUser(username = "hr_specialist", roles = "HR")
+    void validSalaryPrecisionReachesServiceWithoutRounding(String endpoint, String proposed, String probation) throws Exception {
+        mvc.perform(validSalaryForm(endpoint, proposed, probation)).andExpect(status().is3xxRedirection());
+        if (endpoint.endsWith("create")) {
+            var request = org.mockito.ArgumentCaptor.forClass(CreateOfferRequest.class);
+            org.mockito.Mockito.verify(offerService).createOfferByHr(request.capture());
+            org.junit.jupiter.api.Assertions.assertEquals(new BigDecimal(proposed), request.getValue().getProposedSalary());
+            org.junit.jupiter.api.Assertions.assertEquals(new BigDecimal(probation), request.getValue().getProbationSalary());
+        } else {
+            var request = org.mockito.ArgumentCaptor.forClass(UpdateOfferRequest.class);
+            org.mockito.Mockito.verify(offerService).updateOfferByHr(eq(1), request.capture());
+            org.junit.jupiter.api.Assertions.assertEquals(new BigDecimal(proposed), request.getValue().getProposedSalary());
+            org.junit.jupiter.api.Assertions.assertEquals(new BigDecimal(probation), request.getValue().getProbationSalary());
+        }
+    }
+
+    private org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder validSalaryForm(
+            String endpoint, String proposed, String probation) {
+        return post(endpoint).with(csrf()).contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .param("applicationId", "1").param("offeredPositionTitle", "Entered salary test")
+                .param("proposedSalary", proposed).param("probationSalary", probation)
+                .param("probationDays", "60").param("responsePeriodDays", "5").param("isDraft", "true")
+                .param("workLocation", "Hà Nội").param("expectedStartDate", LocalDate.now().plusDays(14).toString());
+    }
+
     @Test
     @DisplayName("IT-25 GET /offers/{id}/edit: HR xem form chỉnh sửa Offer thành công (view offers/form, HTTP 200)")
     @WithMockUser(username = "hr_specialist", roles = {"HR"})
@@ -709,7 +1017,9 @@ class OfferIntegrationTests {
                 .andExpect(view().name("offers/form"))
                 .andExpect(model().attribute("isEdit", true))
                 .andExpect(model().attribute("isLockedCandidate", false))
-                .andExpect(model().attributeExists("offerDto", "detail"));
+                .andExpect(model().attributeExists("offerDto", "detail"))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("data-offer-edit=\"true\"")))
+                .andExpect(result -> writeOfferFixture(result.getResponse().getContentAsString(java.nio.charset.StandardCharsets.UTF_8), "edit"));
     }
 
     @ParameterizedTest
@@ -723,8 +1033,8 @@ class OfferIntegrationTests {
                 .expectedStartDate(LocalDate.now().plusDays(14)).build());
         String html = mvc.perform(get("/offers/1").with(user(username).roles(role)))
                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
-        org.junit.jupiter.api.Assertions.assertEquals(deleteVisible, html.contains("action=\"/offers/1/delete\""));
-        org.junit.jupiter.api.Assertions.assertEquals(sendVisible, html.contains("onclick=\"confirmSendOffer(1)\""));
+        org.junit.jupiter.api.Assertions.assertEquals(deleteVisible, html.contains("data-offer-click=\"open-delete\""));
+        org.junit.jupiter.api.Assertions.assertEquals(sendVisible, html.contains("data-offer-click=\"open-send\""));
     }
 
 }

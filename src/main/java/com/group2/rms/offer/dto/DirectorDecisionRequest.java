@@ -11,6 +11,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class DirectorDecisionRequest {
-    @Size(max = 2000, message = "Phản hồi của Director không được vượt quá 2000 ký tự.")
+    @Size(max = 2000, message = "Phản hồi của Giám đốc không được vượt quá 2000 ký tự.")
     private String comments;
 }

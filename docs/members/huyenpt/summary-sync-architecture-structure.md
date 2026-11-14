@@ -1,3 +1,5 @@
+> Ghi chú 11/11/2026: đường dẫn và package test đã được cập nhật theo tầng kiểm thử; kết quả Task/PR lịch sử giữ nguyên.
+
 # BÁO CÁO ĐỒNG BỘ VÀ CHUẨN HÓA CẤU TRÚC PHÂN HỆ OFFER
 
 - **Nhánh thực hiện (Branch):** `refactor/huyenpt/sync-architecture-structure`
@@ -49,7 +51,7 @@ Các mục tiêu cốt lõi đã hoàn thành:
 ### 2.3. Quy hoạch và Chuẩn hóa Bộ Kiểm thử (Test Suite Reorganization)
 - Đã tổ chức lại các file kiểm thử:
   - `com.group2.rms.service.OfferServiceTests` ➔ `com.group2.rms.offer.service.OfferServiceTests`
-  - `com.group2.rms.offer.OfferIntegrationTest` ➔ `com.group2.rms.offer.OfferIntegrationTests`
+  - `com.group2.rms.offer.OfferIntegrationTest` ➔ `com.group2.rms.offer.controller.OfferIntegrationTests`
   - `com.group2.rms.OfferControllerBugTest` ➔ `com.group2.rms.offer.controller.OfferControllerBugTests`
 - Tất cả các lớp test trong phân hệ Offer hiện tuân thủ 100% quy ước đặt tên `*Tests` và gom nhóm đúng gói tính năng.
 

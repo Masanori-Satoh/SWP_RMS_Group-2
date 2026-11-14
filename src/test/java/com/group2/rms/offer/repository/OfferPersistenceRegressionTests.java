@@ -537,7 +537,7 @@ class OfferPersistenceRegressionTests {
         var criteria = entityManager.getCriteriaBuilder();
         var query = criteria.createQuery(OfferProposal.class);
         var root = query.from(OfferProposal.class);
-        query.where(OfferProposalRepository.matchingFilters("%_[", "Director_Approved")
+        query.where(OfferProposalRepository.matchingFilters("%_[", "Director_Approved", java.time.LocalDateTime.now())
                 .toPredicate(root, query, criteria));
         assertEquals(1, entityManager.createQuery(query).getResultList().size());
         offer.setIsDeleted(true);

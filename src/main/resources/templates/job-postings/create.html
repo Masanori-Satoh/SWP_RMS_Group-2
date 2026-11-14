@@ -80,6 +80,7 @@
                             <div class="jpf-field">
                                 <div class="jpf-lblrow"><label class="form-label" for="employmentType">Hình thức làm việc <span
                                             class="required-asterisk">*</span></label>
+                                <span class="jpf-from" data-from="employmentType" th:data-source="*{sourceEmploymentType}"></span>
                                 </div>
                                 <select class="form-select" th:field="*{employmentType}"
                                     aria-describedby="employmentType-error">
@@ -94,6 +95,7 @@
                             <div class="jpf-field">
                                 <div class="jpf-lblrow"><label class="form-label" for="workModel">Mô hình làm việc <span
                                             class="required-asterisk">*</span></label>
+                                    <span class="jpf-from" data-from="workModel" th:data-source="*{sourceWorkModel}"></span>
                                 </div>
                                 <select class="form-select" th:field="*{workModel}" aria-describedby="workModel-error">
                                     <option value="On-site">Tại văn phòng</option>
@@ -139,6 +141,7 @@
                         <div class="jpf-field">
                             <div class="jpf-lblrow"><label class="form-label" for="jobDescription">Mô tả công việc <span
                                         class="required-asterisk">*</span></label>
+                                <span class="jpf-from" data-from="jobDescription" th:data-source="*{sourceJobDescription}"></span>
                             </div>
                             <textarea class="form-textarea" th:field="*{jobDescription}" rows="7"
                                 th:maxlength="${textLimit}" placeholder="Nhập mô tả công việc"
@@ -149,6 +152,7 @@
                         <div class="jpf-field">
                             <div class="jpf-lblrow"><label class="form-label" for="jobRequirements">Yêu cầu ứng viên
                                     <span class="required-asterisk">*</span></label>
+                                <span class="jpf-from" data-from="jobRequirements" th:data-source="*{sourceRequirements}"></span>
                             </div>
                             <textarea class="form-textarea" th:field="*{jobRequirements}" rows="6"
                                 th:maxlength="${textLimit}" placeholder="Nhập yêu cầu ứng viên"
@@ -173,10 +177,15 @@
                         <div class="jpf-field">
                             <div class="jpf-lblrow"><label class="form-label" for="workLocation">Địa điểm làm
                                     việc</label>
+                                <span class="jpf-from" data-from="workLocation" th:data-source="*{sourceWorkLocation}"></span>
                             </div>
                             <input class="form-input" th:field="*{workLocation}" th:maxlength="${locationLimit}"
                                 placeholder="Nhập địa điểm làm việc" th:disabled="*{workModel == 'Remote'}"
                                 aria-describedby="workLocation-help workLocation-error">
+                            <details class="jpf-map-toggle" id="jpf-map-toggle">
+                                <summary class="jpf-map-summary">Xem bản đồ</summary>
+                                <div class="jpf-map" id="jpf-map"></div>
+                            </details>
                             <small id="workLocation-error" class="field-error"
                                 th:text="${#fields.hasErrors('workLocation')} ? ${#fields.errors('workLocation')[0]} : ''"></small>
                         </div>

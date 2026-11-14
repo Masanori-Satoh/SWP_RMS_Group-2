@@ -1,3 +1,9 @@
+> Ghi chú 11/11/2026: đường dẫn và package test đã được cập nhật theo tầng kiểm thử; kết quả Task/PR lịch sử giữ nguyên.
+
+> Ghi chú 11/11/2026: đường dẫn JavaScript đã được cập nhật theo vị trí hiện hành; kết quả thực hiện lịch sử không thay đổi.
+
+> Ghi chú 11/11/2026: đường dẫn CSS trong tài liệu đã được cập nhật theo vị trí hiện hành; các kết quả Task/PR lịch sử được giữ nguyên.
+
 # TECHNICAL REPORT 31 — TASK 21: FINAL PRE-COMMIT QUALITY AUDIT & SWP391 OFFER FRONTEND ACCEPTANCE
 
 > **Lưu ý khi đọc:** Tài liệu lịch sử: phản ánh thời điểm audit/refactor; tên hàm, đường dẫn và đề xuất có thể khác code đã merge. Xem [mục lục và hướng dẫn hiện hành](../README.md).
@@ -153,11 +159,11 @@ An inspection of the generated XML reports in `target/surefire-reports/` directl
 
 | Test Class | Full Class Name | Tests | Failures | Errors | Skipped | Time | Status |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| `OfferIntegrationTests` | `com.group2.rms.offer.OfferIntegrationTests` | 34 | 0 | 0 | 0 | 2.39s | **PASS** |
+| `OfferIntegrationTests` | `com.group2.rms.offer.controller.OfferIntegrationTests` | 34 | 0 | 0 | 0 | 2.39s | **PASS** |
 | `OfferServiceTests` | `com.group2.rms.offer.service.OfferServiceTests` | 114 | 0 | 0 | 0 | 0.74s | **PASS** |
-| `CandidateOfferWebTests` | `com.group2.rms.offer.CandidateOfferWebTests` | 19 | 0 | 0 | 0 | 12.44s | **PASS** |
+| `CandidateOfferWebTests` | `com.group2.rms.offer.controller.CandidateOfferWebTests` | 19 | 0 | 0 | 0 | 12.44s | **PASS** |
 | `CandidateOfferServiceTests` | `com.group2.rms.offer.service.CandidateOfferServiceTests` | 35 | 0 | 0 | 0 | 0.26s | **PASS** |
-| `OfferExportServiceTests` | `com.group2.rms.offer.OfferExportServiceTests` | 10 | 0 | 0 | 0 | 2.73s | **PASS** |
+| `OfferExportServiceTests` | `com.group2.rms.offer.service.OfferExportServiceTests` | 10 | 0 | 0 | 0 | 2.73s | **PASS** |
 | `OfferControllerBugTests` | `com.group2.rms.offer.controller.OfferControllerBugTests` | 6 | 0 | 0 | 0 | 19.79s | **PASS** |
 | `CandidateOfferQueryTests` | `com.group2.rms.offer.repository.CandidateOfferQueryTests` | 5 | 0 | 0 | 0 | 4.36s | **PASS** |
 | **TOTAL VERIFIED** | **All 7 Test Classes** | **223** | **0** | **0** | **0** | **42.71s** | **100% PASS** |
@@ -258,14 +264,14 @@ src/main/resources/static/css/pages/offer-workspace.css
 
 # Active CSS (Role-based & Optimized):
 src/main/resources/static/css/pages/candidate-offers.css
-src/main/resources/static/css/pages/offers/offer-common.css
-src/main/resources/static/css/pages/offers/offer-hr.css
-src/main/resources/static/css/pages/offers/offer-director.css
+src/main/resources/static/css/pages/offer-common.css
+src/main/resources/static/css/pages/offer-hr.css
+src/main/resources/static/css/pages/offer-director.css
 
 # Active JS (Role-based):
-src/main/resources/static/js/pages/offers/offer-common.js
-src/main/resources/static/js/pages/offers/offer-hr.js
-src/main/resources/static/js/pages/offers/offer-director.js
+src/main/resources/static/js/pages/offer-common.js
+src/main/resources/static/js/pages/offer-hr.js
+src/main/resources/static/js/pages/offer-director.js
 
 # Offer HTML Templates:
 src/main/resources/templates/offers/list.html

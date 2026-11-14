@@ -78,3 +78,16 @@
 
 /* Ô nhập quá số ký tự cho phép (js/text-limit.js gắn class is-too-long) */
 :is(input, textarea).is-too-long, :is(input, textarea).is-too-long:focus { border-color:var(--error); }
+
+/* Ô "Khác" của thời gian thử việc: .form-input đặt display:block nên cần ép [hidden] */
+.jp-form-page .jpf-field .form-input[hidden] { display:none; }
+
+.jp-form-page .jpf-from { color:var(--muted); font-size:var(--font-xs); }
+.jp-form-page .jpf-from button { padding:0; border:0; background:none; color:var(--brand-dark); font:inherit; font-weight:700; text-decoration:underline; cursor:pointer; }
+.jp-form-page .jpf-map-summary { display:inline-flex; color:var(--brand-dark); font-size:var(--font-sm); font-weight:700; cursor:pointer; }
+.jp-form-page .jpf-map-summary:hover { text-decoration:underline; }
+.jp-form-page .jpf-map-toggle[open] .jpf-map { margin-top:var(--s2); }
+.jp-form-page .jpf-map { position:relative; overflow:hidden; min-height:64px; border:1px solid var(--line); border-radius:var(--radius-md); background:var(--surface-subtle); }
+.jp-form-page .jpf-map iframe { display:block; width:100%; height:200px; border:0; }
+.jp-form-page .jpf-map-empty { margin:0; padding:var(--s4); color:var(--muted); font-size:var(--font-sm); text-align:center; }
+.jp-form-page .jpf-map-link { position:absolute; right:var(--s2); bottom:var(--s2); padding:var(--s1) var(--s3); border-radius:var(--radius-md); background:var(--surface); box-shadow:var(--shadow-sm); color:var(--brand-dark); font-size:var(--font-sm); font-weight:700; text-decoration:none; }

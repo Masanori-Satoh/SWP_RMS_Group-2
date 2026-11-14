@@ -599,7 +599,7 @@ public class TalentPoolService {
         if (accept) {
             if (applications.existsActiveByCandidateAndJobPosting(a.getCandidate().getCandidateId(),
                     target.getJobPostingId()))
-                throw new TalentPoolException("Ứng viên đã có hồ sơ chính thức cho tin này.");
+                throw new TalentPoolException("Ứng viên đã có hồ sơ chính thức cho vị trí này (cùng đợt tuyển dụng).");
             requireCv(a.getAppliedCvUrl());
         } else if (applications.transition(id, Set.of("HM_Suggested"), "Rejected") != 1) {
             throw new TalentPoolException("Gợi ý đã được xử lý.");
@@ -644,7 +644,7 @@ public class TalentPoolService {
             throw new TalentPoolException("Đề xuất đã được xử lý. Vui lòng tải lại trang.");
         if (applications.existsActiveByCandidateAndJobPosting(application.getCandidate().getCandidateId(),
                 application.getJobPosting().getJobPostingId()))
-            throw new TalentPoolException("Ứng viên đã có hồ sơ chính thức cho tin này.");
+            throw new TalentPoolException("Ứng viên đã có hồ sơ chính thức cho vị trí này (cùng đợt tuyển dụng).");
         //check old cv
         requireCv(application.getAppliedCvUrl());
         if (applications.promoteSuggestionToHmPassed(id) != 1)

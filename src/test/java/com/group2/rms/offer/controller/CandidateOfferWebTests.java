@@ -1,4 +1,4 @@
-package com.group2.rms.offer;
+package com.group2.rms.offer.controller;
 
 import com.group2.rms.core.config.SecurityConfig;
 import com.group2.rms.core.exception.ResourceNotFoundException;
@@ -38,6 +38,24 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(CandidateOfferController.class)
 @Import({SecurityConfig.class, DatabaseUserDetailsService.class})
 class CandidateOfferWebTests {
+
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(ints = {403, 404, 500})
+    void candidateOperationFailuresReachGlobalHandlerWithoutSuccessFeedback(int expected) throws Exception {
+        RuntimeException error = expected == 403 ? new org.springframework.security.access.AccessDeniedException("Denied")
+                : expected == 404 ? new ResourceNotFoundException("Không tìm thấy thư mời.")
+                : new IllegalStateException("INTERNAL_FAILURE_MARKER");
+        when(candidateOffers.accept(1)).thenThrow(error);
+        when(candidateOffers.decline(1)).thenThrow(error);
+        when(candidateOffers.getDetail(1)).thenThrow(error);
+        for (var request : List.of(post("/portal/offers/1/accept"), post("/portal/offers/1/decline"),
+                get("/portal/offers/1/decline"))) {
+            mvc.perform(request.with(as("an.vo", "Candidate")).with(csrf()).accept(org.springframework.http.MediaType.APPLICATION_JSON))
+                    .andExpect(status().is(expected)).andExpect(view().name("error/" + expected))
+                    .andExpect(flash().attributeCount(0))
+                    .andExpect(content().string(not(containsString("INTERNAL_FAILURE_MARKER"))));
+        }
+    }
 
     @Autowired MockMvc mvc;
     @MockitoBean CandidateOfferService candidateOffers;
@@ -291,6 +309,27 @@ class CandidateOfferWebTests {
                 .andExpect(content().string(containsString("17:00 - 20/10/2026")))
                 .andExpect(content().string(containsString("data-deadline=\"2026-10-20T17:00:00\"")))
                 .andExpect(content().string(not(containsString("style=\""))));
+    }
+
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(booleans = {true, false})
+    void sentDateUsesIssuanceDateOrUnknownRatherThanLastUpdate(boolean hasSentAt) throws Exception {
+        var sentAt = java.time.LocalDateTime.of(2026, 11, 14, 9, 15);
+        CandidateOfferDetailResponse detail = new CandidateOfferDetailResponse(
+                15, "Nguyễn Văn A", "nguyenvana@example.com", "0912345678", "Hà Nội",
+                "DevOps Engineer", "DevOps Engineer", "Phòng Kỹ thuật",
+                new BigDecimal("25000000"), new BigDecimal("21250000"), 85, "60 ngày",
+                LocalDate.of(2026, 12, 1), "Hà Nội", "Bảo hiểm",
+                "Accepted", "Đã nhận việc", "badge--success", false,
+                "Nguyễn Tuyển Dụng", "tuyendung@mocrms.com.vn", null, 5, sentAt.plusDays(5),
+                hasSentAt ? sentAt : null, sentAt.plusDays(3));
+        when(candidateOffers.getDetail(15)).thenReturn(detail);
+
+        mvc.perform(get("/portal/offers/15").with(as("an.vo", "Candidate")))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Ngày gửi: <time>"
+                        + (hasSentAt ? "14/11/2026" : "Chưa xác định") + "</time>")))
+                .andExpect(content().string(not(containsString("Ngày gửi: <time>17/11/2026</time>"))));
     }
 
     private static CandidateOfferResponse offer(int id, String postingTitle, String statusLabel, String badge,

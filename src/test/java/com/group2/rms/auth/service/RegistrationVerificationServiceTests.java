@@ -164,6 +164,8 @@ class RegistrationVerificationServiceTests {
             RegistrationFlowException error = assertThrows(RegistrationFlowException.class,
                 () -> service.verifyAndRegister("123456", session));
             assertEquals("REGISTER_OTP_INVALID", error.getErrorCode());
+            assertEquals("Mã xác minh không đúng. Bạn đã nhập sai %d lần, còn %d lần thử. Vui lòng nhập lại."
+                .formatted(attempt, 5 - attempt), error.getMessage());
         }
 
         // When: Lần sai thứ 5.
@@ -172,6 +174,8 @@ class RegistrationVerificationServiceTests {
 
         // Then: xóa yêu cầu đăng ký và không tạo account.
         assertEquals("REGISTER_OTP_ATTEMPTS_EXCEEDED", error.getErrorCode());
+        assertEquals("Mã xác minh không đúng. Bạn đã nhập sai 5 lần, còn 0 lần thử. Vui lòng đăng ký lại.",
+            error.getMessage());
         assertEquals(Step.REGISTER, error.getStep());
         assertThrows(RegistrationFlowException.class, () -> service.getPendingRegistrationEmail(session));
         verify(accounts, times(0)).createCandidateWithPasswordHash(anyString(), anyString(), anyString(), anyString());

@@ -9,7 +9,7 @@
    Target Pages:
      - /offers (HR & Director Workspace Lists)
      - /offers/{id} (Offer Detail View for HR & Director)
-     - /offers/new, /offers/{id}/edit (Offer Create/Edit Forms)
+     - /offers/create, /offers/{id}/edit (Offer Create/Edit Forms)
    Cascade Position: Loaded FIRST among Offer stylesheets, providing the
                      shared foundation for role-specific overlays.
    ============================================================================= */
@@ -178,7 +178,7 @@ dialog.confirm-dialog#offerExportModal {
     gap: 6px;
 }
 
-.btn-icon,
+:where(.ofw-page) .btn-icon,
 .ofw-action-btn {
     width: 34px;
     height: 34px;
@@ -196,41 +196,41 @@ dialog.confirm-dialog#offerExportModal {
     text-decoration: none;
 }
 
-.btn-icon:hover,
+:where(.ofw-page) .btn-icon:hover,
 .ofw-action-btn:hover {
     background: var(--brand-soft);
     color: var(--brand-dark);
     border-color: var(--control-line);
 }
 
-.btn-icon-primary {
+:where(.ofw-page) .btn-icon-primary {
     color: var(--brand-dark);
 }
 
-.btn-icon-primary:hover {
+:where(.ofw-page) .btn-icon-primary:hover {
     background: var(--brand-soft);
     color: var(--brand-dark);
     border-color: var(--brand);
 }
 
-.btn-icon-success,
+:where(.ofw-page) .btn-icon-success,
 .ofw-action-btn--success {
     color: var(--brand-dark);
 }
 
-.btn-icon-success:hover,
+:where(.ofw-page) .btn-icon-success:hover,
 .ofw-action-btn--success:hover {
     background: var(--brand-soft);
     border-color: var(--brand-caption);
     color: var(--brand-hover);
 }
 
-.btn-icon-danger,
+:where(.ofw-page) .btn-icon-danger,
 .ofw-action-btn--danger {
     color: var(--error);
 }
 
-.btn-icon-danger:hover,
+:where(.ofw-page) .btn-icon-danger:hover,
 .ofw-action-btn--danger:hover {
     background: var(--error-soft);
     border-color: var(--error-soft);
@@ -623,6 +623,15 @@ button.director-stat-card {
   background: var(--surface);
 }
 
+.ofw-pagination {
+  padding-inline: var(--s6);
+}
+
+.ofw-list-surface .adw-data-table .ofw-id-cell,
+.ofw-list-surface .adw-data-table .ofw-action-cell {
+  text-align: center;
+}
+
 .ofw-list-heading {
   display: flex;
   align-items: center;
@@ -745,7 +754,7 @@ button.director-stat-card {
 .ofw-actions-cell {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: center;
   gap: var(--s2);
 }
 
@@ -1215,7 +1224,7 @@ button.director-stat-card {
 
 
 /* Card General Enhancements */
-.card-header-flex {
+:where(.ofw-page) .card-header-flex {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -1729,4 +1738,49 @@ button.director-stat-card {
 
 .ofw-page [hidden] {
     display: none !important;
+}
+
+/* Chi tiết trên tablet/mobile: giữ đủ dữ liệu và nút thao tác, không che phần lương bị tràn. */
+@media (max-width: 768px) {
+    .ofw-page.offer-detail-container .offers-detail-header-actions {
+        flex-wrap: wrap;
+    }
+
+    .ofw-page.offer-detail-container :is(.candidate-detail-grid, .salary-kpi-grid, .detail-info-tiles) {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .ofw-page.offer-detail-container .candidate-detail-grid .detail-item.col-span-2 {
+        grid-column: auto;
+    }
+
+    .ofw-page.offer-detail-container :is(.offers-detail-header-left, .detail-item, .salary-kpi-card, .detail-info-tile, .detail-soft-box) {
+        min-width: 0;
+        max-width: 100%;
+        overflow-wrap: anywhere;
+    }
+
+    .ofw-page.offer-detail-container .ofw-card-body {
+        padding: var(--s4);
+    }
+
+    .ofw-page.offer-detail-container :is(.salary-kpi-header, .salary-kpi-amount) {
+        flex-wrap: wrap;
+        gap: var(--s2);
+    }
+
+    .ofw-page.offer-detail-container .meta-item {
+        min-width: 0;
+        max-width: 100%;
+        align-items: flex-start;
+    }
+
+    .ofw-page.offer-detail-container .meta-item :is(svg, .meta-label) {
+        flex-shrink: 0;
+    }
+
+    .ofw-page.offer-detail-container .meta-val {
+        min-width: 0;
+        overflow-wrap: anywhere;
+    }
 }
