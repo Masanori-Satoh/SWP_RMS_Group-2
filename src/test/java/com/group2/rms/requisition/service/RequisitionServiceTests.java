@@ -942,7 +942,7 @@ class RequisitionServiceTests {
         @DisplayName("Không có tin tuyển dụng hoặc phiếu sao chép -> Xóa lịch sử duyệt rồi xóa phiếu")
         void deleteRequisition_shouldDelete_whenNothingDependsOnIt() {
             // Arrange
-            JobRequisition requisition = requisitionWithStatus(60, RequisitionAccess.STATUS_REJECTED);
+            JobRequisition requisition = requisitionWithStatus(60, RequisitionAccess.STATUS_DRAFT);
             when(requisitions.findApprovalHistory(60)).thenReturn(List.of());
 
             // Act
@@ -959,7 +959,7 @@ class RequisitionServiceTests {
         @DisplayName("Đã có tin tuyển dụng -> Không xóa, báo lỗi rõ ràng")
         void deleteRequisition_shouldReject_whenPostingExists() {
             // Arrange
-            requisitionWithStatus(60, RequisitionAccess.STATUS_REJECTED);
+            requisitionWithStatus(60, RequisitionAccess.STATUS_DRAFT);
             when(postings.existsByRequisition_RequisitionId(60)).thenReturn(true);
 
             // Act
@@ -975,7 +975,7 @@ class RequisitionServiceTests {
         @DisplayName("Đã có phiếu sao chép từ nó -> Không xóa, báo lỗi rõ ràng")
         void deleteRequisition_shouldReject_whenLaterRoundExists() {
             // Arrange
-            requisitionWithStatus(60, RequisitionAccess.STATUS_REJECTED);
+            requisitionWithStatus(60, RequisitionAccess.STATUS_DRAFT);
             when(requisitions.existsByOriginalRequisition_RequisitionId(60)).thenReturn(true);
 
             // Act
@@ -987,6 +987,17 @@ class RequisitionServiceTests {
                     error.getErrors().get("action"));
             verify(requisitions, never()).delete(any(JobRequisition.class));
             verifyNoInteractions(audit);
+        }
+
+        @Test
+        @DisplayName("Yêu cầu bị từ chối -> Không xóa dù người tạo gửi request trực tiếp")
+        void deleteRequisition_shouldReject_whenStatusIsRejected() {
+            requisitionWithStatus(60, RequisitionAccess.STATUS_REJECTED);
+
+            assertThrows(RequisitionStateException.class, () -> service.deleteRequisition(60));
+
+            verify(requisitions, never()).delete(any(JobRequisition.class));
+            verifyNoInteractions(postings, approvals, audit);
         }
     }
 }

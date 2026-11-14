@@ -109,6 +109,15 @@ class RequisitionMapperTests {
     }
 
     @Test
+    @DisplayName("Yêu cầu bị từ chối -> Người tạo vẫn sửa được nhưng không thấy nút Xóa")
+    void toListRow_shouldAllowEditButNotDelete_whenRejected() {
+        RequisitionResponse row = mapper.toListRow(requisition(RequisitionAccess.STATUS_REJECTED), manager, null, false);
+
+        assertTrue(row.editable());
+        assertFalse(row.deletable());
+    }
+
+    @Test
     @DisplayName("HR xem yêu cầu Đã duyệt chưa có tin -> Có nút Tạo tin tuyển dụng")
     void toListRow_shouldBePostable_whenHrViewsApprovedWithoutPosting() {
         RequisitionResponse row = mapper.toListRow(requisition(RequisitionAccess.STATUS_APPROVED), hr, null, false);

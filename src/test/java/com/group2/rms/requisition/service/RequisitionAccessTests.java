@@ -14,6 +14,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -236,10 +237,12 @@ class RequisitionAccessTests {
                     hasPosting, hasLaterRound));
         }
 
-        @Test
-        @DisplayName("Yêu cầu đã duyệt (không sửa được) -> Không xóa được dù chưa có tin")
-        void canDelete_shouldReturnFalse_whenRequisitionIsApproved() {
-            assertFalse(access.canDelete(manager, ownedByManager(RequisitionAccess.STATUS_APPROVED), false, false));
+        @ParameterizedTest
+        @ValueSource(strings = {RequisitionAccess.STATUS_REJECTED,
+                RequisitionAccess.STATUS_PENDING_DIRECTOR, RequisitionAccess.STATUS_APPROVED})
+        @DisplayName("Chỉ bản nháp được xóa; yêu cầu ở trạng thái khác không có nút Xóa")
+        void canDelete_shouldReturnFalse_whenRequisitionIsNotDraft(String status) {
+            assertFalse(access.canDelete(manager, ownedByManager(status), false, false));
         }
 
         @Test

@@ -9,6 +9,7 @@ import com.group2.rms.requisition.dto.RequisitionRequest;
 import com.group2.rms.requisition.dto.RequisitionResponse;
 import com.group2.rms.requisition.entity.JobRequisition;
 import com.group2.rms.requisition.entity.RequisitionApproval;
+import com.group2.rms.requisition.exception.RequisitionStateException;
 import com.group2.rms.requisition.exception.RequisitionValidationException;
 import com.group2.rms.requisition.repository.JobRequisitionRepository;
 import com.group2.rms.requisition.repository.RequisitionApprovalRepository;
@@ -181,6 +182,10 @@ public class RequisitionServiceImpl implements RequisitionService {
         User currentUser = access.actor();
         JobRequisition jobRequisition = findRequisitionById(id, true);
         access.requireEdit(currentUser, jobRequisition);
+
+        if (!RequisitionAccess.STATUS_DRAFT.equals(jobRequisition.getApprovalStatus())) {
+            throw new RequisitionStateException();
+        }
 
         if (postings.existsByRequisition_RequisitionId(id)) {
             throw createValidationException("action",

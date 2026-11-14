@@ -101,7 +101,8 @@ public class RequisitionAccess {
 
     // Checks whether the requisition can be deleted.
     public boolean canDelete(User user, JobRequisition requisition, boolean hasPosting, boolean hasLaterRound) {
-        return canEdit(user, requisition) && !hasPosting && !hasLaterRound;
+        return canEdit(user, requisition) && STATUS_DRAFT.equals(requisition.getApprovalStatus())
+                && !hasPosting && !hasLaterRound;
     }
     // Checks whether the requisition can be copied.
     public boolean canCopy(User user, JobRequisition requisition) {
