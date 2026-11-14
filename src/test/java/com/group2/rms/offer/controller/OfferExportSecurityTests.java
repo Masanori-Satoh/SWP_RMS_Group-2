@@ -6,6 +6,7 @@ import com.group2.rms.core.security.RoleAuthorities;
 import com.group2.rms.offer.dto.OfferExportRequest;
 import com.group2.rms.offer.dto.OfferExportScope;
 import com.group2.rms.offer.dto.OfferResponse;
+import com.group2.rms.offer.exception.OfferValidationException;
 import com.group2.rms.offer.service.OfferExportService;
 import com.group2.rms.offer.service.OfferService;
 import com.group2.rms.user.entity.Role;
@@ -70,6 +71,30 @@ class OfferExportSecurityTests {
 
         verify(exporter).exportOffersToExcel(argThat(request -> request.scope() == OfferExportScope.ALL
                 && request.columns().equals(List.of("offerId"))), eq("export.user"));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"EMPTY_EXPORT_DATA", "EMPTY_SELECTED_OFFERS", "INVALID_EXPORT_COLUMN"})
+    void export_shouldReturnBusinessFailureAsJsonWithoutDownload(String errorCode) throws Exception {
+        String message = switch (errorCode) {
+            case "EMPTY_EXPORT_DATA" -> "Không có dữ liệu thư mời nhận việc phù hợp để xuất Excel.";
+            case "EMPTY_SELECTED_OFFERS" -> "Vui lòng chọn ít nhất một thư mời để xuất dữ liệu.";
+            default -> "Cột dữ liệu yêu cầu không hợp lệ hoặc không được phép xuất: invalidColumn";
+        };
+        when(exporter.exportOffersToExcel(any(), eq("export.user")))
+                .thenThrow(new OfferValidationException(message, errorCode));
+        String request = "{\"scope\":\"FILTERED\",\"filters\":{\"keyword\":\"OE13_NO_MATCH_2026\","
+                + "\"status\":\"ALL\",\"sort\":\"DEFAULT\"},\"columns\":[\"offerId\"]}";
+
+        mvc.perform(post(EXPORT).with(account("HR")).with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON).content(request))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(message))
+                .andExpect(header().doesNotExist("Content-Disposition"));
+
+        verify(exporter, never()).generateExportFilename(any());
     }
 
     @ParameterizedTest
