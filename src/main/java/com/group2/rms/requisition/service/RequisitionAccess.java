@@ -22,10 +22,10 @@ public class RequisitionAccess {
     public static final String ROLE_HR = "HR";
     public static final String ROLE_SYSTEM_ADMIN = "System Admin";
 
-    public static final String STATUS_DRAFT = "Draft";
-    public static final String STATUS_PENDING_DIRECTOR = "Pending_Director";
-    public static final String STATUS_APPROVED = "Approved";
-    public static final String STATUS_REJECTED = "Rejected";
+    public static final String STATUS_DRAFT = JobRequisition.STATUS_DRAFT;
+    public static final String STATUS_PENDING_DIRECTOR = JobRequisition.STATUS_PENDING_DIRECTOR;
+    public static final String STATUS_APPROVED = JobRequisition.STATUS_APPROVED;
+    public static final String STATUS_REJECTED = JobRequisition.STATUS_REJECTED;
 
     private static final Set<String> ALLOWED_ROLES = Set.of(
             ROLE_HIRING_MANAGER,

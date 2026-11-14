@@ -18,14 +18,13 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class JobPostingAccess {
 
-    // Giá trị PostingStatus trong DB (CK_JobPosting_Status chỉ có 4 giá trị này)
-    public static final String STATUS_DRAFT = "Draft";
-    public static final String STATUS_PUBLISHED = "Published";
-    public static final String STATUS_PAUSED = "Paused";
-    public static final String STATUS_CLOSED = "Closed";
+    // Hằng trạng thái gốc nằm ở entity JobPosting; giữ alias để code cũ không đổi
+    public static final String STATUS_DRAFT = JobPosting.STATUS_DRAFT;
+    public static final String STATUS_PUBLISHED = JobPosting.STATUS_PUBLISHED;
+    public static final String STATUS_PAUSED = JobPosting.STATUS_PAUSED;
+    public static final String STATUS_CLOSED = JobPosting.STATUS_CLOSED;
 
-    /** Tin "đang mở" của một yêu cầu: mỗi yêu cầu chỉ được có 1 tin ở các trạng thái này. */
-    public static final List<String> OPEN_STATUSES = List.of(STATUS_DRAFT, STATUS_PUBLISHED, STATUS_PAUSED);
+    public static final List<String> OPEN_STATUSES = JobPosting.OPEN_STATUSES;
     /** Trạng thái hiển thị theo thứ tự trên bộ lọc. */
     public static final List<String> VIEW_STATUSES =
             List.of(STATUS_DRAFT, STATUS_PUBLISHED, STATUS_PAUSED, STATUS_CLOSED);

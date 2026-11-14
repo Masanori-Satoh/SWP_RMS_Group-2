@@ -12,6 +12,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import org.springframework.format.annotation.DateTimeFormat;
 
 /*
  * DTO: form tạo / sửa yêu cầu; annotation chặn sớm định dạng, phần bắt buộc do RequisitionValidator kiểm tra.
@@ -26,15 +28,14 @@ public class RequisitionRequest {
     @Size(max = RequisitionValidator.TITLE_CHAR_LIMIT, message = RequisitionValidator.TITLE_TOO_LONG)
     private String title;
     private Integer departmentId;
-    @Min(value = RequisitionValidator.ROUND_MIN, message = RequisitionValidator.ROUND_MIN_MESSAGE)
-    private Integer recruitmentRound;
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+    private LocalDate expectedStaffingDate;
     /**
-     * Phiếu nguồn khi sao chép; server tự quy về phiếu đợt 1 và tính lại số đợt.
+     * Phiếu gốc khi sao chép, chỉ dùng để truy vết nguồn.
      */
     private Integer originalRequisitionId;
     /**
-     * Tên vị trí của phiếu đợt 1, chỉ để form đổi số đợt hiển thị; server không
-     * dùng.
+     * Tên vị trí của phiếu gốc để hiển thị nguồn sao chép.
      */
     private String originalTitle;
 
@@ -51,13 +52,9 @@ public class RequisitionRequest {
     @Digits(integer = 16, fraction = 2, message = RequisitionValidator.SALARY_FORMAT_MESSAGE)
     @DecimalMax(value = RequisitionValidator.SALARY_MAX_TEXT, message = RequisitionValidator.SALARY_MAX_MESSAGE)
     private BigDecimal maxSalary;
-    private String gender;
     @Size(max = RequisitionValidator.SHORT_FIELD_CHAR_LIMIT, message = RequisitionValidator.SHORT_FIELD_TOO_LONG)
     private String workLocation;
     private String workModel;
-
-    @Size(max = RequisitionValidator.PROBATION_CHAR_LIMIT, message = RequisitionValidator.PROBATION_TOO_LONG)
-    private String probationPeriod;
 
     private String reasonForHiring;
     private String jobDescription;

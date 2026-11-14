@@ -196,6 +196,7 @@ class HiringManagerDashboardServiceTests {
 
             // Assert
             assertEquals("DevOps", work.get(0).title());
+            assertEquals("/requisitions/5", work.get(0).titleHref());
             assertEquals("Thiếu ngân sách", work.get(0).detail());
             assertEquals("Chỉnh sửa", work.get(0).actionLabel());
             assertEquals("QA", work.get(1).title());

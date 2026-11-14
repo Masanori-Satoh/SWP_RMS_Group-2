@@ -39,7 +39,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Form "Lên lịch phỏng vấn mới" mở từ trang hồ sơ (/applications/{id}) với ?applicationId=.
  */
 @WebMvcTest(InterviewSchedulingController.class)
-@Import({SecurityConfig.class, DatabaseUserDetailsService.class})
+@Import({SecurityConfig.class, DatabaseUserDetailsService.class, com.group2.rms.interview.service.InterviewFormOptions.class})
 class InterviewScheduleFormWebTests {
 
     @Autowired MockMvc mvc;

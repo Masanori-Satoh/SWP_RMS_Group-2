@@ -305,7 +305,7 @@ class RequisitionListServiceTests {
         RequisitionListResponse partTime = service.getListPage(
                 new RequisitionSearchRequest(null, null, null, null, null, null, null, null, null, null, "Part-time"));
         RequisitionListResponse unknown = service.getListPage(
-                new RequisitionSearchRequest(null, null, null, null, null, null, null, null, null, null, "Freelance"));
+                new RequisitionSearchRequest(null, null, null, null, null, null, null, null, null, null, "Temp"));
 
         assertTrue(partTime.errors().isEmpty());
         assertEquals("Part-time", partTime.filter().employmentType());

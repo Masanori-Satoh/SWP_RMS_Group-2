@@ -81,7 +81,7 @@ class JobPostingListServiceTests {
 
         Department engineering = Department.builder().departmentId(1).departmentName("Engineering").build();
         requisition = JobRequisition.builder().requisitionId(5).requisitionCode("REQ-0005").title("Java Dev")
-                .department(engineering).employmentType("Full-time").recruitmentRound(1).build();
+                .department(engineering).employmentType("Full-time").build();
 
         lenient().when(postings.findAll(any(Specification.class), any(Pageable.class)))
                 .thenAnswer(invocation -> new PageImpl<>(rows, invocation.getArgument(1), rows.size()));

@@ -1,4 +1,4 @@
-package com.group2.rms.core.validation;
+package com.group2.rms.core.validator;
 
 import org.springframework.beans.BeanWrapperImpl;
 

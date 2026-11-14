@@ -1,6 +1,6 @@
 /* =============================================================================
    REQUISITION-FORM.CSS: Form Tạo / Sửa yêu cầu tuyển dụng (requisitions/form.html)
-   Tiền tố riêng của trang: rqf- (catalog chưa có switch, nhóm nút chọn, ô tăng/giảm số).
+   Tiền tố riêng của trang: rqf- (catalog chưa có switch, nhóm nút chọn).
    Chỉ dùng token trong tokens.css, không mã màu cứng.
    Bố cục theo wireframe: form bên trái, cột "Sẵn sàng gửi duyệt" + nút thao tác bên phải.
    ============================================================================= */
@@ -16,7 +16,7 @@
 .req-form-page .rqf-section h2 { margin:0; color:var(--brand-dark); font:700 20px/1.35 var(--sans); }
 .req-form-page .rqf-section-head { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:baseline; gap:var(--s2) var(--s4); }
 .req-form-page .rqf-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:var(--s4); }
-/* 2 ô nhỏ (Đợt, Số lượng) chung một cột của rqf-grid */
+/* Hai ô ngày dự kiến và số lượng chung một hàng */
 .req-form-page .rqf-pair { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:var(--s4); min-width:0; }
 .req-form-page .rqf-full { grid-column:1 / -1; }
 .req-form-page .rqf-field { display:grid; gap:var(--s2); align-content:start; min-width:0; margin:0; padding:0; border:0; }
@@ -28,18 +28,7 @@
 .req-form-page .rqf-counter { color:var(--muted); font-size:var(--font-xs); text-align:right; font-variant-numeric:tabular-nums; }
 
 
-/* ----- Ô tăng/giảm số: Số lượng, Thời gian thử việc ----- */
-.req-form-page .rqf-stepper { display:flex; align-items:stretch; width:max-content; max-width:100%; border:1px solid var(--control-line); border-radius:var(--radius-md); overflow:hidden; background:var(--surface); }
-.req-form-page .rqf-stepper button { width:var(--btn-sm-h); border:0; background:var(--surface-subtle); color:var(--ink); font-size:var(--font-lg); cursor:pointer; }
-.req-form-page .rqf-stepper button:hover { background:var(--brand-soft); }
-.req-form-page .rqf-stepper input { width:80px; min-height:var(--btn-sm-h); border:0; border-radius:0; text-align:center; font-variant-numeric:tabular-nums; }
-.req-form-page .rqf-stepper input:focus { outline:none; }
-.req-form-page .rqf-stepper:focus-within { outline:3px solid var(--focus); outline-offset:2px; }
-
-/* Chữ đơn vị "ngày" nằm trong ô tăng/giảm, sau ô số */
-.req-form-page .rqf-unit { display:flex; align-items:center; padding:0 var(--s3) 0 var(--s1); color:var(--muted); font-size:var(--font-sm); white-space:nowrap; }
-
-/* Ẩn nút tăng giảm mặc định trên trình duyệt (tránh đè chữ "ngày") */
+/* Số lượng dùng ô nhập thường, không hiện nút tăng giảm của trình duyệt. */
 .req-form-page input[type="number"]::-webkit-inner-spin-button,
 .req-form-page input[type="number"]::-webkit-outer-spin-button { -webkit-appearance:none; margin:0; }
 .req-form-page input[type="number"] { -moz-appearance:textfield; appearance:textfield; }

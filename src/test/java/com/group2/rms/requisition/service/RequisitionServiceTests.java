@@ -134,13 +134,13 @@ class RequisitionServiceTests {
     }
 
     private RequisitionRequest draft(String title) {
-        return RequisitionRequest.builder().action(RequisitionValidator.ACTION_DRAFT).title(title).recruitmentRound(1)
-                .gender("Any").build();
+        return RequisitionRequest.builder().action(RequisitionValidator.ACTION_DRAFT).title(title)
+                .build();
     }
 
     private RequisitionRequest submit(String title) {
-        return RequisitionRequest.builder().action(RequisitionValidator.ACTION_SUBMIT).title(title).recruitmentRound(1)
-                .build();
+        return RequisitionRequest.builder().action(RequisitionValidator.ACTION_SUBMIT).title(title)
+                .expectedStaffingDate(LocalDate.of(2026, 12, 1)).build();
     }
 
     /** Yêu cầu của HM đang đăng nhập, ở trạng thái cho trước; findForUpdate / findById đều trả về nó. */
@@ -148,7 +148,7 @@ class RequisitionServiceTests {
         JobRequisition requisition = JobRequisition.builder()
                 .requisitionId(id)
                 .title("Senior Java")
-                .recruitmentRound(1)
+
                 .approvalStatus(status)
                 .hiringManager(manager)
                 .department(itDepartment)
@@ -179,7 +179,7 @@ class RequisitionServiceTests {
                     .maxSalary(new BigDecimal("35000000"))
                     .workLocation("Hanoi")
                     .workModel("Hybrid")
-                    .probationPeriod("60 ngày")
+                    .expectedStaffingDate(LocalDate.of(2026, 12, 1))
                     .reasonForHiring("Expansion")
                     .jobDescription("Develop RMS")
                     .requirementDetails("Spring Boot, SQL")
@@ -423,11 +423,11 @@ class RequisitionServiceTests {
     }
 
     // =========================================================================
-    // createRequisition từ bản sao chép: đợt tuyển
+    // createRequisition từ bản sao chép
     // =========================================================================
 
     @Nested
-    @DisplayName("createRequisition (sao chép sang đợt mới)")
+    @DisplayName("createRequisition (sao chép yêu cầu)")
     class CreateFromCopy {
 
         private JobRequisition root;
@@ -439,12 +439,12 @@ class RequisitionServiceTests {
         }
 
         @Test
-        @DisplayName("Giữ tên vị trí (khác hoa/thường, thừa khoảng trắng) -> Trỏ về phiếu gốc, đợt = số HM nhập")
+        @DisplayName("Giữ tên vị trí -> Trỏ về phiếu gốc và lưu ngày cần nhân sự mới")
         void createRequisition_shouldUseNextRound_whenCopyKeepsTitle() {
             // Arrange
             RequisitionRequest request = draft("  java engineer ");
             request.setOriginalRequisitionId(80);
-            request.setRecruitmentRound(3);
+            request.setExpectedStaffingDate(LocalDate.of(2026, 12, 3));
 
             // Act
             service.createRequisition(request);
@@ -452,29 +452,28 @@ class RequisitionServiceTests {
             // Assert
             JobRequisition saved = savedRequisition();
             assertSame(root, saved.getOriginalRequisition());
-            assertEquals(3, saved.getRecruitmentRound());
+            assertEquals(LocalDate.of(2026, 12, 3), saved.getExpectedStaffingDate());
         }
 
         @Test
-        @DisplayName("Đổi tên vị trí -> Không nối phiếu gốc, đợt giữ số HM nhập")
+        @DisplayName("Đổi tên vị trí -> Vẫn giữ nguồn sao chép và ngày cần nhân sự mới")
         void createRequisition_shouldResetToRound1_whenCopyChangesTitle() {
             // Arrange
             RequisitionRequest request = draft("Python Engineer");
             request.setOriginalRequisitionId(80);
-            request.setRecruitmentRound(2);
+            request.setExpectedStaffingDate(LocalDate.of(2026, 12, 2));
 
             // Act
             service.createRequisition(request);
 
             // Assert
             JobRequisition saved = savedRequisition();
-            assertNull(saved.getOriginalRequisition());
-            assertEquals(2, saved.getRecruitmentRound());
-            verify(requisitions, never()).findMaxRoundInChain(any());
+            assertSame(root, saved.getOriginalRequisition());
+            assertEquals(LocalDate.of(2026, 12, 2), saved.getExpectedStaffingDate());
         }
 
         @Test
-        @DisplayName("Giám đốc sao chép rồi chọn phòng ban khác -> Không nối chuỗi phòng cũ, đợt giữ số HM nhập")
+        @DisplayName("Giám đốc sao chép sang phòng ban khác -> Vẫn giữ nguồn sao chép")
         void createRequisition_shouldResetToRound1_whenDirectorCopiesToAnotherDepartment() {
             // Arrange
             Department sales = Department.builder().departmentId(2).departmentName("Sales").departmentStatus("Active").build();
@@ -489,9 +488,7 @@ class RequisitionServiceTests {
 
             // Assert
             JobRequisition saved = savedRequisition();
-            assertNull(saved.getOriginalRequisition());
-            assertEquals(1, saved.getRecruitmentRound());
-            verify(requisitions, never()).findMaxRoundInChain(any());
+            assertSame(root, saved.getOriginalRequisition());
         }
 
         @ParameterizedTest(name = "phiếu nguồn {0}")
@@ -674,22 +671,21 @@ class RequisitionServiceTests {
         }
 
         @Test
-        @DisplayName("Bản nháp đợt 2 đổi tên vị trí, HM nhập đợt 1 -> Bỏ phiếu gốc, audit ghi 'Đợt tuyển dụng: 2 → 1'")
+        @DisplayName("Đổi tên bản nháp sao chép -> Giữ nguồn và ghi audit tên mới")
         void updateRequisition_shouldResetToRound1_whenCopiedDraftChangesTitle() {
             // Arrange
-            JobRequisition root = JobRequisition.builder().requisitionId(80).title("Java Engineer").recruitmentRound(1).build();
+            JobRequisition root = JobRequisition.builder().requisitionId(80).title("Java Engineer").build();
             JobRequisition requisition = requisitionWithStatus(81, RequisitionAccess.STATUS_DRAFT);
             requisition.setTitle("Java Engineer");
-            requisition.setRecruitmentRound(2);
             requisition.setOriginalRequisition(root);
 
             // Act
             service.updateRequisition(81, draft("Python Engineer"));
 
             // Assert
-            assertNull(requisition.getOriginalRequisition());
-            assertEquals(1, requisition.getRecruitmentRound());
-            assertTrue(savedAudit().getNewValue().contains("Đợt tuyển dụng: 2 → 1"));
+            assertSame(root, requisition.getOriginalRequisition());
+            assertEquals("Python Engineer", requisition.getTitle());
+            assertTrue(savedAudit().getNewValue().contains("Python Engineer"));
         }
 
         @Test
@@ -740,23 +736,22 @@ class RequisitionServiceTests {
     class ReadOperations {
 
         @Test
-        @DisplayName("Sao chép yêu cầu đã duyệt -> Form mới gợi ý đợt tiếp theo, không ghi DB")
+        @DisplayName("Sao chép yêu cầu đã duyệt -> Form mới giữ nguồn, xóa ngày dự kiến, chưa ghi DB")
         void copy_shouldSuggestNextRoundWithoutSaving_whenSourceIsApproved() {
             // Arrange
             JobRequisition source = requisitionWithStatus(80, RequisitionAccess.STATUS_APPROVED);
-            when(requisitions.findMaxRoundInChain(80)).thenReturn(1);
 
             // Act
             RequisitionRequest copied = service.copy(80);
 
             // Assert
             assertEquals(80, copied.getOriginalRequisitionId());
-            assertEquals(2, copied.getRecruitmentRound());
+            assertNull(copied.getExpectedStaffingDate());
             verify(requisitions, never()).saveAndFlush(any());
         }
 
         @Test
-        @DisplayName("Sao chép yêu cầu chưa được duyệt (gõ URL) -> RequisitionStateException, không tính số đợt")
+        @DisplayName("Sao chép yêu cầu chưa được duyệt -> RequisitionStateException")
         void copy_shouldThrowStateException_whenSourceIsNotApproved() {
             // Arrange
             JobRequisition source = requisitionWithStatus(80, RequisitionAccess.STATUS_PENDING_DIRECTOR);
@@ -764,7 +759,6 @@ class RequisitionServiceTests {
 
             // Act + Assert
             assertThrows(RequisitionStateException.class, () -> service.copy(80));
-            verify(requisitions, never()).findMaxRoundInChain(any());
         }
 
         @Test
@@ -884,7 +878,7 @@ class RequisitionServiceTests {
         }
 
         @Test
-        @DisplayName("Ý kiến có xuống dòng \\r\\n -> Đếm mỗi lần xuống dòng là 1 ký tự (khớp bộ đếm trên trình duyệt)")
+        @DisplayName("Ý kiến có xuống dòng CRLF -> Đếm mỗi lần xuống dòng là 1 ký tự")
         void decide_shouldCountLineBreakAsOneChar_whenCommentHasCrLf() {
             // Arrange: 999 chữ + 1 lần xuống dòng = 1000 ký tự theo trình duyệt (1001 nếu đếm cả \r)
             String comment = "x".repeat(500) + "\r\n" + "x".repeat(499);
@@ -892,7 +886,7 @@ class RequisitionServiceTests {
             // Act
             service.decide(50, false, comment);
 
-            // Assert: hợp lệ, ý kiến lưu với \n
+            // Assert: hợp lệ, ý kiến lưu với LF
             assertEquals(RequisitionAccess.STATUS_REJECTED, pending.getApprovalStatus());
             ArgumentCaptor<RequisitionApproval> decision = ArgumentCaptor.forClass(RequisitionApproval.class);
             verify(approvals).save(decision.capture());
@@ -945,7 +939,7 @@ class RequisitionServiceTests {
     class DeleteRequisition {
 
         @Test
-        @DisplayName("Không có tin tuyển dụng, không có đợt sau -> Xóa lịch sử duyệt rồi xóa phiếu, ghi audit DELETE")
+        @DisplayName("Không có tin tuyển dụng hoặc phiếu sao chép -> Xóa lịch sử duyệt rồi xóa phiếu")
         void deleteRequisition_shouldDelete_whenNothingDependsOnIt() {
             // Arrange
             JobRequisition requisition = requisitionWithStatus(60, RequisitionAccess.STATUS_REJECTED);
@@ -978,7 +972,7 @@ class RequisitionServiceTests {
         }
 
         @Test
-        @DisplayName("Đã có đợt tuyển sau sao chép từ nó -> Không xóa, báo lỗi rõ ràng")
+        @DisplayName("Đã có phiếu sao chép từ nó -> Không xóa, báo lỗi rõ ràng")
         void deleteRequisition_shouldReject_whenLaterRoundExists() {
             // Arrange
             requisitionWithStatus(60, RequisitionAccess.STATUS_REJECTED);
@@ -989,7 +983,7 @@ class RequisitionServiceTests {
                     () -> service.deleteRequisition(60));
 
             // Assert
-            assertEquals("Yêu cầu này đã có đợt tuyển sau được sao chép từ nó và không thể xóa.",
+            assertEquals("Yêu cầu này đã được dùng làm nguồn sao chép và không thể xóa.",
                     error.getErrors().get("action"));
             verify(requisitions, never()).delete(any(JobRequisition.class));
             verifyNoInteractions(audit);

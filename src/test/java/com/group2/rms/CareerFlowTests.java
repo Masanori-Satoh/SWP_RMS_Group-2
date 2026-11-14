@@ -144,7 +144,6 @@ class CareerFlowTests {
                                 .andExpect(content().string(containsString("Kết hợp")))
                                 .andExpect(content().string(containsString("Số lượng tuyển")))
                                 .andExpect(content().string(containsString("2 người")))
-                                .andExpect(content().string(containsString("Yêu cầu giới tính")))
                                 .andExpect(content().string(containsString("href=\"/jobs/41/apply\"")))
                                 .andExpect(content().string(containsString("Ứng tuyển ngay")))
                                 .andExpect(content().string(not(containsString("onclick="))))
@@ -488,8 +487,8 @@ class CareerFlowTests {
 
         private PublicJobDetailResponse detail(int id, String title, LocalDateTime deadline,
                         boolean hasApplied, boolean accepting) {
-                return new PublicJobDetailResponse(id, title, "Engineering", "Hà Nội", "Thứ 2 - Thứ 6 (09:00 - 18:00)", "2 tháng", "Full-time",
-                                "Kết hợp", "Không yêu cầu", "2 người", "VND 30–45 million", deadline, POSTED,
+                return new PublicJobDetailResponse(id, title, "Engineering", "Hà Nội", "Thứ 2 - Thứ 6 (09:00 - 18:00)", "Full-time",
+                                "Kết hợp", 2, "VND 30–45 million", deadline, POSTED,
                                 "Build clear, dependable workflow software.",
                                 List.of("Build clear, dependable workflow software."),
                                 "Experience with Java and Spring Boot.",

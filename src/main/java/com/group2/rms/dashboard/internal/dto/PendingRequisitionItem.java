@@ -2,7 +2,7 @@ package com.group2.rms.dashboard.internal.dto;
 
 /*
  * DTO: một yêu cầu tuyển dụng đang chờ Giám đốc duyệt.
- * roundText = null khi là đợt 1 (đợt 2 trở đi template nhấn màu).
+ * staffingDateText = null với dữ liệu cũ chưa có ngày dự kiến.
  */
 public record PendingRequisitionItem(
         String code,
@@ -10,7 +10,7 @@ public record PendingRequisitionItem(
         String departmentName,
         String requesterName,
         int positions,
-        String roundText,
+        String staffingDateText,
         String waitText,
         String waitTone,
         String href) {

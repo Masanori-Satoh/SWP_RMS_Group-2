@@ -137,23 +137,17 @@
                                 <dd th:text="${p.workModelLabel}">Kết hợp</dd>
                             </div>
                             <div>
-                                <dt>Thời gian thử việc</dt>
-                                <dd
-                                    th:text="${#strings.isEmpty(p.probationPeriod) ? 'Không thử việc' : p.probationPeriod}">
-                                    30 ngày</dd>
-                            </div>
-                            <div>
-                                <dt>Yêu cầu giới tính</dt>
-                                <dd th:text="${p.genderLabel}">Không yêu cầu</dd>
-                            </div>
-                            <div>
                                 <dt>Số lượng cần tuyển</dt>
                                 <dd>
                                     <span th:if="${p.numberOfPositionsDisplay != null}"
-                                        th:text="${p.numberOfPositionsDisplay}">1 người</span>
+                                        th:text="|${p.numberOfPositionsDisplay} người|">1 người</span>
                                     <span th:unless="${p.numberOfPositionsDisplay != null}" class="jpd-muted">Không hiển
                                         thị</span>
                                 </dd>
+                            </div>
+                            <div th:if="${p.expectedStartDate != null}">
+                                <dt>Ngày dự kiến nhận việc</dt>
+                                <dd th:text="${#temporals.format(p.expectedStartDate, 'dd/MM/yyyy')}">01/12/2026</dd>
                             </div>
                             <div>
                                 <dt>Hạn ứng tuyển</dt>
@@ -261,6 +255,15 @@
                             <div class="jpd-muted"
                                 th:text="|${act.performedBy} · ${#temporals.format(act.timestamp, 'dd/MM/yyyy HH:mm')}|">
                                 Lê Thị Mai Lan · 30/09/2026</div>
+                            <details class="jpd-audit-details" th:if="${!#lists.isEmpty(act.changes)}">
+                                <summary>Xem thay đổi</summary>
+                                <div class="jpd-audit-change" th:each="change : ${act.changes}">
+                                    <strong th:text="${change.field}">Trường</strong>
+                                    <span th:text="${change.oldValue}">Cũ</span>
+                                    <span aria-hidden="true">→</span>
+                                    <span th:text="${change.newValue}">Mới</span>
+                                </div>
+                            </details>
                         </li>
                     </ol>
                     <p class="jpd-empty" th:if="${#lists.isEmpty(p.activityHistory)}">Chưa có lịch sử.</p>

@@ -1,8 +1,8 @@
 package com.group2.rms.dashboard.internal.repository;
 
 import com.group2.rms.candidate.domain.rule.ApplicationStatusService;
-import com.group2.rms.jobposting.service.JobPostingAccess;
-import com.group2.rms.requisition.service.RequisitionAccess;
+import com.group2.rms.jobposting.entity.JobPosting;
+import com.group2.rms.requisition.entity.JobRequisition;
 import jakarta.persistence.EntityManager;
 import org.springframework.stereotype.Repository;
 
@@ -44,7 +44,7 @@ public class InternalMetricsRepository {
                 Long.class);
         query.setParameter("userId", userId);
         query.setParameter("departmentId", departmentId);
-        query.setParameter("published", JobPostingAccess.STATUS_PUBLISHED);
+        query.setParameter("published", JobPosting.STATUS_PUBLISHED);
         return query.getSingleResult();
     }
 
@@ -70,7 +70,7 @@ public class InternalMetricsRepository {
                 + "left join r.department d left join d.manager m "
                 + "where r.approvalStatus = :pending and (r.hiringManager.userId = :userId "
                 + "or m.userId = :userId or d.departmentId = :departmentId)", Long.class);
-        query.setParameter("pending", RequisitionAccess.STATUS_PENDING_DIRECTOR);
+        query.setParameter("pending", JobRequisition.STATUS_PENDING_DIRECTOR);
         query.setParameter("userId", userId);
         query.setParameter("departmentId", departmentId);
         return query.getSingleResult();
@@ -82,7 +82,7 @@ public class InternalMetricsRepository {
     public long countPublishedPostingsBetween(LocalDateTime from, LocalDateTime to) {
         return count("select count(j) from JobPosting j where j.postingStatus = :published "
                 + "and j.postingDate >= :from and j.postingDate < :to",
-                Map.of("published", JobPostingAccess.STATUS_PUBLISHED, "from", from, "to", to));
+                Map.of("published", JobPosting.STATUS_PUBLISHED, "from", from, "to", to));
     }
 
     /** Ngày nộp của các hồ sơ chính thức trong [from, to), để chia theo tuần. */

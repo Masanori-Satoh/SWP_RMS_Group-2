@@ -374,10 +374,10 @@ public class TalentPoolService {
                 if (poolApplications.findPreviousCvByCandidateId(candidateId).stream()
                         .noneMatch(a -> a.getApplicationId().equals(sourceId)))
                     throw new TalentPoolException("CV này không còn đủ điều kiện làm hồ sơ nguồn.");
-                if (applications.existsActiveByCandidateInSameRequisition(candidateId, jobId)
+                if (applications.existsActiveByCandidateAndJobPosting(candidateId, jobId)
                         || applications.findFirstByCandidate_CandidateIdAndJobPosting_JobPostingIdAndApplicationStatus(
                                 candidateId, jobId, "HM_Suggested").isPresent())
-                    throw new TalentPoolException("Ứng viên đã ứng tuyển vị trí này (cùng đợt tuyển dụng) hoặc đã có đề xuất cho tin này.");
+                    throw new TalentPoolException("Ứng viên đã ứng tuyển hoặc được đề xuất cho tin này.");
                 requireCv(source.getAppliedCvUrl());
             } catch (TalentPoolException | ResourceNotFoundException e) {
                 error = e.getMessage();
@@ -435,10 +435,10 @@ public class TalentPoolService {
             // check if cv is exist
             requireCv(source.getAppliedCvUrl());
             // check if candidate is already applied or suggested
-            if (applications.existsActiveByCandidateInSameRequisition(candidate.getCandidateId(), jobId)
+            if (applications.existsActiveByCandidateAndJobPosting(candidate.getCandidateId(), jobId)
                     || applications.findFirstByCandidate_CandidateIdAndJobPosting_JobPostingIdAndApplicationStatus(
                             candidate.getCandidateId(), jobId, "HM_Suggested").isPresent())
-                throw new TalentPoolException("Ứng viên đã ứng tuyển vị trí này (cùng đợt tuyển dụng) hoặc đã có đề xuất cho tin này.");
+                throw new TalentPoolException("Ứng viên đã ứng tuyển hoặc được đề xuất cho tin này.");
             sources.add(source);
         }
 
@@ -597,9 +597,9 @@ public class TalentPoolService {
         if (applications.countPendingHrRecommendation(id) != 1)
             throw new TalentPoolException("Gợi ý đã được xử lý. Vui lòng tải lại trang.");
         if (accept) {
-            if (applications.existsActiveByCandidateInSameRequisition(a.getCandidate().getCandidateId(),
+            if (applications.existsActiveByCandidateAndJobPosting(a.getCandidate().getCandidateId(),
                     target.getJobPostingId()))
-                throw new TalentPoolException("Ứng viên đã có hồ sơ chính thức cho vị trí này (cùng đợt tuyển dụng).");
+                throw new TalentPoolException("Ứng viên đã có hồ sơ chính thức cho tin này.");
             requireCv(a.getAppliedCvUrl());
         } else if (applications.transition(id, Set.of("HM_Suggested"), "Rejected") != 1) {
             throw new TalentPoolException("Gợi ý đã được xử lý.");
@@ -642,9 +642,9 @@ public class TalentPoolService {
         requireHmDecision(id);
         if (!"HM_Suggested".equals(application.getApplicationStatus()))
             throw new TalentPoolException("Đề xuất đã được xử lý. Vui lòng tải lại trang.");
-        if (applications.existsActiveByCandidateInSameRequisition(application.getCandidate().getCandidateId(),
+        if (applications.existsActiveByCandidateAndJobPosting(application.getCandidate().getCandidateId(),
                 application.getJobPosting().getJobPostingId()))
-            throw new TalentPoolException("Ứng viên đã có hồ sơ chính thức cho vị trí này (cùng đợt tuyển dụng).");
+            throw new TalentPoolException("Ứng viên đã có hồ sơ chính thức cho tin này.");
         //check old cv
         requireCv(application.getAppliedCvUrl());
         if (applications.promoteSuggestionToHmPassed(id) != 1)
@@ -675,9 +675,11 @@ public class TalentPoolService {
             throw new TalentPoolException("Chỉ tin đã đăng hoặc đang tạm dừng mới được đóng đợt tuyển.");
         if (audit.hasOpenOffers(id))
             throw new TalentPoolException("Còn thư mời chưa kết thúc. Hãy xử lý thư mời trước khi đóng đợt tuyển.");
+        String oldPostingStatus = posting.getPostingStatus();
         posting.setPostingStatus("Closed");
         posting.setClosedAt(java.time.LocalDateTime.now());
-        audit.record(user.getUserId(), "UPDATE", "JobPosting", id, null, "Closed");
+        audit.record(user.getUserId(), "UPDATE", "JobPosting", id,
+                "{\"Status\":\"" + oldPostingStatus + "\"}", "{\"Status\":\"Closed\"}");
         for (Application suggestion : poolApplications.findAllDraftsByJobPostingId(id)) {
             if (applications.transition(suggestion.getApplicationId(), Set.of("HM_Suggested"), "Rejected") == 1)
                 audit.record(user.getUserId(), "UPDATE", "Application", suggestion.getApplicationId(), "HM_Suggested",

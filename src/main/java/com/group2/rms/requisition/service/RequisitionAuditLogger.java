@@ -65,15 +65,13 @@ public class RequisitionAuditLogger {
             departmentName = jobRequisition.getDepartment().getDepartmentName();
         }
         snapshot.put("Phòng ban", departmentName);
-        snapshot.put("Đợt tuyển dụng", FieldChanges.display(jobRequisition.getRecruitmentRound()));
+        snapshot.put("Ngày dự kiến nhận việc", FieldChanges.display(jobRequisition.getExpectedStaffingDate()));
         snapshot.put("Số lượng cần tuyển", FieldChanges.display(jobRequisition.getNumberOfPositions()));
         snapshot.put("Hình thức làm việc", jobRequisition.getEmploymentType());
         snapshot.put("Mức lương tối thiểu", formatNumber(jobRequisition.getMinSalary()));
         snapshot.put("Mức lương tối đa", formatNumber(jobRequisition.getMaxSalary()));
-        snapshot.put("Yêu cầu giới tính", jobRequisition.getGender());
         snapshot.put("Địa điểm làm việc", jobRequisition.getWorkLocation());
         snapshot.put("Mô hình làm việc", jobRequisition.getWorkModel());
-        snapshot.put("Thời gian thử việc", jobRequisition.getProbationPeriod());
         snapshot.put("Lý do tuyển dụng", jobRequisition.getReasonForHiring());
         snapshot.put("Mô tả công việc", jobRequisition.getJobDescription());
         snapshot.put("Yêu cầu ứng viên", jobRequisition.getRequirementDetails());

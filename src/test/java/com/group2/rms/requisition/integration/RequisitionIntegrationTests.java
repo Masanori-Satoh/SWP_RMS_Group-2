@@ -105,7 +105,7 @@ class RequisitionIntegrationTests {
         /** Các trường NOT NULL của bảng JobRequisition; từng test tự đặt trạng thái / người tạo / phòng ban. */
         private JobRequisition.JobRequisitionBuilder validRequisition() {
                 return JobRequisition.builder()
-                                .recruitmentRound(1)
+
                                 .numberOfPositions(1)
                                 .employmentType("Full-time")
                                 .workModel("On-site")
@@ -168,7 +168,8 @@ class RequisitionIntegrationTests {
                 JobRequisition requisition = requisitions.saveAndFlush(validRequisition()
                                 .title("Unicode read regression").hiringManager(hiringManager).department(department)
                                 .approvalStatus(RequisitionAccess.STATUS_DRAFT)
-                                .workLocation("Văn phòng Hà Nội").workModel("Hybrid").probationPeriod("60 ngày").build());
+                                .workLocation("Văn phòng Hà Nội").workModel("Hybrid")
+                                .expectedStaffingDate(java.time.LocalDate.of(2026, 12, 1)).build());
                 Integer id = requisition.getRequisitionId();
                 entityManager.clear(); // Đọc lại từ JDBC, không lấy từ cache của persistence context
 
@@ -178,11 +179,11 @@ class RequisitionIntegrationTests {
                 RequisitionResponse detail = service.getById(id);
 
                 // Assert
-                assertEquals("60 ngày", entityManager.createNativeQuery(
-                                "SELECT ProbationPeriod FROM JobRequisition WHERE RequisitionId = :id")
+                assertNotNull(entityManager.createNativeQuery(
+                                "SELECT ExpectedStaffingDate FROM JobRequisition WHERE RequisitionId = :id")
                                 .setParameter("id", id).getSingleResult());
                 assertEquals("Văn phòng Hà Nội", row.workLocation());
-                assertEquals("60 ngày", detail.probationLabel());
+                assertEquals(java.time.LocalDate.of(2026, 12, 1), detail.expectedStaffingDate());
                 assertEquals("Kết hợp", detail.workModelLabel());
                 mvc.perform(get("/requisitions")).andExpect(status().isOk()).andExpect(view().name("requisitions/list"));
                 mvc.perform(get("/requisitions/{id}", id)).andExpect(status().isOk())
@@ -361,7 +362,7 @@ class RequisitionIntegrationTests {
 
                 // Assert
                 assertEquals("Original Requisition", copy.getTitle());
-                assertEquals(2, copy.getRecruitmentRound());
+                assertNull(copy.getExpectedStaffingDate());
                 assertEquals(countBefore, requisitions.count());
         }
 

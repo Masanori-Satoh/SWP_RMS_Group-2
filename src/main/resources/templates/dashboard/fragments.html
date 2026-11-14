@@ -67,7 +67,7 @@
 <ul th:fragment="workItems(items)" class="dash-work">
     <li th:each="item : ${items}" class="dash-work__item">
         <div class="dash-work__body">
-            <p class="dash-work__title" th:text="${item.title}">Tiêu đề</p>
+            <p class="dash-work__title"><a th:href="@{${item.titleHref}}" th:text="${item.title}">Tiêu đề</a></p>
             <p class="dash-work__detail" th:if="${item.detail != null}" th:text="${item.detail}">Chi tiết</p>
         </div>
         <span th:if="${item.waitText != null}" class="badge" th:classappend="|badge--${item.waitTone}|">

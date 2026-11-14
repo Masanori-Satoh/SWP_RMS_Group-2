@@ -95,8 +95,8 @@ public final class RequisitionLabels {
         if ("Internship".equals(type)) {
             return "Thực tập";
         }
-        if ("Contract".equals(type)) {
-            return "Tự do";
+        if ("Freelance".equals(type)) {
+            return "Freelance";
         }
         return type == null ? "—" : type;
     }
@@ -135,24 +135,6 @@ public final class RequisitionLabels {
         BigDecimal value = amount.divide(BigDecimal.valueOf(1_000_000), 2, RoundingMode.HALF_UP);
         return value.stripTrailingZeros().toPlainString().replace('.', ',');
     }
-
-    /** Thời gian thử việc (JobRequisition.ProbationPeriod); trống = không thử việc. */
-    public static String probation(String period) {
-        return period == null || period.isBlank() ? "Không thử việc" : period;
-    }
-
-
-    // Returns the display label for a gender value.
-    public static String gender(String gender) {
-        if ("Male".equals(gender)) {
-            return "Nam";
-        }
-        if ("Female".equals(gender)) {
-            return "Nữ";
-        }
-        return "Không yêu cầu";
-    }
-
 
     // Converts plain text to safe multiline HTML.
     public static String multilineHtml(String text) {

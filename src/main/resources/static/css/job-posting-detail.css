@@ -82,6 +82,11 @@
 .jp-detail-page .jpd-timeline li { position:relative; }
 .jp-detail-page .jpd-timeline li::before { content:""; position:absolute; left:calc(-1 * var(--s4) - 6px); top:4px; width:10px; height:10px; border-radius:50%; background:var(--brand); }
 .jp-detail-page .jpd-what { font-weight:600; }
+.jp-detail-page .jpd-audit-details { margin-top:var(--s2); }
+.jp-detail-page .jpd-audit-details summary { color:var(--brand); cursor:pointer; }
+.jp-detail-page .jpd-audit-change { display:grid; grid-template-columns:minmax(8rem, 1fr) minmax(0, 2fr) auto minmax(0, 2fr); gap:var(--s2); padding:var(--s2) 0; border-bottom:1px solid var(--line); }
+.jp-detail-page .jpd-audit-change span { overflow-wrap:anywhere; white-space:pre-wrap; }
+@media (max-width: 640px) { .jp-detail-page .jpd-audit-change { grid-template-columns:1fr auto 1fr; } .jp-detail-page .jpd-audit-change strong { grid-column:1 / -1; } }
 
 /* ----- Màn hình hẹp ----- */
 @media (max-width:1100px) {

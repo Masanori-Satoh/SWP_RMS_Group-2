@@ -60,13 +60,13 @@ class DirectorDashboardServiceTests {
                 .role(Role.builder().roleName("Director").build()).build();
     }
 
-    private PendingRequisitionRow requisition(int id, Integer round, int waitedDays) {
-        return new PendingRequisitionRow(id, null, "Vị trí " + id, "Kỹ thuật", "Hoài Nam", 2, round,
+    private PendingRequisitionRow requisition(int id, Integer day, int waitedDays) {
+        return new PendingRequisitionRow(id, null, "Vị trí " + id, "Kỹ thuật", "Hoài Nam", 2, java.time.LocalDate.of(2026, 12, day),
                 NOW.minusDays(waitedDays));
     }
 
     @Test
-    @DisplayName("Yêu cầu chờ: mã sinh từ id, đợt 2 ghi 'Tuyển lại lần 2', chờ 9 ngày tô đỏ")
+    @DisplayName("Yêu cầu chờ: hiển thị ngày cần nhân sự và thời gian chờ")
     void build_shouldMapPendingRequisition_whenSecondRound() {
         // Arrange
         when(lists.pendingRequisitions(USER_ID)).thenReturn(List.of(
@@ -78,9 +78,9 @@ class DirectorDashboardServiceTests {
 
         // Assert
         assertEquals("REQ-0012", items.get(0).code());
-        assertEquals("Tuyển lại lần 2", items.get(0).roundText());
+        assertEquals("Ngày dự kiến nhận việc: 02/12/2026", items.get(0).staffingDateText());
         assertEquals("danger", items.get(0).waitTone());
-        assertNull(items.get(1).roundText());
+        assertEquals("Ngày dự kiến nhận việc: 01/12/2026", items.get(1).staffingDateText());
         assertEquals("/requisitions/13", items.get(1).href());
     }
 

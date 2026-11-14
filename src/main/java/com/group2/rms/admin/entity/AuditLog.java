@@ -8,7 +8,8 @@ import java.time.LocalDateTime;
 
 /**
  * 3.5 AuditLog - Nhật ký hành động trong hệ thống.
- * Lưu các thao tác được schema hỗ trợ: CREATE, UPDATE, DELETE, LOGIN.
+ * Lưu các thao tác được schema hỗ trợ: CREATE, UPDATE, DELETE, LOGIN,
+ * PUBLISH, UNPUBLISH, RESTORE.
  * Dùng BIGINT cho AuditLogId do log có thể rất lớn.
  */
 @Entity
@@ -30,7 +31,7 @@ public class AuditLog {
     private User user;
 
     /**
-     * Loại hành động: CREATE, UPDATE, DELETE, LOGIN
+     * Loại hành động theo CK_AuditLog_Action.
      */
     @Column(name = "Action", nullable = false, length = 50)
     private String action;

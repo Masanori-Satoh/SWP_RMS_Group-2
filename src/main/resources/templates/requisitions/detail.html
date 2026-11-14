@@ -25,7 +25,7 @@
                lastDecision=${#lists.isEmpty(req.approvals) ? null : req.approvals[0]}">
         <th:block th:replace="~{fragments/ui/admin-workspace :: scene}"></th:block>
 
-        <!-- ===== 1. ĐẦU TRANG: tên, trạng thái, mã, phòng ban, đợt + các nút thao tác ===== -->
+        <!-- ===== 1. ĐẦU TRANG: tên, trạng thái, mã, phòng ban và các nút thao tác ===== -->
         <header class="rqd-head adw-heading">
             <div class="rqd-title">
                 <h1 class="adw-title" th:text="${req.title}">Key Account Manager</h1>
@@ -34,8 +34,6 @@
                         duyệt</span>
                     <span class="rqd-code" th:text="${req.requisitionCode}">REQ-0020</span>
                     <span th:text="${req.departmentName}">Sales &amp; Marketing</span>
-                    <span aria-hidden="true">·</span>
-                    <span th:text="|Đợt ${req.recruitmentRound ?: 1}|">Đợt 1</span>
                 </div>
             </div>
             <!-- Mỗi nút chỉ hiện khi service bật cờ quyền tương ứng; server vẫn kiểm tra lại khi bấm -->
@@ -55,7 +53,7 @@
                 <a class="btn btn--secondary" th:if="${req.postingViewable}"
                     th:href="@{/internal/job-postings/{id}(id=${req.jobPostingId})}">Xem tin tuyển dụng</a>
                 <a class="btn btn--secondary" th:if="${req.copyable}"
-                    th:href="@{/requisitions/copy/{id}(id=${req.requisitionId})}">Sao chép thành đợt mới</a>
+                    th:href="@{/requisitions/copy/{id}(id=${req.requisitionId})}">Sao chép yêu cầu</a>
                 <button type="button" class="btn btn--danger" th:if="${req.deletable}" data-delete-requisition
                     th:data-delete-url="@{/requisitions/delete/{id}(id=${req.requisitionId})}"
                     th:data-title="${req.title}">Xóa</button>
@@ -114,20 +112,12 @@
                             <dd th:text="${req.workModelLabel}">Kết hợp</dd>
                         </div>
                         <div>
-                            <dt>Thời gian thử việc</dt>
-                            <dd th:text="${req.probationLabel}">60 ngày</dd>
-                        </div>
-                        <div>
-                            <dt>Yêu cầu giới tính</dt>
-                            <dd th:text="${req.genderLabel}">Không yêu cầu</dd>
-                        </div>
-                        <div>
                             <dt>Mức lương</dt>
                             <dd th:text="${req.salaryLabel}">20 – 30 triệu VND/tháng</dd>
                         </div>
                         <div>
-                            <dt>Ngày tạo</dt>
-                            <dd th:text="${#temporals.format(req.createdAt, 'HH:mm dd/MM/yyyy')}">09:12 03/10/2026</dd>
+                            <dt>Ngày dự kiến nhận việc</dt>
+                            <dd th:text="${req.expectedStaffingDate == null ? 'Chưa xác định' : #temporals.format(req.expectedStaffingDate, 'dd/MM/yyyy')}">01/12/2026</dd>
                         </div>
                         <div class="rqd-wide">
                             <dt>Địa điểm làm việc</dt>

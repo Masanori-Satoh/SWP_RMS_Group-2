@@ -80,11 +80,11 @@ public class RequisitionServiceImpl implements RequisitionService {
         access.requireCopy(currentUser, jobRequisition);
 
         RequisitionRequest copiedRequest = mapper.toEditForm(jobRequisition);
+        copiedRequest.setExpectedStaffingDate(null);
 
         JobRequisition root = rootOf(jobRequisition);
         copiedRequest.setOriginalRequisitionId(root.getRequisitionId());
         copiedRequest.setOriginalTitle(root.getTitle());
-        copiedRequest.setRecruitmentRound(requisitions.findMaxRoundInChain(root.getRequisitionId()) + 1);
         return copiedRequest;
     }
 
@@ -113,7 +113,7 @@ public class RequisitionServiceImpl implements RequisitionService {
         JobRequisition jobRequisition = new JobRequisition();
         jobRequisition.setHiringManager(currentUser);
         jobRequisition.setCreatedBy(currentUser);
-        assignRecruitmentRound(jobRequisition, request, currentUser);
+        assignCopySource(jobRequisition, request, currentUser);
         applyDataToEntity(jobRequisition, request);
 
         applySavedStatus(jobRequisition, request.getAction(), currentUser);
@@ -160,11 +160,6 @@ public class RequisitionServiceImpl implements RequisitionService {
         Map<String, String> before = auditLogger.snapshot(jobRequisition);
         applyDataToEntity(jobRequisition, request);
 
-        JobRequisition original = jobRequisition.getOriginalRequisition();
-        if (original != null && !isSameChain(request, original)) {
-            jobRequisition.setOriginalRequisition(null);
-        }
-
         applySavedStatus(jobRequisition, request.getAction(), currentUser);
 
         Map<String, String> after = auditLogger.snapshot(jobRequisition);
@@ -193,7 +188,7 @@ public class RequisitionServiceImpl implements RequisitionService {
         }
         if (requisitions.existsByOriginalRequisition_RequisitionId(id)) {
             throw createValidationException("action",
-                    "Yêu cầu này đã có đợt tuyển sau được sao chép từ nó và không thể xóa.");
+                    "Yêu cầu này đã được dùng làm nguồn sao chép và không thể xóa.");
         }
 
         auditLogger.log(jobRequisition, currentUser, RequisitionAuditLogger.ACTION_DELETE, null,
@@ -271,8 +266,8 @@ public class RequisitionServiceImpl implements RequisitionService {
         }
     }
 
-    // Assigns the requisition to a recruitment round.
-    private void assignRecruitmentRound(JobRequisition jobRequisition, RequisitionRequest request, User currentUser) {
+    // Keeps the root requisition as copy provenance.
+    private void assignCopySource(JobRequisition jobRequisition, RequisitionRequest request, User currentUser) {
         if (request.getOriginalRequisitionId() == null) {
             return;
         }
@@ -281,9 +276,6 @@ public class RequisitionServiceImpl implements RequisitionService {
                         "Yêu cầu nguồn để sao chép không tồn tại."));
         access.requireView(currentUser, source);
         requireCopyableSource(source);
-        if (!isSameChain(request, rootOf(source))) {
-            return;
-        }
         jobRequisition.setOriginalRequisition(rootOf(source));
     }
 
@@ -293,18 +285,6 @@ public class RequisitionServiceImpl implements RequisitionService {
             return jobRequisition.getOriginalRequisition();
         }
         return jobRequisition;
-    }
-
-    // Checks whether the request belongs to the same requisition chain.
-    private boolean isSameChain(RequisitionRequest request, JobRequisition root) {
-        Integer rootDepartmentId = root.getDepartment() == null ? null : root.getDepartment().getDepartmentId();
-        return Objects.equals(request.getDepartmentId(), rootDepartmentId)
-                && isSameTitle(request.getTitle(), root.getTitle());
-    }
-
-    // Checks whether two titles match.
-    private boolean isSameTitle(String first, String second) {
-        return first != null && second != null && first.trim().equalsIgnoreCase(second.trim());
     }
 
     // Requires an active department the user may create for: Director any, HM own or managed departments.
@@ -356,16 +336,14 @@ public class RequisitionServiceImpl implements RequisitionService {
     // Copies request data to the requisition entity.
     private void applyDataToEntity(JobRequisition jobRequisition, RequisitionRequest request) {
         jobRequisition.setTitle(request.getTitle());
-        jobRequisition.setRecruitmentRound(request.getRecruitmentRound());
+        jobRequisition.setExpectedStaffingDate(request.getExpectedStaffingDate());
         jobRequisition.setDepartment(findDepartment(request.getDepartmentId()));
         jobRequisition.setNumberOfPositions(request.getNumberOfPositions());
         jobRequisition.setEmploymentType(request.getEmploymentType());
         jobRequisition.setMinSalary(request.getMinSalary());
         jobRequisition.setMaxSalary(request.getMaxSalary());
-        jobRequisition.setGender(request.getGender());
         jobRequisition.setWorkLocation(request.getWorkLocation());
         jobRequisition.setWorkModel(request.getWorkModel());
-        jobRequisition.setProbationPeriod(request.getProbationPeriod());
         jobRequisition.setReasonForHiring(request.getReasonForHiring());
         jobRequisition.setJobDescription(Objects.requireNonNullElse(request.getJobDescription(), ""));
         jobRequisition.setRequirementDetails(Objects.requireNonNullElse(request.getRequirementDetails(), ""));

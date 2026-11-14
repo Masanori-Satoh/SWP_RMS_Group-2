@@ -418,8 +418,8 @@ class OfferPersistenceRegressionTests {
                 .departmentStatus("Active").build();
         entityManager.persist(department);
         JobRequisition requisition = JobRequisition.builder().title("Test position").department(department)
-                .hiringManager(hr).recruitmentRound(1).numberOfPositions(1).employmentType("Full-time")
-                .jobDescription("Test").requirementDetails("Test").gender("Any")
+                .hiringManager(hr).numberOfPositions(1).employmentType("Full-time")
+                .jobDescription("Test").requirementDetails("Test")
                 .workModel("On-site").approvalStatus("Approved").build();
         entityManager.persist(requisition);
         JobPosting posting = JobPosting.builder().requisition(requisition).postingNo(1)

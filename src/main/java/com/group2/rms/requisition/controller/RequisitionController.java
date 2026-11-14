@@ -7,10 +7,10 @@ import com.group2.rms.requisition.dto.RequisitionSearchRequest;
 import com.group2.rms.requisition.exception.RequisitionStateException;
 import com.group2.rms.requisition.exception.RequisitionValidationException;
 import com.group2.rms.requisition.service.RequisitionAccess;
+import com.group2.rms.requisition.service.RequisitionFormOptions;
 import com.group2.rms.requisition.service.RequisitionListService;
 import com.group2.rms.requisition.service.RequisitionService;
 import com.group2.rms.requisition.validator.RequisitionValidator;
-import com.group2.rms.user.repository.DepartmentRepository;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -54,13 +54,13 @@ public class RequisitionController {
     private final RequisitionListService listService;
     private final RequisitionAccess access;
     private final RequisitionValidator validator;
-    private final DepartmentRepository departments;
+    private final RequisitionFormOptions formOptions;
 
     @InitBinder("form")
     void binder(WebDataBinder binder) {
-        binder.setAllowedFields("action", "title", "departmentId", "originalTitle", "numberOfPositions", "employmentType", "minSalary",
+        binder.setAllowedFields("action", "title", "departmentId", "originalTitle", "expectedStaffingDate", "numberOfPositions", "employmentType", "minSalary",
                 "maxSalary",
-                "gender", "workLocation", "workModel", "probationPeriod", "reasonForHiring", "recruitmentRound", "originalRequisitionId",
+                "workLocation", "workModel", "reasonForHiring", "originalRequisitionId",
                 "jobDescription", "requirementDetails");
 
         PropertyEditorSupport salaryEditor = new PropertyEditorSupport() {
@@ -101,8 +101,7 @@ public class RequisitionController {
             @Override
             public void processPropertyAccessException(PropertyAccessException ex, BindingResult bindingResult) {
                 String field = ex.getPropertyName();
-                String label = "recruitmentRound".equals(field) ? RequisitionValidator.ROUND_LABEL
-                        : "numberOfPositions".equals(field) ? RequisitionValidator.POSITIONS_LABEL : null;
+                String label = "numberOfPositions".equals(field) ? RequisitionValidator.POSITIONS_LABEL : null;
                 if (label == null) {
                     super.processPropertyAccessException(ex, bindingResult);
                     return;
@@ -142,10 +141,8 @@ public class RequisitionController {
         RequisitionRequest form = new RequisitionRequest();
 
         form.setNumberOfPositions(1);
-        form.setRecruitmentRound(1);
         form.setEmploymentType("Full-time");
         form.setWorkModel("On-site");
-        form.setGender(RequisitionValidator.GENDER_ANY);
         if (currentUser.getDepartment() != null && !access.isDirector(currentUser)) {
             form.setDepartmentId(currentUser.getDepartment().getDepartmentId());
         }
@@ -358,6 +355,7 @@ public class RequisitionController {
     private String renderForm(Model model, boolean edit, Integer id) {
         model.addAttribute("isEdit", edit);
         model.addAttribute("requisitionId", id);
+        model.addAttribute("today", validator.today());
         model.addAttribute("directApprove", access.isDirector(access.actor()));
         addFormOptions(model);
         model.addAttribute("activeMenu", "requisitions");
@@ -366,7 +364,7 @@ public class RequisitionController {
     }
 
     private void addFormOptions(Model model) {
-        var allDepartments = departments.findAll();
+        var allDepartments = formOptions.allDepartments();
         var actor = access.actor();
         model.addAttribute("departments", allDepartments);
         // Phòng được chọn khi tạo/sửa: Director mọi phòng đang hoạt động, HM phòng mình thuộc về hoặc làm trưởng phòng.
@@ -375,11 +373,8 @@ public class RequisitionController {
                         && access.canManageDepartment(actor, department.getDepartmentId(), department.getManager()))
                 .toList());
         model.addAttribute("employmentTypes", RequisitionValidator.EMPLOYMENT_TYPES);
-        model.addAttribute("genders", RequisitionValidator.GENDERS);
-        model.addAttribute("probationLimit", RequisitionValidator.PROBATION_CHAR_LIMIT);
         // Giới hạn số lượng cần tuyển, dùng cho min/max của ô số lượng và nút −/+
         model.addAttribute("positionsMin", RequisitionValidator.POSITIONS_MIN);
-        model.addAttribute("roundMin", RequisitionValidator.ROUND_MIN);
     }
 
     private void addErrors(BindingResult errors, RequisitionValidationException e) {

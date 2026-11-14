@@ -111,18 +111,6 @@
                             <span class="summary-label">Thời gian làm việc</span>
                             <span class="summary-value" th:text="${job.workingHours}">Thứ 2 - Thứ 6 (09:00 - 18:00)</span>
                         </li>
-                        <li th:unless="${#strings.isEmpty(job.probationPeriod)}">
-                            <span class="summary-label">Thời gian thử việc</span>
-                            <span class="summary-value" th:text="${job.probationPeriod}">2 tháng</span>
-                        </li>
-                        <li th:unless="${#strings.isEmpty(job.workingHours)}">
-                            <span class="summary-label">Thời gian làm việc</span>
-                            <span class="summary-value" th:text="${job.workingHours}">Thứ 2 - Thứ 6 (09:00 - 18:00)</span>
-                        </li>
-                        <li th:unless="${#strings.isEmpty(job.probationPeriod)}">
-                            <span class="summary-label">Thời gian thử việc</span>
-                            <span class="summary-value" th:text="${job.probationPeriod}">2 tháng</span>
-                        </li>
                         <li>
                             <span class="summary-label">Hình thức</span>
                             <span class="summary-value" th:text="${job.employmentType}">Full-time</span>
@@ -131,13 +119,9 @@
                             <span class="summary-label">Mô hình làm việc</span>
                             <span class="summary-value" th:text="${job.workModel}">Kết hợp</span>
                         </li>
-                        <li th:unless="${#strings.isEmpty(job.numberOfPositionsDisplay)}">
+                        <li th:if="${job.numberOfPositionsDisplay != null}">
                             <span class="summary-label">Số lượng tuyển</span>
-                            <span class="summary-value" th:text="${job.numberOfPositionsDisplay}">1 người</span>
-                        </li>
-                        <li>
-                            <span class="summary-label">Yêu cầu giới tính</span>
-                            <span class="summary-value" th:text="${job.genderLabel}">Không yêu cầu</span>
+                            <span class="summary-value" th:text="|${job.numberOfPositionsDisplay} người|">1 người</span>
                         </li>
                         <li th:if="${job.salaryDisplay != null}">
                             <span class="summary-label">Mức lương</span>

@@ -79,15 +79,6 @@
                             </select>
                         </div>
 
-                        <div class="mft-field">
-                            <label class="form-label" for="filter-sort">Sắp xếp theo</label>
-                            <select class="form-select" id="filter-sort" name="sort">
-                                <option th:each="option : ${list.options.sorts}" th:value="${option.value}"
-                                    th:text="${option.label}" th:selected="${option.value == list.filter.sort}">Mới đăng
-                                    nhất</option>
-                            </select>
-                        </div>
-
                         <fieldset class="mft-field jp-filter-full" th:if="${list.options.showPostedDate}">
                             <legend class="form-label">Ngày đăng</legend>
                             <div class="jp-date-range">
@@ -198,9 +189,7 @@
                                         <span
                                             th:classappend="${post.deadlineState != null} ? |jp-dl-${post.deadlineState}|"
                                             th:text="${#temporals.format(post.applicationDeadline, 'dd/MM/yyyy')}">31/12/2026</span>
-                                        <div class="jp-sub" th:if="${post.deadlineState != null}"
-                                            th:text="${post.daysUntilDeadline < 0} ? |quá hạn ${-post.daysUntilDeadline} ngày| : |còn ${post.daysUntilDeadline} ngày|">
-                                            còn 75 ngày</div>
+
                                     </th:block>
                                     <span class="jp-sub" th:if="${post.applicationDeadline == null}">Không thời
                                         hạn</span>

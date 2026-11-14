@@ -42,7 +42,7 @@ public class RequisitionMapper {
         }
 
         return RequisitionRequest.builder()
-                .recruitmentRound(jobRequisition.getRecruitmentRound())
+                .expectedStaffingDate(jobRequisition.getExpectedStaffingDate())
                 .originalTitle(originalTitle)
                 .title(jobRequisition.getTitle())
                 .departmentId(departmentId)
@@ -50,10 +50,8 @@ public class RequisitionMapper {
                 .employmentType(jobRequisition.getEmploymentType())
                 .minSalary(jobRequisition.getMinSalary())
                 .maxSalary(jobRequisition.getMaxSalary())
-                .gender(jobRequisition.getGender())
                 .workLocation(jobRequisition.getWorkLocation())
                 .workModel(jobRequisition.getWorkModel())
-                .probationPeriod(jobRequisition.getProbationPeriod())
                 .reasonForHiring(jobRequisition.getReasonForHiring())
                 .jobDescription(jobRequisition.getJobDescription())
                 .requirementDetails(jobRequisition.getRequirementDetails())
@@ -81,7 +79,7 @@ public class RequisitionMapper {
                 .hiringManagerName(jobRequisition.getHiringManager().getFullName())
                 .numberOfPositions(jobRequisition.getNumberOfPositions())
                 .approvalStatus(approvalStatus)
-                .recruitmentRound(jobRequisition.getRecruitmentRound())
+                .expectedStaffingDate(jobRequisition.getExpectedStaffingDate())
                 .requisitionCode(requisitionCode)
                 .createdAt(jobRequisition.getCreatedAt())
                 .workLocation(jobRequisition.getWorkLocation());
@@ -133,8 +131,6 @@ public class RequisitionMapper {
         return toListRow(jobRequisition, viewer, latestPosting, hasLaterRound).toBuilder()
                 .incomplete(incomplete)
                 .salaryLabel(RequisitionLabels.salary(jobRequisition.getMinSalary(), jobRequisition.getMaxSalary()))
-                .probationLabel(RequisitionLabels.probation(jobRequisition.getProbationPeriod()))
-                .genderLabel(RequisitionLabels.gender(jobRequisition.getGender()))
                 .workModelLabel(RequisitionLabels.workModel(jobRequisition.getWorkModel()))
                 // Văn bản nhiều dòng: escape HTML rồi đổi xuống dòng thành <br/> (AG §6.3)
                 .reasonForHiringHtml(RequisitionLabels.multilineHtml(jobRequisition.getReasonForHiring()))

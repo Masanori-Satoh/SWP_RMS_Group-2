@@ -183,8 +183,7 @@ public class JobPostingServiceImpl implements JobPostingService {
         }
 
         JobPosting saved = postings.save(posting);
-        auditLogger.log(saved, actor, JobPostingAuditLogger.ACTION_CREATE,
-                JobPostingLabels.LOG_CREATE + ": " + saved.getPostingStatus());
+        auditLogger.logCreate(saved, actor);
         if (publish) {
             notifyPublishedOrReopened(saved, actor, false);
         }
@@ -238,12 +237,10 @@ public class JobPostingServiceImpl implements JobPostingService {
         }
 
         boolean isNewPublication = posting.getPostingDate() != null && !posting.getPostingDate().equals(oldPostingDate);
-        String description = JobPostingLabels.LOG_UPDATE;
-        if (isNewPublication) {
-            description = JobPostingLabels.LOG_PUBLISH;
-        }
         postings.save(posting);
-        auditLogger.logChanges(posting, actor, description, changedKeys, before, after);
+        auditLogger.logChanges(posting, actor,
+                isNewPublication ? JobPostingAuditLogger.ACTION_PUBLISH : JobPostingAuditLogger.ACTION_UPDATE,
+                changedKeys, before, after);
         if (isNewPublication) {
             notifyPublishedOrReopened(posting, actor, isPaused);
         }
@@ -270,7 +267,7 @@ public class JobPostingServiceImpl implements JobPostingService {
         posting.setPostingStatus(JobPostingAccess.STATUS_PUBLISHED);
         posting.setPostingDate(now);
         postings.save(posting);
-        auditLogger.log(posting, currentUser, JobPostingAuditLogger.ACTION_UPDATE, JobPostingLabels.LOG_PUBLISH);
+        auditLogger.logStatusChange(posting, currentUser, JobPostingAuditLogger.ACTION_PUBLISH, status);
         notifyPublishedOrReopened(posting, currentUser, wasPaused);
     }
 
@@ -282,9 +279,10 @@ public class JobPostingServiceImpl implements JobPostingService {
         if (!JobPostingAccess.STATUS_PUBLISHED.equals(posting.getPostingStatus())) {
             throw new JobPostingValidationException("Chỉ tin đang đăng mới được tạm dừng.");
         }
+        String oldStatus = posting.getPostingStatus();
         posting.setPostingStatus(JobPostingAccess.STATUS_PAUSED);
         postings.save(posting);
-        auditLogger.log(posting, currentUser, JobPostingAuditLogger.ACTION_UPDATE, JobPostingLabels.LOG_PAUSE);
+        auditLogger.logStatusChange(posting, currentUser, JobPostingAuditLogger.ACTION_UNPUBLISH, oldStatus);
         notificationService.notifyJobPostingPaused(posting, currentUser);
     }
 
@@ -307,7 +305,7 @@ public class JobPostingServiceImpl implements JobPostingService {
             throw new JobPostingValidationException("Chỉ có thể xóa bản nháp chưa có hồ sơ ứng tuyển.");
         }
         // Ghi audit trước khi xóa để vẫn còn tiêu đề tin trong lịch sử
-        auditLogger.log(posting, currentUser, JobPostingAuditLogger.ACTION_DELETE, JobPostingLabels.LOG_DELETE);
+        auditLogger.logDelete(posting, currentUser);
         postings.delete(posting);
     }
 
@@ -511,11 +509,9 @@ public class JobPostingServiceImpl implements JobPostingService {
         posting.setWorkingHours(request.getWorkingHours());
         posting.setEmploymentType(request.getEmploymentType());
         posting.setWorkModel(request.getWorkModel());
-        posting.setGender(request.getGender());
-        posting.setProbationPeriod(request.getProbationPeriod());
         posting.setSalaryDisplay(salaryDisplayOf(request, requisition));
         // Rule: tắt "Hiển thị số lượng tuyển" thì lưu NULL (trang công khai không hiện số lượng)
-        String positions = null;
+        Integer positions = null;
         if (Boolean.TRUE.equals(request.getShowPositions())) {
             positions = request.getNumberOfPositionsDisplay();
         }

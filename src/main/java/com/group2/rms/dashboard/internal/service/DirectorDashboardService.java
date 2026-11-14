@@ -94,14 +94,11 @@ public class DirectorDashboardService {
             if (department == null) {
                 department = "Chưa xác định";
             }
-            // Rule: đợt 2 trở đi là tuyển lại cùng vị trí, ghi rõ để Giám đốc biết đợt trước chưa đủ người.
-            String roundText = null;
-            if (row.recruitmentRound() != null && row.recruitmentRound() > 1) {
-                roundText = "Tuyển lại lần " + row.recruitmentRound();
-            }
+            String staffingDateText = row.expectedStaffingDate() == null ? null
+                    : "Ngày dự kiến nhận việc: " + row.expectedStaffingDate().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy"));
             long days = DashboardLabels.waitDays(row.waitingSince(), now);
             items.add(new PendingRequisitionItem(code, row.title(), department, row.requesterName(),
-                    row.numberOfPositions(), roundText,
+                    row.numberOfPositions(), staffingDateText,
                     DashboardLabels.waitText(days), DashboardLabels.waitTone(days),
                     "/requisitions/" + row.requisitionId()));
         }

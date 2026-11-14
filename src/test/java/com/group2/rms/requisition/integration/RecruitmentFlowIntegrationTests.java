@@ -146,7 +146,7 @@ class RecruitmentFlowIntegrationTests {
 
     /** Yêu cầu nằm sẵn ở trạng thái cho trước (bỏ qua các bước trước đó của luồng). */
     private JobRequisition savedRequisition(String title, User owner, String status) {
-        return requisitions.saveAndFlush(JobRequisition.builder().title(title).recruitmentRound(1)
+        return requisitions.saveAndFlush(JobRequisition.builder().title(title)
                 .numberOfPositions(1).employmentType("Full-time").workModel("On-site")
                 .jobDescription("Mô tả").requirementDetails("Yêu cầu").approvalStatus(status)
                 .hiringManager(owner).createdBy(owner).department(department).build());
@@ -308,7 +308,7 @@ class RecruitmentFlowIntegrationTests {
             entityManager.flush();
             entityManager.clear();
             JobRequisition saved = requisitions.findById(id).orElseThrow();
-            assertEquals(2, saved.getRecruitmentRound());
+            assertNull(saved.getExpectedStaffingDate());
             assertEquals(original.getRequisitionId(), saved.getOriginalRequisition().getRequisitionId());
         }
 

@@ -3,6 +3,7 @@ package com.group2.rms.requisition.dto;
 import com.group2.rms.admin.dto.ActivityLogResponse;
 
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
 
 import lombok.Builder;
@@ -25,7 +26,7 @@ public record RequisitionResponse(
                 Integer numberOfPositions,
                 String approvalStatus,
                 LocalDateTime createdAt,
-                Integer recruitmentRound,
+                LocalDate expectedStaffingDate,
                 String requisitionCode,
                 String postingStatus,
                 Integer jobPostingId,
@@ -47,8 +48,6 @@ public record RequisitionResponse(
                 LocalDateTime submittedAt, // JobRequisition.SubmittedAt: lúc gửi duyệt gần nhất
                 Long waitingDays, // số ngày đã chờ Giám đốc duyệt (chỉ khi Pending_Director)
                 String salaryLabel, // "20 – 30 triệu VND/tháng" hoặc "Thỏa thuận"
-                String probationLabel, // "2 tháng", "Thỏa thuận"... hoặc "Không thử việc"
-                String genderLabel,
                 String workModelLabel,
                 String reasonForHiringHtml, // nội dung nhiều dòng đã escape + <br/> (hiển thị bằng th:utext)
                 String jobDescriptionHtml,

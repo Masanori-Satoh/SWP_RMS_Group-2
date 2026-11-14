@@ -53,7 +53,7 @@
     <span class="aul-entity"><svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path th:d="${row.entityIcon()}"></path></svg><span th:text="${row.entityLabel()}"></span></span>
     <span class="aul-target-name" title="Tên đối tượng theo dữ liệu hiện tại" th:classappend="${row.targetName == null ? 'aul-target-name--missing' : ''}" th:text="${row.targetDescription()}"></span>
 </div>
-<span th:fragment="actionBadge(action,label)" class="badge aul-action" th:attr="data-action=${action}" th:classappend="${action == 'CREATE' ? 'badge--success' : (action == 'DELETE' ? 'badge--danger' : (action == 'UPDATE' ? 'badge--info' : 'badge--neutral'))}">
+<span th:fragment="actionBadge(action,label)" class="badge aul-action" th:attr="data-action=${action}" th:classappend="${action == 'CREATE' or action == 'PUBLISH' ? 'badge--success' : (action == 'DELETE' or action == 'UNPUBLISH' ? 'badge--danger' : (action == 'UPDATE' or action == 'RESTORE' ? 'badge--info' : 'badge--neutral'))}">
     <svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" th:switch="${action}">
         <path th:case="'CREATE'" d="M12 8v8M8 12h8M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0"></path>
         <path th:case="'UPDATE'" d="m16 3 5 5M4 15 15.5 3.5a3.54 3.54 0 0 1 5 5L9 20l-6 1 1-6Z"></path>

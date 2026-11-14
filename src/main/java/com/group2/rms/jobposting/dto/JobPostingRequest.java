@@ -10,6 +10,7 @@ import lombok.Setter;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 /*
  * DTO: form tạo / sửa tin; chỉ các ô trong whitelist của controller được nhận, phần còn lại service điền từ DB.
@@ -33,7 +34,6 @@ public class JobPostingRequest {
     private String requisitionCode;
     private String requisitionTitle;
     private String departmentName;
-    private Integer recruitmentRound;
     private Integer numberOfPositions;
     private String hiringManagerName;
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
@@ -48,9 +48,7 @@ public class JobPostingRequest {
     private String sourceRequirements;
     private String sourceEmploymentType;
     private String sourceWorkModel;
-    private String sourceGender;
-    private String sourceProbationPeriod;
-    private String sourcePositionsDisplay;
+    private Integer sourcePositionsDisplay;
 
     // ----- Trạng thái form (service tính, template chỉ đọc; server không dùng giá trị gửi lên) -----
     /** Tạo mới hoặc đang sửa bản nháp: có nút "Lưu nháp" + "Đăng tin". */
@@ -59,6 +57,8 @@ public class JobPostingRequest {
     private boolean paused;
     /** Tin đã lên trang tuyển dụng (đang đăng hoặc tạm dừng). */
     private boolean live;
+    /** Ngày đăng đã lưu, chỉ để hiển thị trong phần xem trước khi sửa tin. */
+    private LocalDateTime postingDate;
 
     // ----- Nội dung tin (HR nhập) -----
     @Size(max = JobPostingValidator.TITLE_LIMIT, message = JobPostingValidator.TITLE_TOO_LONG)
@@ -74,12 +74,6 @@ public class JobPostingRequest {
     private String employmentType;
     /** Mã mô hình, ví dụ "Hybrid" (điền sẵn từ yêu cầu, HR đổi được). */
     private String workModel;
-    /** Yêu cầu giới tính của riêng tin, mặc định lấy từ yêu cầu. */
-    private String gender;
-    /** Thời gian thử việc dạng chữ (điền sẵn từ yêu cầu, HR sửa được); trống = không hiển thị. */
-    @Size(max = JobPostingValidator.PROBATION_LIMIT, message = JobPostingValidator.PROBATION_TOO_LONG)
-    private String probationPeriod;
-
     /** "range" (theo yêu cầu), "nego" (thỏa thuận) hoặc "custom" (tự nhập). */
     private String salaryMode;
     /** Mức lương tự nhập khi salaryMode = custom. */
@@ -88,8 +82,7 @@ public class JobPostingRequest {
 
     /** Có công khai số lượng tuyển không; tắt thì lưu NumberOfPositionsDisplay = NULL. */
     private Boolean showPositions;
-    @Size(max = JobPostingValidator.POSITIONS_TEXT_LIMIT, message = JobPostingValidator.POSITIONS_TEXT_TOO_LONG)
-    private String numberOfPositionsDisplay;
+    private Integer numberOfPositionsDisplay;
 
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     private LocalDate applicationDeadline;

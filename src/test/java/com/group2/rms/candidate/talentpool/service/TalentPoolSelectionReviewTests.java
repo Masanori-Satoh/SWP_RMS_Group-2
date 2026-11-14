@@ -135,13 +135,13 @@ class TalentPoolSelectionReviewTests {
         var second = source(102, 12);
         when(poolApplications.findPreviousCvByCandidateId(11)).thenReturn(List.of(first));
         when(poolApplications.findPreviousCvByCandidateId(12)).thenReturn(List.of(second));
-        when(applications.existsActiveByCandidateInSameRequisition(11, 8)).thenReturn(true);
+        when(applications.existsActiveByCandidateAndJobPosting(11, 8)).thenReturn(true);
         when(applications.findFirstByCandidate_CandidateIdAndJobPosting_JobPostingIdAndApplicationStatus(12, 8, "HM_Suggested"))
             .thenReturn(Optional.of(second));
         // When: Gọi pool.reviewSelection với dữ liệu đã chuẩn bị.
         var result = pool.reviewSelection(8, new TalentPoolSuggestRequest(List.of(101, 102)));
         // Then: Preflight chặn Candidate đã có application chính thức hoặc draft cùng tin.
-        assertEquals(true, result.items().stream().allMatch(item -> item.error().contains("hoặc đã có đề xuất cho tin này")));
+        assertEquals(true, result.items().stream().allMatch(item -> item.error().contains("được đề xuất cho tin này")));
         verify(storage, times(0)).load(any());
     }
 

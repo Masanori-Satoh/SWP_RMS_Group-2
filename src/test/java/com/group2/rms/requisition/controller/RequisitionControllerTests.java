@@ -61,7 +61,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Quy ước (docs/members/hoangnh/CLAUDE.md §23): hàm_shouldKếtQuả_whenĐiềuKiện, Arrange / Act / Assert.
  */
 @WebMvcTest(controllers = RequisitionController.class)
-@Import({ SecurityConfig.class, DatabaseUserDetailsService.class })
+@Import({ SecurityConfig.class, DatabaseUserDetailsService.class, com.group2.rms.requisition.service.RequisitionFormOptions.class })
 class RequisitionControllerTests {
 
         @Autowired
@@ -180,41 +180,6 @@ class RequisitionControllerTests {
 
         @Test
         @WithMockUser(username = "hm", roles = "HIRING_MANAGER")
-        @DisplayName("Form sửa -> Dropdown thử việc chọn sẵn đúng mục: rỗng = Không thử việc, mẫu = mục đó, chữ lạ = Khác")
-        void editForm_shouldPreselectProbationChoice_fromSavedValue() throws Exception {
-                String[][] cases = {
-                                { null, "Không thử việc" },
-                                { "15 ngày", "15 ngày" },
-                                { "6 ngày làm việc", "6 ngày làm việc" },
-                                { "2 tháng", "Khác" } };
-                for (String[] c : cases) {
-                        RequisitionRequest form = new RequisitionRequest();
-                        form.setProbationPeriod(c[0]);
-                        when(service.prepareEditForm(77)).thenReturn(form);
-
-                        String html = mvc.perform(get("/requisitions/edit/77"))
-                                        .andExpect(status().isOk())
-                                        .andReturn().getResponse().getContentAsString();
-
-                        String select = html.substring(html.indexOf("id=\"probationChoice\""));
-                        select = select.substring(0, select.indexOf("</select>"));
-                        java.util.regex.Matcher selected = java.util.regex.Pattern
-                                        .compile("<option[^>]*selected=\"selected\"[^>]*>([^<]*)</option>").matcher(select);
-                        org.junit.jupiter.api.Assertions.assertTrue(selected.find(), "không có mục nào được chọn: " + c[0]);
-                        assertEquals(c[1], selected.group(1).trim(), "giá trị lưu: " + c[0]);
-                        org.junit.jupiter.api.Assertions.assertFalse(selected.find(), "chọn nhiều hơn 1 mục: " + c[0]);
-                        if (c[0] != null) {
-                                int at = html.indexOf("id=\"probationPeriod\"");
-                                String input = org.springframework.web.util.HtmlUtils.htmlUnescape(
-                                                html.substring(html.lastIndexOf('<', at), html.indexOf('>', at)));
-                                org.junit.jupiter.api.Assertions.assertTrue(input.contains("value=\"" + c[0] + "\""),
-                                                "ô probationPeriod phải giữ giá trị đã lưu: " + c[0] + " | " + input);
-                        }
-                }
-        }
-
-        @Test
-        @WithMockUser(username = "hm", roles = "HIRING_MANAGER")
         @DisplayName("GET /requisitions/create -> Form tạo mới, khoảng ngày bắt đầu lấy từ validator")
         void createForm_shouldRenderEmptyForm_whenViewerCanCreate() throws Exception {
                 mvc.perform(get("/requisitions/create"))
@@ -256,7 +221,7 @@ class RequisitionControllerTests {
         void detail_shouldRenderDetailView_whenRequisitionExists() throws Exception {
                 // Arrange
                 RequisitionResponse detail = RequisitionResponse.builder().requisitionId(1).requisitionCode("REQ-0001")
-                                .recruitmentRound(1).title("Backend Engineer").approvalStatus(RequisitionAccess.STATUS_DRAFT)
+                                .title("Backend Engineer").approvalStatus(RequisitionAccess.STATUS_DRAFT)
                                 .approvals(List.of()).activityLog(List.of()).build();
                 when(service.getById(1)).thenReturn(detail);
 
@@ -449,20 +414,20 @@ class RequisitionControllerTests {
 
         @Test
         @WithMockUser(username = "hm", roles = "HIRING_MANAGER")
-        @DisplayName("POST /requisitions/edit/{id} -> Thời gian thử việc dài quá PROBATION_CHAR_LIMIT thì báo lỗi ở ô thử việc, không gọi service")
+        @DisplayName("POST /requisitions/edit/{id} -> Ngày dự kiến sai định dạng thì báo lỗi đúng ô")
         void update_shouldShowFieldError_whenProbationIsTooLong() throws Exception {
                 mvc.perform(post("/requisitions/edit/10").with(csrf())
                                 .param("action", RequisitionValidator.ACTION_DRAFT).param("title", "Updated Title")
-                                .param("probationPeriod", "x".repeat(RequisitionValidator.PROBATION_CHAR_LIMIT + 1)))
+                                .param("expectedStaffingDate", "not-a-date"))
                                 .andExpect(status().isOk())
                                 .andExpect(view().name("requisitions/form"))
-                                .andExpect(model().attributeHasFieldErrors("form", "probationPeriod"));
+                                .andExpect(model().attributeHasFieldErrors("form", "expectedStaffingDate"));
                 verify(service, never()).updateRequisition(any(), any());
         }
 
         @Test
         @WithMockUser(username = "hm", roles = "HIRING_MANAGER")
-        @DisplayName("POST /requisitions/create -> Trường lạ (hiringManager.userId) bị bỏ qua; đợt tuyển dụng HM nhập được nhận")
+        @DisplayName("POST /requisitions/create -> Bỏ qua trường người phụ trách giả mạo, nhận ngày dự kiến")
         void create_shouldIgnoreUnknownField_whenFormIsTampered() throws Exception {
                 // Arrange
                 when(service.createRequisition(any(RequisitionRequest.class))).thenReturn(10);
@@ -470,11 +435,11 @@ class RequisitionControllerTests {
                 // Act + Assert: không lỗi bind, service vẫn được gọi bình thường
                 mvc.perform(post("/requisitions/create").with(csrf())
                                 .param("action", RequisitionValidator.ACTION_DRAFT).param("title", "New Dev")
-                                .param("hiringManager.userId", "1").param("recruitmentRound", "3"))
+                                .param("hiringManager.userId", "1").param("expectedStaffingDate", "2026-12-03"))
                                 .andExpect(status().is3xxRedirection());
                 ArgumentCaptor<RequisitionRequest> captor = ArgumentCaptor.forClass(RequisitionRequest.class);
                 verify(service).createRequisition(captor.capture());
-                assertEquals(3, captor.getValue().getRecruitmentRound(), "Đợt tuyển dụng do HM nhập tay");
+                assertEquals(java.time.LocalDate.of(2026, 12, 3), captor.getValue().getExpectedStaffingDate());
         }
 
         @Test
@@ -483,10 +448,9 @@ class RequisitionControllerTests {
         void create_shouldShowIntegerFormatMessages_whenNumberFieldsAreNotIntegers() throws Exception {
                 mvc.perform(post("/requisitions/create").with(csrf())
                                 .param("action", RequisitionValidator.ACTION_DRAFT).param("title", "New Dev")
-                                .param("recruitmentRound", "1.5").param("numberOfPositions", "abc"))
+                                .param("numberOfPositions", "abc"))
                                 .andExpect(status().isOk())
-                                .andExpect(model().attributeHasFieldErrors("form", "recruitmentRound", "numberOfPositions"))
-                                .andExpect(content().string(org.hamcrest.Matchers.containsString("Đợt tuyển dụng phải là số nguyên.")))
+                                .andExpect(model().attributeHasFieldErrors("form", "numberOfPositions"))
                                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Số lượng cần tuyển chỉ được chứa số nguyên.")));
                 verify(service, never()).createRequisition(any());
         }

@@ -49,6 +49,8 @@
 .dash-work__item { display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto; align-items: center; gap: var(--s3) var(--s4); padding-block: var(--s3); border-bottom: 1px solid var(--line); }
 .dash-work__item:last-child { border-bottom: 0; }
 .dash-work__title { font-weight: 600; margin: 0; overflow-wrap: anywhere; }
+.dash-work__title a { color: inherit; text-decoration: none; }
+.dash-work__title a:hover, .dash-work__title a:focus-visible { text-decoration: underline; }
 /* Chi tiết chỉ hiện 1 dòng, dư thì "…"; xem đầy đủ ở trang chỉnh sửa */
 .dash-work__detail { margin: var(--s1) 0 0; color: var(--muted); font-size: var(--font-sm); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* Director: dòng duyệt không có cột loại việc; dòng đề nghị có ô tròn chữ viết tắt ở đầu */

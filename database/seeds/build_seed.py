@@ -173,38 +173,39 @@ JD = {
 }
 HN = "Tầng 8, Tòa nhà RMS Tower, Phố Duy Tân, Cầu Giấy, Hà Nội"
 HCM = "Số 12 Lê Thánh Tôn, Bến Nghé, Quận 1, TP. Hồ Chí Minh"
-# id, code, title, key, dept, hm, created_by, positions, type, min, max, gender, probation, model, location,
-# status, created(day), submitted(day), round, original
+# id, title, key, department, hiring manager, positions, type, salary min/max,
+# work model/location, status, created(day), submitted(day)
 REQS = [
-    (1, "Senior Java Backend Engineer", "java", 1, HM_TUAN, 2, "Full-time", 30e6, 45e6, "Any", "2 tháng", "Hybrid", HN, "Approved", -75, -74),
-    (2, "Frontend ReactJS Developer", "react", 1, HM_TUAN, 2, "Full-time", 20e6, 32e6, "Any", "2 tháng", "Hybrid", HN, "Approved", -74, -73),
-    (3, "QA Automation Engineer", "qa", 1, HM_TUAN, 1, "Full-time", 18e6, 28e6, "Any", "2 tháng", "On-site", HN, "Approved", -73, -72),
-    (4, "Business Development Executive (B2B)", "bd", 2, HM_HUONG, 2, "Full-time", 15e6, 25e6, "Any", "2 tháng", "On-site", HCM, "Approved", -72, -71),
-    (5, "Digital Marketing Specialist", "mkt", 2, HM_HUONG, 1, "Contract", 14e6, 20e6, "Female", "1 tháng", "Hybrid", HCM, "Approved", -70, -69),
-    (6, "Kế toán tổng hợp", "acc", 4, HM_MINH, 1, "Full-time", 15e6, 22e6, "Any", "Thỏa thuận", "On-site", HN, "Approved", -68, -67),
-    (7, "Thực tập sinh Java Backend", "intern", 1, HM_TUAN, 3, "Internship", 3e6, 5e6, "Any", None, "Remote", None, "Approved", -100, -99),
-    (8, "DevOps Engineer", "devops", 1, HM_TUAN, 1, "Full-time", 30e6, 40e6, "Any", "2 tháng", "Hybrid", HN, "Pending_Director", -3, -2),
-    (9, "Data Analyst", "data", 4, HM_MINH, 1, "Full-time", None, None, "Any", "2 tháng", "On-site", HN, "Draft", -1, None),
-    (10, "Sales Admin bán thời gian", "salesadmin", 2, HM_HUONG, 1, "Part-time", 6e6, 8e6, "Female", None, "On-site", HCM, "Rejected", -20, -19),
-    (11, "Mobile Developer (Flutter)", "mobile", 1, HM_TUAN, 1, "Full-time", 20e6, 30e6, "Any", "2 tháng", "On-site", HN, "Cancelled", -30, None),
-    (12, "Customer Support Executive", "cs", 2, HM_HUONG, 2, "Full-time", 9e6, 12e6, "Any", "1 tháng", "On-site", HCM, "Closed", -110, -109),
-    (13, "Customer Support Executive", "cs", 2, HM_HUONG, 1, "Full-time", 9e6, 13e6, "Any", "1 tháng", "On-site", HCM, "Approved", -6, -5),
-    (14, "Business Analyst", "ba", 1, HM_TUAN, 1, "Full-time", 22e6, 32e6, "Male", "2 tháng", "Hybrid", HN, "Approved", -5, -4),
+    (1, "Senior Java Backend Engineer", "java", 1, HM_TUAN, 2, "Full-time", 30e6, 45e6, "Hybrid", HN, "Approved", -75, -74),
+    (2, "Frontend ReactJS Developer", "react", 1, HM_TUAN, 2, "Full-time", 20e6, 32e6, "Hybrid", HN, "Approved", -74, -73),
+    (3, "QA Automation Engineer", "qa", 1, HM_TUAN, 1, "Full-time", 18e6, 28e6, "On-site", HN, "Approved", -73, -72),
+    (4, "Business Development Executive (B2B)", "bd", 2, HM_HUONG, 2, "Full-time", 15e6, 25e6, "On-site", HCM, "Approved", -72, -71),
+    (5, "Digital Marketing Specialist", "mkt", 2, HM_HUONG, 1, "Freelance", 14e6, 20e6, "Hybrid", HCM, "Approved", -70, -69),
+    (6, "Kế toán tổng hợp", "acc", 4, HM_MINH, 1, "Full-time", 15e6, 22e6, "On-site", HN, "Approved", -68, -67),
+    (7, "Thực tập sinh Java Backend", "intern", 1, HM_TUAN, 3, "Internship", 3e6, 5e6, "Remote", None, "Approved", -100, -99),
+    (8, "DevOps Engineer", "devops", 1, HM_TUAN, 1, "Full-time", 30e6, 40e6, "Hybrid", HN, "Pending_Director", -3, -2),
+    (9, "Data Analyst", "data", 4, HM_MINH, 1, "Full-time", None, None, "On-site", HN, "Draft", -1, None),
+    (10, "Sales Admin bán thời gian", "salesadmin", 2, HM_HUONG, 1, "Part-time", 6e6, 8e6, "On-site", HCM, "Rejected", -20, -19),
+    (11, "Mobile Developer (Flutter)", "mobile", 1, HM_TUAN, 1, "Full-time", 20e6, 30e6, "On-site", HN, "Cancelled", -30, None),
+    (12, "Customer Support Executive", "cs", 2, HM_HUONG, 2, "Full-time", 9e6, 12e6, "On-site", HCM, "Closed", -110, -109),
+    (13, "Customer Support Executive", "cs", 2, HM_HUONG, 1, "Full-time", 9e6, 13e6, "On-site", HCM, "Approved", -6, -5),
+    (14, "Business Analyst", "ba", 1, HM_TUAN, 1, "Full-time", 22e6, 32e6, "Hybrid", HN, "Approved", -5, -4),
 ]
 REQ = {}
-for rid, title, key, dept, hm, pos, etype, mn, mx, gender, prob, model, loc, st, cday, sday in REQS:
-    rnd, orig = (2, 12) if rid == 13 else (1, None)
+for rid, title, key, dept, hm, pos, etype, mn, mx, model, loc, st, cday, sday in REQS:
+    orig = 12 if rid == 13 else None
     REQ[rid] = dict(title=title, key=key, dept=dept, hm=hm, pos=pos, type=etype, min=mn, max=mx, model=model,
-                    loc=loc, gender=gender, prob=prob)
+                    loc=loc)
     approved_day = (sday or cday) + 2
     add("JobRequisition", {
         "RequisitionId": rid, "Title": title, "RequisitionCode": f"REQ-{rid:04d}", "DepartmentId": dept,
-        "HiringManagerId": hm, "CreatedBy": hm, "RecruitmentRound": rnd, "OriginalRequisitionId": orig,
+        "HiringManagerId": hm, "CreatedBy": hm, "ExpectedStaffingDate": DAY(70) if st != "Draft" else None,
+        "OriginalRequisitionId": orig,
         "NumberOfPositions": pos, "EmploymentType": etype,
         "MinSalary": None if mn is None else f"{mn:.2f}", "MaxSalary": None if mx is None else f"{mx:.2f}",
         "ReasonForHiring": f"Bổ sung nhân sự cho vị trí {title} theo kế hoạch quý." + (" Tuyển đợt 2 do đợt 1 chưa đủ người." if rid == 13 else ""),
-        "JobDescription": JD[key][0], "RequirementDetails": JD[key][1], "RequiredGender": gender,
-        "ProbationPeriod": prob, "WorkModel": model, "WorkLocation": loc, "ApprovalStatus": st,
+        "JobDescription": JD[key][0], "RequirementDetails": JD[key][1],
+        "WorkModel": model, "WorkLocation": loc, "ApprovalStatus": st,
         "SubmittedAt": T(at(sday, 9)) if sday is not None else None,
         "ClosedAt": T(at(-12, 17)) if st == "Closed" else None,
         "CreatedAt": T(at(cday, 9)),
@@ -254,7 +255,7 @@ POSTINGS = [
     (3, 3, 1, "Paused", -55, 20, HR_QUANG, {}),
     (4, 4, 1, "Published", -56, 21, HR_QUANG, {"WorkingHours": "Thứ 2 - Thứ 7 (08:00 - 17:00)"}),
     (5, 5, 1, "Published", -45, -2, HR_QUANG, {}),  # đã quá hạn nộp nhưng chưa đóng
-    (6, 6, 1, "Published", -40, 35, HR_LAN, {"ProbationPeriod": None}),
+    (6, 6, 1, "Published", -40, 35, HR_LAN, {}),
     (7, 7, 1, "Closed", -95, -50, HR_LAN, {}),
     (8, 7, 2, "Published", 0, 40, HR_LAN, {"WorkModel": "Hybrid", "EmploymentType": "Internship"}),  # đăng lại hôm nay
     (9, 12, 1, "Closed", -105, -15, HR_QUANG, {}),
@@ -269,9 +270,8 @@ for pid, rid, no, st, pday, dday, creator, ov in POSTINGS:
            "PostingTitle": r["title"] + (" (Đợt 2)" if rid == 13 else ""),
            "JobDescription": JD[r["key"]][0] + "\nLàm việc cùng đội ngũ trẻ, quy trình Agile/Scrum.",
            "JobRequirements": "- " + JD[r["key"]][1].replace(", ", "\n- ", 1), "Benefits": BENEFITS,
-           "SalaryDisplay": salary, "NumberOfPositionsDisplay": f"{r['pos']} người", "WorkLocation": r["loc"] or "Làm việc từ xa",
-           "WorkingHours": HOURS, "EmploymentType": None, "WorkModel": None, "RequiredGender": r["gender"],
-           "ProbationPeriod": r["prob"],
+           "SalaryDisplay": salary, "NumberOfPositionsDisplay": r['pos'], "WorkLocation": r["loc"] or "Làm việc từ xa",
+           "WorkingHours": HOURS, "EmploymentType": None, "WorkModel": None,
            # tin đăng hôm nay: lùi 1 giờ so với lúc chạy để luôn ở quá khứ
            "PostingDate": None if pday is None else (ago(60) if pday == 0 else T(at(pday, 8))),
            "ApplicationDeadline": None if dday is None else T(at(dday, 23, 59)),
@@ -523,7 +523,7 @@ def rejected_notice(aid, cid, when):
 def run(scn, pid, cid=None, S=None):
     """Tạo một hồ sơ đi tới đúng trạng thái của kịch bản. S = ngày nộp (phút từ @D0)."""
     if cid is None:
-        cid = new_candidate(female=True if REQ[POST[pid]["req"]]["gender"] == "Female" else None,
+        cid = new_candidate(female=True if POST[pid]["req"] in (5, 10) else None,
                             created=(S if isinstance(S, int) else at(-1)) - 30)
     hm = POST[pid]["hm"]
     if scn == "A":
@@ -904,9 +904,8 @@ CHECKS = [
     ("OfferApproval", "[Status]", ["Approved", "Rejected"]),
     ("[User]", "AccountStatus", ["Active", "Inactive"]),
     ("Department", "DepartmentStatus", ["Active", "Inactive"]),
-    ("JobRequisition", "EmploymentType", ["Full-time", "Part-time", "Internship", "Contract"]),
+    ("JobRequisition", "EmploymentType", ["Full-time", "Part-time", "Internship", "Freelance"]),
     ("JobRequisition", "WorkModel", ["On-site", "Remote", "Hybrid"]),
-    ("JobRequisition", "RequiredGender", ["Male", "Female", "Any"]),
     ("AuditLog", "[Action]", ["CREATE", "UPDATE", "DELETE", "LOGIN"]),
     ("AuditLog", "NewValue", ["Withdrawn", "PostingClosed", "InterviewCancelledOnClose", "TalentPoolMarked", "TalentPoolUnmarked",
                               "TalentPoolSuggested", "TalentPoolHrRecommended", "TalentPoolHrWithdrawn", "TalentPoolCancelled",

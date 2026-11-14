@@ -19,9 +19,10 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 /*
- * ENTITY: yêu cầu tuyển dụng; đợt 1 không có phiếu gốc, đợt sau trỏ về phiếu đợt 1.
+ * ENTITY: yêu cầu tuyển dụng; phiếu sao chép giữ liên kết tới phiếu gốc để truy vết.
  */
 @Entity
 @Table(name = "JobRequisition")
@@ -31,6 +32,11 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 @Builder
 public class JobRequisition extends BaseEntity {
+
+    public static final String STATUS_DRAFT = "Draft";
+    public static final String STATUS_PENDING_DIRECTOR = "Pending_Director";
+    public static final String STATUS_APPROVED = "Approved";
+    public static final String STATUS_REJECTED = "Rejected";
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -55,8 +61,8 @@ public class JobRequisition extends BaseEntity {
     @JoinColumn(name = "CreatedBy", referencedColumnName = "UserId")
     private User createdBy;
 
-    @Column(name = "RecruitmentRound", nullable = false)
-    private Integer recruitmentRound;
+    @Column(name = "ExpectedStaffingDate")
+    private LocalDate expectedStaffingDate;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "OriginalRequisitionId", referencedColumnName = "RequisitionId")
@@ -66,7 +72,7 @@ public class JobRequisition extends BaseEntity {
     private Integer numberOfPositions;
 
     /**
-     * Full-time, Part-time, Internship, Contract
+     * Full-time, Part-time, Internship, Freelance
      */
     @Column(name = "EmploymentType", nullable = false, length = 50)
     private String employmentType;
@@ -92,18 +98,10 @@ public class JobRequisition extends BaseEntity {
     @Column(name = "ApprovalStatus", nullable = false, length = 30)
     private String approvalStatus;
 
-    // Mặc định "Any" (Không yêu cầu) như form; cột NOT NULL nên builder không set thì vẫn lưu được.
-    @Column(name = "RequiredGender", nullable = false, length = 20)
-    @Builder.Default
-    private String gender = "Any";
-
     @Column(name = "WorkLocation", length = 255)
     private String workLocation;
     @Column(name = "WorkModel", nullable = false, length = 20)
     private String workModel;
-    // Thời gian thử việc dạng chữ ("2 tháng", "Thỏa thuận"); NULL = không thử việc
-    @Column(name = "ProbationPeriod", length = 100)
-    private String probationPeriod;
     @Column(name = "SubmittedAt")
     private java.time.LocalDateTime submittedAt;
     // Cột có trong DB nhưng luồng requisition hiện chưa ghi (không có trạng thái đóng yêu cầu)

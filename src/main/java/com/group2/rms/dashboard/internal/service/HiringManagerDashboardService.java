@@ -122,11 +122,15 @@ public class HiringManagerDashboardService {
                 detail = row.rejectComment();
             }
             return new DashboardWorkItem(tag, tagTone, title, detail, null, null,
-                    "Chỉnh sửa", editHref(row.requisitionId()), false);
+                    "Chỉnh sửa", editHref(row.requisitionId()), false, detailHref(row.requisitionId()));
         }
         // Còn lại là bản nháp: badge trạng thái đã đủ nghĩa, không cần dòng giải thích.
         return new DashboardWorkItem(tag, tagTone, title, null, null, null,
-                "Gửi duyệt", editHref(row.requisitionId()), false);
+                "Gửi duyệt", editHref(row.requisitionId()), false, detailHref(row.requisitionId()));
+    }
+
+    private static String detailHref(int requisitionId) {
+        return "/requisitions/" + requisitionId;
     }
 
     private List<DashboardInterviewItem> upcomingInterviews(int userId, Integer departmentId, LocalDateTime now) {
@@ -159,10 +163,6 @@ public class HiringManagerDashboardService {
             return "/internal/job-postings/" + row.latestPostingId();
         }
         return detailHref(row.requisitionId());
-    }
-
-    private String detailHref(int requisitionId) {
-        return "/requisitions/" + requisitionId;
     }
 
     private String editHref(int requisitionId) {

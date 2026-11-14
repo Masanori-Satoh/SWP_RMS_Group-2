@@ -1,7 +1,10 @@
 package com.group2.rms.jobposting.service;
 
 import com.group2.rms.admin.entity.AuditLog;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.group2.rms.jobposting.dto.InternalJobPostingDetailResponse;
+import com.group2.rms.jobposting.dto.InternalJobPostingDetailResponse.ActivityHistoryChange;
 import com.group2.rms.jobposting.dto.InternalJobPostingDetailResponse.ActivityHistoryItem;
 import com.group2.rms.jobposting.dto.InternalJobPostingDetailResponse.ApplicationStats;
 import com.group2.rms.jobposting.dto.InternalJobPostingDetailResponse.PostingRound;
@@ -20,7 +23,9 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.LinkedHashSet;
 import java.util.Objects;
+import java.util.Set;
 
 /*
  * MAPPER: entity tin → DTO cho danh sách, chi tiết, form; không truy vấn DB.
@@ -29,8 +34,7 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class JobPostingMapper {
 
-    /** Số người hiển thị mặc định khi tạo tin, ví dụ "2 người". */
-    private static final String PEOPLE_SUFFIX = " người";
+    private static final ObjectMapper AUDIT_JSON = new ObjectMapper();
 
     private final JobPostingAccess access;
     private final JobPostingValidator validator;
@@ -108,8 +112,7 @@ public class JobPostingMapper {
                         .departmentName(departmentName(requisition))
                         .employmentType(employmentTypeLabel(posting))
                         .workModelLabel(workModelLabel(posting))
-                        .genderLabel(RequisitionLabels.gender(posting.effectiveGender()))
-                        .probationPeriod(posting.getProbationPeriod())
+                        .expectedStartDate(requisition.getExpectedStaffingDate())
                         .workLocation(posting.effectiveWorkLocation())
                         .workingHours(posting.getWorkingHours())
                         .salaryDisplay(salaryDisplay)
@@ -194,7 +197,7 @@ public class JobPostingMapper {
             int index = 1;
             for (AuditLog log : chronological) {
                 history.add(new ActivityHistoryItem(index, JobPostingLabels.activityLabel(log),
-                        fullNameOrSystem(log.getUser()), log.getTimestamp()));
+                        fullNameOrSystem(log.getUser()), log.getTimestamp(), auditChanges(log)));
                 index++;
             }
             return history;
@@ -202,15 +205,63 @@ public class JobPostingMapper {
 
         String author = fullNameOrSystem(posting.getCreatedBy());
         if (posting.getCreatedAt() != null) {
-            history.add(new ActivityHistoryItem(history.size() + 1, "Tạo mới", author, posting.getCreatedAt()));
+            history.add(new ActivityHistoryItem(history.size() + 1, "Tạo mới", author, posting.getCreatedAt(), List.of()));
         }
         if (posting.getUpdatedAt() != null && !posting.getUpdatedAt().equals(posting.getCreatedAt())) {
-            history.add(new ActivityHistoryItem(history.size() + 1, "Cập nhật", author, posting.getUpdatedAt()));
+            history.add(new ActivityHistoryItem(history.size() + 1, "Cập nhật", author, posting.getUpdatedAt(), List.of()));
         }
         if (JobPostingAccess.STATUS_PUBLISHED.equals(posting.getPostingStatus()) && posting.getPostingDate() != null) {
-            history.add(new ActivityHistoryItem(history.size() + 1, "Đăng tin", author, posting.getPostingDate()));
+            history.add(new ActivityHistoryItem(history.size() + 1, "Đăng tin", author, posting.getPostingDate(), List.of()));
         }
         return history;
+    }
+
+    private static List<ActivityHistoryChange> auditChanges(AuditLog log) {
+        JsonNode oldValues = auditJson(log.getOldValue());
+        JsonNode newValues = auditJson(log.getNewValue());
+        if (oldValues == null && newValues == null) return List.of();
+        Set<String> fields = new LinkedHashSet<>();
+        if (oldValues != null) oldValues.fieldNames().forEachRemaining(fields::add);
+        if (newValues != null) newValues.fieldNames().forEachRemaining(fields::add);
+        List<ActivityHistoryChange> changes = new ArrayList<>();
+        for (String field : fields) {
+            changes.add(new ActivityHistoryChange(auditFieldLabel(field),
+                    auditValue(oldValues, field), auditValue(newValues, field)));
+        }
+        return changes;
+    }
+
+    private static JsonNode auditJson(String value) {
+        if (value == null || !value.stripLeading().startsWith("{")) return null;
+        try {
+            JsonNode json = AUDIT_JSON.readTree(value);
+            return json.isObject() ? json : null;
+        } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+            return null;
+        }
+    }
+
+    private static String auditValue(JsonNode values, String field) {
+        if (values == null || !values.has(field) || values.get(field).isNull()) return "—";
+        return values.get(field).asText();
+    }
+
+    private static String auditFieldLabel(String field) {
+        return switch (field) {
+            case "Title" -> "Tiêu đề";
+            case "JobDescription" -> "Mô tả công việc";
+            case "JobRequirements" -> "Yêu cầu ứng viên";
+            case "Benefits" -> "Quyền lợi";
+            case "SalaryDisplay" -> "Mức lương";
+            case "NumberOfPositions" -> "Số lượng cần tuyển";
+            case "WorkLocation" -> "Địa điểm làm việc";
+            case "WorkingHours" -> "Thời gian làm việc";
+            case "EmploymentType" -> "Hình thức làm việc";
+            case "WorkModel" -> "Mô hình làm việc";
+            case "ExpiresAt" -> "Hạn ứng tuyển";
+            case "Status" -> "Trạng thái";
+            default -> field;
+        };
     }
 
     // ----- Form tạo / sửa -----
@@ -228,8 +279,6 @@ public class JobPostingMapper {
         form.setWorkLocation(form.getSourceWorkLocation());
         form.setEmploymentType(form.getSourceEmploymentType());
         form.setWorkModel(form.getSourceWorkModel());
-        form.setGender(form.getSourceGender());
-        form.setProbationPeriod(form.getSourceProbationPeriod());
         form.setBenefits("");
         boolean hasSalary = requisition.getMinSalary() != null || requisition.getMaxSalary() != null;
         if (hasSalary) {
@@ -239,7 +288,7 @@ public class JobPostingMapper {
         }
         form.setShowPositions(true);
         form.setNumberOfPositionsDisplay(form.getSourcePositionsDisplay());
-        form.setApplicationDeadline(validator.defaultDeadline());
+        form.setApplicationDeadline(validator.defaultDeadline(requisition.getExpectedStaffingDate()));
         form.setAction(JobPostingValidator.ACTION_DRAFT);
         return form;
     }
@@ -266,6 +315,7 @@ public class JobPostingMapper {
         form.setDraftOrNew(JobPostingAccess.STATUS_DRAFT.equals(viewStatus));
         form.setPaused(JobPostingAccess.STATUS_PAUSED.equals(viewStatus));
         form.setLive(JobPostingAccess.isLive(viewStatus));
+        form.setPostingDate(posting.getPostingDate());
     }
 
     /** Trạng thái form khi tạo tin mới (hoặc hiện lại form tạo bị lỗi). */
@@ -274,6 +324,7 @@ public class JobPostingMapper {
         form.setDraftOrNew(true);
         form.setPaused(false);
         form.setLive(false);
+        form.setPostingDate(null);
     }
 
     /** Thông tin yêu cầu nguồn (chỉ hiển thị) và các giá trị gốc cho nút "Khôi phục bản gốc". Luôn nạp lại từ DB. */
@@ -282,7 +333,7 @@ public class JobPostingMapper {
         form.setRequisitionCode(requisition.getRequisitionCode());
         form.setRequisitionTitle(requisition.getTitle());
         form.setDepartmentName(departmentName(requisition));
-        form.setRecruitmentRound(recruitmentRound(requisition));
+        form.setExpectedStartDate(requisition.getExpectedStaffingDate());
         form.setNumberOfPositions(requisition.getNumberOfPositions());
         form.setHiringManagerName(fullName(requisition.getHiringManager()));
         form.setSalaryRangeLabel(RequisitionLabels.salary(requisition.getMinSalary(), requisition.getMaxSalary()));
@@ -291,13 +342,7 @@ public class JobPostingMapper {
         form.setSourceRequirements(requirementsFromRequisition(requisition));
         form.setSourceEmploymentType(requisition.getEmploymentType());
         form.setSourceWorkModel(requisition.getWorkModel());
-        form.setSourceGender(Objects.toString(requisition.getGender(), "Any"));
-        form.setSourceProbationPeriod(Objects.toString(requisition.getProbationPeriod(), ""));
-        String positions = "";
-        if (requisition.getNumberOfPositions() != null) {
-            positions = requisition.getNumberOfPositions() + PEOPLE_SUFFIX;
-        }
-        form.setSourcePositionsDisplay(positions);
+        form.setSourcePositionsDisplay(requisition.getNumberOfPositions());
     }
 
     /** Chép nội dung một tin có sẵn vào form (dùng cho "Chỉnh sửa" và "Đăng lại"). */
@@ -310,8 +355,6 @@ public class JobPostingMapper {
         form.setWorkingHours(posting.getWorkingHours());
         form.setEmploymentType(posting.effectiveEmploymentType());
         form.setWorkModel(posting.effectiveWorkModel());
-        form.setGender(posting.effectiveGender());
-        form.setProbationPeriod(posting.getProbationPeriod());
 
         // Nhận lại lựa chọn lương từ chuỗi đã lưu
         String salary = posting.getSalaryDisplay();
@@ -361,14 +404,6 @@ public class JobPostingMapper {
             return JobPostingLabels.MISSING;
         }
         return RequisitionLabels.workModel(posting.effectiveWorkModel());
-    }
-
-    /** Yêu cầu cũ chưa có số đợt thì coi là đợt 1. */
-    private static Integer recruitmentRound(JobRequisition requisition) {
-        if (requisition.getRecruitmentRound() == null) {
-            return 1;
-        }
-        return requisition.getRecruitmentRound();
     }
 
     private static String fullName(User user) {

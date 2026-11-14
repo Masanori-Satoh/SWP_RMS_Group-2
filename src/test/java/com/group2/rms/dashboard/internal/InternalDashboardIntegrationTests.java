@@ -95,7 +95,8 @@ class InternalDashboardIntegrationTests {
             JobRequisition original) {
         return requisitions.saveAndFlush(JobRequisition.builder()
                 .title(title).hiringManager(owner).department(department).approvalStatus(status)
-                .submittedAt(now.minusDays(9)).recruitmentRound(round).originalRequisition(original)
+                .submittedAt(now.minusDays(9)).expectedStaffingDate(java.time.LocalDate.of(2026, 12, round))
+                .originalRequisition(original)
                 .numberOfPositions(3).employmentType("Full-time")
                 .workModel("On-site").jobDescription("Mô tả kiểm thử").requirementDetails("Yêu cầu kiểm thử").build());
     }
@@ -126,7 +127,7 @@ class InternalDashboardIntegrationTests {
                 .filter(item -> item.requisitionId() == secondRound.getRequisitionId()).findFirst().orElseThrow();
         assertEquals(department.getDepartmentName(), row.departmentName());
         assertEquals("Người gửi kiểm thử", row.requesterName());
-        assertEquals(2, row.recruitmentRound());
+        assertEquals(java.time.LocalDate.of(2026, 12, 2), row.expectedStaffingDate());
         assertEquals(3, row.numberOfPositions());
         DepartmentRequisitionRow departmentRow = byDepartment.stream()
                 .filter(item -> item.departmentName().equals(department.getDepartmentName())).findFirst().orElseThrow();

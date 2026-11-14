@@ -114,7 +114,7 @@ class TalentPoolDecisionUnitTests {
         when(currentUser.requireUser()).thenReturn(hr);
         when(applications.findDetailById(100)).thenReturn(Optional.of(application));
         when(jobs.findForUpdate(20)).thenReturn(Optional.of(job));
-        when(applications.existsActiveByCandidateInSameRequisition(8, 20)).thenReturn(true);
+        when(applications.existsActiveByCandidateAndJobPosting(8, 20)).thenReturn(true);
         // When: Gọi nghiệp vụ cần kiểm tra với dữ liệu đã chuẩn bị.
         assertThrows(TalentPoolException.class, () -> service.confirm(100, new TalentPoolConfirmRequest(true)));
         // Then: Kiểm tra kết quả và số lần gọi repository theo đúng ca này.
@@ -227,7 +227,7 @@ class TalentPoolDecisionUnitTests {
         when(jobs.findForUpdate(20)).thenReturn(Optional.of(job));
         when(jobAccess.inManagedDepartment(hm, job.getRequisition())).thenReturn(true);
         when(applications.countPendingHrRecommendation(100)).thenReturn(1L);
-        when(applications.existsActiveByCandidateInSameRequisition(8, 20)).thenReturn(true);
+        when(applications.existsActiveByCandidateAndJobPosting(8, 20)).thenReturn(true);
         // When: Gọi nghiệp vụ cần kiểm tra với dữ liệu đã chuẩn bị.
         assertThrows(TalentPoolException.class, () -> service.decideRecommendation(100, true));
         // Then: Kiểm tra kết quả và số lần gọi repository theo đúng ca này.

@@ -177,7 +177,6 @@
                             <col class="col-index">
                             <col class="col-position">
                             <col class="col-department">
-                            <col class="col-round">
                             <col class="col-quantity">
                             <col class="col-type">
                             <col class="col-status">
@@ -190,7 +189,6 @@
                                 <th scope="col">STT</th>
                                 <th scope="col">Vị trí tuyển dụng</th>
                                 <th scope="col">Phòng ban</th>
-                                <th scope="col">Đợt tuyển dụng</th>
                                 <th scope="col">Số lượng</th>
                                 <th scope="col">Hình thức làm việc</th>
                                 <th scope="col">Trạng thái</th>
@@ -205,8 +203,6 @@
                                 <td><a class="position-title" th:href="@{/requisitions/{id}(id=${req.requisitionId})}"
                                         th:text="${req.title}"></a></td>
                                 <td th:text="${req.departmentName}"></td>
-                                <td><span class="badge badge--neutral" th:text="|Đợt ${req.recruitmentRound ?: 1}|">Đợt
-                                        1</span></td>
                                 <td th:text="${req.numberOfPositions ?: '—'}"></td>
                                 <!-- Nhãn tiếng Việt do service tính sẵn (RequisitionLabels), template không tự dịch -->
                                 <td th:text="${req.employmentTypeLabel}">Toàn thời gian</td>
@@ -259,7 +255,7 @@
                                 </td>
                             </tr>
                             <tr th:if="${list.page.empty and #lists.isEmpty(list.errors)}">
-                                <td colspan="10" class="empty-state">Không tìm thấy yêu cầu tuyển dụng nào. Hãy
+                                <td colspan="9" class="empty-state">Không tìm thấy yêu cầu tuyển dụng nào. Hãy
                                     thử thay đổi hoặc đặt lại bộ lọc.</td>
                             </tr>
                         </tbody>

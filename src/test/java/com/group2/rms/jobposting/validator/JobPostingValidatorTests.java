@@ -51,7 +51,6 @@ class JobPostingValidatorTests {
                 .jobRequirements("2 năm kinh nghiệm")
                 .employmentType("Full-time")
                 .workModel("Hybrid")
-                .gender("Any")
                 .salaryMode(JobPostingRequest.SALARY_NEGOTIABLE)
                 .showPositions(false)
                 .applicationDeadline(TODAY.plusDays(30))
@@ -155,7 +154,7 @@ class JobPostingValidatorTests {
 
         @ParameterizedTest(name = "Hình thức = [{0}] -> lỗi")
         @NullAndEmptySource
-        @ValueSource(strings = {"full-time", "Freelance"})
+        @ValueSource(strings = {"full-time", "Contract"})
         @DisplayName("Hình thức thiếu / sai hoa thường / ngoài danh mục -> Lỗi ở ô Hình thức")
         void normalizeAndValidate_shouldRejectEmploymentType_whenOutsideCatalog(String type) {
             JobPostingRequest form = validForm(JobPostingValidator.ACTION_DRAFT);
@@ -173,32 +172,6 @@ class JobPostingValidatorTests {
             form.setWorkModel(model);
 
             assertEquals("Vui lòng chọn mô hình làm việc.", errorsOf(form, false).get("workModel"));
-        }
-
-        @Test
-        @DisplayName("Yêu cầu giới tính ngoài danh mục -> Lỗi đúng ô")
-        void normalizeAndValidate_shouldRejectGender_whenOutsideCatalog() {
-            JobPostingRequest form = validForm(JobPostingValidator.ACTION_DRAFT);
-            form.setGender("Other");
-            assertEquals("Vui lòng chọn yêu cầu giới tính.", errorsOf(form, false).get("gender"));
-        }
-
-        @Test
-        @DisplayName("Thử việc: chữ tự do được trim, chỉ khoảng trắng thì thành NULL, quá PROBATION_LIMIT -> Lỗi")
-        void normalizeAndValidate_shouldCleanAndLimitProbation() {
-            JobPostingRequest trimmed = validForm(JobPostingValidator.ACTION_DRAFT);
-            trimmed.setProbationPeriod("  2 tháng  ");
-            validator.normalizeAndValidate(trimmed, false);
-            assertEquals("2 tháng", trimmed.getProbationPeriod());
-
-            JobPostingRequest blank = validForm(JobPostingValidator.ACTION_DRAFT);
-            blank.setProbationPeriod("   ");
-            validator.normalizeAndValidate(blank, false);
-            assertNull(blank.getProbationPeriod());
-
-            JobPostingRequest tooLong = validForm(JobPostingValidator.ACTION_DRAFT);
-            tooLong.setProbationPeriod("a".repeat(JobPostingValidator.PROBATION_LIMIT + 1));
-            assertEquals(JobPostingValidator.PROBATION_TOO_LONG, errorsOf(tooLong, false).get("probationPeriod"));
         }
 
         @Test
@@ -222,12 +195,23 @@ class JobPostingValidatorTests {
             form.setSalaryMode(JobPostingRequest.SALARY_CUSTOM);
             form.setSalaryCustom("  ");
             form.setShowPositions(true);
-            form.setNumberOfPositionsDisplay("");
+            form.setNumberOfPositionsDisplay(null);
 
             Map<String, String> errors = errorsOf(form, true);
 
-            assertEquals("Vui lòng nhập khoảng lương hiển thị.", errors.get("salaryCustom"));
+            assertEquals("Vui lòng nhập mức lương.", errors.get("salaryCustom"));
             assertEquals("Vui lòng nhập số lượng.", errors.get("numberOfPositionsDisplay"));
+        }
+
+        @Test
+        @DisplayName("Số lượng hiển thị phải là số nguyên dương")
+        void normalizeAndValidate_shouldRejectNonPositiveDisplayedPositions() {
+            JobPostingRequest form = validForm(JobPostingValidator.ACTION_PUBLISH);
+            form.setShowPositions(true);
+            form.setNumberOfPositionsDisplay(0);
+
+            assertEquals("Số lượng phải lớn hơn hoặc bằng 1.",
+                    errorsOf(form, true).get("numberOfPositionsDisplay"));
         }
 
         @ParameterizedTest(name = "salaryMode = [{0}] -> lỗi")
@@ -240,6 +224,7 @@ class JobPostingValidatorTests {
 
             assertTrue(errorsOf(form, true).containsKey("salaryMode"));
         }
+
     }
 
     // =========================================================================
@@ -297,6 +282,12 @@ class JobPostingValidatorTests {
         @DisplayName("Hạn nộp mặc định của form tạo = hôm nay + DEFAULT_DEADLINE_DAYS (theo Clock)")
         void defaultDeadline_shouldUseClock() {
             assertEquals(TODAY.plusDays(JobPostingValidator.DEFAULT_DEADLINE_DAYS), validator.defaultDeadline());
+        }
+
+        @Test
+        @DisplayName("Ngày cần nhân sự còn gần -> Không gợi ý hạn nộp trong quá khứ")
+        void defaultDeadline_shouldUseToday_whenThirtyDaysEarlierHasPassed() {
+            assertEquals(TODAY, validator.defaultDeadline(TODAY.plusDays(10)));
         }
 
         @ParameterizedTest(name = "Yêu cầu {0} -> không đăng được")

@@ -36,14 +36,10 @@ public class JobPostingValidator {
     public static final int TEXT_LIMIT = 5000;
     /** Cột SalaryDisplay NVARCHAR(100). */
     public static final int SALARY_TEXT_LIMIT = 100;
-    /** Cột NumberOfPositionsDisplay NVARCHAR(50). */
-    public static final int POSITIONS_TEXT_LIMIT = 50;
     /** Cột WorkLocation NVARCHAR(255). */
     public static final int LOCATION_LIMIT = 255;
     /** Cột WorkingHours NVARCHAR(255). */
     public static final int WORKING_HOURS_LIMIT = 255;
-    /** Cột ProbationPeriod NVARCHAR(100). */
-    public static final int PROBATION_LIMIT = 100;
     /** Hạn nộp điền sẵn khi tạo tin: hôm nay + 30 ngày (đúng mockup). */
     public static final int DEFAULT_DEADLINE_DAYS = 30;
     /** Hạn nộp được lưu là cuối ngày đã chọn (23:59:59). */
@@ -53,9 +49,7 @@ public class JobPostingValidator {
     public static final String TITLE_TOO_LONG = "Nội dung quá " + TITLE_LIMIT + " ký tự";
     public static final String LOCATION_TOO_LONG = "Nội dung quá " + LOCATION_LIMIT + " ký tự";
     public static final String WORKING_HOURS_TOO_LONG = "Nội dung quá " + WORKING_HOURS_LIMIT + " ký tự";
-    public static final String PROBATION_TOO_LONG = "Nội dung quá " + PROBATION_LIMIT + " ký tự";
     public static final String SALARY_TEXT_TOO_LONG = "Nội dung quá " + SALARY_TEXT_LIMIT + " ký tự";
-    public static final String POSITIONS_TEXT_TOO_LONG = "Nội dung quá " + POSITIONS_TEXT_LIMIT + " ký tự";
 
     private static final Set<String> ACTIONS = Set.of(ACTION_DRAFT, ACTION_PUBLISH);
     private static final List<String> SALARY_MODES = List.of(JobPostingRequest.SALARY_RANGE,
@@ -77,6 +71,15 @@ public class JobPostingValidator {
     /** Hạn nộp điền sẵn khi mở form tạo tin. */
     public LocalDate defaultDeadline() {
         return today().plusDays(DEFAULT_DEADLINE_DAYS);
+    }
+
+    /** Gợi ý hạn nộp trước ngày cần nhân sự 30 ngày; không điền một ngày đã qua. */
+    public LocalDate defaultDeadline(LocalDate expectedStaffingDate) {
+        if (expectedStaffingDate == null) {
+            return defaultDeadline();
+        }
+        LocalDate suggested = expectedStaffingDate.minusDays(DEFAULT_DEADLINE_DAYS);
+        return suggested.isBefore(today()) ? today() : suggested;
     }
 
     public void requireApproved(JobRequisition requisition) {
@@ -123,7 +126,6 @@ public class JobPostingValidator {
         maxLength(errors, "benefits", request.getBenefits(), TEXT_LIMIT);
         maxLength(errors, "workLocation", request.getWorkLocation(), LOCATION_LIMIT);
         maxLength(errors, "workingHours", request.getWorkingHours(), WORKING_HOURS_LIMIT);
-        maxLength(errors, "probationPeriod", request.getProbationPeriod(), PROBATION_LIMIT);
 
         // Rule: Hình thức, Mô hình bắt buộc và phải nằm trong danh mục (khớp CHECK của JobPosting)
         if (request.getEmploymentType() == null
@@ -133,22 +135,22 @@ public class JobPostingValidator {
         if (request.getWorkModel() == null || !RequisitionValidator.WORK_MODELS.contains(request.getWorkModel())) {
             errors.put("workModel", "Vui lòng chọn mô hình làm việc.");
         }
-        if (request.getGender() == null || !RequisitionValidator.GENDERS.contains(request.getGender())) {
-            errors.put("gender", "Vui lòng chọn yêu cầu giới tính.");
-        }
 
         // Rule: lương là 1 trong 3 lựa chọn, "Tự nhập" phải có nội dung (kiểm tra null trước contains)
         if (request.getSalaryMode() == null || !SALARY_MODES.contains(request.getSalaryMode())) {
             errors.put("salaryMode", "Vui lòng chọn cách hiển thị mức lương.");
         } else if (JobPostingRequest.SALARY_CUSTOM.equals(request.getSalaryMode())) {
             requireText(errors, "salaryCustom", request.getSalaryCustom(), SALARY_TEXT_LIMIT,
-                    "Vui lòng nhập khoảng lương hiển thị.");
+                    "Vui lòng nhập mức lương.");
         }
 
-        // Rule: bật "Hiển thị số lượng tuyển" thì phải có nội dung
+        // Số lượng hiển thị là số nguyên dương; tắt hiển thị thì lưu NULL.
         if (Boolean.TRUE.equals(request.getShowPositions())) {
-            requireText(errors, "numberOfPositionsDisplay", request.getNumberOfPositionsDisplay(), POSITIONS_TEXT_LIMIT,
-                    "Vui lòng nhập số lượng.");
+            if (request.getNumberOfPositionsDisplay() == null) {
+                errors.put("numberOfPositionsDisplay", "Vui lòng nhập số lượng.");
+            } else if (request.getNumberOfPositionsDisplay() < 1) {
+                errors.put("numberOfPositionsDisplay", "Số lượng phải lớn hơn hoặc bằng 1.");
+            }
         }
 
         validateDeadline(errors, request, publishing, now);
@@ -180,10 +182,7 @@ public class JobPostingValidator {
         if ("Remote".equals(request.getWorkModel())) {
             request.setWorkLocation(null);
         }
-        request.setGender(RequisitionValidator.cleanString(request.getGender()));
-        request.setProbationPeriod(RequisitionValidator.cleanString(request.getProbationPeriod()));
         request.setSalaryCustom(RequisitionValidator.cleanString(request.getSalaryCustom()));
-        request.setNumberOfPositionsDisplay(RequisitionValidator.cleanString(request.getNumberOfPositionsDisplay()));
     }
 
     /** Rule (D6): đăng tin bắt buộc có hạn nộp; hạn nộp phải sau ngày đăng (CK_JobPosting_Deadline). */

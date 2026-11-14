@@ -58,15 +58,6 @@ public interface JobRequisitionRepository
     @EntityGraph(attributePaths = { "department", "hiringManager" })
     Page<JobRequisition> findAll(Specification<JobRequisition> spec, Pageable pageable);
 
-    @Query("""
-            SELECT COALESCE(MAX(r.recruitmentRound), 1)
-            FROM JobRequisition r
-            LEFT JOIN r.originalRequisition o
-            WHERE r.requisitionId = :rootId
-               OR o.requisitionId = :rootId
-            """)
-    int findMaxRoundInChain(@Param("rootId") Integer rootId);
-
     /** Finds an existing Draft with the same normalized title and department. */
     @Query("""
             SELECT COUNT(r) > 0

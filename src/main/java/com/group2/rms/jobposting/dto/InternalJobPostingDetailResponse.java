@@ -20,13 +20,11 @@ public record InternalJobPostingDetailResponse(
         Integer numberOfPositions,
         String employmentType,
         String workModelLabel,
-        String genderLabel,
         LocalDate expectedStartDate,
         String workLocation,
         String workingHours,
-        String probationPeriod,
         String salaryDisplay,
-        String numberOfPositionsDisplay,
+        Integer numberOfPositionsDisplay,
         Integer postingNo,
         LocalDateTime closedAt,
         String jobDescription,
@@ -92,7 +90,11 @@ public record InternalJobPostingDetailResponse(
     }
 
     /** Một dòng ở mục "Lịch sử". */
-    public record ActivityHistoryItem(Integer no, String action, String performedBy, LocalDateTime timestamp) {
+    public record ActivityHistoryItem(Integer no, String action, String performedBy, LocalDateTime timestamp,
+            List<ActivityHistoryChange> changes) {
+    }
+
+    public record ActivityHistoryChange(String field, String oldValue, String newValue) {
     }
 
     /** Số liệu hồ sơ của tin, service tra rồi truyền cho JobPostingMapper#toDetail. */

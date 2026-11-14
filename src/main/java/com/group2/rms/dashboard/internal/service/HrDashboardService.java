@@ -147,7 +147,8 @@ public class HrDashboardService {
     private DashboardWorkItem postingWork(AwaitingPostingRow row, long days) {
         return new DashboardWorkItem("Yêu cầu", "success", row.title(),
                 "Đã duyệt, chưa có tin tuyển dụng", DashboardLabels.waitText(days), DashboardLabels.waitTone(days),
-                "Tạo tin", "/internal/job-postings/create?requisitionId=" + row.requisitionId(), true);
+                "Tạo tin", "/internal/job-postings/create?requisitionId=" + row.requisitionId(), true,
+                "/requisitions/" + row.requisitionId());
     }
 
     /** Tin nháp -> "Đăng tin"; tin đang đăng đã tuyển đủ -> đóng tin; quá hạn nộp -> đóng hoặc gia hạn. */

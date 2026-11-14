@@ -59,7 +59,6 @@ class RequisitionMapperTests {
                 .hiringManager(manager)
                 .department(Department.builder().departmentId(1).departmentName("IT").build())
                 .approvalStatus(status)
-                .recruitmentRound(1)
                 .numberOfPositions(2)
                 .employmentType("Full-time")
                 .workModel("Hybrid")
@@ -166,6 +165,7 @@ class RequisitionMapperTests {
         draft.setReasonForHiring("Mở rộng");
         draft.setJobDescription("Phát triển RMS");
         draft.setRequirementDetails("Spring Boot");
+        draft.setExpectedStaffingDate(java.time.LocalDate.of(2026, 12, 1));
 
         // Act
         RequisitionResponse detail = mapper.toDetail(draft, manager, null, false, List.of(), List.of());
@@ -238,21 +238,11 @@ class RequisitionMapperTests {
     // ----- Form -----
 
     @Test
-    @DisplayName("Giới tính đã lưu -> Hiện đúng trong form sửa và trang chi tiết")
-    void gender_shouldSurviveEditAndDetailMapping() {
-        JobRequisition requisition = requisition(RequisitionAccess.STATUS_DRAFT);
-        requisition.setGender("Female");
-
-        assertEquals("Female", mapper.toEditForm(requisition).getGender());
-        assertEquals("Nữ", mapper.toDetail(requisition, manager, null, false, List.of(), List.of()).genderLabel());
-    }
-
-    @Test
-    @DisplayName("Đợt 2 trỏ về phiếu gốc -> DTO form mang tên phiếu gốc và phòng ban")
+    @DisplayName("Phiếu sao chép -> Form mang tên phiếu gốc, phòng ban và ngày dự kiến")
     void toEditForm_shouldCarryOriginalTitleAndDepartment_whenRequisitionIsLaterRound() {
         // Arrange
         JobRequisition round2 = requisition(RequisitionAccess.STATUS_DRAFT);
-        round2.setRecruitmentRound(2);
+        round2.setExpectedStaffingDate(java.time.LocalDate.of(2026, 12, 2));
         round2.setOriginalRequisition(JobRequisition.builder().requisitionId(1).title("Java Engineer").build());
 
         // Act
@@ -261,6 +251,6 @@ class RequisitionMapperTests {
         // Assert
         assertEquals("Java Engineer", form.getOriginalTitle());
         assertEquals(1, form.getDepartmentId());
-        assertEquals(2, form.getRecruitmentRound());
+        assertEquals(java.time.LocalDate.of(2026, 12, 2), form.getExpectedStaffingDate());
     }
 }

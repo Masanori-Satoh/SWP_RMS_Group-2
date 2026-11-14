@@ -1,18 +1,16 @@
 package com.group2.rms.interview.controller;
 
 import com.group2.rms.candidate.domain.entity.Application;
-import com.group2.rms.candidate.domain.repository.ApplicationRepository;
 import com.group2.rms.candidate.talentpool.service.RecruitmentEmailService;
 import com.group2.rms.candidate.domain.rule.ApplicationStatusException;
-import com.group2.rms.core.security.RoleAuthorities;
 import com.group2.rms.interview.dto.InterviewScheduleRequest;
 import com.group2.rms.interview.dto.InterviewScheduleResponse;
 import com.group2.rms.interview.dto.PanelMemberResponse;
 import com.group2.rms.interview.entity.*;
 import com.group2.rms.interview.exception.InterviewStatusException;
+import com.group2.rms.interview.service.InterviewFormOptions;
 import com.group2.rms.interview.service.InterviewSchedulingService;
 import com.group2.rms.user.entity.User;
-import com.group2.rms.user.repository.UserRepository;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -51,8 +49,7 @@ public class InterviewSchedulingController {
 
     private final InterviewSchedulingService interviewSchedulingService;
     private final com.group2.rms.interview.service.InterviewResultService interviewResultService;
-    private final ApplicationRepository applicationRepository;
-    private final UserRepository userRepository;
+    private final InterviewFormOptions formOptions;
 
     /**
      * Màn hình danh sách lịch phỏng vấn dùng chung (Rule GBR-05 và Unified View).
@@ -331,24 +328,14 @@ public class InterviewSchedulingController {
         model.addAttribute("activeMenu", "interviews");
 
         // Danh sách hồ sơ ứng tuyển
-        List<Application> applications = new java.util.ArrayList<>(applicationRepository.findEligibleForInterview());
-        if (isEdit && interviewId != null) {
-            Integer currentApplicationId = interviewSchedulingService.getScheduleDetail(interviewId).applicationId();
-            if (applications.stream().noneMatch(a -> a.getApplicationId().equals(currentApplicationId)))
-                applicationRepository.findDetailById(currentApplicationId).ifPresent(applications::add);
-        }
-        model.addAttribute("applications", applications);
+        Integer currentApplicationId = isEdit && interviewId != null
+                ? interviewSchedulingService.getScheduleDetail(interviewId).applicationId() : null;
+        model.addAttribute("applications", formOptions.eligibleApplications(currentApplicationId));
 
         // Danh sách người phỏng vấn hợp lệ: mọi tài khoản nội bộ đang Active (kể cả HR khác, Director).
         // HR đang đặt lịch không thấy chính mình, trừ khi sửa lịch mà HR khác đã xếp mình vào hội đồng.
         Integer hiddenSelfId = isHrSelfHidden(currentUser, isEdit, interviewId) ? currentUser.getUserId() : null;
-        List<User> availableInterviewers = userRepository.findAllWithRoleAndDepartment().stream()
-                .filter(u -> u.getRole() != null
-                        && RoleAuthorities.INTERNAL_ROLE_NAMES.contains(u.getRole().getRoleName()))
-                .filter(u -> "Active".equalsIgnoreCase(u.getAccountStatus()))
-                .filter(u -> hiddenSelfId == null || !hiddenSelfId.equals(u.getUserId()))
-                .toList();
-        model.addAttribute("availableInterviewers", availableInterviewers);
+        model.addAttribute("availableInterviewers", formOptions.availableInterviewers(hiddenSelfId));
 
         model.addAttribute("interviewFormats", InterviewFormat.values());
         // ducnm bổ sung: không còn ô chọn trạng thái trên form — hệ thống tự suy (Scheduled/Rescheduled khi lưu).
@@ -403,7 +390,7 @@ public class InterviewSchedulingController {
     private User getCurrentUser(Authentication authentication) {
         if (authentication != null && authentication.isAuthenticated()
                 && !"anonymousUser".equals(authentication.getPrincipal())) {
-            return userRepository.findByUsernameIgnoreCase(authentication.getName()).orElse(null);
+            return formOptions.findByUsername(authentication.getName()).orElse(null);
         }
         return null;
     }
@@ -417,10 +404,7 @@ public class InterviewSchedulingController {
             return user;
         }
         // Fallback môi trường demo/dev khi chưa có session
-        return userRepository.findAll().stream()
-                .filter(u -> u.getRole() != null && "HR".equalsIgnoreCase(u.getRole().getRoleName()))
-                .findFirst()
-                .orElseGet(() -> userRepository.findAll().stream().findFirst().orElse(null));
+        return formOptions.fallbackUser();
     }
 
     /**

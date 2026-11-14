@@ -78,9 +78,8 @@ class ApplicationRepositoryTests {
     }
 
     private JobRequisition savedRequisition(Department department, User hiringManager, int round, JobRequisition original) {
-        return requisitions.saveAndFlush(JobRequisition.builder().title("IT-AR Backend").recruitmentRound(round)
-                // dunglt bổ sung: RequiredGender là NOT NULL (migration 017), thiếu thì cả lớp test vỡ ở setUp
-                .originalRequisition(original).numberOfPositions(1).gender("Any").employmentType("Full-time")
+        return requisitions.saveAndFlush(JobRequisition.builder().title("IT-AR Backend")
+                .originalRequisition(original).numberOfPositions(1).employmentType("Full-time")
                 .workModel("On-site").jobDescription("Integration-test responsibilities")
                 .requirementDetails("Integration-test requirements").approvalStatus(RequisitionAccess.STATUS_APPROVED)
                 .hiringManager(hiringManager).department(department).build());
@@ -100,30 +99,30 @@ class ApplicationRepositoryTests {
         entityManager.flush();
     }
 
-    private boolean appliedInSameRequisition(JobPosting target) {
-        return applications.existsActiveByCandidateInSameRequisition(candidate.getCandidateId(), target.getJobPostingId());
+    private boolean appliedToPosting(JobPosting target) {
+        return applications.existsActiveByCandidateAndJobPosting(candidate.getCandidateId(), target.getJobPostingId());
     }
 
     // ----- Test -----
 
     @Test
-    @DisplayName("Đã nộp tin Lần 1 -> Tin Đăng lại (Lần 2) cùng đợt bị coi là đã ứng tuyển")
-    void existsActiveByCandidateInSameRequisition_shouldBeTrue_whenAppliedToEarlierPostingOfSameRound() {
+    @DisplayName("Đã nộp tin lần 1 -> Có thể nộp tin đăng lại lần 2")
+    void existsActiveByCandidateAndJobPosting_shouldBeFalse_whenPostingIsNew() {
         // Arrange
         savedApplication(roundOnePostingOne, "Rejected");
 
         // Act + Assert
-        assertTrue(appliedInSameRequisition(roundOnePostingTwo));
+        assertFalse(appliedToPosting(roundOnePostingTwo));
     }
 
     @Test
-    @DisplayName("BR-CAN-01 giữ nguyên: đơn đã rút (Withdrawn) hoặc dừng do đóng tin (Cancelled) vẫn tính là đã ứng tuyển")
-    void existsActiveByCandidateInSameRequisition_shouldStayTrue_forWithdrawnAndCancelledApplications() {
+    @DisplayName("Đơn đã rút hoặc bị hủy vẫn tính là đã nộp vào chính tin đó")
+    void existsActiveByCandidateAndJobPosting_shouldStayTrue_forWithdrawnAndCancelledApplications() {
         savedApplication(roundOnePostingOne, "Withdrawn");
-        assertTrue(appliedInSameRequisition(roundOnePostingTwo));
+        assertTrue(appliedToPosting(roundOnePostingOne));
 
         savedApplication(roundOnePostingTwo, "Cancelled");
-        assertTrue(appliedInSameRequisition(roundOnePostingOne));
+        assertTrue(appliedToPosting(roundOnePostingTwo));
     }
 
     @Test
@@ -133,7 +132,7 @@ class ApplicationRepositoryTests {
         savedApplication(roundOnePostingOne, "Rejected");
 
         // Act + Assert
-        assertFalse(appliedInSameRequisition(roundTwoPosting));
+        assertFalse(appliedToPosting(roundTwoPosting));
     }
 
     @Test
@@ -143,6 +142,6 @@ class ApplicationRepositoryTests {
         savedApplication(roundOnePostingOne, "HM_Suggested");
 
         // Act + Assert
-        assertFalse(appliedInSameRequisition(roundOnePostingTwo));
+        assertFalse(appliedToPosting(roundOnePostingOne));
     }
 }

@@ -99,7 +99,8 @@ CREATE TABLE AuditLog (
         FOREIGN KEY (UserId) REFERENCES [User](UserId),
 
     CONSTRAINT CK_AuditLog_Action
-        CHECK ([Action] IN (N'CREATE', N'UPDATE', N'DELETE', N'LOGIN'))
+        CHECK ([Action] IN (N'CREATE', N'UPDATE', N'DELETE', N'LOGIN',
+                           N'PUBLISH', N'UNPUBLISH', N'RESTORE'))
 );
 GO
 
@@ -124,9 +125,9 @@ CREATE TABLE JobRequisition (
     RequisitionCode        NVARCHAR(50) NULL,
     DepartmentId           INT NOT NULL,
     HiringManagerId        INT NOT NULL,
-    CreatedBy              INT NULL,                -- [MỚI] user tạo phiếu
-    RecruitmentRound       INT NOT NULL CONSTRAINT DF_JobRequisition_Round DEFAULT 1,
-    OriginalRequisitionId  INT NULL,                -- [MỚI] yêu cầu gốc khi sao chép sang đợt mới
+    CreatedBy              INT NULL,
+    ExpectedStaffingDate   DATE NULL,
+    OriginalRequisitionId  INT NULL,
     NumberOfPositions      INT NOT NULL,
     EmploymentType         NVARCHAR(50) NOT NULL,
     MinSalary              DECIMAL(18,2) NULL,
@@ -134,12 +135,10 @@ CREATE TABLE JobRequisition (
     ReasonForHiring        NVARCHAR(2000) NULL,
     JobDescription         NVARCHAR(MAX) NOT NULL,
     RequirementDetails     NVARCHAR(MAX) NOT NULL,
-    RequiredGender         NVARCHAR(20) NOT NULL CONSTRAINT DF_JobRequisition_RequiredGender DEFAULT N'Any',
-    ProbationPeriod        NVARCHAR(100) NULL,      -- thời gian thử việc dạng chữ, VD "2 tháng", "Thỏa thuận"; NULL = không thử việc
     WorkModel              NVARCHAR(20) NOT NULL CONSTRAINT DF_JobRequisition_WorkModel DEFAULT N'On-site',
     WorkLocation           NVARCHAR(255) NULL,
     ApprovalStatus         NVARCHAR(30) NOT NULL CONSTRAINT DF_JobRequisition_ApprovalStatus DEFAULT N'Draft',
-    SubmittedAt            DATETIME2 NULL,          -- [MỚI]
+    SubmittedAt            DATETIME2 NULL,
     ClosedAt               DATETIME2 NULL,          -- [MỚI]
     CreatedAt              DATETIME2 NOT NULL CONSTRAINT DF_JobRequisition_CreatedAt DEFAULT SYSDATETIME(),
     UpdatedAt              DATETIME2 NULL,
@@ -156,18 +155,12 @@ CREATE TABLE JobRequisition (
     CONSTRAINT FK_JobRequisition_Original
         FOREIGN KEY (OriginalRequisitionId) REFERENCES JobRequisition(RequisitionId),
  
-    CONSTRAINT CK_JobRequisition_RecruitmentRound
-        CHECK (RecruitmentRound > 0),
- 
     CONSTRAINT CK_JobRequisition_NumberOfPositions
         CHECK (NumberOfPositions > 0),
  
     CONSTRAINT CK_JobRequisition_EmploymentType
-        CHECK (EmploymentType IN (N'Full-time', N'Part-time', N'Internship', N'Contract')),
+        CHECK (EmploymentType IN (N'Full-time', N'Part-time', N'Internship', N'Freelance')),
 
-    CONSTRAINT CK_JobRequisition_RequiredGender
-        CHECK (RequiredGender IN (N'Male', N'Female', N'Any')),
- 
     CONSTRAINT CK_JobRequisition_WorkModel
         CHECK (WorkModel IN (N'On-site', N'Remote', N'Hybrid')),
  
@@ -185,7 +178,24 @@ CREATE TABLE JobRequisition (
         CHECK (MinSalary IS NULL OR MaxSalary IS NULL OR MinSalary <= MaxSalary),
  
     CONSTRAINT CK_JobRequisition_Salary_NonNegative
-        CHECK ((MinSalary IS NULL OR MinSalary >= 0) AND (MaxSalary IS NULL OR MaxSalary >= 0))
+        CHECK ((MinSalary IS NULL OR MinSalary BETWEEN 0.01 AND 1000000000)
+            AND (MaxSalary IS NULL OR MaxSalary BETWEEN 0.01 AND 1000000000)),
+    CONSTRAINT CK_JobRequisition_Title_NotBlank
+        CHECK (LEN(TRIM(Title)) > 0),
+    CONSTRAINT CK_JobRequisition_ExpectedStaffingDate_Required
+        CHECK (ApprovalStatus = N'Draft' OR ExpectedStaffingDate IS NOT NULL),
+    CONSTRAINT CK_JobRequisition_ExpectedStaffingDate_Chronology
+        CHECK (ExpectedStaffingDate IS NULL OR
+            (ExpectedStaffingDate >= CONVERT(DATE, CreatedAt)
+             AND (SubmittedAt IS NULL OR ExpectedStaffingDate >= CONVERT(DATE, SubmittedAt)))),
+    CONSTRAINT CK_JobRequisition_Submitted_Content
+        CHECK (ApprovalStatus IN (N'Draft', N'Cancelled') OR (
+            SubmittedAt IS NOT NULL
+            AND ReasonForHiring IS NOT NULL AND LEN(TRIM(ReasonForHiring)) > 0
+            AND LEN(TRIM(JobDescription)) > 0
+            AND LEN(TRIM(RequirementDetails)) > 0
+            AND (WorkModel = N'Remote' OR (WorkLocation IS NOT NULL AND LEN(TRIM(WorkLocation)) > 0))
+        ))
 );
 GO
 
@@ -207,7 +217,9 @@ CREATE TABLE RequisitionApproval (
         FOREIGN KEY (DirectorId) REFERENCES [User](UserId),
 
     CONSTRAINT CK_RequisitionApproval_Status
-        CHECK ([Status] IN (N'Approved', N'Rejected'))
+        CHECK ([Status] IN (N'Approved', N'Rejected')),
+    CONSTRAINT CK_RequisitionApproval_Rejection_Comment
+        CHECK ([Status] <> N'Rejected' OR (Comments IS NOT NULL AND LEN(TRIM(Comments)) > 0))
 );
 GO
 
@@ -224,13 +236,11 @@ CREATE TABLE JobPosting (
     JobRequirements      NVARCHAR(MAX) NOT NULL,
     Benefits             NVARCHAR(MAX) NULL,
     SalaryDisplay        NVARCHAR(100) NULL,
-    NumberOfPositionsDisplay     NVARCHAR(50) NULL,      -- [MỚI] NULL = không hiển thị số lượng
+    NumberOfPositionsDisplay     INT NULL,                -- NULL = không hiển thị số lượng
     WorkLocation         NVARCHAR(255) NULL,
     WorkingHours         NVARCHAR(255) NULL,      -- [MỚI] thời gian làm việc, VD "Thứ 2 - Thứ 6 (09:00 - 18:00)"
     EmploymentType       NVARCHAR(50) NULL,       -- [MỚI] hình thức riêng của tin; NULL = dùng của yêu cầu
     WorkModel            NVARCHAR(20) NULL,       -- [MỚI] mô hình riêng của tin; NULL = dùng của yêu cầu
-    RequiredGender       NVARCHAR(20) NULL,       -- NULL ở tin cũ = dùng của yêu cầu
-    ProbationPeriod      NVARCHAR(100) NULL,      -- [MỚI] thời gian thử việc hiển thị; NULL = không hiển thị
     PostingDate          DATETIME2 NULL,
     ApplicationDeadline  DATETIME2 NULL,
     PostingStatus        NVARCHAR(20) NOT NULL CONSTRAINT DF_JobPosting_PostingStatus DEFAULT N'Draft',
@@ -250,21 +260,26 @@ CREATE TABLE JobPosting (
  
     CONSTRAINT CK_JobPosting_PostingNo
         CHECK (PostingNo > 0),
+
+    CONSTRAINT CK_JobPosting_NumberOfPositionsDisplay
+        CHECK (NumberOfPositionsDisplay IS NULL OR NumberOfPositionsDisplay > 0),
  
     CONSTRAINT CK_JobPosting_EmploymentType
-        CHECK (EmploymentType IS NULL OR EmploymentType IN (N'Full-time', N'Part-time', N'Internship', N'Contract')),
+        CHECK (EmploymentType IS NULL OR EmploymentType IN (N'Full-time', N'Part-time', N'Internship', N'Freelance')),
 
     CONSTRAINT CK_JobPosting_WorkModel
         CHECK (WorkModel IS NULL OR WorkModel IN (N'On-site', N'Remote', N'Hybrid')),
-
-    CONSTRAINT CK_JobPosting_RequiredGender
-        CHECK (RequiredGender IS NULL OR RequiredGender IN (N'Male', N'Female', N'Any')),
 
     CONSTRAINT CK_JobPosting_Status
         CHECK (PostingStatus IN (N'Draft', N'Published', N'Paused', N'Closed')),
  
     CONSTRAINT CK_JobPosting_Deadline
-        CHECK (ApplicationDeadline IS NULL OR PostingDate IS NULL OR ApplicationDeadline > PostingDate)
+        CHECK (ApplicationDeadline IS NULL OR PostingDate IS NULL OR ApplicationDeadline > PostingDate),
+    CONSTRAINT CK_JobPosting_Content_NotBlank
+        CHECK (LEN(TRIM(PostingTitle)) > 0 AND LEN(TRIM(JobDescription)) > 0
+            AND LEN(TRIM(JobRequirements)) > 0),
+    CONSTRAINT CK_JobPosting_Published_Dates
+        CHECK (PostingStatus = N'Draft' OR (PostingDate IS NOT NULL AND ApplicationDeadline IS NOT NULL))
 );
 GO
 
@@ -620,9 +635,8 @@ CREATE NONCLUSTERED INDEX IX_JobRequisition_DepartmentId ON JobRequisition(Depar
 CREATE NONCLUSTERED INDEX IX_JobRequisition_HiringManagerId ON JobRequisition(HiringManagerId);
 CREATE NONCLUSTERED INDEX IX_JobRequisition_CreatedBy ON JobRequisition(CreatedBy);
 
--- Chặn tạo trùng "đợt 2" cho cùng một vị trí (Yêu cầu có cột OriginalRequisitionId trong bảng)
-CREATE UNIQUE NONCLUSTERED INDEX UX_JobRequisition_Original_Round
-ON JobRequisition(OriginalRequisitionId, RecruitmentRound)
+CREATE NONCLUSTERED INDEX IX_JobRequisition_Original
+ON JobRequisition(OriginalRequisitionId)
 WHERE OriginalRequisitionId IS NOT NULL;
 GO
 
@@ -632,10 +646,10 @@ GO
 CREATE NONCLUSTERED INDEX IX_JobPosting_RequisitionId ON JobPosting(RequisitionId);
 CREATE NONCLUSTERED INDEX IX_JobPosting_CreatedBy ON JobPosting(CreatedBy);
 
--- Mỗi requisition chỉ có tối đa 1 tin đang công khai
-CREATE UNIQUE NONCLUSTERED INDEX UX_JobPosting_ActivePerRequisition
+-- Mỗi requisition chỉ có tối đa 1 tin chưa đóng (Draft/Published/Paused).
+CREATE UNIQUE NONCLUSTERED INDEX UX_JobPosting_OpenPerRequisition
 ON JobPosting(RequisitionId)
-WHERE PostingStatus = N'Published';
+WHERE PostingStatus <> N'Closed';
 
 -- Trang danh sách tin tuyển dụng công khai (Yêu cầu có cột NumberOfPositionsDisplay trong bảng)
 CREATE NONCLUSTERED INDEX IX_JobPosting_Public

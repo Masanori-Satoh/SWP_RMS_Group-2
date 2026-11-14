@@ -34,6 +34,10 @@
                 return integerMessage('Số lượng cần tuyển', value, Number(input.min) || 1);
             }
         },
+        {
+            id: 'expectedStaffingDate', label: 'Ngày dự kiến nhận việc', section: 'rqf-position', requiredForSubmit: true,
+            errorOf: value => value < today() ? 'Ngày dự kiến nhận việc không được trước hôm nay.' : ''
+        },
         { id: 'employmentType', label: 'Hình thức làm việc', section: 'rqf-work', requiredForDraft: true },
         { id: 'workModel', label: 'Mô hình làm việc', section: 'rqf-work', requiredForDraft: true },
         { id: 'workLocation', label: 'Địa điểm làm việc', section: 'rqf-work', requiredForSubmit: true },
@@ -207,21 +211,6 @@
         }
     });
 
-    form.querySelectorAll('[data-step]').forEach(button => button.addEventListener('click', () => {
-        const input = document.getElementById(button.dataset.stepTarget);
-        if (!input) return;
-        const min = input.min === '' ? 1 : Number(input.min);
-        const max = input.max === '' ? Infinity : Number(input.max);
-        if (input.value === '' && input.dataset.stepStart) {
-            input.value = input.dataset.stepStart;
-        } else {
-            const typed = Number(input.value);
-            const current = input.value === '' || !Number.isFinite(typed) ? min - Number(button.dataset.step) : typed;
-            input.value = Math.min(max, Math.max(min, current + Number(button.dataset.step)));
-        }
-        input.dispatchEvent(new Event('input', { bubbles: true }));
-    }));
-
     form.querySelectorAll('textarea[maxlength]').forEach(textarea => {
         const counter = document.getElementById(textarea.id + '-count');
         if (!counter) return;
@@ -268,30 +257,9 @@
     form.addEventListener('input', refreshChecklist);
     form.addEventListener('change', refreshChecklist);
 
-    // Đợt tuyển dụng không bắt buộc (trống = đợt 1), nhưng đã nhập thì phải là số nguyên >= min.
-    const roundInput = document.getElementById('recruitmentRound');
-    function validateRound() {
-        if (!roundInput) return true;
-        const value = roundInput.value.trim();
-        const message = roundInput.validity.badInput ? 'Đợt tuyển dụng chỉ được chứa số nguyên.'
-            : !value ? '' : integerMessage('Đợt tuyển dụng', value, Number(roundInput.min || 1));
-        showError('recruitmentRound', message);
-        return !message;
-    }
-    roundInput?.addEventListener('input', validateRound);
-
-    // Chọn "Khác" ở thời gian thử việc thì phải nhập nội dung.
-    function validateProbation() {
-        const choice = document.getElementById('probationChoice');
-        const input = document.getElementById('probationPeriod');
-        const missing = choice?.value === '__other__' && !input?.value.trim();
-        showError('probationPeriod', missing ? 'Vui lòng nhập thời gian thử việc.' : '');
-        return !missing;
-    }
-
     function validateAll(action) {
         const fieldsOk = FIELD_RULES.map(rule => validateField(rule, action)).every(Boolean);
-        const numbersOk = [validateNumbers(), validateRound(), validateProbation()].every(Boolean);
+        const numbersOk = validateNumbers();
         if (!(fieldsOk && numbersOk)) {
             const firstError = form.querySelector('[aria-invalid="true"], .is-invalid input');
             firstError?.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -339,24 +307,6 @@
         submitting = false;
         form.querySelectorAll('button[type=submit]').forEach(button => { button.disabled = false; });
     });
-
-    // Thời gian thử việc: chọn mẫu thì ghi thẳng vào ô probationPeriod (ẩn); "Khác" thì hiện ô để nhập tay.
-    const probationChoice = document.getElementById('probationChoice');
-    const probationInput = document.getElementById('probationPeriod');
-    if (probationChoice && probationInput) {
-        const syncProbation = userChanged => {
-            const isOther = probationChoice.value === '__other__';
-            probationInput.hidden = !isOther;
-            if (!isOther) {
-                probationInput.value = probationChoice.value;
-            } else if (userChanged) {
-                probationInput.value = '';
-                probationInput.focus();
-            }
-        };
-        probationChoice.addEventListener('change', () => syncProbation(true));
-        syncProbation(false);
-    }
 
     syncWorkLocation();
     document.getElementById('validation-summary')?.focus();

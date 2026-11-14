@@ -61,8 +61,8 @@ class JobPostingMapperTests {
         requisition = JobRequisition.builder().requisitionId(5).requisitionCode("REQ-0005").title("Java Dev")
                 .approvalStatus(RequisitionAccess.STATUS_APPROVED).employmentType("Full-time").workModel("Hybrid")
                 .department(Department.builder().departmentId(1).departmentName("Engineering").build())
-                .numberOfPositions(2).recruitmentRound(1).workLocation("Hà Nội")
-                .gender("Female")
+                .numberOfPositions(2).workLocation("Hà Nội")
+                .expectedStaffingDate(java.time.LocalDate.of(2026, 12, 1))
                 .jobDescription("Lập trình backend").requirementDetails("2 năm Spring Boot")
                 .minSalary(new BigDecimal("20000000")).maxSalary(new BigDecimal("30000000")).build();
     }
@@ -91,6 +91,24 @@ class JobPostingMapperTests {
         remote.setWorkLocation("Old office");
 
         assertNull(detail(remote, hr).workLocation());
+    }
+
+    @Test
+    @DisplayName("Lịch sử JSON hiện đúng trường đã sửa và giá trị cũ, mới")
+    void toActivityHistory_shouldMapChangedFields() {
+        AuditLog updated = AuditLog.builder().action(JobPostingAuditLogger.ACTION_UPDATE).user(hr)
+                .oldValue("{\"JobDescription\":\"Mô tả cũ\",\"NumberOfPositions\":2}")
+                .newValue("{\"JobDescription\":\"Mô tả mới\",\"NumberOfPositions\":10}")
+                .timestamp(NOW).build();
+
+        List<ActivityHistoryItem> history = mapper.toActivityHistory(
+                posting(JobPostingAccess.STATUS_DRAFT, null, null), List.of(updated));
+
+        assertEquals("Cập nhật", history.getFirst().action());
+        assertEquals("Mô tả công việc", history.getFirst().changes().getFirst().field());
+        assertEquals("Mô tả cũ", history.getFirst().changes().getFirst().oldValue());
+        assertEquals("Mô tả mới", history.getFirst().changes().getFirst().newValue());
+        assertEquals("10", history.getFirst().changes().get(1).newValue());
     }
 
     // =========================================================================
@@ -261,6 +279,7 @@ class JobPostingMapperTests {
             assertEquals(2, history.get(1).no());
             assertEquals(JobPostingLabels.SYSTEM_ACTOR, history.get(1).performedBy());
         }
+
     }
 
     // =========================================================================
@@ -271,7 +290,7 @@ class JobPostingMapperTests {
     class Form {
 
         @Test
-        @DisplayName("Form tạo -> Điền sẵn từ yêu cầu: lương 'Theo yêu cầu', hiện '2 người', hạn nộp hôm nay + 30, nháp")
+        @DisplayName("Form tạo -> Hạn nộp mặc định trước ngày cần nhân sự 30 ngày")
         void toCreateForm_shouldPrefillFromRequisition() {
             // Arrange
 
@@ -283,10 +302,9 @@ class JobPostingMapperTests {
             assertEquals("Java Dev", form.getPostingTitle());
             assertEquals(JobPostingRequest.SALARY_RANGE, form.getSalaryMode());
             assertEquals("20 – 30 triệu VND/tháng", form.getSalaryRangeLabel());
-            assertEquals("2 người", form.getNumberOfPositionsDisplay());
-            assertEquals("Female", form.getGender());
-            assertEquals("Female", form.getSourceGender());
-            assertEquals(NOW.toLocalDate().plusDays(JobPostingValidator.DEFAULT_DEADLINE_DAYS), form.getApplicationDeadline());
+            assertEquals(2, form.getNumberOfPositionsDisplay());
+            assertEquals(java.time.LocalDate.of(2026, 12, 1), form.getExpectedStartDate());
+            assertEquals(java.time.LocalDate.of(2026, 11, 1), form.getApplicationDeadline());
             assertEquals(JobPostingValidator.ACTION_DRAFT, form.getAction());
             assertEquals("2 năm Spring Boot", form.getJobRequirements());
             assertTrue(form.isDraftOrNew());
@@ -303,6 +321,15 @@ class JobPostingMapperTests {
         }
 
         @Test
+        @DisplayName("Yêu cầu cũ chưa có ngày cần nhân sự -> Hạn nộp mặc định sau hôm nay 30 ngày")
+        void toCreateForm_shouldUseFallbackDeadline_whenStaffingDateIsMissing() {
+            requisition.setExpectedStaffingDate(null);
+
+            assertEquals(NOW.toLocalDate().plusDays(JobPostingValidator.DEFAULT_DEADLINE_DAYS),
+                    mapper.toCreateForm(requisition, 1).getApplicationDeadline());
+        }
+
+        @Test
         @DisplayName("Form sửa tin đã đăng -> Nhận ra lương tự nhập, số lượng bị ẩn, trạng thái live")
         void toEditForm_shouldDeriveChoices_whenPostingIsPublished() {
             // Arrange
@@ -310,7 +337,6 @@ class JobPostingMapperTests {
             JobPosting posting = posting(JobPostingAccess.STATUS_PUBLISHED, at, NOW.plusDays(30));
             posting.setPostingNo(2);
             posting.setSalaryDisplay("Lên đến 30 triệu + hoa hồng");
-            posting.setGender("Male");
 
             // Act
             JobPostingRequest form = mapper.toEditForm(posting);
@@ -323,7 +349,8 @@ class JobPostingMapperTests {
             assertTrue(form.isLive());
             assertFalse(form.isDraftOrNew());
             assertEquals(2, form.getPostingNo());
-            assertEquals("Male", form.getGender());
+            assertEquals(at, form.getPostingDate());
+            assertEquals(NOW.toLocalDate().plusDays(30), form.getApplicationDeadline());
         }
 
         @Test
