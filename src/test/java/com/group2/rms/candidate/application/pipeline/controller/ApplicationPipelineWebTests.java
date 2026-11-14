@@ -85,7 +85,7 @@ class ApplicationPipelineWebTests {
         when(talentPool.recommendations(8)).thenReturn(List.of(recommendation(true,false)));
         when(talentPool.viewerRole()).thenReturn("HR"); when(talentPool.canRecommend(8)).thenReturn(true);
         mvc.perform(get("/talent-pool/jobs/8/recommendations").with(as("hr","HR")))
-                .andExpect(status().isOk()).andExpect(content().string(containsString("Gợi ý ứng viên cho HM")))
+                .andExpect(status().isOk()).andExpect(content().string(containsString("Gợi ý ứng viên cho Trưởng bộ phận")))
                 .andExpect(content().string(containsString("href=\"/talent-pool?jobPostingId=8\"")))
                 .andExpect(content().string(containsString("data-pool-withdraw-dialog=\"tp-withdraw-dialog\"")))
                 .andExpect(content().string(containsString("id=\"tp-withdraw-dialog\"")))
@@ -94,7 +94,7 @@ class ApplicationPipelineWebTests {
         when(talentPool.canRecommend(8)).thenReturn(false);
         when(talentPool.recommendations(8)).thenReturn(List.of(recommendation(false,false)));
         mvc.perform(get("/talent-pool/jobs/8/recommendations").with(as("hr","HR")))
-                .andExpect(status().isOk()).andExpect(content().string(not(containsString("Gợi ý ứng viên cho HM"))))
+                .andExpect(status().isOk()).andExpect(content().string(not(containsString("Gợi ý ứng viên cho Trưởng bộ phận"))))
                 .andExpect(content().string(not(containsString("data-pool-withdraw-dialog"))));
         when(talentPool.viewerRole()).thenReturn("Hiring Manager");
         when(talentPool.recommendations(8)).thenReturn(List.of(recommendation(true,true)));
@@ -133,8 +133,8 @@ class ApplicationPipelineWebTests {
         mvc.perform(get("/talent-pool?jobPostingId=8").with(as("hr","HR")))
                 .andExpect(status().isOk()).andExpect(content().string(containsString("data-pool-flow=\"hr\"")))
                 .andExpect(content().string(containsString("action=\"/talent-pool/jobs/8/recommend\"")))
-                .andExpect(content().string(containsString("Gửi gợi ý cho HM")))
-                .andExpect(content().string(containsString("HM phụ trách: HM Tuấn")))
+                .andExpect(content().string(containsString("Gửi gợi ý cho Trưởng bộ phận")))
+                .andExpect(content().string(containsString("Trưởng bộ phận phụ trách: HM Tuấn")))
                 .andExpect(content().string(containsString("id=\"tp-selection-bar\"")));
     }
 
@@ -188,7 +188,7 @@ class ApplicationPipelineWebTests {
         when(talentPool.recommendationDetail(15,219)).thenReturn(new TalentPoolDetailResponse(c,true,
                 List.of(new TalentPoolNoteResponse(1,"HR Lan","<script>note</script>",SUBMITTED)),history, null, null, null, null, null, null));
         mvc.perform(get("/talent-pool/15?recommendationId=219&keyword=An&page=1").with(as("hm","Hiring Manager")))
-                .andExpect(status().isOk()).andExpect(content().string(containsString("Quay lại gợi ý từ HR")))
+                .andExpect(status().isOk()).andExpect(content().string(containsString("Quay lại gợi ý từ Nhân sự")))
                 .andExpect(content().string(containsString("Java Backend"))).andExpect(content().string(containsString("QA Automation")))
                 .andExpect(content().string(containsString("/talent-pool/15/cv/101"))).andExpect(content().string(containsString("/talent-pool/15/cv/102")))
                 .andExpect(content().string(containsString("&lt;script&gt;note&lt;/script&gt;")))
@@ -216,7 +216,8 @@ class ApplicationPipelineWebTests {
         when(talentPool.pendingRecommendationUrl(219)).thenReturn("/talent-pool/15?recommendationId=219");
         mvc.perform(get("/applications/219").with(as("hr","HR"))).andExpect(redirectedUrl("/talent-pool/15?recommendationId=219"));
         when(talentPool.recommendation(219,15)).thenThrow(new AccessDeniedException("Wrong scope"));
-        mvc.perform(get("/talent-pool/15?recommendationId=219").with(as("other","Hiring Manager"))).andExpect(status().isForbidden());
+        mvc.perform(get("/talent-pool/15?recommendationId=219").with(as("other","Hiring Manager")))
+                .andExpect(status().isSeeOther()).andExpect(redirectedUrl("/talent-pool"));
         verifyNoInteractions(pipeline);
     }
 
@@ -1171,7 +1172,7 @@ class ApplicationPipelineWebTests {
                 .when(talentPool).validateNoteApplication(15, 999);
         mvc.perform(post("/talent-pool/15/notes/1/delete").with(as("hr", "HR")).with(csrf())
                         .param("returnApplicationId", "999"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isSeeOther()).andExpect(redirectedUrl("/talent-pool"));
         verify(talentPool, never()).deleteNote(any(), any());
     }
 
@@ -1249,9 +1250,9 @@ class ApplicationPipelineWebTests {
         doThrow(new AccessDeniedException("Not your note")).when(talentPool).deleteNote(15, 1);
         doThrow(new AccessDeniedException("Not your note")).when(talentPool).updateNote(eq(15), eq(1), any());
         mvc.perform(post("/talent-pool/15/notes/1/delete").with(as("hr", "HR")).with(csrf()))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isSeeOther()).andExpect(redirectedUrl("/talent-pool"));
         mvc.perform(post("/talent-pool/15/notes/1/edit").with(as("hr", "HR")).with(csrf()).param("content", "Hack"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isSeeOther()).andExpect(redirectedUrl("/talent-pool"));
     }
 
     @Test
@@ -1320,8 +1321,8 @@ class ApplicationPipelineWebTests {
                 .andReturn();
         var html = response.getResponse().getContentAsString();
         assertEquals(2, html.split("data-pool-withdraw-dialog=", -1).length - 1);
-        assertEquals(2, html.split("Chỉ xóa được gợi ý khi HM chưa phản hồi", -1).length - 1);
-        assertTrue(html.indexOf("Xem ứng viên được HM đề xuất") < html.indexOf("id=\"tp-recommendations-title\""));
+        assertEquals(2, html.split("Chỉ xóa được gợi ý khi Trưởng bộ phận chưa phản hồi", -1).length - 1);
+        assertTrue(html.indexOf("Xem ứng viên được Trưởng bộ phận đề xuất") < html.indexOf("id=\"tp-recommendations-title\""));
         assertEquals(4, ((Page<?>) response.getModelAndView().getModel().get("page")).getTotalElements());
         var dir = java.nio.file.Path.of("docs/members/linhdn/tmp/talent-pool");
         java.nio.file.Files.createDirectories(dir);
