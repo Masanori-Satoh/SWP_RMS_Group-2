@@ -141,6 +141,7 @@
                         <p th:if="${req.reasonForHiringHtml != null}" th:utext="${req.reasonForHiringHtml}">Lý do</p>
                         <p class="rqd-empty" th:unless="${req.reasonForHiringHtml != null}">Chưa nhập.</p>
                     </div>
+
                     <div class="rqd-text">
                         <h2>Mô tả công việc</h2>
                         <p th:if="${req.jobDescriptionHtml != null}" th:utext="${req.jobDescriptionHtml}">Mô tả</p>

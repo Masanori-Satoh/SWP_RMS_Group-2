@@ -265,19 +265,21 @@ public class RequisitionListService {
         RequisitionSort sortOption = RequisitionSort.fromParam(filter.sort());
         Sort sort = sortOption.toSort();
         if (sortOption == RequisitionSort.NEWEST) {
-            // CASE ordering can't be expressed with Sort; the spec sets ORDER BY, so pass unsorted.
             where = where.and(RequisitionSpecifications.pendingFirstThenNewest());
             sort = Sort.unsorted();
         }
+
         Page<JobRequisition> result = requisitions.findAll(where, PageRequest.of(filter.page(), filter.size(), sort));
         if (filter.page() > 0 && filter.page() >= result.getTotalPages()) {
             errors.add("Trang bạn yêu cầu không tồn tại.");
             return Page.empty(result.getPageable());
         }
+
         List<Integer> ids = new ArrayList<>();
         for (JobRequisition jobRequisition : result.getContent()) {
             ids.add(jobRequisition.getRequisitionId());
         }
+
         Map<Integer, JobPosting> latestPostings = latestPostingsOf(ids);
         Set<Integer> idsWithLaterRounds = idsWithLaterRounds(ids);
 
@@ -329,6 +331,7 @@ public class RequisitionListService {
                     "Phòng ban: " + ListFilters.labelOf(filter.departmentId(), options.departments()),
                     List.of("departmentId")));
         }
+
         if (filter.creatorId() != null) {
             chips.add(new FilterChip(
                     "Người tạo yêu cầu: " + ListFilters.labelOf(filter.creatorId(), options.creators()),

@@ -20,10 +20,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class RequisitionValidator {
 
-    /**
-     * Hai nút trên form: "Lưu bản nháp" gửi action=draft, "Gửi duyệt" gửi
-     * action=submit.
-     */
+
     public static final String ACTION_DRAFT = "draft";
     public static final String ACTION_SUBMIT = "submit";
 
@@ -50,10 +47,7 @@ public class RequisitionValidator {
     public static final List<String> EMPLOYMENT_TYPES = List.of("Full-time", "Part-time", "Internship", "Freelance");
     public static final List<String> WORK_MODELS = List.of("On-site", "Remote", "Hybrid");
 
-    /**
-     * Đồng hồ dùng chung (ClockConfig); test truyền Clock.fixed để cố định "hôm
-     * nay".
-     */
+
     private final Clock clock;
 
     /** Người dùng bấm "Gửi duyệt" */
@@ -177,10 +171,7 @@ public class RequisitionValidator {
         }
     }
 
-    /**
-     * Lương không bắt buộc; nếu nhập thì từ 1 đến SALARY_MAX VND/tháng, tối đa 2
-     * chữ số thập phân.
-     */
+
     private void validateMoneyField(Map<String, String> errorsMap, String fieldKey, BigDecimal amount) {
         if (amount == null) {
             return;

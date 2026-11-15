@@ -380,13 +380,12 @@ public class RequisitionController {
         var allDepartments = formOptions.allDepartments();
         var actor = access.actor();
         model.addAttribute("departments", allDepartments);
-        // Phòng được chọn khi tạo/sửa: Director mọi phòng đang hoạt động, HM phòng mình thuộc về hoặc làm trưởng phòng.
+
         model.addAttribute("departmentChoices", allDepartments.stream()
                 .filter(department -> "Active".equals(department.getDepartmentStatus())
                         && access.canManageDepartment(actor, department.getDepartmentId(), department.getManager()))
                 .toList());
         model.addAttribute("employmentTypes", RequisitionValidator.EMPLOYMENT_TYPES);
-        // Giới hạn số lượng cần tuyển, dùng cho min/max của ô số lượng và nút −/+
         model.addAttribute("positionsMin", RequisitionValidator.POSITIONS_MIN);
     }
 
