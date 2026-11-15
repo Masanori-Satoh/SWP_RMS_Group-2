@@ -75,18 +75,6 @@ public interface ApplicationRepository extends JpaRepository<Application, Intege
         boolean existsByJobPosting_JobPostingId(Integer jobPostingId);
 
         /**
-         * Số đơn chính thức của tin đã qua vòng CV: HR từng cho Đạt (kể cả đơn bị loại ở bước sau), hoặc đang ở
-         * bước sau vòng CV (đơn đi đường talent pool lên thẳng {@code HM_Passed}, không có lượt HR).
-         */
-        @Query("SELECT COUNT(a) FROM Application a WHERE a.jobPosting.jobPostingId = :jobPostingId AND "
-                        + FORMAL_FILTER + """
-                         AND (a.applicationStatus IN ('HR_Passed', 'HM_Passed', 'Interviewing', 'Offered', 'Hired')
-                              OR EXISTS (SELECT r.reviewId FROM ApplicationReview r WHERE r.application = a
-                                         AND r.reviewerRole = 'HR' AND r.decision = 'Pass'))
-                        """)
-        long countPastCvRoundByJobPosting(@Param("jobPostingId") Integer jobPostingId);
-
-        /**
          * Đổi trạng thái khi duyệt, chỉ khi đơn còn ở một trong các trạng thái
          * {@code from}
          * (người khác vừa xử lý thì không đè). Tự gán {@code updatedAt} vì câu update
@@ -170,17 +158,6 @@ public interface ApplicationRepository extends JpaRepository<Application, Intege
         boolean existsActiveByCandidateAndJobPosting(@Param("candidateId") Integer candidateId,
                         @Param("jobPostingId") Integer jobPostingId);
 
-        /** BR-CAN-01: đã nộp vào bất kỳ tin nào của cùng đợt (Requisition) với tin này thì coi như đã ứng tuyển. */
-        @Query("""
-                        select case when count(a) > 0 then true else false end
-                        from Application a
-                        where a.candidate.candidateId = :candidateId
-                        and a.jobPosting.requisition.requisitionId = (select jp.requisition.requisitionId
-                            from JobPosting jp where jp.jobPostingId = :jobPostingId)
-                        """ + " and " + FORMAL_FILTER)
-        boolean existsActiveByCandidateInSameRequisition(@Param("candidateId") Integer candidateId,
-                        @Param("jobPostingId") Integer jobPostingId);
-            
         @Query("select count(a) from Application a where a.applicationId = :id and a.applicationStatus = 'HM_Suggested' and " + PENDING_HR_RECOMMENDATION)
         long countPendingHrRecommendation(@Param("id") Integer applicationId);
 

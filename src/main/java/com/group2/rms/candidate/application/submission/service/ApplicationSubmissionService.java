@@ -30,7 +30,7 @@ public class ApplicationSubmissionService {
 
     static final String INITIAL_STATUS = "Applied";
     static final String ALREADY_APPLIED_MESSAGE =
-            "Bạn đã ứng tuyển vị trí này trong đợt tuyển dụng hiện tại. Vui lòng chờ đợt tuyển dụng mới.";
+            "Bạn đã ứng tuyển tin tuyển dụng này.";
 
     private final CandidateRepository candidates;
     private final ApplicationRepository applications;
@@ -51,8 +51,8 @@ public class ApplicationSubmissionService {
         if (job.getApplicationDeadline() != null && job.getApplicationDeadline().isBefore(LocalDateTime.now())) {
             throw new ApplicationSubmissionException(null, "Tin tuyển dụng đã hết hạn nhận hồ sơ.");
         }
-        // BR-CAN-01: tin "Đăng lại" cùng đợt không nhận lại hồ sơ; chỉ đợt tuyển dụng mới mới được nộp lại
-        if (applications.existsActiveByCandidateInSameRequisition(
+        // Mỗi lần đăng tin có JobPostingId riêng; ứng viên được nộp lại ở lần đăng mới.
+        if (applications.existsActiveByCandidateAndJobPosting(
                 candidate.getCandidateId(), job.getJobPostingId())) {
             throw new ApplicationSubmissionException(null, ALREADY_APPLIED_MESSAGE);
         }
@@ -78,14 +78,14 @@ public class ApplicationSubmissionService {
         return saved.getApplicationId();
     }
 
-    /** Chưa đăng nhập hoặc không phải ứng viên thì coi như chưa nộp; xét cả các tin cùng đợt (BR-CAN-01). */
+    /** Chưa đăng nhập hoặc không phải ứng viên thì coi như chưa nộp ở tin này. */
     @Transactional(readOnly = true)
     public boolean hasApplied(String username, Integer jobPostingId) {
         if (username == null) {
             return false;
         }
         return candidates.findByAccount_UsernameIgnoreCase(username)
-                .map(c -> applications.existsActiveByCandidateInSameRequisition(
+                .map(c -> applications.existsActiveByCandidateAndJobPosting(
                         c.getCandidateId(), jobPostingId))
                 .orElse(false);
     }

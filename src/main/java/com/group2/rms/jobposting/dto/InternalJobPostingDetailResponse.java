@@ -14,19 +14,16 @@ public record InternalJobPostingDetailResponse(
         Integer jobPostingId,
         String postingTitle,
         Integer requisitionId,
-        String requisitionCode,
         String requisitionTitle,
         String departmentName,
         Integer numberOfPositions,
         String employmentType,
         String workModelLabel,
-        String genderLabel,
         LocalDate expectedStartDate,
         String workLocation,
         String workingHours,
-        String probationPeriod,
         String salaryDisplay,
-        String numberOfPositionsDisplay,
+        Integer numberOfPositionsDisplay,
         Integer postingNo,
         LocalDateTime closedAt,
         String jobDescription,
@@ -75,7 +72,6 @@ public record InternalJobPostingDetailResponse(
         long totalApplications,
         long applicationsLast7Days,
         long pendingApplications,
-        long passedCvRoundApplications,
         long interviewingApplications,
         long hiredApplications,
         List<RecentApplication> recentApplications,
@@ -93,17 +89,21 @@ public record InternalJobPostingDetailResponse(
     }
 
     /** Một dòng ở mục "Lịch sử". */
-    public record ActivityHistoryItem(Integer no, String action, String performedBy, LocalDateTime timestamp) {
+    public record ActivityHistoryItem(Integer no, String action, String performedBy, LocalDateTime timestamp,
+            List<ActivityHistoryChange> changes) {
+    }
+
+    public record ActivityHistoryChange(String field, String oldValue, String newValue) {
     }
 
     /** Số liệu hồ sơ của tin, service tra rồi truyền cho JobPostingMapper#toDetail. */
     @Builder
-    public record ApplicationStats(long total, long last7Days, long pending, long passedCvRound,
+    public record ApplicationStats(long total, long last7Days, long pending,
             long interviewing, long hired, List<RecentApplication> recent) {
 
         /** Tin chưa lên trang tuyển dụng: chưa có số liệu. */
         public static ApplicationStats empty() {
-            return new ApplicationStats(0, 0, 0, 0, 0, 0, List.of());
+            return new ApplicationStats(0, 0, 0, 0, 0, List.of());
         }
     }
 }

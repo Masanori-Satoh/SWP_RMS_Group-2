@@ -40,9 +40,7 @@ class PaginationFragmentTests {
 
     @ParameterizedTest
     @ValueSource(strings = {
-            "fragments/ui/pagination :: paged(page=${page})",
-            "fragments/pagination :: paged(page=${page}, baseUrl='/talent-pool')",
-            "fragments/pagination :: pager(${page.number}, ${page.totalPages}, ${page.totalElements}, '/talent-pool')"
+            "fragments/ui/pagination :: paged(page=${page})"
     })
     void outOfRangePageOnlyRendersLinksToExistingPages(String fragment) {
         for (int pageNumber : List.of(9999, Integer.MAX_VALUE)) {

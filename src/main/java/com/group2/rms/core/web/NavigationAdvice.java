@@ -1,4 +1,4 @@
-package com.group2.rms.auth;
+package com.group2.rms.core.web;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;

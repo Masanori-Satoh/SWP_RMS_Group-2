@@ -4,6 +4,9 @@ import org.springframework.web.util.HtmlUtils;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.util.Locale;
 
 
 public final class RequisitionLabels {
@@ -18,24 +21,7 @@ public final class RequisitionLabels {
     public static final String POSTING_CLOSED = "Closed";
 
 
-    private static final String REQUISITION_CODE_FORMAT = "REQ-%04d";
-
     private RequisitionLabels() {
-    }
-
-
-    // Returns the display code for the requisition.
-    public static String requisitionCode(Integer requisitionId) {
-        return String.format(REQUISITION_CODE_FORMAT, requisitionId);
-    }
-
-
-    // Returns the display code for the requisition.
-    public static String requisitionCode(Integer requisitionId, String savedCode) {
-        if (savedCode == null || savedCode.isBlank()) {
-            return requisitionCode(requisitionId);
-        }
-        return savedCode;
     }
 
 
@@ -52,6 +38,9 @@ public final class RequisitionLabels {
         }
         if (RequisitionAccess.STATUS_REJECTED.equals(status)) {
             return "Từ chối";
+        }
+        if (RequisitionAccess.STATUS_CLOSED.equals(status)) {
+            return "Đã đóng";
         }
         return status;
     }
@@ -95,8 +84,8 @@ public final class RequisitionLabels {
         if ("Internship".equals(type)) {
             return "Thực tập";
         }
-        if ("Contract".equals(type)) {
-            return "Hợp đồng";
+        if ("Freelance".equals(type)) {
+            return "Freelance";
         }
         return type == null ? "—" : type;
     }
@@ -130,29 +119,35 @@ public final class RequisitionLabels {
         return "Đến " + millions(max) + " triệu VND/tháng";
     }
 
+    /** Bảng danh sách ghi đơn vị ở tiêu đề cột nên mỗi dòng chỉ hiển thị số tiền. */
+    public static String salaryForList(BigDecimal min, BigDecimal max) {
+        if (min == null && max == null) {
+            return "Chưa cập nhật";
+        }
+        if (min != null && max != null) {
+            return vnd(min) + " – " + vnd(max);
+        }
+        return min != null ? "Từ " + vnd(min) : "Đến " + vnd(max);
+    }
+
+    /** Chi tiết yêu cầu hiển thị đúng số VND đã lưu, không quy đổi hoặc làm tròn sang triệu. */
+    public static String salaryForDetail(BigDecimal min, BigDecimal max) {
+        String salary = salaryForList(min, max);
+        return min == null && max == null ? salary : salary + " VND/tháng";
+    }
+
+    private static String vnd(BigDecimal amount) {
+        DecimalFormatSymbols symbols = DecimalFormatSymbols.getInstance(Locale.forLanguageTag("vi-VN"));
+        symbols.setGroupingSeparator('.');
+        symbols.setDecimalSeparator(',');
+        return new DecimalFormat("#,##0.##", symbols).format(amount);
+    }
+
     // Formats an amount in millions.
     private static String millions(BigDecimal amount) {
         BigDecimal value = amount.divide(BigDecimal.valueOf(1_000_000), 2, RoundingMode.HALF_UP);
         return value.stripTrailingZeros().toPlainString().replace('.', ',');
     }
-
-    /** Thời gian thử việc (JobRequisition.ProbationPeriod); trống = không thử việc. */
-    public static String probation(String period) {
-        return period == null || period.isBlank() ? "Không thử việc" : period;
-    }
-
-
-    // Returns the display label for a gender value.
-    public static String gender(String gender) {
-        if ("Male".equals(gender)) {
-            return "Nam";
-        }
-        if ("Female".equals(gender)) {
-            return "Nữ";
-        }
-        return "Không yêu cầu";
-    }
-
 
     // Converts plain text to safe multiline HTML.
     public static String multilineHtml(String text) {

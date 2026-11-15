@@ -1,20 +1,10 @@
 /* =============================================================================
    JOB-POSTING-DETAIL.JS — Chi tiết tin tuyển dụng (job-postings/detail.html)
    Tab "Nội dung tin" / "Ứng viên": bấm tab hoặc dùng phím ← → để chuyển.
-   Bản đồ thu gọn: chỉ tải Google Maps khi người dùng bấm "Xem bản đồ".
    Thao tác ghi (đăng, tạm dừng, đóng...) nằm ở pages/job-posting-actions.js.
    ============================================================================= */
 (() => {
     'use strict';
-
-    // Bản đồ: iframe để trống src; lần đầu bung khung mới gán src (lấy từ data-src) để tải bản đồ
-    const mapToggle = document.querySelector('.jpd-map-toggle');
-    mapToggle?.addEventListener('toggle', () => {
-        const frame = mapToggle.querySelector('iframe');
-        if (mapToggle.open && !frame.src) {
-            frame.src = frame.dataset.src;
-        }
-    });
 
     const container = document.querySelector('[data-tabs]');
     if (!container) {

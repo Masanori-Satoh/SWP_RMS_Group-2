@@ -24,7 +24,7 @@
 --                   #24 Applied (rút được), #25 Rejected, 1 đơn Cancelled do đóng tin
 --   ung_vien_moi    chưa đồng ý điều khoản (PolicyAgreedAt NULL), chưa ứng tuyển
 --   ung_vien_khoa   tài khoản Inactive
--- YÊU CẦU: 1-7,13,14 Approved (14 chưa có tin) | 8 Pending_Director | 9 Draft | 10 Rejected | 11 Cancelled | 12 Closed (13 là đợt 2 của 12)
+-- YÊU CẦU: 1-7,13,14 Approved (14 chưa có tin) | 8 Pending_Director | 9,11 Draft | 10 Rejected | 12 Closed (13 là đợt 2 của 12)
 -- TIN: 1,2,4,6,8 Published (5 Published nhưng quá hạn) | 3 Paused | 7,9 Closed | 10 Draft | 8 = lần đăng 2 của yêu cầu 7
 -- SỐ HỒ SƠ THEO TRẠNG THÁI: Applied 21, Cancelled 11, HM_Passed 8, HM_Suggested 4, HR_Passed 7, Hired 12, Interviewing 31, Offered 6, Rejected 25, Withdrawn 9
 -- =============================================================================
@@ -214,21 +214,21 @@ INSERT INTO SystemConfig (ConfigKey, ConfigValue, [Description], UpdatedAt) VALU
 
 -- JobRequisition (14 dòng)
 SET IDENTITY_INSERT JobRequisition ON;
-INSERT INTO JobRequisition (RequisitionId, Title, RequisitionCode, DepartmentId, HiringManagerId, CreatedBy, RecruitmentRound, OriginalRequisitionId, NumberOfPositions, EmploymentType, MinSalary, MaxSalary, ReasonForHiring, JobDescription, RequirementDetails, RequiredGender, ProbationPeriod, WorkModel, WorkLocation, ApprovalStatus, SubmittedAt, ClosedAt, CreatedAt, UpdatedAt) VALUES
-    (1, N'Senior Java Backend Engineer', N'REQ-0001', 1, 5, 5, 1, NULL, 2, N'Full-time', 30000000.00, 45000000.00, N'Bổ sung nhân sự cho vị trí Senior Java Backend Engineer theo kế hoạch quý.', N'Phát triển RESTful API bằng Spring Boot, tối ưu SQL Server, triển khai Docker.', N'Tối thiểu 3 năm Java, thành thạo Spring Boot, JPA/Hibernate, Redis, RabbitMQ.', N'Any', N'2 tháng', N'Hybrid', N'Tầng 8, Tòa nhà RMS Tower, Phố Duy Tân, Cầu Giấy, Hà Nội', N'Approved', DATEADD(MINUTE, -106020, @D0), NULL, DATEADD(MINUTE, -107460, @D0), DATEADD(MINUTE, -103080, @D0)),
-    (2, N'Frontend ReactJS Developer', N'REQ-0002', 1, 5, 5, 1, NULL, 2, N'Full-time', 20000000.00, 32000000.00, N'Bổ sung nhân sự cho vị trí Frontend ReactJS Developer theo kế hoạch quý.', N'Phát triển giao diện web bằng React 18, TypeScript, tích hợp REST API.', N'Tối thiểu 2 năm ReactJS, thành thạo Redux Toolkit hoặc Zustand.', N'Any', N'2 tháng', N'Hybrid', N'Tầng 8, Tòa nhà RMS Tower, Phố Duy Tân, Cầu Giấy, Hà Nội', N'Approved', DATEADD(MINUTE, -104580, @D0), NULL, DATEADD(MINUTE, -106020, @D0), DATEADD(MINUTE, -101640, @D0)),
-    (3, N'QA Automation Engineer', N'REQ-0003', 1, 5, 5, 1, NULL, 1, N'Full-time', 18000000.00, 28000000.00, N'Bổ sung nhân sự cho vị trí QA Automation Engineer theo kế hoạch quý.', N'Xây dựng framework kiểm thử tự động API và Web UI bằng Playwright, tích hợp CI/CD.', N'Tối thiểu 2 năm Automation Test, thành thạo Postman, Playwright hoặc Selenium.', N'Any', N'2 tháng', N'On-site', N'Tầng 8, Tòa nhà RMS Tower, Phố Duy Tân, Cầu Giấy, Hà Nội', N'Approved', DATEADD(MINUTE, -103140, @D0), NULL, DATEADD(MINUTE, -104580, @D0), DATEADD(MINUTE, -100200, @D0)),
-    (4, N'Business Development Executive (B2B)', N'REQ-0004', 2, 6, 6, 1, NULL, 2, N'Full-time', 15000000.00, 25000000.00, N'Bổ sung nhân sự cho vị trí Business Development Executive (B2B) theo kế hoạch quý.', N'Tìm kiếm khách hàng B2B, tư vấn giải pháp chuyển đổi số, đàm phán hợp đồng.', N'Tối thiểu 1 năm Sales B2B ngành phần mềm, giao tiếp và thuyết trình tốt.', N'Any', N'2 tháng', N'On-site', N'Số 12 Lê Thánh Tôn, Bến Nghé, Quận 1, TP. Hồ Chí Minh', N'Approved', DATEADD(MINUTE, -101700, @D0), NULL, DATEADD(MINUTE, -103140, @D0), DATEADD(MINUTE, -98760, @D0)),
-    (5, N'Digital Marketing Specialist', N'REQ-0005', 2, 6, 6, 1, NULL, 1, N'Contract', 14000000.00, 20000000.00, N'Bổ sung nhân sự cho vị trí Digital Marketing Specialist theo kế hoạch quý.', N'Lập kế hoạch và triển khai chiến dịch quảng cáo Facebook, Google, TikTok.', N'Tối thiểu 1 năm Digital Marketing, biết đo lường hiệu quả chiến dịch.', N'Female', N'1 tháng', N'Hybrid', N'Số 12 Lê Thánh Tôn, Bến Nghé, Quận 1, TP. Hồ Chí Minh', N'Approved', DATEADD(MINUTE, -98820, @D0), NULL, DATEADD(MINUTE, -100260, @D0), DATEADD(MINUTE, -95880, @D0)),
-    (6, N'Kế toán tổng hợp', N'REQ-0006', 4, 11, 11, 1, NULL, 1, N'Full-time', 15000000.00, 22000000.00, N'Bổ sung nhân sự cho vị trí Kế toán tổng hợp theo kế hoạch quý.', N'Hạch toán, lập báo cáo thuế tháng/quý, quyết toán cuối năm.', N'Tốt nghiệp Kế toán – Kiểm toán, tối thiểu 2 năm kế toán tổng hợp, thành thạo MISA.', N'Any', N'Thỏa thuận', N'On-site', N'Tầng 8, Tòa nhà RMS Tower, Phố Duy Tân, Cầu Giấy, Hà Nội', N'Approved', DATEADD(MINUTE, -95940, @D0), NULL, DATEADD(MINUTE, -97380, @D0), DATEADD(MINUTE, -93000, @D0)),
-    (7, N'Thực tập sinh Java Backend', N'REQ-0007', 1, 5, 5, 1, NULL, 3, N'Internship', 3000000.00, 5000000.00, N'Bổ sung nhân sự cho vị trí Thực tập sinh Java Backend theo kế hoạch quý.', N'Tham gia phát triển module nội bộ cùng đội Backend dưới sự hướng dẫn của mentor.', N'Sinh viên năm 3-4 ngành CNTT, nắm vững Java cơ bản và OOP.', N'Any', NULL, N'Remote', NULL, N'Approved', DATEADD(MINUTE, -142020, @D0), NULL, DATEADD(MINUTE, -143460, @D0), DATEADD(MINUTE, -139080, @D0)),
-    (8, N'DevOps Engineer', N'REQ-0008', 1, 5, 5, 1, NULL, 1, N'Full-time', 30000000.00, 40000000.00, N'Bổ sung nhân sự cho vị trí DevOps Engineer theo kế hoạch quý.', N'Vận hành hạ tầng Kubernetes, xây dựng pipeline CI/CD.', N'Tối thiểu 2 năm DevOps, thành thạo Docker, Kubernetes, Terraform.', N'Any', N'2 tháng', N'Hybrid', N'Tầng 8, Tòa nhà RMS Tower, Phố Duy Tân, Cầu Giấy, Hà Nội', N'Pending_Director', DATEADD(MINUTE, -2340, @D0), NULL, DATEADD(MINUTE, -3780, @D0), NULL),
-    (9, N'Data Analyst', N'REQ-0009', 4, 11, 11, 1, NULL, 1, N'Full-time', NULL, NULL, N'Bổ sung nhân sự cho vị trí Data Analyst theo kế hoạch quý.', N'Phân tích dữ liệu kinh doanh, xây dựng dashboard Power BI.', N'Thành thạo SQL, Excel nâng cao, Power BI.', N'Any', N'2 tháng', N'On-site', N'Tầng 8, Tòa nhà RMS Tower, Phố Duy Tân, Cầu Giấy, Hà Nội', N'Draft', NULL, NULL, DATEADD(MINUTE, -900, @D0), NULL),
-    (10, N'Sales Admin bán thời gian', N'REQ-0010', 2, 6, 6, 1, NULL, 1, N'Part-time', 6000000.00, 8000000.00, N'Bổ sung nhân sự cho vị trí Sales Admin bán thời gian theo kế hoạch quý.', N'Hỗ trợ đội kinh doanh soạn hợp đồng, theo dõi công nợ.', N'Cẩn thận, thành thạo tin học văn phòng.', N'Female', NULL, N'On-site', N'Số 12 Lê Thánh Tôn, Bến Nghé, Quận 1, TP. Hồ Chí Minh', N'Rejected', DATEADD(MINUTE, -26820, @D0), NULL, DATEADD(MINUTE, -28260, @D0), DATEADD(MINUTE, -23880, @D0)),
-    (11, N'Mobile Developer (Flutter)', N'REQ-0011', 1, 5, 5, 1, NULL, 1, N'Full-time', 20000000.00, 30000000.00, N'Bổ sung nhân sự cho vị trí Mobile Developer (Flutter) theo kế hoạch quý.', N'Phát triển ứng dụng di động bằng Flutter.', N'Tối thiểu 1 năm Flutter hoặc React Native.', N'Any', N'2 tháng', N'On-site', N'Tầng 8, Tòa nhà RMS Tower, Phố Duy Tân, Cầu Giấy, Hà Nội', N'Cancelled', NULL, NULL, DATEADD(MINUTE, -42660, @D0), DATEADD(MINUTE, -39720, @D0)),
-    (12, N'Customer Support Executive', N'REQ-0012', 2, 6, 6, 1, NULL, 2, N'Full-time', 9000000.00, 12000000.00, N'Bổ sung nhân sự cho vị trí Customer Support Executive theo kế hoạch quý.', N'Tiếp nhận và xử lý yêu cầu hỗ trợ của khách hàng qua điện thoại, email, chat.', N'Giao tiếp tốt, kiên nhẫn, ưu tiên có kinh nghiệm chăm sóc khách hàng.', N'Any', N'1 tháng', N'On-site', N'Số 12 Lê Thánh Tôn, Bến Nghé, Quận 1, TP. Hồ Chí Minh', N'Closed', DATEADD(MINUTE, -156420, @D0), DATEADD(MINUTE, -16260, @D0), DATEADD(MINUTE, -157860, @D0), DATEADD(MINUTE, -153480, @D0)),
-    (13, N'Customer Support Executive', N'REQ-0013', 2, 6, 6, 2, 12, 1, N'Full-time', 9000000.00, 13000000.00, N'Bổ sung nhân sự cho vị trí Customer Support Executive theo kế hoạch quý. Tuyển đợt 2 do đợt 1 chưa đủ người.', N'Tiếp nhận và xử lý yêu cầu hỗ trợ của khách hàng qua điện thoại, email, chat.', N'Giao tiếp tốt, kiên nhẫn, ưu tiên có kinh nghiệm chăm sóc khách hàng.', N'Any', N'1 tháng', N'On-site', N'Số 12 Lê Thánh Tôn, Bến Nghé, Quận 1, TP. Hồ Chí Minh', N'Approved', DATEADD(MINUTE, -6660, @D0), NULL, DATEADD(MINUTE, -8100, @D0), DATEADD(MINUTE, -3720, @D0)),
-    (14, N'Business Analyst', N'REQ-0014', 1, 5, 5, 1, NULL, 1, N'Full-time', 22000000.00, 32000000.00, N'Bổ sung nhân sự cho vị trí Business Analyst theo kế hoạch quý.', N'Thu thập yêu cầu, viết tài liệu đặc tả, phối hợp đội phát triển.', N'Tối thiểu 2 năm Business Analyst, thành thạo UML, BPMN.', N'Male', N'2 tháng', N'Hybrid', N'Tầng 8, Tòa nhà RMS Tower, Phố Duy Tân, Cầu Giấy, Hà Nội', N'Approved', DATEADD(MINUTE, -5220, @D0), NULL, DATEADD(MINUTE, -6660, @D0), DATEADD(MINUTE, -2280, @D0));
+INSERT INTO JobRequisition (RequisitionId, Title, DepartmentId, HiringManagerId, CreatedBy, ExpectedStaffingDate, OriginalRequisitionId, NumberOfPositions, EmploymentType, MinSalary, MaxSalary, ReasonForHiring, JobDescription, RequirementDetails, WorkModel, WorkLocation, ApprovalStatus, SubmittedAt, ClosedAt, CreatedAt, UpdatedAt) VALUES
+    (1, N'Senior Java Backend Engineer', 1, 5, 5, CAST(DATEADD(DAY, 70, @D0) AS DATE), NULL, 2, N'Full-time', 30000000.00, 45000000.00, N'Bổ sung nhân sự cho vị trí Senior Java Backend Engineer theo kế hoạch quý.', N'Phát triển RESTful API bằng Spring Boot, tối ưu SQL Server, triển khai Docker.', N'Tối thiểu 3 năm Java, thành thạo Spring Boot, JPA/Hibernate, Redis, RabbitMQ.', N'Hybrid', N'Tầng 8, Tòa nhà RMS Tower, Phố Duy Tân, Cầu Giấy, Hà Nội', N'Approved', DATEADD(MINUTE, -106020, @D0), NULL, DATEADD(MINUTE, -107460, @D0), DATEADD(MINUTE, -103080, @D0)),
+    (2, N'Frontend ReactJS Developer', 1, 5, 5, CAST(DATEADD(DAY, 70, @D0) AS DATE), NULL, 2, N'Full-time', 20000000.00, 32000000.00, N'Bổ sung nhân sự cho vị trí Frontend ReactJS Developer theo kế hoạch quý.', N'Phát triển giao diện web bằng React 18, TypeScript, tích hợp REST API.', N'Tối thiểu 2 năm ReactJS, thành thạo Redux Toolkit hoặc Zustand.', N'Hybrid', N'Tầng 8, Tòa nhà RMS Tower, Phố Duy Tân, Cầu Giấy, Hà Nội', N'Approved', DATEADD(MINUTE, -104580, @D0), NULL, DATEADD(MINUTE, -106020, @D0), DATEADD(MINUTE, -101640, @D0)),
+    (3, N'QA Automation Engineer', 1, 5, 5, CAST(DATEADD(DAY, 70, @D0) AS DATE), NULL, 1, N'Full-time', 18000000.00, 28000000.00, N'Bổ sung nhân sự cho vị trí QA Automation Engineer theo kế hoạch quý.', N'Xây dựng framework kiểm thử tự động API và Web UI bằng Playwright, tích hợp CI/CD.', N'Tối thiểu 2 năm Automation Test, thành thạo Postman, Playwright hoặc Selenium.', N'On-site', N'Tầng 8, Tòa nhà RMS Tower, Phố Duy Tân, Cầu Giấy, Hà Nội', N'Approved', DATEADD(MINUTE, -103140, @D0), NULL, DATEADD(MINUTE, -104580, @D0), DATEADD(MINUTE, -100200, @D0)),
+    (4, N'Business Development Executive (B2B)', 2, 6, 6, CAST(DATEADD(DAY, 70, @D0) AS DATE), NULL, 2, N'Full-time', 15000000.00, 25000000.00, N'Bổ sung nhân sự cho vị trí Business Development Executive (B2B) theo kế hoạch quý.', N'Tìm kiếm khách hàng B2B, tư vấn giải pháp chuyển đổi số, đàm phán hợp đồng.', N'Tối thiểu 1 năm Sales B2B ngành phần mềm, giao tiếp và thuyết trình tốt.', N'On-site', N'Số 12 Lê Thánh Tôn, Bến Nghé, Quận 1, TP. Hồ Chí Minh', N'Approved', DATEADD(MINUTE, -101700, @D0), NULL, DATEADD(MINUTE, -103140, @D0), DATEADD(MINUTE, -98760, @D0)),
+    (5, N'Digital Marketing Specialist', 2, 6, 6, CAST(DATEADD(DAY, 70, @D0) AS DATE), NULL, 1, N'Freelance', 14000000.00, 20000000.00, N'Bổ sung nhân sự cho vị trí Digital Marketing Specialist theo kế hoạch quý.', N'Lập kế hoạch và triển khai chiến dịch quảng cáo Facebook, Google, TikTok.', N'Tối thiểu 1 năm Digital Marketing, biết đo lường hiệu quả chiến dịch.', N'Hybrid', N'Số 12 Lê Thánh Tôn, Bến Nghé, Quận 1, TP. Hồ Chí Minh', N'Approved', DATEADD(MINUTE, -98820, @D0), NULL, DATEADD(MINUTE, -100260, @D0), DATEADD(MINUTE, -95880, @D0)),
+    (6, N'Kế toán tổng hợp', 4, 11, 11, CAST(DATEADD(DAY, 70, @D0) AS DATE), NULL, 1, N'Full-time', 15000000.00, 22000000.00, N'Bổ sung nhân sự cho vị trí Kế toán tổng hợp theo kế hoạch quý.', N'Hạch toán, lập báo cáo thuế tháng/quý, quyết toán cuối năm.', N'Tốt nghiệp Kế toán – Kiểm toán, tối thiểu 2 năm kế toán tổng hợp, thành thạo MISA.', N'On-site', N'Tầng 8, Tòa nhà RMS Tower, Phố Duy Tân, Cầu Giấy, Hà Nội', N'Approved', DATEADD(MINUTE, -95940, @D0), NULL, DATEADD(MINUTE, -97380, @D0), DATEADD(MINUTE, -93000, @D0)),
+    (7, N'Thực tập sinh Java Backend', 1, 5, 5, CAST(DATEADD(DAY, 70, @D0) AS DATE), NULL, 3, N'Internship', 3000000.00, 5000000.00, N'Bổ sung nhân sự cho vị trí Thực tập sinh Java Backend theo kế hoạch quý.', N'Tham gia phát triển module nội bộ cùng đội Backend dưới sự hướng dẫn của mentor.', N'Sinh viên năm 3-4 ngành CNTT, nắm vững Java cơ bản và OOP.', N'Remote', NULL, N'Approved', DATEADD(MINUTE, -142020, @D0), NULL, DATEADD(MINUTE, -143460, @D0), DATEADD(MINUTE, -139080, @D0)),
+    (8, N'DevOps Engineer', 1, 5, 5, CAST(DATEADD(DAY, 70, @D0) AS DATE), NULL, 1, N'Full-time', 30000000.00, 40000000.00, N'Bổ sung nhân sự cho vị trí DevOps Engineer theo kế hoạch quý.', N'Vận hành hạ tầng Kubernetes, xây dựng pipeline CI/CD.', N'Tối thiểu 2 năm DevOps, thành thạo Docker, Kubernetes, Terraform.', N'Hybrid', N'Tầng 8, Tòa nhà RMS Tower, Phố Duy Tân, Cầu Giấy, Hà Nội', N'Pending_Director', DATEADD(MINUTE, -2340, @D0), NULL, DATEADD(MINUTE, -3780, @D0), NULL),
+    (9, N'Data Analyst', 4, 11, 11, NULL, NULL, 1, N'Full-time', NULL, NULL, N'Bổ sung nhân sự cho vị trí Data Analyst theo kế hoạch quý.', N'Phân tích dữ liệu kinh doanh, xây dựng dashboard Power BI.', N'Thành thạo SQL, Excel nâng cao, Power BI.', N'On-site', N'Tầng 8, Tòa nhà RMS Tower, Phố Duy Tân, Cầu Giấy, Hà Nội', N'Draft', NULL, NULL, DATEADD(MINUTE, -900, @D0), NULL),
+    (10, N'Sales Admin bán thời gian', 2, 6, 6, CAST(DATEADD(DAY, 70, @D0) AS DATE), NULL, 1, N'Part-time', 6000000.00, 8000000.00, N'Bổ sung nhân sự cho vị trí Sales Admin bán thời gian theo kế hoạch quý.', N'Hỗ trợ đội kinh doanh soạn hợp đồng, theo dõi công nợ.', N'Cẩn thận, thành thạo tin học văn phòng.', N'On-site', N'Số 12 Lê Thánh Tôn, Bến Nghé, Quận 1, TP. Hồ Chí Minh', N'Rejected', DATEADD(MINUTE, -26820, @D0), NULL, DATEADD(MINUTE, -28260, @D0), DATEADD(MINUTE, -23880, @D0)),
+    (11, N'Mobile Developer (Flutter)', 1, 5, 5, NULL, NULL, 1, N'Full-time', 20000000.00, 30000000.00, N'Bổ sung nhân sự cho vị trí Mobile Developer (Flutter) theo kế hoạch quý.', N'Phát triển ứng dụng di động bằng Flutter.', N'Tối thiểu 1 năm Flutter hoặc React Native.', N'On-site', N'Tầng 8, Tòa nhà RMS Tower, Phố Duy Tân, Cầu Giấy, Hà Nội', N'Draft', NULL, NULL, DATEADD(MINUTE, -42660, @D0), NULL),
+    (12, N'Customer Support Executive', 2, 6, 6, CAST(DATEADD(DAY, 70, @D0) AS DATE), NULL, 2, N'Full-time', 9000000.00, 12000000.00, N'Bổ sung nhân sự cho vị trí Customer Support Executive theo kế hoạch quý.', N'Tiếp nhận và xử lý yêu cầu hỗ trợ của khách hàng qua điện thoại, email, chat.', N'Giao tiếp tốt, kiên nhẫn, ưu tiên có kinh nghiệm chăm sóc khách hàng.', N'On-site', N'Số 12 Lê Thánh Tôn, Bến Nghé, Quận 1, TP. Hồ Chí Minh', N'Closed', DATEADD(MINUTE, -156420, @D0), DATEADD(MINUTE, -16260, @D0), DATEADD(MINUTE, -157860, @D0), DATEADD(MINUTE, -153480, @D0)),
+    (13, N'Customer Support Executive', 2, 6, 6, CAST(DATEADD(DAY, 70, @D0) AS DATE), 12, 1, N'Full-time', 9000000.00, 13000000.00, N'Bổ sung nhân sự cho vị trí Customer Support Executive theo kế hoạch quý. Tuyển đợt 2 do đợt 1 chưa đủ người.', N'Tiếp nhận và xử lý yêu cầu hỗ trợ của khách hàng qua điện thoại, email, chat.', N'Giao tiếp tốt, kiên nhẫn, ưu tiên có kinh nghiệm chăm sóc khách hàng.', N'On-site', N'Số 12 Lê Thánh Tôn, Bến Nghé, Quận 1, TP. Hồ Chí Minh', N'Approved', DATEADD(MINUTE, -6660, @D0), NULL, DATEADD(MINUTE, -8100, @D0), DATEADD(MINUTE, -3720, @D0)),
+    (14, N'Business Analyst', 1, 5, 5, CAST(DATEADD(DAY, 70, @D0) AS DATE), NULL, 1, N'Full-time', 22000000.00, 32000000.00, N'Bổ sung nhân sự cho vị trí Business Analyst theo kế hoạch quý.', N'Thu thập yêu cầu, viết tài liệu đặc tả, phối hợp đội phát triển.', N'Tối thiểu 2 năm Business Analyst, thành thạo UML, BPMN.', N'Hybrid', N'Tầng 8, Tòa nhà RMS Tower, Phố Duy Tân, Cầu Giấy, Hà Nội', N'Approved', DATEADD(MINUTE, -5220, @D0), NULL, DATEADD(MINUTE, -6660, @D0), DATEADD(MINUTE, -2280, @D0));
 SET IDENTITY_INSERT JobRequisition OFF;
 
 -- RequisitionApproval (12 dòng)
@@ -248,67 +248,67 @@ INSERT INTO RequisitionApproval (RequisitionId, DirectorId, [Status], Comments, 
 
 -- JobPosting (10 dòng)
 SET IDENTITY_INSERT JobPosting ON;
-INSERT INTO JobPosting (JobPostingId, RequisitionId, PostingNo, PostingTitle, JobDescription, JobRequirements, Benefits, SalaryDisplay, NumberOfPositionsDisplay, WorkLocation, WorkingHours, EmploymentType, WorkModel, RequiredGender, ProbationPeriod, PostingDate, ApplicationDeadline, PostingStatus, ClosedAt, CreatedBy, CreatedAt, UpdatedAt) VALUES
+INSERT INTO JobPosting (JobPostingId, RequisitionId, PostingNo, PostingTitle, JobDescription, JobRequirements, Benefits, SalaryDisplay, NumberOfPositionsDisplay, WorkLocation, WorkingHours, EmploymentType, WorkModel, PostingDate, ApplicationDeadline, PostingStatus, ClosedAt, CreatedBy, CreatedAt, UpdatedAt) VALUES
     (1, 1, 1, N'Senior Java Backend Engineer', N'Phát triển RESTful API bằng Spring Boot, tối ưu SQL Server, triển khai Docker.
 Làm việc cùng đội ngũ trẻ, quy trình Agile/Scrum.', N'- Tối thiểu 3 năm Java
 - thành thạo Spring Boot, JPA/Hibernate, Redis, RabbitMQ.', N'- Lương tháng 13, thưởng dự án
 - Bảo hiểm sức khỏe PVI
 - 12 ngày phép năm
-- Review lương 2 lần/năm', N'30,000,000 - 45,000,000 VND', N'2 người', N'Tầng 8, Tòa nhà RMS Tower, Phố Duy Tân, Cầu Giấy, Hà Nội', N'Thứ 2 - Thứ 6 (08:30 - 17:30)', NULL, NULL, N'Any', N'2 tháng', DATEADD(MINUTE, -85920, @D0), DATEADD(MINUTE, 44639, @D0), N'Published', NULL, 3, DATEADD(MINUTE, -86880, @D0), NULL),
+- Review lương 2 lần/năm', N'30,000,000 - 45,000,000 VND', 2, N'Tầng 8, Tòa nhà RMS Tower, Phố Duy Tân, Cầu Giấy, Hà Nội', N'Thứ 2 - Thứ 6 (08:30 - 17:30)', NULL, NULL, DATEADD(MINUTE, -85920, @D0), DATEADD(MINUTE, 44639, @D0), N'Published', NULL, 3, DATEADD(MINUTE, -86880, @D0), NULL),
     (2, 2, 1, N'Frontend ReactJS Developer', N'Phát triển giao diện web bằng React 18, TypeScript, tích hợp REST API.
 Làm việc cùng đội ngũ trẻ, quy trình Agile/Scrum.', N'- Tối thiểu 2 năm ReactJS
 - thành thạo Redux Toolkit hoặc Zustand.', N'- Lương tháng 13, thưởng dự án
 - Bảo hiểm sức khỏe PVI
 - 12 ngày phép năm
-- Review lương 2 lần/năm', N'20,000,000 - 32,000,000 VND', NULL, N'Tầng 8, Tòa nhà RMS Tower, Phố Duy Tân, Cầu Giấy, Hà Nội', N'Thứ 2 - Thứ 6 (08:30 - 17:30)', NULL, NULL, N'Any', N'2 tháng', DATEADD(MINUTE, -83040, @D0), DATEADD(MINUTE, 37439, @D0), N'Published', NULL, 3, DATEADD(MINUTE, -84000, @D0), NULL),
+- Review lương 2 lần/năm', N'20,000,000 - 32,000,000 VND', NULL, N'Tầng 8, Tòa nhà RMS Tower, Phố Duy Tân, Cầu Giấy, Hà Nội', N'Thứ 2 - Thứ 6 (08:30 - 17:30)', NULL, NULL, DATEADD(MINUTE, -83040, @D0), DATEADD(MINUTE, 37439, @D0), N'Published', NULL, 3, DATEADD(MINUTE, -84000, @D0), NULL),
     (3, 3, 1, N'QA Automation Engineer', N'Xây dựng framework kiểm thử tự động API và Web UI bằng Playwright, tích hợp CI/CD.
 Làm việc cùng đội ngũ trẻ, quy trình Agile/Scrum.', N'- Tối thiểu 2 năm Automation Test
 - thành thạo Postman, Playwright hoặc Selenium.', N'- Lương tháng 13, thưởng dự án
 - Bảo hiểm sức khỏe PVI
 - 12 ngày phép năm
-- Review lương 2 lần/năm', N'18,000,000 - 28,000,000 VND', N'1 người', N'Tầng 8, Tòa nhà RMS Tower, Phố Duy Tân, Cầu Giấy, Hà Nội', N'Thứ 2 - Thứ 6 (08:30 - 17:30)', NULL, NULL, N'Any', N'2 tháng', DATEADD(MINUTE, -78720, @D0), DATEADD(MINUTE, 30239, @D0), N'Paused', NULL, 4, DATEADD(MINUTE, -79680, @D0), DATEADD(MINUTE, -6540, @D0)),
+- Review lương 2 lần/năm', N'18,000,000 - 28,000,000 VND', 1, N'Tầng 8, Tòa nhà RMS Tower, Phố Duy Tân, Cầu Giấy, Hà Nội', N'Thứ 2 - Thứ 6 (08:30 - 17:30)', NULL, NULL, DATEADD(MINUTE, -78720, @D0), DATEADD(MINUTE, 30239, @D0), N'Paused', NULL, 4, DATEADD(MINUTE, -79680, @D0), DATEADD(MINUTE, -6540, @D0)),
     (4, 4, 1, N'Business Development Executive (B2B)', N'Tìm kiếm khách hàng B2B, tư vấn giải pháp chuyển đổi số, đàm phán hợp đồng.
 Làm việc cùng đội ngũ trẻ, quy trình Agile/Scrum.', N'- Tối thiểu 1 năm Sales B2B ngành phần mềm
 - giao tiếp và thuyết trình tốt.', N'- Lương tháng 13, thưởng dự án
 - Bảo hiểm sức khỏe PVI
 - 12 ngày phép năm
-- Review lương 2 lần/năm', N'15,000,000 - 25,000,000 VND', N'2 người', N'Số 12 Lê Thánh Tôn, Bến Nghé, Quận 1, TP. Hồ Chí Minh', N'Thứ 2 - Thứ 7 (08:00 - 17:00)', NULL, NULL, N'Any', N'2 tháng', DATEADD(MINUTE, -80160, @D0), DATEADD(MINUTE, 31679, @D0), N'Published', NULL, 4, DATEADD(MINUTE, -81120, @D0), NULL),
+- Review lương 2 lần/năm', N'15,000,000 - 25,000,000 VND', 2, N'Số 12 Lê Thánh Tôn, Bến Nghé, Quận 1, TP. Hồ Chí Minh', N'Thứ 2 - Thứ 7 (08:00 - 17:00)', NULL, NULL, DATEADD(MINUTE, -80160, @D0), DATEADD(MINUTE, 31679, @D0), N'Published', NULL, 4, DATEADD(MINUTE, -81120, @D0), NULL),
     (5, 5, 1, N'Digital Marketing Specialist', N'Lập kế hoạch và triển khai chiến dịch quảng cáo Facebook, Google, TikTok.
 Làm việc cùng đội ngũ trẻ, quy trình Agile/Scrum.', N'- Tối thiểu 1 năm Digital Marketing
 - biết đo lường hiệu quả chiến dịch.', N'- Lương tháng 13, thưởng dự án
 - Bảo hiểm sức khỏe PVI
 - 12 ngày phép năm
-- Review lương 2 lần/năm', N'14,000,000 - 20,000,000 VND', N'1 người', N'Số 12 Lê Thánh Tôn, Bến Nghé, Quận 1, TP. Hồ Chí Minh', N'Thứ 2 - Thứ 6 (08:30 - 17:30)', NULL, NULL, N'Female', N'1 tháng', DATEADD(MINUTE, -64320, @D0), DATEADD(MINUTE, -1441, @D0), N'Published', NULL, 4, DATEADD(MINUTE, -65280, @D0), NULL),
+- Review lương 2 lần/năm', N'14,000,000 - 20,000,000 VND', 1, N'Số 12 Lê Thánh Tôn, Bến Nghé, Quận 1, TP. Hồ Chí Minh', N'Thứ 2 - Thứ 6 (08:30 - 17:30)', NULL, NULL, DATEADD(MINUTE, -64320, @D0), DATEADD(MINUTE, -1441, @D0), N'Published', NULL, 4, DATEADD(MINUTE, -65280, @D0), NULL),
     (6, 6, 1, N'Kế toán tổng hợp', N'Hạch toán, lập báo cáo thuế tháng/quý, quyết toán cuối năm.
 Làm việc cùng đội ngũ trẻ, quy trình Agile/Scrum.', N'- Tốt nghiệp Kế toán – Kiểm toán
 - tối thiểu 2 năm kế toán tổng hợp, thành thạo MISA.', N'- Lương tháng 13, thưởng dự án
 - Bảo hiểm sức khỏe PVI
 - 12 ngày phép năm
-- Review lương 2 lần/năm', N'15,000,000 - 22,000,000 VND', N'1 người', N'Tầng 8, Tòa nhà RMS Tower, Phố Duy Tân, Cầu Giấy, Hà Nội', N'Thứ 2 - Thứ 6 (08:30 - 17:30)', NULL, NULL, N'Any', NULL, DATEADD(MINUTE, -57120, @D0), DATEADD(MINUTE, 51839, @D0), N'Published', NULL, 3, DATEADD(MINUTE, -58080, @D0), NULL),
+- Review lương 2 lần/năm', N'15,000,000 - 22,000,000 VND', 1, N'Tầng 8, Tòa nhà RMS Tower, Phố Duy Tân, Cầu Giấy, Hà Nội', N'Thứ 2 - Thứ 6 (08:30 - 17:30)', NULL, NULL, DATEADD(MINUTE, -57120, @D0), DATEADD(MINUTE, 51839, @D0), N'Published', NULL, 3, DATEADD(MINUTE, -58080, @D0), NULL),
     (7, 7, 1, N'Thực tập sinh Java Backend', N'Tham gia phát triển module nội bộ cùng đội Backend dưới sự hướng dẫn của mentor.
 Làm việc cùng đội ngũ trẻ, quy trình Agile/Scrum.', N'- Sinh viên năm 3-4 ngành CNTT
 - nắm vững Java cơ bản và OOP.', N'- Lương tháng 13, thưởng dự án
 - Bảo hiểm sức khỏe PVI
 - 12 ngày phép năm
-- Review lương 2 lần/năm', N'3,000,000 - 5,000,000 VND', N'3 người', N'Làm việc từ xa', N'Thứ 2 - Thứ 6 (08:30 - 17:30)', NULL, NULL, N'Any', NULL, DATEADD(MINUTE, -136320, @D0), DATEADD(MINUTE, -70561, @D0), N'Closed', DATEADD(MINUTE, -70980, @D0), 3, DATEADD(MINUTE, -137280, @D0), DATEADD(MINUTE, -70980, @D0)),
+- Review lương 2 lần/năm', N'3,000,000 - 5,000,000 VND', 3, N'Làm việc từ xa', N'Thứ 2 - Thứ 6 (08:30 - 17:30)', NULL, NULL, DATEADD(MINUTE, -136320, @D0), DATEADD(MINUTE, -70561, @D0), N'Closed', DATEADD(MINUTE, -70980, @D0), 3, DATEADD(MINUTE, -137280, @D0), DATEADD(MINUTE, -70980, @D0)),
     (8, 7, 2, N'Thực tập sinh Java Backend', N'Tham gia phát triển module nội bộ cùng đội Backend dưới sự hướng dẫn của mentor.
 Làm việc cùng đội ngũ trẻ, quy trình Agile/Scrum.', N'- Sinh viên năm 3-4 ngành CNTT
 - nắm vững Java cơ bản và OOP.', N'- Lương tháng 13, thưởng dự án
 - Bảo hiểm sức khỏe PVI
 - 12 ngày phép năm
-- Review lương 2 lần/năm', N'3,000,000 - 5,000,000 VND', N'3 người', N'Làm việc từ xa', N'Thứ 2 - Thứ 6 (08:30 - 17:30)', N'Internship', N'Hybrid', N'Any', NULL, DATEADD(MINUTE, -60, @Now), DATEADD(MINUTE, 59039, @D0), N'Published', NULL, 3, DATEADD(MINUTE, -90, @Now), NULL),
+- Review lương 2 lần/năm', N'3,000,000 - 5,000,000 VND', 3, N'Làm việc từ xa', N'Thứ 2 - Thứ 6 (08:30 - 17:30)', N'Internship', N'Hybrid', DATEADD(MINUTE, -60, @Now), DATEADD(MINUTE, 59039, @D0), N'Published', NULL, 3, DATEADD(MINUTE, -90, @Now), NULL),
     (9, 12, 1, N'Customer Support Executive', N'Tiếp nhận và xử lý yêu cầu hỗ trợ của khách hàng qua điện thoại, email, chat.
 Làm việc cùng đội ngũ trẻ, quy trình Agile/Scrum.', N'- Giao tiếp tốt
 - kiên nhẫn, ưu tiên có kinh nghiệm chăm sóc khách hàng.', N'- Lương tháng 13, thưởng dự án
 - Bảo hiểm sức khỏe PVI
 - 12 ngày phép năm
-- Review lương 2 lần/năm', N'9,000,000 - 12,000,000 VND', N'2 người', N'Số 12 Lê Thánh Tôn, Bến Nghé, Quận 1, TP. Hồ Chí Minh', N'Thứ 2 - Thứ 6 (08:30 - 17:30)', NULL, NULL, N'Any', N'1 tháng', DATEADD(MINUTE, -150720, @D0), DATEADD(MINUTE, -20161, @D0), N'Closed', DATEADD(MINUTE, -16260, @D0), 4, DATEADD(MINUTE, -151680, @D0), DATEADD(MINUTE, -16260, @D0)),
+- Review lương 2 lần/năm', N'9,000,000 - 12,000,000 VND', 2, N'Số 12 Lê Thánh Tôn, Bến Nghé, Quận 1, TP. Hồ Chí Minh', N'Thứ 2 - Thứ 6 (08:30 - 17:30)', NULL, NULL, DATEADD(MINUTE, -150720, @D0), DATEADD(MINUTE, -20161, @D0), N'Closed', DATEADD(MINUTE, -16260, @D0), 4, DATEADD(MINUTE, -151680, @D0), DATEADD(MINUTE, -16260, @D0)),
     (10, 13, 1, N'Customer Support Executive (Đợt 2)', N'Tiếp nhận và xử lý yêu cầu hỗ trợ của khách hàng qua điện thoại, email, chat.
 Làm việc cùng đội ngũ trẻ, quy trình Agile/Scrum.', N'- Giao tiếp tốt
 - kiên nhẫn, ưu tiên có kinh nghiệm chăm sóc khách hàng.', N'- Lương tháng 13, thưởng dự án
 - Bảo hiểm sức khỏe PVI
 - 12 ngày phép năm
-- Review lương 2 lần/năm', N'9,000,000 - 13,000,000 VND', N'1 người', N'Số 12 Lê Thánh Tôn, Bến Nghé, Quận 1, TP. Hồ Chí Minh', N'Thứ 2 - Thứ 6 (08:30 - 17:30)', NULL, NULL, N'Any', N'1 tháng', NULL, NULL, N'Draft', NULL, 4, DATEADD(MINUTE, -3360, @D0), NULL);
+- Review lương 2 lần/năm', N'9,000,000 - 13,000,000 VND', 1, N'Số 12 Lê Thánh Tôn, Bến Nghé, Quận 1, TP. Hồ Chí Minh', N'Thứ 2 - Thứ 6 (08:30 - 17:30)', NULL, NULL, NULL, NULL, N'Draft', NULL, 4, DATEADD(MINUTE, -3360, @D0), NULL);
 SET IDENTITY_INSERT JobPosting OFF;
 
 -- Candidate (122 dòng)
@@ -2044,7 +2044,7 @@ INSERT INTO [Notification] (RecipientId, ActorId, Title, Content, EventType, Ref
     (3, 216, N'Ứng viên đã chấp nhận thư mời', N'Nguyễn Văn Sơn đã phản hồi thư mời.', 'OFFER_ACCEPTED', NULL, '32', N'/offers/32', 0, NULL, 'OFFER_RESP_ACC_32', DATEADD(MINUTE, 1, @D0)),
     (11, 216, N'Ứng viên đã chấp nhận thư mời', N'Nguyễn Văn Sơn đã phản hồi thư mời.', 'OFFER_ACCEPTED', NULL, '32', N'/applications/119', 0, NULL, 'OFFER_RESP_HM_ACC_32', DATEADD(MINUTE, 1, @D0));
 
--- AuditLog (192 dòng)
+-- AuditLog (191 dòng)
 INSERT INTO AuditLog (UserId, [Action], EntityName, EntityId, OldValue, NewValue, IpAddress, [Timestamp]) VALUES
     (1, N'LOGIN', N'User', N'1', NULL, N'Đăng nhập thành công', N'192.168.1.20', DATEADD(MINUTE, -42714, @D0)),
     (1, N'LOGIN', N'User', N'1', NULL, N'Đăng nhập thành công', N'192.168.1.20', DATEADD(MINUTE, -9594, @D0)),
@@ -2097,7 +2097,6 @@ INSERT INTO AuditLog (UserId, [Action], EntityName, EntityId, OldValue, NewValue
     (2, N'UPDATE', N'JobRequisition', N'10', N'Pending_Director', N'Rejected', N'192.168.1.20', DATEADD(MINUTE, -25260, @D0)),
     (5, N'CREATE', N'JobRequisition', N'11', NULL, N'Tạo yêu cầu: Mobile Developer (Flutter) · Draft', N'192.168.1.20', DATEADD(MINUTE, -42660, @D0));
 INSERT INTO AuditLog (UserId, [Action], EntityName, EntityId, OldValue, NewValue, IpAddress, [Timestamp]) VALUES
-    (5, N'UPDATE', N'JobRequisition', N'11', N'Draft', N'Cancelled', N'192.168.1.20', DATEADD(MINUTE, -37920, @D0)),
     (6, N'CREATE', N'JobRequisition', N'12', NULL, N'Tạo yêu cầu: Customer Support Executive · Pending_Director', N'192.168.1.20', DATEADD(MINUTE, -157860, @D0)),
     (2, N'UPDATE', N'JobRequisition', N'12', N'Pending_Director', N'Approved', N'192.168.1.20', DATEADD(MINUTE, -153480, @D0)),
     (3, N'UPDATE', N'JobRequisition', N'12', N'Approved', N'Closed', N'192.168.1.20', DATEADD(MINUTE, -16260, @D0)),
@@ -2146,9 +2145,9 @@ INSERT INTO AuditLog (UserId, [Action], EntityName, EntityId, OldValue, NewValue
     (3, N'UPDATE', N'InterviewSchedule', N'8', NULL, N'MailSent:InterviewInvitation', N'192.168.1.20', DATEADD(MINUTE, -111407, @D0)),
     (122, N'UPDATE', N'Application', N'19', N'Applied', N'Withdrawn', N'192.168.1.20', DATEADD(MINUTE, -114633, @D0)),
     (3, N'UPDATE', N'Application', N'20', N'Applied', N'PostingClosed', N'192.168.1.20', DATEADD(MINUTE, -70980, @D0)),
-    (3, N'UPDATE', N'Application', N'20', NULL, N'MailSent:PostingClosed', N'192.168.1.20', DATEADD(MINUTE, -70975, @D0));
+    (3, N'UPDATE', N'Application', N'20', NULL, N'MailSent:PostingClosed', N'192.168.1.20', DATEADD(MINUTE, -70975, @D0)),
+    (3, N'UPDATE', N'Application', N'21', N'HR_Passed', N'PostingClosed', N'192.168.1.20', DATEADD(MINUTE, -70980, @D0));
 INSERT INTO AuditLog (UserId, [Action], EntityName, EntityId, OldValue, NewValue, IpAddress, [Timestamp]) VALUES
-    (3, N'UPDATE', N'Application', N'21', N'HR_Passed', N'PostingClosed', N'192.168.1.20', DATEADD(MINUTE, -70980, @D0)),
     (3, N'UPDATE', N'Application', N'21', NULL, N'MailFailed:PostingClosed', N'192.168.1.20', DATEADD(MINUTE, -70975, @D0)),
     (4, N'UPDATE', N'InterviewSchedule', N'9', NULL, N'MailSent:InterviewInvitation', N'192.168.1.20', DATEADD(MINUTE, -29038, @D0)),
     (3, N'UPDATE', N'InterviewSchedule', N'10', NULL, N'MailSent:InterviewInvitation', N'192.168.1.20', DATEADD(MINUTE, -11698, @D0)),
@@ -2197,9 +2196,9 @@ INSERT INTO AuditLog (UserId, [Action], EntityName, EntityId, OldValue, NewValue
     (3, N'UPDATE', N'InterviewSchedule', N'48', NULL, N'MailSent:InterviewInvitation', N'192.168.1.20', DATEADD(MINUTE, -11905, @D0)),
     (4, N'UPDATE', N'InterviewSchedule', N'49', NULL, N'MailSent:InterviewInvitation', N'192.168.1.20', DATEADD(MINUTE, -32286, @D0)),
     (3, N'UPDATE', N'InterviewSchedule', N'50', NULL, N'MailSent:InterviewInvitation', N'192.168.1.20', DATEADD(MINUTE, -19220, @D0)),
-    (4, N'UPDATE', N'InterviewSchedule', N'51', NULL, N'MailSent:InterviewInvitation', N'192.168.1.20', DATEADD(MINUTE, -38072, @D0));
+    (4, N'UPDATE', N'InterviewSchedule', N'51', NULL, N'MailSent:InterviewInvitation', N'192.168.1.20', DATEADD(MINUTE, -38072, @D0)),
+    (3, N'UPDATE', N'InterviewSchedule', N'52', NULL, N'MailSent:InterviewInvitation', N'192.168.1.20', DATEADD(MINUTE, -34074, @D0));
 INSERT INTO AuditLog (UserId, [Action], EntityName, EntityId, OldValue, NewValue, IpAddress, [Timestamp]) VALUES
-    (3, N'UPDATE', N'InterviewSchedule', N'52', NULL, N'MailSent:InterviewInvitation', N'192.168.1.20', DATEADD(MINUTE, -34074, @D0)),
     (4, N'UPDATE', N'InterviewSchedule', N'53', NULL, N'MailSent:InterviewInvitation', N'192.168.1.20', DATEADD(MINUTE, -43388, @D0)),
     (3, N'UPDATE', N'InterviewSchedule', N'54', NULL, N'MailSent:InterviewInvitation', N'192.168.1.20', DATEADD(MINUTE, -48341, @D0)),
     (4, N'UPDATE', N'InterviewSchedule', N'55', NULL, N'MailSent:InterviewInvitation', N'192.168.1.20', DATEADD(MINUTE, -31051, @D0)),
@@ -2275,7 +2274,6 @@ IF NOT EXISTS (SELECT 1 FROM JobRequisition WHERE ApprovalStatus = N'Pending_Dir
 IF NOT EXISTS (SELECT 1 FROM JobRequisition WHERE ApprovalStatus = N'Approved') SET @Missing += N'JobRequisition.ApprovalStatus=Approved; ';
 IF NOT EXISTS (SELECT 1 FROM JobRequisition WHERE ApprovalStatus = N'Rejected') SET @Missing += N'JobRequisition.ApprovalStatus=Rejected; ';
 IF NOT EXISTS (SELECT 1 FROM JobRequisition WHERE ApprovalStatus = N'Closed') SET @Missing += N'JobRequisition.ApprovalStatus=Closed; ';
-IF NOT EXISTS (SELECT 1 FROM JobRequisition WHERE ApprovalStatus = N'Cancelled') SET @Missing += N'JobRequisition.ApprovalStatus=Cancelled; ';
 IF NOT EXISTS (SELECT 1 FROM JobPosting WHERE PostingStatus = N'Draft') SET @Missing += N'JobPosting.PostingStatus=Draft; ';
 IF NOT EXISTS (SELECT 1 FROM JobPosting WHERE PostingStatus = N'Published') SET @Missing += N'JobPosting.PostingStatus=Published; ';
 IF NOT EXISTS (SELECT 1 FROM JobPosting WHERE PostingStatus = N'Paused') SET @Missing += N'JobPosting.PostingStatus=Paused; ';
@@ -2321,13 +2319,10 @@ IF NOT EXISTS (SELECT 1 FROM Department WHERE DepartmentStatus = N'Inactive') SE
 IF NOT EXISTS (SELECT 1 FROM JobRequisition WHERE EmploymentType = N'Full-time') SET @Missing += N'JobRequisition.EmploymentType=Full-time; ';
 IF NOT EXISTS (SELECT 1 FROM JobRequisition WHERE EmploymentType = N'Part-time') SET @Missing += N'JobRequisition.EmploymentType=Part-time; ';
 IF NOT EXISTS (SELECT 1 FROM JobRequisition WHERE EmploymentType = N'Internship') SET @Missing += N'JobRequisition.EmploymentType=Internship; ';
-IF NOT EXISTS (SELECT 1 FROM JobRequisition WHERE EmploymentType = N'Contract') SET @Missing += N'JobRequisition.EmploymentType=Contract; ';
+IF NOT EXISTS (SELECT 1 FROM JobRequisition WHERE EmploymentType = N'Freelance') SET @Missing += N'JobRequisition.EmploymentType=Freelance; ';
 IF NOT EXISTS (SELECT 1 FROM JobRequisition WHERE WorkModel = N'On-site') SET @Missing += N'JobRequisition.WorkModel=On-site; ';
 IF NOT EXISTS (SELECT 1 FROM JobRequisition WHERE WorkModel = N'Remote') SET @Missing += N'JobRequisition.WorkModel=Remote; ';
 IF NOT EXISTS (SELECT 1 FROM JobRequisition WHERE WorkModel = N'Hybrid') SET @Missing += N'JobRequisition.WorkModel=Hybrid; ';
-IF NOT EXISTS (SELECT 1 FROM JobRequisition WHERE RequiredGender = N'Male') SET @Missing += N'JobRequisition.RequiredGender=Male; ';
-IF NOT EXISTS (SELECT 1 FROM JobRequisition WHERE RequiredGender = N'Female') SET @Missing += N'JobRequisition.RequiredGender=Female; ';
-IF NOT EXISTS (SELECT 1 FROM JobRequisition WHERE RequiredGender = N'Any') SET @Missing += N'JobRequisition.RequiredGender=Any; ';
 IF NOT EXISTS (SELECT 1 FROM AuditLog WHERE [Action] = N'CREATE') SET @Missing += N'AuditLog.[Action]=CREATE; ';
 IF NOT EXISTS (SELECT 1 FROM AuditLog WHERE [Action] = N'UPDATE') SET @Missing += N'AuditLog.[Action]=UPDATE; ';
 IF NOT EXISTS (SELECT 1 FROM AuditLog WHERE [Action] = N'DELETE') SET @Missing += N'AuditLog.[Action]=DELETE; ';

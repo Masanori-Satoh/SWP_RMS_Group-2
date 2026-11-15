@@ -1,6 +1,9 @@
 package com.group2.rms.jobposting.service;
 
 import com.group2.rms.admin.entity.AuditLog;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -12,6 +15,8 @@ import java.util.Objects;
  * LABELS: đổi giá trị của tin (trạng thái, hạn nộp, audit) sang chữ tiếng Việt và tông màu badge.
  */
 public final class JobPostingLabels {
+
+    private static final ObjectMapper AUDIT_JSON = new ObjectMapper();
 
     // Nhóm hạn nộp trên bộ lọc và màu cột hạn nộp
     public static final String DEADLINE_OPEN = "open";
@@ -119,10 +124,16 @@ public final class JobPostingLabels {
     public static String activityLabel(AuditLog log) {
         String detail = Objects.toString(log.getNewValue(), "");
         String action = Objects.toString(log.getAction(), "");
+        if (JobPostingAuditLogger.ACTION_PUBLISH.equalsIgnoreCase(action)) return "Đăng tin";
+        if (JobPostingAuditLogger.ACTION_UNPUBLISH.equalsIgnoreCase(action)) return "Tạm dừng";
+        if (JobPostingAuditLogger.ACTION_RESTORE.equalsIgnoreCase(action)) return "Khôi phục";
         if (JobPostingAuditLogger.ACTION_UPDATE.equalsIgnoreCase(action)) {
+            if ("Closed".equals(jsonStatus(detail))) return "Đóng tin";
+            if (detail.startsWith("{")) return "Cập nhật";
             return updateActivityLabel(detail);
         }
         if (JobPostingAuditLogger.ACTION_CREATE.equalsIgnoreCase(action)) {
+            if (JobPostingAccess.STATUS_PUBLISHED.equals(jsonStatus(detail))) return "Tạo và đăng tin";
             if (detail.startsWith(LOG_CREATE + ": " + JobPostingAccess.STATUS_PUBLISHED)) {
                 return "Tạo và đăng tin";
             }
@@ -132,6 +143,16 @@ public final class JobPostingLabels {
             return "Xóa";
         }
         return "Tạo mới";
+    }
+
+    private static String jsonStatus(String detail) {
+        if (!detail.startsWith("{")) return null;
+        try {
+            JsonNode root = AUDIT_JSON.readTree(detail);
+            return root.path("Status").isTextual() ? root.path("Status").asText() : null;
+        } catch (JsonProcessingException e) {
+            return null;
+        }
     }
 
     private static String updateActivityLabel(String detail) {

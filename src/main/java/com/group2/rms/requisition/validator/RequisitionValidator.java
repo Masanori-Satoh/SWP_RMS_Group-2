@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.time.Clock;
+import java.time.LocalDate;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,10 +20,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class RequisitionValidator {
 
-    /**
-     * Hai nút trên form: "Lưu bản nháp" gửi action=draft, "Gửi duyệt" gửi
-     * action=submit.
-     */
+
     public static final String ACTION_DRAFT = "draft";
     public static final String ACTION_SUBMIT = "submit";
 
@@ -32,38 +30,33 @@ public class RequisitionValidator {
     public static final int SHORT_FIELD_CHAR_LIMIT = 255;
     public static final int COMMENT_CHAR_LIMIT = 1000;
     public static final String PLACEHOLDER_TITLE = "Chưa nhập vị trí";
-    public static final int PROBATION_CHAR_LIMIT = 100;
     public static final int POSITIONS_MIN = 1;
-    public static final int ROUND_MIN = 1;
-    public static final int ROUND_MAX = 99;
-    public static final int POSITIONS_MAX = 30;
     public static final String SALARY_MAX_TEXT = "1000000000";
     public static final BigDecimal SALARY_MAX = new BigDecimal(SALARY_MAX_TEXT);
 
     // Câu lỗi dùng chung cho annotation trên DTO và validate()
     public static final String TITLE_TOO_LONG = "Nội dung quá " + TITLE_CHAR_LIMIT + " ký tự";
     public static final String SHORT_FIELD_TOO_LONG = "Nội dung quá " + SHORT_FIELD_CHAR_LIMIT + " ký tự";
-    public static final String PROBATION_TOO_LONG = "Nội dung quá " + PROBATION_CHAR_LIMIT + " ký tự";
-    public static final String ROUND_RANGE_MESSAGE = "Đợt tuyển dụng phải từ " + ROUND_MIN + " đến " + ROUND_MAX + ".";
-    public static final String POSITIONS_RANGE_MESSAGE = "Số lượng cần tuyển phải từ " + POSITIONS_MIN + " đến "
-            + POSITIONS_MAX + " người.";
+    public static final String EXPECTED_STAFFING_DATE_LABEL = "Ngày dự kiến nhận việc";
+    public static final String POSITIONS_LABEL = "Số lượng cần tuyển";
+    public static final String POSITIONS_MIN_MESSAGE = POSITIONS_LABEL + " phải lớn hơn hoặc bằng " + POSITIONS_MIN + ".";
+    public static final String POSITIONS_REQUIRED_MESSAGE = POSITIONS_LABEL + " là bắt buộc.";
     public static final String SALARY_FORMAT_MESSAGE = "Mức lương phải lớn hơn 0 với tối đa 2 chữ số thập phân.";
     public static final String SALARY_MAX_MESSAGE = "Mức lương không được vượt quá 1.000.000.000 VND/tháng.";
 
-    public static final List<String> EMPLOYMENT_TYPES = List.of("Full-time", "Part-time", "Internship", "Contract");
-    public static final List<String> GENDERS = List.of("Any", "Male", "Female");
+    public static final List<String> EMPLOYMENT_TYPES = List.of("Full-time", "Part-time", "Internship", "Freelance");
     public static final List<String> WORK_MODELS = List.of("On-site", "Remote", "Hybrid");
-    public static final String GENDER_ANY = "Any";
 
-    /**
-     * Đồng hồ dùng chung (ClockConfig); test truyền Clock.fixed để cố định "hôm
-     * nay".
-     */
+
     private final Clock clock;
 
     /** Người dùng bấm "Gửi duyệt" */
     public static boolean isSubmit(String action) {
         return ACTION_SUBMIT.equals(action);
+    }
+
+    public LocalDate today() {
+        return LocalDate.now(clock);
     }
 
     public void validate(RequisitionRequest requisitionRequest) {
@@ -87,13 +80,16 @@ public class RequisitionValidator {
         if ("Remote".equals(requisitionRequest.getWorkModel())) {
             requisitionRequest.setWorkLocation(null);
         }
-        requisitionRequest.setGender(cleanString(requisitionRequest.getGender()));
-        requisitionRequest.setProbationPeriod(cleanString(requisitionRequest.getProbationPeriod()));
-        if (requisitionRequest.getGender() == null) {
-            requisitionRequest.setGender(GENDER_ANY);
+
+        // Bản nháp chỉ cần hành động hợp lệ; nội dung được kiểm tra khi gửi duyệt.
+        if (!isSubmitAction) {
+            if (!errors.isEmpty()) {
+                throw new RequisitionValidationException(errors);
+            }
+            return;
         }
 
-        // Rule: tên vị trí bắt buộc cả khi lưu nháp
+        // Rule: tên vị trí bắt buộc khi gửi duyệt
         validateTextField(errors, "title", requisitionRequest.getTitle(), TITLE_CHAR_LIMIT, true);
         validateTextField(errors, "reasonForHiring", requisitionRequest.getReasonForHiring(), REASON_CHAR_LIMIT,
                 isSubmitAction);
@@ -110,32 +106,31 @@ public class RequisitionValidator {
         validateTextField(errors, "workLocation", requisitionRequest.getWorkLocation(), SHORT_FIELD_CHAR_LIMIT,
                 isSubmitAction && !"Remote".equals(requisitionRequest.getWorkModel()));
 
-        // Rule: thử việc không bắt buộc, chữ tự do (VD "2 tháng", "Thỏa thuận"), tối đa
-        // PROBATION_CHAR_LIMIT ký tự
-        validateTextField(errors, "probationPeriod", requisitionRequest.getProbationPeriod(), PROBATION_CHAR_LIMIT,
-                false);
-
         // Rule: Các trường chọn phải nằm trong danh mục hợp lệ.
         validateChoiceField(errors, "employmentType", requisitionRequest.getEmploymentType(), EMPLOYMENT_TYPES, true);
         validateChoiceField(errors, "workModel", requisitionRequest.getWorkModel(), WORK_MODELS, true);
-        validateChoiceField(errors, "gender", requisitionRequest.getGender(), GENDERS, true);
-        // Rule: đợt tuyển dụng do HM nhập tay; để trống thì là đợt 1
-        Integer round = requisitionRequest.getRecruitmentRound();
-        if (round == null) {
-            requisitionRequest.setRecruitmentRound(ROUND_MIN);
-        } else if (round < ROUND_MIN || round > ROUND_MAX) {
-            errors.put("recruitmentRound", ROUND_RANGE_MESSAGE);
+        if (isSubmitAction && requisitionRequest.getExpectedStaffingDate() == null) {
+            errors.put("expectedStaffingDate", "Vui lòng chọn ngày dự kiến nhận việc.");
+        } else if (requisitionRequest.getExpectedStaffingDate() != null
+                && requisitionRequest.getExpectedStaffingDate().isBefore(today())) {
+            errors.put("expectedStaffingDate", "Ngày dự kiến nhận việc không được trước hôm nay.");
         }
 
         // Rule: Số lượng tuyển dụng bắt buộc
         Integer numberOfPositions = requisitionRequest.getNumberOfPositions();
         if (numberOfPositions == null) {
-            errors.put("numberOfPositions", "Vui lòng nhập số lượng cần tuyển.");
-        } else if (numberOfPositions < POSITIONS_MIN || numberOfPositions > POSITIONS_MAX) {
-            errors.put("numberOfPositions", POSITIONS_RANGE_MESSAGE);
+            errors.put("numberOfPositions", POSITIONS_REQUIRED_MESSAGE);
+        } else if (numberOfPositions < POSITIONS_MIN) {
+            errors.put("numberOfPositions", POSITIONS_MIN_MESSAGE);
         }
 
         // Rule: Mức lương phải lớn hơn 0 và lương tối đa >= lương tối thiểu
+        if (isSubmitAction && requisitionRequest.getMinSalary() == null) {
+            errors.put("minSalary", "Vui lòng nhập mức lương tối thiểu.");
+        }
+        if (isSubmitAction && requisitionRequest.getMaxSalary() == null) {
+            errors.put("maxSalary", "Vui lòng nhập mức lương tối đa.");
+        }
         validateMoneyField(errors, "minSalary", requisitionRequest.getMinSalary());
         validateMoneyField(errors, "maxSalary", requisitionRequest.getMaxSalary());
         if (requisitionRequest.getMinSalary() != null && requisitionRequest.getMaxSalary() != null
@@ -146,6 +141,16 @@ public class RequisitionValidator {
         if (!errors.isEmpty()) {
             throw new RequisitionValidationException(errors);
         }
+    }
+
+    /** Câu lỗi khi ô số nguyên nhận giá trị không parse được: số thập phân hay chữ/ký tự đặc biệt. */
+    public static String integerFormatMessage(String label, Object rawValue) {
+        String raw = rawValue == null ? "" : String.valueOf(rawValue).trim();
+        if (raw.matches("[-+]?\\d+[.,]\\d+")) {
+            return label + " phải là số nguyên.";
+        }
+        // Toàn chữ số mà vẫn không đọc được = vượt giới hạn kiểu INT
+        return raw.matches("[-+]?\\d+") ? label + " quá lớn." : label + " chỉ được chứa số nguyên.";
     }
 
     public static String cleanString(String textValue) {
@@ -180,10 +185,7 @@ public class RequisitionValidator {
         }
     }
 
-    /**
-     * Lương không bắt buộc; nếu nhập thì từ 1 đến SALARY_MAX VND/tháng, tối đa 2
-     * chữ số thập phân.
-     */
+
     private void validateMoneyField(Map<String, String> errorsMap, String fieldKey, BigDecimal amount) {
         if (amount == null) {
             return;

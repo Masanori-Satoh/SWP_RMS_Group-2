@@ -1,7 +1,6 @@
 package com.group2.rms.jobposting.entity;
 
 import com.group2.rms.core.base.BaseEntity;
-import com.group2.rms.jobposting.service.JobPostingAccess;
 import com.group2.rms.requisition.entity.JobRequisition;
 import com.group2.rms.user.entity.User;
 import jakarta.persistence.Column;
@@ -20,6 +19,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * 3.10 JobPosting - Tin tuyển dụng công khai (từ JobRequisition đã được duyệt).
@@ -33,6 +33,14 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 public class JobPosting extends BaseEntity {
+
+    // Giá trị PostingStatus trong DB (CK_JobPosting_Status chỉ có 4 giá trị này)
+    public static final String STATUS_DRAFT = "Draft";
+    public static final String STATUS_PUBLISHED = "Published";
+    public static final String STATUS_PAUSED = "Paused";
+    public static final String STATUS_CLOSED = "Closed";
+    /** Tin "đang mở" của một yêu cầu: mỗi yêu cầu chỉ được có 1 tin ở các trạng thái này. */
+    public static final List<String> OPEN_STATUSES = List.of(STATUS_DRAFT, STATUS_PUBLISHED, STATUS_PAUSED);
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -67,8 +75,8 @@ public class JobPosting extends BaseEntity {
     /**
      * Số lượng hiển thị trên tin công khai; NULL = không hiển thị.
      */
-    @Column(name = "NumberOfPositionsDisplay", length = 50)
-    private String numberOfPositionsDisplay;
+    @Column(name = "NumberOfPositionsDisplay")
+    private Integer numberOfPositionsDisplay;
 
     @Column(name = "WorkLocation", length = 255)
     private String workLocation;
@@ -84,14 +92,6 @@ public class JobPosting extends BaseEntity {
     /** Mô hình riêng của tin (On-site...); NULL = dùng của yêu cầu, xem effectiveWorkModel(). */
     @Column(name = "WorkModel", length = 20)
     private String workModel;
-
-    /** Yêu cầu giới tính riêng của tin; NULL ở tin cũ thì lấy từ yêu cầu. */
-    @Column(name = "RequiredGender", length = 20)
-    private String gender;
-
-    /** Thời gian thử việc hiển thị, ví dụ "2 tháng", "Thỏa thuận"; NULL = không hiển thị. */
-    @Column(name = "ProbationPeriod", length = 100)
-    private String probationPeriod;
 
     @Column(name = "PostingDate")
     private LocalDateTime postingDate;
@@ -132,15 +132,8 @@ public class JobPosting extends BaseEntity {
         return "Remote".equals(effectiveWorkModel()) ? null : workLocation;
     }
 
-    public String effectiveGender() {
-        if (gender != null || requisition == null) {
-            return gender;
-        }
-        return requisition.getGender();
-    }
-
     /** Ứng viên thấy tin khi đang đăng (Published) và đã tới giờ đăng. */
     public boolean isVisibleToCandidates(LocalDateTime now) {
-        return JobPostingAccess.STATUS_PUBLISHED.equals(postingStatus) && (postingDate == null || !postingDate.isAfter(now));
+        return STATUS_PUBLISHED.equals(postingStatus) && (postingDate == null || !postingDate.isAfter(now));
     }
 }

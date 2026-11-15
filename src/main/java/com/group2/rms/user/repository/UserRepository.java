@@ -28,6 +28,7 @@ public interface UserRepository extends JpaRepository<User, Integer>, JpaSpecifi
 
     List<User> findAllByDepartmentDepartmentIdAndAccountStatusOrderByFullNameAscUserIdAsc(Integer departmentId, String accountStatus);
 
+
     boolean existsByDepartmentDepartmentIdAndRoleRoleNameAndAccountStatusAndUserIdNot(
             Integer departmentId, String roleName, String accountStatus, Integer userId);
 

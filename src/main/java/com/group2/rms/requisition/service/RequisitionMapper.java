@@ -42,7 +42,7 @@ public class RequisitionMapper {
         }
 
         return RequisitionRequest.builder()
-                .recruitmentRound(jobRequisition.getRecruitmentRound())
+                .expectedStaffingDate(jobRequisition.getExpectedStaffingDate())
                 .originalTitle(originalTitle)
                 .title(jobRequisition.getTitle())
                 .departmentId(departmentId)
@@ -50,10 +50,8 @@ public class RequisitionMapper {
                 .employmentType(jobRequisition.getEmploymentType())
                 .minSalary(jobRequisition.getMinSalary())
                 .maxSalary(jobRequisition.getMaxSalary())
-                .gender(jobRequisition.getGender())
                 .workLocation(jobRequisition.getWorkLocation())
                 .workModel(jobRequisition.getWorkModel())
-                .probationPeriod(jobRequisition.getProbationPeriod())
                 .reasonForHiring(jobRequisition.getReasonForHiring())
                 .jobDescription(jobRequisition.getJobDescription())
                 .requirementDetails(jobRequisition.getRequirementDetails())
@@ -71,18 +69,16 @@ public class RequisitionMapper {
         if (jobRequisition.getDepartment() != null) {
             departmentName = jobRequisition.getDepartment().getDepartmentName();
         }
-        String requisitionCode = RequisitionLabels.requisitionCode(jobRequisition.getRequisitionId(),
-                jobRequisition.getRequisitionCode());
 
         RequisitionResponse.RequisitionResponseBuilder row = RequisitionResponse.builder()
                 .requisitionId(jobRequisition.getRequisitionId())
-                .title(jobRequisition.getTitle())
+                .title(jobRequisition.getTitle() == null ? RequisitionValidator.PLACEHOLDER_TITLE : jobRequisition.getTitle())
                 .departmentName(departmentName)
                 .hiringManagerName(jobRequisition.getHiringManager().getFullName())
                 .numberOfPositions(jobRequisition.getNumberOfPositions())
+                .salaryLabel(RequisitionLabels.salaryForList(jobRequisition.getMinSalary(), jobRequisition.getMaxSalary()))
                 .approvalStatus(approvalStatus)
-                .recruitmentRound(jobRequisition.getRecruitmentRound())
-                .requisitionCode(requisitionCode)
+                .expectedStaffingDate(jobRequisition.getExpectedStaffingDate())
                 .createdAt(jobRequisition.getCreatedAt())
                 .workLocation(jobRequisition.getWorkLocation());
         String postingStatus = null;
@@ -132,15 +128,14 @@ public class RequisitionMapper {
 
         return toListRow(jobRequisition, viewer, latestPosting, hasLaterRound).toBuilder()
                 .incomplete(incomplete)
-                .salaryLabel(RequisitionLabels.salary(jobRequisition.getMinSalary(), jobRequisition.getMaxSalary()))
-                .probationLabel(RequisitionLabels.probation(jobRequisition.getProbationPeriod()))
-                .genderLabel(RequisitionLabels.gender(jobRequisition.getGender()))
+                .salaryLabel(RequisitionLabels.salaryForDetail(jobRequisition.getMinSalary(), jobRequisition.getMaxSalary()))
                 .workModelLabel(RequisitionLabels.workModel(jobRequisition.getWorkModel()))
                 // Văn bản nhiều dòng: escape HTML rồi đổi xuống dòng thành <br/> (AG §6.3)
                 .reasonForHiringHtml(RequisitionLabels.multilineHtml(jobRequisition.getReasonForHiring()))
                 .jobDescriptionHtml(RequisitionLabels.multilineHtml(jobRequisition.getJobDescription()))
                 .requirementDetailsHtml(RequisitionLabels.multilineHtml(jobRequisition.getRequirementDetails()))
                 .submittedAt(jobRequisition.getSubmittedAt())
+                .closedAt(jobRequisition.getClosedAt())
                 .waitingDays(waitingDays)
                 .approvals(approvals)
                 .activityLog(toActivityResponses(activityLogs))
@@ -151,6 +146,9 @@ public class RequisitionMapper {
 
     // Checks whether the requisition is ready for submission.
     private boolean isReadyToSubmit(JobRequisition jobRequisition) {
+        if (jobRequisition.getDepartment() == null) {
+            return false;
+        }
         RequisitionRequest submissionCheck = toEditForm(jobRequisition);
         submissionCheck.setAction(RequisitionValidator.ACTION_SUBMIT);
         try {

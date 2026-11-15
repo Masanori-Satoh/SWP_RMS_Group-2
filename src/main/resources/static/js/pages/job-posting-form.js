@@ -6,12 +6,11 @@
 
    Các phần:
      1. Tiện ích nhỏ (ngày tháng, escape HTML)
-     2. "Lấy từ yêu cầu" / "Khôi phục bản gốc"
-     3. Bản đồ địa điểm
-     4. Lương, số lượng, quyền lợi
-     5. Ngày đăng và hạn nộp
-     6. Xem trước "Ứng viên sẽ thấy" + tab trên điện thoại
-     7. Kiểm tra trước khi gửi + khóa nút
+     2. Địa điểm làm việc
+     3. Lương và số lượng
+     4. Ngày đăng và hạn nộp
+     5. Xem trước "Ứng viên sẽ thấy" + tab trên điện thoại
+     6. Kiểm tra trước khi gửi + khóa nút
    ============================================================================= */
 (() => {
     'use strict';
@@ -36,24 +35,14 @@
         return isoDate(new Date(y, m - 1, d + days));
     };
     const today = form.dataset.today || isoDate(new Date());
-    const radioValue = name => form.querySelector(`input[name="${name}"]:checked`)?.value || '';
     const isRemote = () => $('workModel').value === 'Remote';
+    const mapToggle = $('jpf-map-toggle');
 
-    // Đổi yêu cầu nguồn: chọn xong thì mở lại form với yêu cầu đó
-    document.querySelectorAll('[data-auto-submit]').forEach(select =>
-        select.addEventListener('change', () => select.form.submit()));
-
-    /* ---------------------------------------------------------------------
-     * 2. "LẤY TỪ YÊU CẦU" / "KHÔI PHỤC BẢN GỐC"
-     *    Mỗi ô điền sẵn có một nhãn [data-from] mang giá trị gốc (data-source) của yêu cầu.
-     * --------------------------------------------------------------------- */
     function renderFromMarkers() {
-        document.querySelectorAll('[data-from]').forEach(marker => {
-            if (marker.dataset.from === 'workLocation') {
-                marker.hidden = isRemote();
-            }
+        form.querySelectorAll('[data-from]').forEach(marker => {
             const field = $(marker.dataset.from);
             if (!field) return;
+            marker.hidden = marker.dataset.from === 'workLocation' && isRemote();
             const same = field.value.trim() === (marker.dataset.source || '').trim();
             marker.innerHTML = same
                 ? 'Lấy từ yêu cầu'
@@ -64,41 +53,19 @@
         const restore = event.target.closest('[data-restore]');
         if (!restore) return;
         const field = $(restore.dataset.restore);
+        if (!field) return;
         field.value = form.querySelector(`[data-from="${restore.dataset.restore}"]`).dataset.source || '';
         field.dispatchEvent(new Event('input', { bubbles: true }));
-        if (field.id === 'probationPeriod') {
-            syncProbationChoice();
-            (field.hidden ? $('probationChoice') : field).focus();
-            return;
-        }
-        field.focus();
+        field.dispatchEvent(new Event('change', { bubbles: true }));
     });
 
-    /* Thời gian thử việc: chọn mẫu thì ghi thẳng vào ô probationPeriod (ẩn); "Khác" thì hiện ô để nhập tay. */
-    const PROBATION_OTHER = '__other__';
-    function syncProbationChoice() {
-        const choice = $('probationChoice');
-        const input = $('probationPeriod');
-        if (!choice || !input) return;
-        const value = input.value.trim();
-        const preset = [...choice.options].some(o => o.value === value && o.value !== PROBATION_OTHER);
-        choice.value = preset ? value : PROBATION_OTHER;
-        input.hidden = choice.value !== PROBATION_OTHER;
-    }
-    $('probationChoice')?.addEventListener('change', event => {
-        const input = $('probationPeriod');
-        const isOther = event.target.value === PROBATION_OTHER;
-        input.hidden = !isOther;
-        input.value = isOther ? '' : event.target.value;
-        input.dispatchEvent(new Event('input', { bubbles: true }));
-        if (isOther) input.focus();
-    });
+    // Đổi yêu cầu nguồn: chọn xong thì mở lại form với yêu cầu đó
+    document.querySelectorAll('[data-auto-submit]').forEach(select =>
+        select.addEventListener('change', () => select.form.submit()));
 
     /* ---------------------------------------------------------------------
-     * 3. BẢN ĐỒ: thu gọn mặc định; bấm "Xem bản đồ" mới nhúng Google Maps theo địa chỉ
-     *    (cần mạng) + link mở Google Maps làm dự phòng
+     * 2. ĐỊA ĐIỂM: làm việc từ xa thì khóa ô địa điểm
      * --------------------------------------------------------------------- */
-    const mapToggle = $('jpf-map-toggle');
     function syncWorkLocation() {
         const remote = isRemote();
         $('workLocation').disabled = remote;
@@ -111,71 +78,38 @@
         }
         mapToggle.hidden = remote;
     }
+
     const mapsLink = address => 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(address);
     const mapsEmbed = address => 'https://www.google.com/maps?q=' + encodeURIComponent(address) + '&output=embed';
-    function mapHtml(address) {
-        if (!address) {
-            return '<p class="jpf-map-empty">Nhập địa chỉ để xem bản đồ</p>';
-        }
-        return `<iframe title="Bản đồ ${escapeHtml(address)}" src="${mapsEmbed(address)}" loading="lazy"
-                    referrerpolicy="no-referrer-when-downgrade"></iframe>
-                <a class="jpf-map-link" href="${mapsLink(address)}" target="_blank" rel="noopener">Mở Google Maps ↗</a>`;
-    }
     let mapTimer = null;
     let lastMapAddress = null;
     function renderMap() {
-        // Khung bản đồ đang thu gọn thì không tải Google Maps
         if (!mapToggle.open) return;
         const address = isRemote() ? '' : $('workLocation').value.trim();
         if (address === lastMapAddress) return;
         lastMapAddress = address;
-        $('jpf-map').innerHTML = mapHtml(address);
+        $('jpf-map').innerHTML = address
+            ? `<iframe title="Bản đồ ${escapeHtml(address)}" src="${mapsEmbed(address)}" loading="lazy"
+                referrerpolicy="no-referrer-when-downgrade"></iframe>
+                <a class="jpf-map-link" href="${mapsLink(address)}" target="_blank" rel="noopener">Mở Google Maps ↗</a>`
+            : '<p class="jpf-map-empty">Nhập địa chỉ để xem bản đồ</p>';
     }
-    // Bung khung thì tải bản đồ theo địa chỉ hiện tại
     mapToggle.addEventListener('toggle', renderMap);
-    // Đợi người dùng ngừng gõ 0,8 giây mới tải lại bản đồ (tránh gọi Google Maps mỗi phím)
     $('workLocation').addEventListener('input', () => {
         clearTimeout(mapTimer);
         mapTimer = setTimeout(renderMap, 800);
     });
 
     /* ---------------------------------------------------------------------
-     * 4. LƯƠNG, SỐ LƯỢNG, QUYỀN LỢI
+     * 3. LƯƠNG VÀ SỐ LƯỢNG
      * --------------------------------------------------------------------- */
-    // Bấm vào ô "Tự nhập" thì tự chọn lựa chọn "Tự nhập"
-    $('salaryCustom').addEventListener('focus', () => {
-        form.querySelector('input[name="salaryMode"][value="custom"]').checked = true;
-        refresh();
-    });
     function salaryText() {
-        const mode = radioValue('salaryMode');
-        if (mode === 'range') return form.dataset.salaryRange || 'Thỏa thuận';
-        if (mode === 'custom') return $('salaryCustom').value.trim();
-        return 'Thỏa thuận';
+        return $('salaryCustom').value.trim();
     }
 
-    const showPositions = $('showPositions1') || form.querySelector('input[type="checkbox"][name="showPositions"]');
-    function syncPositions() {
-        $('numberOfPositionsDisplay').disabled = !showPositions.checked;
-    }
-    showPositions.addEventListener('change', syncPositions);
-
-    // Nút "+ quyền lợi": thêm một dòng vào ô Quyền lợi; nút của quyền lợi đã có thì mờ đi
-    const benefitBox = $('benefits');
-    function syncBenefitChips() {
-        const lines = benefitBox.value.split('\n').map(line => line.replace(/^[-•]\s*/, '').trim());
-        form.querySelectorAll('[data-benefit]').forEach(chip => {
-            chip.disabled = lines.includes(chip.dataset.benefit);
-        });
-    }
-    form.querySelectorAll('[data-benefit]').forEach(chip => chip.addEventListener('click', () => {
-        const current = benefitBox.value.trimEnd();
-        benefitBox.value = (current ? current + '\n' : '') + '- ' + chip.dataset.benefit;
-        benefitBox.dispatchEvent(new Event('input', { bubbles: true }));
-    }));
 
     /* ---------------------------------------------------------------------
-     * 5. NGÀY ĐĂNG VÀ HẠN NỘP
+     * 4. NGÀY ĐĂNG VÀ HẠN NỘP
      * --------------------------------------------------------------------- */
     const postingDay = () => today;
 
@@ -186,7 +120,7 @@
     }));
 
     /* ---------------------------------------------------------------------
-     * 6. XEM TRƯỚC "ỨNG VIÊN SẼ THẤY" + TAB TRÊN ĐIỆN THOẠI
+     * 5. XEM TRƯỚC "ỨNG VIÊN SẼ THẤY" + TAB TRÊN ĐIỆN THOẠI
      * --------------------------------------------------------------------- */
     function previewSection(title, text) {
         const value = text.trim();
@@ -198,14 +132,10 @@
         // Nhãn đang chọn ở ô Hình thức / Mô hình (HR đổi được), cộng phòng ban của yêu cầu
         const selectedLabel = id => $(id).selectedOptions[0]?.textContent.trim();
         const tags = [selectedLabel('employmentType'), selectedLabel('workModel'), form.dataset.department].filter(Boolean);
-        const facts = [['Mức lương', salaryText() || '—'], ['Hạn nộp', deadline.value ? viDate(deadline.value) : '—']];
-        if (showPositions.checked && $('numberOfPositionsDisplay').value.trim()) {
-            facts.push(['Số lượng', $('numberOfPositionsDisplay').value.trim()]);
+        const facts = [['Mức lương', salaryText() || '—'], ['Hạn ứng tuyển', deadline.value ? viDate(deadline.value) : '—']];
+        if ($('numberOfPositionsDisplay').value.trim()) {
+            facts.push(['Số lượng', `${$('numberOfPositionsDisplay').value.trim()} người`]);
         }
-        const probation = $('probationPeriod').value.trim();
-        if (probation) facts.push(['Thử việc', probation]);
-        const gender = selectedLabel('gender');
-        if (gender) facts.push(['Yêu cầu giới tính', gender]);
         const workingHours = $('workingHours').value.trim();
         // Mục "Địa điểm và thời gian" giống trang /jobs/{id}: chỉ hiện dòng nào HR đã nhập
         const placeTime = (address ? `<h5>Địa điểm làm việc</h5><a href="${mapsLink(address)}" target="_blank" rel="noopener">${escapeHtml(address)} ↗</a>` : '')
@@ -219,10 +149,12 @@
             <div class="jpf-body">
                 ${previewSection('Mô tả công việc', $('jobDescription').value)}
                 ${previewSection('Yêu cầu ứng viên', $('jobRequirements').value)}
-                ${benefitBox.value.trim() ? previewSection('Quyền lợi ứng viên', benefitBox.value) : ''}
+                ${$('benefits').value.trim() ? previewSection('Quyền lợi ứng viên', $('benefits').value) : ''}
                 ${placeTime ? `<section><h4>Địa điểm và thời gian</h4>${placeTime}</section>` : ''}
             </div>
-            <footer><span>Đăng ${viDate(postingDay())}</span><span class="btn btn--primary btn--sm" aria-hidden="true">Ứng tuyển ngay</span></footer>`;
+            <footer><span>${form.dataset.postingDate
+                ? `Ngày đăng: ${viDate(form.dataset.postingDate)}`
+                : 'Ngày đăng sẽ được xác định khi đăng tin'}</span></footer>`;
     }
 
     form.querySelectorAll('[data-tab]').forEach(tab => tab.addEventListener('click', () => {
@@ -231,7 +163,7 @@
     }));
 
     /* ---------------------------------------------------------------------
-     * 7. KIỂM TRA TRƯỚC KHI GỬI (giống JobPostingValidator#normalizeAndValidate) + KHÓA NÚT
+     * 6. KIỂM TRA TRƯỚC KHI GỬI (giống JobPostingValidator#normalizeAndValidate) + KHÓA NÚT
      * --------------------------------------------------------------------- */
     function showError(field, message) {
         const slot = $(field + '-error');
@@ -260,13 +192,19 @@
             return empty ? 'Vui lòng nhập yêu cầu ứng viên.' : '';
         }
         if (field === 'salaryCustom') {
-            return radioValue('salaryMode') === 'custom' && empty
-                ? 'Nhập mức lương hiển thị hoặc chọn một lựa chọn khác.' : '';
+            return empty ? 'Vui lòng nhập mức lương.' : '';
         }
         if (field === 'numberOfPositionsDisplay') {
-            return showPositions.checked && empty ? 'Nhập số lượng hiển thị hoặc tắt hiển thị số lượng.' : '';
+            if (empty) return 'Vui lòng nhập số lượng.';
+            const input = $(field);
+            return input.validity.badInput || !/^[0-9]+$/.test(input.value) || Number(input.value) < 1
+                || Number(input.value) > 2147483647
+                ? 'Số lượng phải lớn hơn hoặc bằng 1.' : '';
         }
         // Còn lại: hạn nộp hồ sơ
+        if (deadline.validity.badInput) {
+            return 'Hạn ứng tuyển không hợp lệ.';
+        }
         if (empty) {
             return publishing ? 'Vui lòng chọn hạn nộp hồ sơ.' : '';
         }
@@ -304,6 +242,7 @@
     }
     form.addEventListener('input', recheckInvalidFields);
     form.addEventListener('change', recheckInvalidFields);
+    deadline.addEventListener('change', () => showError('applicationDeadline', checkField('applicationDeadline', true)));
 
     let submitting = false;
     form.addEventListener('submit', event => {
@@ -340,16 +279,12 @@
     function refresh() {
         syncWorkLocation();
         renderFromMarkers();
-        syncBenefitChips();
         renderPreview();
     }
     form.addEventListener('input', refresh);
     form.addEventListener('change', refresh);
 
     form.dataset.tab = 'edit';
-    syncProbationChoice();
-    syncPositions();
-    renderMap();
     refresh();
     $('jpf-summary')?.focus();
 })();

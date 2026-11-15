@@ -37,6 +37,30 @@ class AccountListServiceTests {
     }
 
     @Test
+    @DisplayName("Vô hiệu hóa HM quản lý 2 phòng: gỡ khỏi cả 2 phòng, không chỉ phòng của mình")
+    void deactivatingHiringManagerClearsEveryManagedDepartment() {
+        UserRepository users = mock(UserRepository.class);
+        DepartmentRepository departments = mock(DepartmentRepository.class);
+        var own = com.group2.rms.user.entity.Department.builder().departmentId(1).departmentName("IT").build();
+        var other = com.group2.rms.user.entity.Department.builder().departmentId(2).departmentName("Sales").build();
+        User hm = User.builder().userId(12).username("hm12").role(Role.builder().roleName("Hiring Manager").build())
+            .department(own).accountStatus("Active").build();
+        own.setManager(hm);
+        other.setManager(hm);
+        when(users.findById(12)).thenReturn(Optional.of(hm));
+        when(departments.findAllByManagerUserIdOrderByDepartmentNameAsc(12)).thenReturn(java.util.List.of(own, other));
+
+        new AccountListService(users, mock(RoleRepository.class), departments, mock(CandidateRepository.class),
+            mock(com.group2.rms.user.service.UserAuditLogger.class)).deactivate(12);
+
+        assertEquals("Inactive", hm.getAccountStatus());
+        assertEquals(null, own.getManager());
+        assertEquals(null, other.getManager());
+        verify(departments).save(own);
+        verify(departments).save(other);
+    }
+
+    @Test
     @DisplayName("Chặn target khác nhóm; giữ account Inactive và cho vô hiệu hóa Candidate đúng nhóm")
     void deactivationRejectsCrossGroupTargetsAndPreservesInactive() {
         // Given: Chặn target khác nhóm; giữ account Inactive và cho vô hiệu hóa Candidate đúng nhóm.

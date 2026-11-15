@@ -79,7 +79,7 @@ class ApplicationStatusServiceTests {
         void consentCannotActivateWhenCandidateAlreadyHasAnOfficialApplication() {
             when(applications.findDetailById(ID)).thenReturn(java.util.Optional.of(suggestion));
             when(jobs.findForUpdate(12)).thenReturn(java.util.Optional.of(suggestion.getJobPosting()));
-            when(applications.existsActiveByCandidateInSameRequisition(15, 12)).thenReturn(true);
+            when(applications.existsActiveByCandidateAndJobPosting(15, 12)).thenReturn(true);
             org.junit.jupiter.api.Assertions.assertThrows(TalentPoolException.class,
                     () -> pool.confirm(ID, new TalentPoolConfirmRequest(true)));
             verify(applications, never()).promoteSuggestionToHmPassed(anyInt());

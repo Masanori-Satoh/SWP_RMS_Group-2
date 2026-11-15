@@ -278,7 +278,6 @@ class ApplicationPipelineServiceTests {
         assertEquals(java.time.LocalDate.of(1995, 8, 17), detail.dateOfBirth());
         assertEquals("Nữ", detail.gender());
         assertEquals("Số 88 Láng Hạ, Đống Đa, Hà Nội", detail.address());
-        assertEquals("REQ-007", detail.requisitionCode());
         assertEquals("Sales & Marketing", detail.departmentName());
         assertEquals("Chờ HR duyệt CV", detail.statusLabel());
         assertEquals(List.of("current", "upcoming", "upcoming", "upcoming", "upcoming"),
@@ -458,7 +457,7 @@ class ApplicationPipelineServiceTests {
     }
 
     private static Application application() {
-        JobRequisition requisition = JobRequisition.builder().requisitionId(7).requisitionCode("REQ-007")
+        JobRequisition requisition = JobRequisition.builder().requisitionId(7)
                 .department(Department.builder().departmentId(20).departmentName("Sales & Marketing").build())
                 .build();
         return Application.builder()

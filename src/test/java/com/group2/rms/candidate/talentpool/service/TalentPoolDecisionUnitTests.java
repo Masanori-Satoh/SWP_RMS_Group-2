@@ -114,7 +114,7 @@ class TalentPoolDecisionUnitTests {
         when(currentUser.requireUser()).thenReturn(hr);
         when(applications.findDetailById(100)).thenReturn(Optional.of(application));
         when(jobs.findForUpdate(20)).thenReturn(Optional.of(job));
-        when(applications.existsActiveByCandidateInSameRequisition(8, 20)).thenReturn(true);
+        when(applications.existsActiveByCandidateAndJobPosting(8, 20)).thenReturn(true);
         // When: Gọi nghiệp vụ cần kiểm tra với dữ liệu đã chuẩn bị.
         assertThrows(TalentPoolException.class, () -> service.confirm(100, new TalentPoolConfirmRequest(true)));
         // Then: Kiểm tra kết quả và số lần gọi repository theo đúng ca này.
@@ -227,7 +227,7 @@ class TalentPoolDecisionUnitTests {
         when(jobs.findForUpdate(20)).thenReturn(Optional.of(job));
         when(jobAccess.inManagedDepartment(hm, job.getRequisition())).thenReturn(true);
         when(applications.countPendingHrRecommendation(100)).thenReturn(1L);
-        when(applications.existsActiveByCandidateInSameRequisition(8, 20)).thenReturn(true);
+        when(applications.existsActiveByCandidateAndJobPosting(8, 20)).thenReturn(true);
         // When: Gọi nghiệp vụ cần kiểm tra với dữ liệu đã chuẩn bị.
         assertThrows(TalentPoolException.class, () -> service.decideRecommendation(100, true));
         // Then: Kiểm tra kết quả và số lần gọi repository theo đúng ca này.
@@ -275,7 +275,8 @@ class TalentPoolDecisionUnitTests {
         // Then: Kiểm tra kết quả và số lần gọi repository theo đúng ca này.
         assertEquals("Closed", job.getPostingStatus());
         assertNotNull(job.getClosedAt());
-        verify(audit, times(1)).record(5, "UPDATE", "JobPosting", 20, null, "Closed");
+        verify(audit, times(1)).record(5, "UPDATE", "JobPosting", 20,
+                "{\"Status\":\"Published\"}", "{\"Status\":\"Closed\"}");
     }
 
     @Test
@@ -290,7 +291,8 @@ class TalentPoolDecisionUnitTests {
         // Then: Kiểm tra kết quả và số lần gọi repository theo đúng ca này.
         assertEquals("Closed", job.getPostingStatus());
         assertNotNull(job.getClosedAt());
-        verify(audit, times(1)).record(5, "UPDATE", "JobPosting", 20, null, "Closed");
+        verify(audit, times(1)).record(5, "UPDATE", "JobPosting", 20,
+                "{\"Status\":\"Paused\"}", "{\"Status\":\"Closed\"}");
     }
 
     @Test
@@ -460,7 +462,7 @@ class TalentPoolDecisionUnitTests {
         // When: Gọi nghiệp vụ cần kiểm tra với dữ liệu đã chuẩn bị.
         var result = service.recommendation(100, 8);
         // Then: Kiểm tra kết quả và số lần gọi repository theo đúng ca này.
-        assertEquals("HM đã từ chối", result.statusLabel());
+        assertEquals("Trưởng bộ phận đã từ chối", result.statusLabel());
         assertEquals(false, result.pending());
         assertEquals(false, result.canDecide());
         assertEquals("HR Linh", result.recommendedBy());
@@ -486,7 +488,7 @@ class TalentPoolDecisionUnitTests {
         // When: Gọi nghiệp vụ cần kiểm tra với dữ liệu đã chuẩn bị.
         var result = service.recommendation(100, 8);
         // Then: Kiểm tra kết quả và số lần gọi repository theo đúng ca này.
-        assertEquals("HM đã chấp nhận", result.statusLabel());
+        assertEquals("Trưởng bộ phận đã chấp nhận", result.statusLabel());
         assertEquals(false, result.pending());
         assertEquals(false, result.canDecide());
         assertEquals("HR Linh", result.recommendedBy());

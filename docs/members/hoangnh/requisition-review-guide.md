@@ -82,7 +82,7 @@ Mọi `POST` đều cần CSRF token (Spring Security tự chèn `_csrf` vào fo
 
 - **Director tạo / sửa phiếu của mình và bấm "Phê duyệt trực tiếp"** → `Approved` luôn (`applySavedStatus`), service tự ghi một bản `RequisitionApproval` với ý kiến "Giám đốc tạo và phê duyệt trực tiếp." và báo HR (`recordDirectApprovalIfNeeded`). Lý do: không có cấp nào trên Giám đốc để duyệt, và Giám đốc không được tự duyệt qua nút Duyệt (`canDecide` loại người tạo).
 - Không có đường Approved → Draft (rule NHH §14). Approved muốn tuyển tiếp thì **Sao chép thành đợt mới**.
-- DB còn 2 trạng thái `Closed`, `Cancelled` nhưng hiện **chưa có chức năng nào dùng**.
+- `Closed` là trạng thái kết thúc yêu cầu: HM sở hữu hoặc Director xác nhận đóng sau khi tuyển đủ, các tin đã đóng và hồ sơ còn hoạt động đã xử lý. Service ghi `ClosedAt` khi xác nhận. `Cancelled` đã được bỏ khỏi trạng thái Requisition.
 
 ---
 
@@ -256,5 +256,5 @@ Không ra trang lỗi: controller bắt lỗi, quay về trang danh sách / chi 
 ## 7. Hạn chế đã biết (nói trước nếu GV hỏi)
 
 - Yêu cầu đang chờ duyệt không còn thao tác đưa về nháp; người tạo chỉ sửa được sau khi Giám đốc trả lại.
-- Trạng thái `Closed` / `Cancelled` có trong DB nhưng chưa có chức năng.
+- Migration bỏ `Cancelled` sẽ dừng nếu DB còn yêu cầu ở trạng thái này; cần xử lý dữ liệu cũ trước khi chạy.
 - Một số phiếu seed thiếu `AuditLog` nên phần Lịch sử ít dòng.

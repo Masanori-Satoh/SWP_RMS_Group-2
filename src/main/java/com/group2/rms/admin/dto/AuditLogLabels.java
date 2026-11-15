@@ -46,11 +46,14 @@ public final class AuditLogLabels {
     public static String action(String value) {
         return switch (value) {
             case "CREATE" -> "Tạo mới"; case "UPDATE" -> "Cập nhật";
-            case "DELETE" -> "Xóa"; case "LOGIN" -> "Đăng nhập"; default -> value;
+            case "DELETE" -> "Xóa"; case "LOGIN" -> "Đăng nhập";
+            case "PUBLISH" -> "Đăng tin"; case "UNPUBLISH" -> "Tạm dừng tin";
+            case "RESTORE" -> "Khôi phục"; default -> value;
         };
     }
     public static List<Option> actions() {
-        return List.of("CREATE", "UPDATE", "DELETE", "LOGIN").stream().map(value -> new Option(value, action(value))).toList();
+        return List.of("CREATE", "UPDATE", "PUBLISH", "UNPUBLISH", "RESTORE", "DELETE", "LOGIN")
+                .stream().map(value -> new Option(value, action(value))).toList();
     }
     public record Option(String value, String label) {}
 

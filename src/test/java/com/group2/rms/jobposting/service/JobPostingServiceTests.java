@@ -97,12 +97,12 @@ class JobPostingServiceTests {
     void setUp() {
         JobPostingValidator validator = new JobPostingValidator(CLOCK);
         JobPostingMapper mapper = new JobPostingMapper(access, validator);
-        JobPostingAuditLogger auditLogger = new JobPostingAuditLogger(audit, CLOCK);
+        JobPostingAuditLogger auditLogger = new JobPostingAuditLogger(audit, new com.fasterxml.jackson.databind.ObjectMapper(), CLOCK);
         service = new JobPostingServiceImpl(postings, requisitions, applications, access, validator, mapper,
                 auditLogger, notificationService, talentPoolService, CLOCK);
 
         hr = User.builder().userId(1).fullName("HR").build();
-        requisition = JobRequisition.builder().requisitionId(101).requisitionCode("REQ-0101").title("Key Account Manager")
+        requisition = JobRequisition.builder().requisitionId(101).title("Key Account Manager")
                 .approvalStatus(RequisitionAccess.STATUS_APPROVED)
                 .department(Department.builder().departmentId(2).departmentName("Sales").build())
                 .minSalary(new BigDecimal("20000000")).maxSalary(new BigDecimal("30000000"))
@@ -121,7 +121,6 @@ class JobPostingServiceTests {
                 .jobRequirements("2 năm kinh nghiệm")
                 .employmentType("Full-time")
                 .workModel("Hybrid")
-                .gender("Any")
                 .salaryMode(JobPostingRequest.SALARY_NEGOTIABLE)
                 .showPositions(false)
                 .applicationDeadline(TODAY.plusDays(30))
@@ -133,7 +132,7 @@ class JobPostingServiceTests {
     private JobPosting existingPosting(int id, String status, LocalDateTime postingDate) {
         JobPosting posting = JobPosting.builder().jobPostingId(id).postingNo(1).requisition(requisition)
                 .postingTitle("Key Account Manager").jobDescription("Chăm sóc khách hàng")
-                .jobRequirements("2 năm kinh nghiệm").employmentType("Full-time").workModel("Hybrid").gender("Any")
+                .jobRequirements("2 năm kinh nghiệm").employmentType("Full-time").workModel("Hybrid")
                 .salaryDisplay(JobPostingLabels.SALARY_NEGOTIABLE)
                 .applicationDeadline(TODAY.plusDays(30).atTime(23, 59, 59))
                 .postingStatus(status).postingDate(postingDate).createdBy(hr).build();
@@ -180,7 +179,7 @@ class JobPostingServiceTests {
             when(postings.findMaxPostingNo(101)).thenReturn(1);
             JobPostingRequest form = validForm(JobPostingValidator.ACTION_DRAFT);
             form.setSalaryMode(JobPostingRequest.SALARY_RANGE);
-            form.setNumberOfPositionsDisplay("99 người");
+            form.setNumberOfPositionsDisplay(99);
 
             // Act
             service.createJobPosting(form, hr);
@@ -295,7 +294,7 @@ class JobPostingServiceTests {
     class Update {
 
         @Test
-        @DisplayName("Sửa tiêu đề tin đang đăng -> Giữ ngày đăng, audit 'Tiêu đề tin: cũ → mới', không thông báo lại")
+        @DisplayName("Sửa tiêu đề tin đang đăng -> Giữ ngày đăng, audit JSON chỉ có Title")
         void updateJobPosting_shouldKeepPostingDate_whenPostingIsLive() {
             // Arrange
             LocalDateTime postedAt = NOW.minusDays(5);
@@ -311,8 +310,8 @@ class JobPostingServiceTests {
             assertEquals(postedAt, live.getPostingDate());
             AuditLog log = savedAudit();
             assertEquals(JobPostingAuditLogger.ACTION_UPDATE, log.getAction());
-            assertTrue(log.getNewValue().startsWith(JobPostingLabels.LOG_UPDATE));
-            assertTrue(log.getNewValue().contains("Tiêu đề tin: Key Account Manager → Key Account Manager (B2B)"));
+            assertEquals("{\"Title\":\"Key Account Manager\"}", log.getOldValue());
+            assertEquals("{\"Title\":\"Key Account Manager (B2B)\"}", log.getNewValue());
             verifyNoInteractions(notificationService);
         }
 
@@ -401,7 +400,9 @@ class JobPostingServiceTests {
 
             assertEquals(JobPostingAccess.STATUS_PUBLISHED, draft.getPostingStatus());
             assertEquals(NOW, draft.getPostingDate());
-            assertTrue(savedAudit().getNewValue().startsWith(JobPostingLabels.LOG_PUBLISH));
+            assertEquals(JobPostingAuditLogger.ACTION_PUBLISH, savedAudit().getAction());
+            assertEquals("{\"Status\":\"Draft\"}", savedAudit().getOldValue());
+            assertEquals("{\"Status\":\"Published\"}", savedAudit().getNewValue());
             verify(notificationService).notifyJobPostingPublished(draft, hr);
         }
 
@@ -645,7 +646,7 @@ class JobPostingServiceTests {
         @Test
         @DisplayName("Ô 'Đổi yêu cầu': số lần đã đăng tra gộp 1 câu (không N+1), nhãn '(đã đăng 2 lần)'")
         void requisitionChoices_shouldBatchPostingCounts() {
-            JobRequisition other = JobRequisition.builder().requisitionId(102).requisitionCode("REQ-0102").title("Tester").build();
+            JobRequisition other = JobRequisition.builder().requisitionId(102).title("Tester").build();
             when(postings.findRequisitionIdsWithPostingStatusIn(JobPostingAccess.OPEN_STATUSES)).thenReturn(Set.of());
             when(requisitions.findWithDepartmentByApprovalStatusOrderByCreatedAtDesc(RequisitionAccess.STATUS_APPROVED))
                     .thenReturn(List.of(requisition, other));
@@ -653,8 +654,8 @@ class JobPostingServiceTests {
 
             List<FilterOption> choices = service.requisitionChoices(hr);
 
-            assertEquals("Key Account Manager · REQ-0101 (đã đăng 2 lần)", choices.get(0).label());
-            assertEquals("Tester · REQ-0102", choices.get(1).label());
+            assertEquals("Key Account Manager (đã đăng 2 lần)", choices.get(0).label());
+            assertEquals("Tester", choices.get(1).label());
             verify(postings, times(1)).findMaxPostingNoByRequisitionIds(anyCollection());
             verify(postings, never()).findMaxPostingNo(anyInt());
         }

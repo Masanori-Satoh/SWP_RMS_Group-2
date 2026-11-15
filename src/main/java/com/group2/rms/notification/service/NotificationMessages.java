@@ -5,7 +5,6 @@ import com.group2.rms.interview.entity.InterviewSchedule;
 import com.group2.rms.jobposting.entity.JobPosting;
 import com.group2.rms.offer.entity.OfferProposal;
 import com.group2.rms.requisition.entity.JobRequisition;
-import com.group2.rms.requisition.service.RequisitionLabels;
 import com.group2.rms.user.entity.User;
 
 import java.time.LocalDateTime;
@@ -50,10 +49,6 @@ public final class NotificationMessages {
         return trimmed.substring(0, COMMENT_PREVIEW_LIMIT).trim() + "…";
     }
 
-    public static String requisitionCode(JobRequisition requisition) {
-        return RequisitionLabels.requisitionCode(requisition.getRequisitionId(), requisition.getRequisitionCode());
-    }
-
     public static JobRequisition requisitionOf(Application application) {
         if (application == null || application.getJobPosting() == null) {
             return null;
@@ -90,8 +85,8 @@ public final class NotificationMessages {
             deptName = requisition.getDepartment().getDepartmentName();
         }
         return String.format(
-                "Hiring Manager %s đã gửi yêu cầu tuyển dụng \"%s\" (Mã: %s, Phòng ban: %s) để chờ phê duyệt. Vui lòng xem xét và thực hiện phê duyệt.",
-                hmName, requisition.getTitle(), requisitionCode(requisition), deptName);
+                "Hiring Manager %s đã gửi yêu cầu tuyển dụng \"%s\" (Phòng ban: %s) để chờ phê duyệt. Vui lòng xem xét và thực hiện phê duyệt.",
+                hmName, requisition.getTitle(), deptName);
     }
 
     public static String requisitionApprovedContent(JobRequisition requisition, String directorName,
@@ -101,8 +96,8 @@ public final class NotificationMessages {
             commentText = " Ý kiến: \"" + shortComment(comments) + "\".";
         }
         return String.format(
-                "Yêu cầu tuyển dụng \"%s\" (Mã: %s) đã được Giám đốc %s phê duyệt vào lúc %s.%s Bộ phận Nhân sự (HR) có thể tiến hành tạo tin tuyển dụng.",
-                requisition.getTitle(), requisitionCode(requisition), directorName, displayTime(decidedAt), commentText);
+                "Yêu cầu tuyển dụng \"%s\" đã được Giám đốc %s phê duyệt vào lúc %s.%s Bộ phận Nhân sự (HR) có thể tiến hành tạo tin tuyển dụng.",
+                requisition.getTitle(), directorName, displayTime(decidedAt), commentText);
     }
 
     public static String requisitionRejectedContent(JobRequisition requisition, String directorName,
@@ -116,8 +111,8 @@ public final class NotificationMessages {
             }
         }
         return String.format(
-                "Yêu cầu tuyển dụng \"%s\" (Mã: %s) đã bị Giám đốc %s từ chối vào lúc %s.\nLý do: %s.\nVui lòng chỉnh sửa lại thông tin và nộp duyệt lại.",
-                requisition.getTitle(), requisitionCode(requisition), directorName, displayTime(decidedAt), reason);
+                "Yêu cầu tuyển dụng \"%s\" đã bị Giám đốc %s từ chối vào lúc %s.\nLý do: %s.\nVui lòng chỉnh sửa lại thông tin và nộp duyệt lại.",
+                requisition.getTitle(), directorName, displayTime(decidedAt), reason);
     }
 
     public static String jobPostingPublishedContent(JobPosting posting, String hrName, LocalDateTime postingDate) {
@@ -127,8 +122,8 @@ public final class NotificationMessages {
             deadline = applicationDeadline.format(DISPLAY_DATE);
         }
         return String.format(
-                "Tin tuyển dụng \"%s\" (cho %s) đã được %s phát hành vào lúc %s (Hạn nộp hồ sơ: %s). Ứng viên hiện đã có thể xem và nộp hồ sơ.",
-                posting.getPostingTitle(), requisitionCode(posting.getRequisition()), hrName, displayTime(postingDate), deadline);
+                "Tin tuyển dụng \"%s\" đã được %s phát hành vào lúc %s (Hạn nộp hồ sơ: %s). Ứng viên hiện đã có thể xem và nộp hồ sơ.",
+                posting.getPostingTitle(), hrName, displayTime(postingDate), deadline);
     }
 
     public static String jobPostingReopenedContent(JobPosting posting, String hrName, LocalDateTime postingDate) {
@@ -138,8 +133,8 @@ public final class NotificationMessages {
             deadline = applicationDeadline.format(DISPLAY_DATE);
         }
         return String.format(
-                "Tin tuyển dụng \"%s\" (cho %s) đã được %s mở lại vào lúc %s (Hạn nộp hồ sơ: %s). Ứng viên có thể xem và nộp hồ sơ trở lại.",
-                posting.getPostingTitle(), requisitionCode(posting.getRequisition()), hrName, displayTime(postingDate), deadline);
+                "Tin tuyển dụng \"%s\" đã được %s mở lại vào lúc %s (Hạn nộp hồ sơ: %s). Ứng viên có thể xem và nộp hồ sơ trở lại.",
+                posting.getPostingTitle(), hrName, displayTime(postingDate), deadline);
     }
 
     public static String jobPostingPausedContent(JobPosting posting, String actorName, LocalDateTime now) {

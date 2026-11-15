@@ -27,7 +27,8 @@ class DepartmentReadOnlyTests {
             assertEquals(d.getDepartmentName(),service.findForEdit(d.getDepartmentId()).name());
             service.managerChoices(d.getDepartmentId()).forEach(m->{
                 var u=users.findById(m.id()).orElseThrow(); assertEquals("Active",u.getAccountStatus());
-                assertEquals(d.getDepartmentId(),u.getDepartment().getDepartmentId()); assertNotEquals("Candidate",u.getRole().getRoleName());
+                assertEquals(d.getDepartmentId(),u.getDepartment().getDepartmentId());
+                assertNotEquals("Candidate",u.getRole().getRoleName());
             });
         });
     }

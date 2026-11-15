@@ -62,4 +62,19 @@ class JobPostingLabelsTests {
 
         assertEquals(expected, JobPostingLabels.activityLabel(log));
     }
+
+    @Test
+    @DisplayName("Action mới và JSON vẫn hiện đúng tên hoạt động trong lịch sử")
+    void activityLabel_shouldReadStructuredAudit() {
+        assertEquals("Tạo và đăng tin", JobPostingLabels.activityLabel(AuditLog.builder()
+                .action(JobPostingAuditLogger.ACTION_CREATE).newValue("{\"Status\":\"Published\"}").build()));
+        assertEquals("Đăng tin", JobPostingLabels.activityLabel(AuditLog.builder()
+                .action(JobPostingAuditLogger.ACTION_PUBLISH).newValue("{\"Status\":\"Published\"}").build()));
+        assertEquals("Tạm dừng", JobPostingLabels.activityLabel(AuditLog.builder()
+                .action(JobPostingAuditLogger.ACTION_UNPUBLISH).newValue("{\"Status\":\"Paused\"}").build()));
+        assertEquals("Đóng tin", JobPostingLabels.activityLabel(AuditLog.builder()
+                .action(JobPostingAuditLogger.ACTION_UPDATE).newValue("{\"Status\":\"Closed\"}").build()));
+        assertEquals("Khôi phục", JobPostingLabels.activityLabel(AuditLog.builder()
+                .action(JobPostingAuditLogger.ACTION_RESTORE).newValue("{\"WorkModel\":\"Hybrid\"}").build()));
+    }
 }

@@ -59,7 +59,6 @@ class RequisitionMapperTests {
                 .hiringManager(manager)
                 .department(Department.builder().departmentId(1).departmentName("IT").build())
                 .approvalStatus(status)
-                .recruitmentRound(1)
                 .numberOfPositions(2)
                 .employmentType("Full-time")
                 .workModel("Hybrid")
@@ -84,6 +83,18 @@ class RequisitionMapperTests {
     // ----- Dòng danh sách -----
 
     @Test
+    @DisplayName("Danh sách hiển thị mức lương đã lưu và nhãn khi chưa nhập")
+    void toListRow_shouldShowStoredSalary() {
+        JobRequisition requisition = requisition(RequisitionAccess.STATUS_DRAFT);
+        assertEquals("Chưa cập nhật", mapper.toListRow(requisition, manager, null, false).salaryLabel());
+
+        requisition.setMinSalary(new BigDecimal("1234.50"));
+        requisition.setMaxSalary(new BigDecimal("5678.75"));
+        assertEquals("1.234,5 – 5.678,75",
+                mapper.toListRow(requisition, manager, null, false).salaryLabel());
+    }
+
+    @Test
     @DisplayName("Bản nháp của chính mình, chưa có tin / đợt sau -> Sửa và xóa được, không sao chép / tạo tin")
     void toListRow_shouldAllowEditAndDelete_whenOwnerViewsOwnDraft() {
         // Act
@@ -104,6 +115,15 @@ class RequisitionMapperTests {
     @DisplayName("Bản nháp đã có đợt sau sao chép từ nó -> Sửa được nhưng không xóa được")
     void toListRow_shouldNotBeDeletable_whenLaterRoundExists() {
         RequisitionResponse row = mapper.toListRow(requisition(RequisitionAccess.STATUS_DRAFT), manager, null, true);
+
+        assertTrue(row.editable());
+        assertFalse(row.deletable());
+    }
+
+    @Test
+    @DisplayName("Yêu cầu bị từ chối -> Người tạo vẫn sửa được nhưng không thấy nút Xóa")
+    void toListRow_shouldAllowEditButNotDelete_whenRejected() {
+        RequisitionResponse row = mapper.toListRow(requisition(RequisitionAccess.STATUS_REJECTED), manager, null, false);
 
         assertTrue(row.editable());
         assertFalse(row.deletable());
@@ -138,15 +158,19 @@ class RequisitionMapperTests {
         assertFalse(forManager.postingViewable());
     }
 
-    @Test
-    @DisplayName("Yêu cầu cũ chưa lưu mã -> Mã hiển thị sinh từ id: REQ-0025")
-    void toListRow_shouldGenerateCode_whenRequisitionCodeIsMissing() {
-        RequisitionResponse row = mapper.toListRow(requisition(RequisitionAccess.STATUS_DRAFT), manager, null, false);
-
-        assertEquals("REQ-0025", row.requisitionCode());
-    }
-
     // ----- Trang chi tiết -----
+
+    @Test
+    @DisplayName("Chi tiết yêu cầu hiển thị số VND đã lưu, kể cả mức nhỏ hơn một triệu")
+    void toDetail_shouldShowExactStoredSalaryInVnd() {
+        JobRequisition requisition = requisition(RequisitionAccess.STATUS_APPROVED);
+        requisition.setMinSalary(new BigDecimal("1234.50"));
+        requisition.setMaxSalary(new BigDecimal("5678.75"));
+
+        RequisitionResponse detail = mapper.toDetail(requisition, manager, null, false, List.of(), List.of());
+
+        assertEquals("1.234,5 – 5.678,75 VND/tháng", detail.salaryLabel());
+    }
 
     @Test
     @DisplayName("Bản nháp thiếu thông tin bắt buộc khi gửi duyệt -> incomplete = true")
@@ -166,6 +190,9 @@ class RequisitionMapperTests {
         draft.setReasonForHiring("Mở rộng");
         draft.setJobDescription("Phát triển RMS");
         draft.setRequirementDetails("Spring Boot");
+        draft.setExpectedStaffingDate(java.time.LocalDate.of(2026, 12, 1));
+        draft.setMinSalary(new BigDecimal("10000000"));
+        draft.setMaxSalary(new BigDecimal("20000000"));
 
         // Act
         RequisitionResponse detail = mapper.toDetail(draft, manager, null, false, List.of(), List.of());
@@ -238,21 +265,11 @@ class RequisitionMapperTests {
     // ----- Form -----
 
     @Test
-    @DisplayName("Giới tính đã lưu -> Hiện đúng trong form sửa và trang chi tiết")
-    void gender_shouldSurviveEditAndDetailMapping() {
-        JobRequisition requisition = requisition(RequisitionAccess.STATUS_DRAFT);
-        requisition.setGender("Female");
-
-        assertEquals("Female", mapper.toEditForm(requisition).getGender());
-        assertEquals("Nữ", mapper.toDetail(requisition, manager, null, false, List.of(), List.of()).genderLabel());
-    }
-
-    @Test
-    @DisplayName("Đợt 2 trỏ về phiếu gốc -> DTO form mang tên phiếu gốc và phòng ban")
+    @DisplayName("Phiếu sao chép -> Form mang tên phiếu gốc, phòng ban và ngày dự kiến")
     void toEditForm_shouldCarryOriginalTitleAndDepartment_whenRequisitionIsLaterRound() {
         // Arrange
         JobRequisition round2 = requisition(RequisitionAccess.STATUS_DRAFT);
-        round2.setRecruitmentRound(2);
+        round2.setExpectedStaffingDate(java.time.LocalDate.of(2026, 12, 2));
         round2.setOriginalRequisition(JobRequisition.builder().requisitionId(1).title("Java Engineer").build());
 
         // Act
@@ -261,6 +278,6 @@ class RequisitionMapperTests {
         // Assert
         assertEquals("Java Engineer", form.getOriginalTitle());
         assertEquals(1, form.getDepartmentId());
-        assertEquals(2, form.getRecruitmentRound());
+        assertEquals(java.time.LocalDate.of(2026, 12, 2), form.getExpectedStaffingDate());
     }
 }

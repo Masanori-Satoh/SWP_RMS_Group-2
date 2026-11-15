@@ -50,10 +50,10 @@
             <!-- Dữ liệu biểu đồ; cũng là bản đọc được khi không có JavaScript -->
             <ul class="dash-chart-data" data-chart-data>
                 <li th:each="item : ${dashboard.progress}" data-chart-point
-                    th:data-label="${item.title}" th:data-title="|${item.code} · ${item.title}|"
+                    th:data-label="${item.title}" th:data-title="${item.title}"
                     th:data-hired="${item.hired}" th:data-missing="${item.missing}" th:data-needed="${item.needed}"
                     th:data-note="${item.pipelineText}" th:data-href="@{${item.href}}">
-                    <a class="dash-link" th:href="@{${item.href}}" th:text="|${item.code} · ${item.title}|">REQ-0001 · Vị trí</a>
+                    <a class="dash-link" th:href="@{${item.href}}" th:text="${item.title}">Vị trí</a>
                     <span th:text="|Đã tuyển ${item.hired}/${item.needed} người · ${item.pipelineText}|">Đã tuyển 1/3 người</span>
                 </li>
             </ul>

@@ -95,7 +95,8 @@ class InternalDashboardIntegrationTests {
             JobRequisition original) {
         return requisitions.saveAndFlush(JobRequisition.builder()
                 .title(title).hiringManager(owner).department(department).approvalStatus(status)
-                .submittedAt(now.minusDays(9)).recruitmentRound(round).originalRequisition(original)
+                .submittedAt(now.minusDays(9)).expectedStaffingDate(java.time.LocalDate.of(2026, 12, round))
+                .originalRequisition(original)
                 .numberOfPositions(3).employmentType("Full-time")
                 .workModel("On-site").jobDescription("Mô tả kiểm thử").requirementDetails("Yêu cầu kiểm thử").build());
     }
@@ -126,7 +127,7 @@ class InternalDashboardIntegrationTests {
                 .filter(item -> item.requisitionId() == secondRound.getRequisitionId()).findFirst().orElseThrow();
         assertEquals(department.getDepartmentName(), row.departmentName());
         assertEquals("Người gửi kiểm thử", row.requesterName());
-        assertEquals(2, row.recruitmentRound());
+        assertEquals(java.time.LocalDate.of(2026, 12, 2), row.expectedStaffingDate());
         assertEquals(3, row.numberOfPositions());
         DepartmentRequisitionRow departmentRow = byDepartment.stream()
                 .filter(item -> item.departmentName().equals(department.getDepartmentName())).findFirst().orElseThrow();
@@ -187,6 +188,30 @@ class InternalDashboardIntegrationTests {
         // Assert
         assertTrue(rows.stream().anyMatch(row -> row.requisitionId() == approved.getRequisitionId()));
         assertFalse(rows.stream().anyMatch(row -> row.requisitionId() == draft.getRequisitionId()));
+    }
+
+    @Test
+    @DisplayName("HR: tin nháp và tin đang đăng đã quá hạn nộp cần xử lý; tin đang đăng còn hạn thì không")
+    void postingsNeedingAction_shouldIncludeDraftAndOverdue() {
+        // Arrange
+        JobPosting draft = savePosting(saveRequisition("Tin nháp kiểm thử", RequisitionAccess.STATUS_APPROVED, 1, null), null);
+        draft.setPostingStatus(JobPostingAccess.STATUS_DRAFT);
+        postings.saveAndFlush(draft);
+        JobPosting overdue = savePosting(saveRequisition("Quá hạn kiểm thử", RequisitionAccess.STATUS_APPROVED, 1, null),
+                now.minusDays(20));
+        overdue.setApplicationDeadline(now.minusDays(2));
+        postings.saveAndFlush(overdue);
+        JobPosting open = savePosting(saveRequisition("Còn hạn kiểm thử", RequisitionAccess.STATUS_APPROVED, 1, null),
+                now.minusDays(1));
+        entityManager.clear();
+
+        // Act
+        List<DashboardListRepository.PostingActionRow> rows = lists.postingsNeedingAction(now);
+
+        // Assert
+        assertTrue(rows.stream().anyMatch(row -> row.jobPostingId() == draft.getJobPostingId()));
+        assertTrue(rows.stream().anyMatch(row -> row.jobPostingId() == overdue.getJobPostingId()));
+        assertFalse(rows.stream().anyMatch(row -> row.jobPostingId() == open.getJobPostingId()));
     }
 
     @Test

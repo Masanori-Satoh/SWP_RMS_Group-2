@@ -11,7 +11,9 @@ import com.group2.rms.dashboard.internal.repository.DashboardListRepository.Prog
 import com.group2.rms.dashboard.internal.repository.InternalMetricsRepository;
 import com.group2.rms.requisition.service.RequisitionAccess;
 import com.group2.rms.requisition.service.RequisitionLabels;
+import com.group2.rms.user.entity.Department;
 import com.group2.rms.user.entity.User;
+import com.group2.rms.user.repository.DepartmentRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,12 +36,14 @@ public class HiringManagerDashboardService {
 
     private final InternalMetricsRepository metrics;
     private final DashboardListRepository lists;
+    private final DepartmentRepository departments;
     private final Clock clock;
 
     public HiringManagerDashboardService(InternalMetricsRepository metrics, DashboardListRepository lists,
-            Clock clock) {
+            DepartmentRepository departments, Clock clock) {
         this.metrics = metrics;
         this.lists = lists;
+        this.departments = departments;
         this.clock = clock;
     }
 
@@ -49,9 +53,19 @@ public class HiringManagerDashboardService {
         int userId = user.getUserId();
         Integer departmentId = null;
         String scopeLabel = "Chưa được gán phòng ban";
+        // Số liệu đã tính cả phòng HM làm trưởng phòng (m.userId = :userId); nhãn liệt kê đủ các phòng đó.
+        List<String> departmentNames = new ArrayList<>();
         if (user.getDepartment() != null) {
             departmentId = user.getDepartment().getDepartmentId();
-            scopeLabel = "Phòng " + user.getDepartment().getDepartmentName();
+            departmentNames.add(user.getDepartment().getDepartmentName());
+        }
+        for (Department managed : departments.findAllByManagerUserIdOrderByDepartmentNameAsc(userId)) {
+            if (!departmentNames.contains(managed.getDepartmentName())) {
+                departmentNames.add(managed.getDepartmentName());
+            }
+        }
+        if (!departmentNames.isEmpty()) {
+            scopeLabel = "Phòng " + String.join(", ", departmentNames);
         }
 
         List<ProgressRow> progressRows = lists.hiringProgress(userId, departmentId);
@@ -84,7 +98,7 @@ public class HiringManagerDashboardService {
                 DashboardMetricResponse.backlog("megaphone", "Yêu cầu đã đăng tuyển", posted,
                         "Đã được HR đăng tin", "/internal/job-postings?status=Published", "neutral"),
                 DashboardMetricResponse.backlog("calendarDays", "Buổi phỏng vấn sắp tới", interviews,
-                        "Trong " + INTERVIEW_WINDOW_DAYS + " ngày tới", "/interviews", "neutral"));
+                        "Trong " + INTERVIEW_WINDOW_DAYS + " ngày tới", DashboardViews.INTERVIEWS_UPCOMING_HREF, "neutral"));
     }
 
     /** Việc HM tự làm được, đã xếp sẵn: bị từ chối trước, bản nháp sau. */
@@ -98,7 +112,7 @@ public class HiringManagerDashboardService {
 
     private DashboardWorkItem workItem(AttentionRow row) {
         String status = row.approvalStatus();
-        String title = RequisitionLabels.requisitionCode(row.requisitionId(), row.requisitionCode()) + " · " + row.title();
+        String title = row.title();
         String tag = RequisitionLabels.approvalStatus(status);
         String tagTone = RequisitionLabels.approvalTone(status);
 
@@ -108,11 +122,15 @@ public class HiringManagerDashboardService {
                 detail = row.rejectComment();
             }
             return new DashboardWorkItem(tag, tagTone, title, detail, null, null,
-                    "Chỉnh sửa", editHref(row.requisitionId()), false);
+                    "Chỉnh sửa", editHref(row.requisitionId()), false, detailHref(row.requisitionId()));
         }
         // Còn lại là bản nháp: badge trạng thái đã đủ nghĩa, không cần dòng giải thích.
         return new DashboardWorkItem(tag, tagTone, title, null, null, null,
-                "Gửi duyệt", editHref(row.requisitionId()), false);
+                "Gửi duyệt", editHref(row.requisitionId()), false, detailHref(row.requisitionId()));
+    }
+
+    private static String detailHref(int requisitionId) {
+        return "/requisitions/" + requisitionId;
     }
 
     private List<DashboardInterviewItem> upcomingInterviews(int userId, Integer departmentId, LocalDateTime now) {
@@ -135,8 +153,7 @@ public class HiringManagerDashboardService {
         if (row.hired() >= needed) {
             pipelineText = "Đã tuyển đủ, chờ đóng yêu cầu";
         }
-        return new HiringProgressItem(RequisitionLabels.requisitionCode(row.requisitionId(), row.requisitionCode()),
-                row.title(), row.hired(), needed, pipelineText, progressHref(row));
+        return new HiringProgressItem(row.title(), row.hired(), needed, pipelineText, progressHref(row));
     }
 
     // Đã có tin thì mở chi tiết tin tuyển dụng; HR chưa đăng tin thì mở chi tiết yêu cầu
@@ -145,10 +162,6 @@ public class HiringManagerDashboardService {
             return "/internal/job-postings/" + row.latestPostingId();
         }
         return detailHref(row.requisitionId());
-    }
-
-    private String detailHref(int requisitionId) {
-        return "/requisitions/" + requisitionId;
     }
 
     private String editHref(int requisitionId) {

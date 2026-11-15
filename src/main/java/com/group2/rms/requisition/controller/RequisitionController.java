@@ -7,19 +7,20 @@ import com.group2.rms.requisition.dto.RequisitionSearchRequest;
 import com.group2.rms.requisition.exception.RequisitionStateException;
 import com.group2.rms.requisition.exception.RequisitionValidationException;
 import com.group2.rms.requisition.service.RequisitionAccess;
+import com.group2.rms.requisition.service.RequisitionFormOptions;
 import com.group2.rms.requisition.service.RequisitionListService;
 import com.group2.rms.requisition.service.RequisitionService;
 import com.group2.rms.requisition.validator.RequisitionValidator;
-import com.group2.rms.user.repository.DepartmentRepository;
 
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.beans.PropertyAccessException;
 import org.springframework.validation.BindingResult;
+import org.springframework.validation.DefaultBindingErrorProcessor;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -52,13 +53,13 @@ public class RequisitionController {
     private final RequisitionListService listService;
     private final RequisitionAccess access;
     private final RequisitionValidator validator;
-    private final DepartmentRepository departments;
+    private final RequisitionFormOptions formOptions;
 
     @InitBinder("form")
     void binder(WebDataBinder binder) {
-        binder.setAllowedFields("action", "title", "departmentId", "originalTitle", "numberOfPositions", "employmentType", "minSalary",
+        binder.setAllowedFields("action", "title", "departmentId", "originalTitle", "expectedStaffingDate", "numberOfPositions", "employmentType", "minSalary",
                 "maxSalary",
-                "gender", "workLocation", "workModel", "probationPeriod", "reasonForHiring", "recruitmentRound", "originalRequisitionId",
+                "workLocation", "workModel", "reasonForHiring", "originalRequisitionId",
                 "jobDescription", "requirementDetails");
 
         PropertyEditorSupport salaryEditor = new PropertyEditorSupport() {
@@ -93,6 +94,21 @@ public class RequisitionController {
         };
         binder.registerCustomEditor(BigDecimal.class, "minSalary", salaryEditor);
         binder.registerCustomEditor(BigDecimal.class, "maxSalary", salaryEditor);
+
+        // Nhập "1.5" / "abc" / "@#" vào ô số nguyên: báo câu lỗi riêng theo từng trường hợp
+        binder.setBindingErrorProcessor(new DefaultBindingErrorProcessor() {
+            @Override
+            public void processPropertyAccessException(PropertyAccessException ex, BindingResult bindingResult) {
+                String field = ex.getPropertyName();
+                String label = "numberOfPositions".equals(field) ? RequisitionValidator.POSITIONS_LABEL : null;
+                if (label == null) {
+                    super.processPropertyAccessException(ex, bindingResult);
+                    return;
+                }
+                bindingResult.addError(new FieldError(bindingResult.getObjectName(), field, ex.getValue(), true,
+                        null, null, RequisitionValidator.integerFormatMessage(label, ex.getValue())));
+            }
+        });
     }
 
     @ModelAttribute
@@ -124,10 +140,8 @@ public class RequisitionController {
         RequisitionRequest form = new RequisitionRequest();
 
         form.setNumberOfPositions(1);
-        form.setRecruitmentRound(1);
         form.setEmploymentType("Full-time");
         form.setWorkModel("On-site");
-        form.setGender(RequisitionValidator.GENDER_ANY);
         if (currentUser.getDepartment() != null && !access.isDirector(currentUser)) {
             form.setDepartmentId(currentUser.getDepartment().getDepartmentId());
         }
@@ -173,7 +187,7 @@ public class RequisitionController {
     }
 
     @PostMapping("/create")
-    public String create(@Valid @ModelAttribute("form") RequisitionRequest form, BindingResult errors, Model model,
+    public String create(@ModelAttribute("form") RequisitionRequest form, BindingResult errors, Model model,
             RedirectAttributes flash) {
         access.requireCreate(access.actor());
         if (!errors.hasErrors()) {
@@ -191,7 +205,7 @@ public class RequisitionController {
     }
 
     @PostMapping("/edit/{id}")
-    public String update(@PathVariable Integer id, @Valid @ModelAttribute("form") RequisitionRequest form,
+    public String update(@PathVariable Integer id, @ModelAttribute("form") RequisitionRequest form,
             BindingResult errors, Model model, RedirectAttributes flash, HttpServletRequest request) {
         if (!errors.hasErrors()) {
             try {
@@ -226,7 +240,7 @@ public class RequisitionController {
     }
 
     @PostMapping("/{id}/decision")
-    public String decide(@PathVariable Integer id, @RequestParam String decision,
+    public String decide(@PathVariable Integer id, @RequestParam(defaultValue = "") String decision,
             @RequestParam(defaultValue = "") String comment, RedirectAttributes flash, HttpServletRequest request) {
         boolean isApprove = DECISION_APPROVE.equals(decision);
         boolean isReject = DECISION_REJECT.equals(decision);
@@ -247,6 +261,19 @@ public class RequisitionController {
         } catch (RequisitionValidationException e) {
             flash.addFlashAttribute("failureMessage", e.getMessage());
             flash.addFlashAttribute("decisionComment", comment);
+        }
+        return "redirect:/requisitions/" + id;
+    }
+
+    @PostMapping("/{id}/close")
+    public String close(@PathVariable Integer id, RedirectAttributes flash, HttpServletRequest request) {
+        try {
+            service.closeRequisition(id);
+            flash.addFlashAttribute("successMessage", "Đã đóng yêu cầu tuyển dụng.");
+        } catch (RequisitionStateException e) {
+            return backToPreviousPage(id, e, flash, request);
+        } catch (RequisitionValidationException e) {
+            flash.addFlashAttribute("failureMessage", e.getMessage());
         }
         return "redirect:/requisitions/" + id;
     }
@@ -340,6 +367,7 @@ public class RequisitionController {
     private String renderForm(Model model, boolean edit, Integer id) {
         model.addAttribute("isEdit", edit);
         model.addAttribute("requisitionId", id);
+        model.addAttribute("today", validator.today());
         model.addAttribute("directApprove", access.isDirector(access.actor()));
         addFormOptions(model);
         model.addAttribute("activeMenu", "requisitions");
@@ -348,15 +376,16 @@ public class RequisitionController {
     }
 
     private void addFormOptions(Model model) {
-        model.addAttribute("departments", departments.findAll());
+        var allDepartments = formOptions.allDepartments();
+        var actor = access.actor();
+        model.addAttribute("departments", allDepartments);
+
+        model.addAttribute("departmentChoices", allDepartments.stream()
+                .filter(department -> "Active".equals(department.getDepartmentStatus())
+                        && access.canManageDepartment(actor, department.getDepartmentId(), department.getManager()))
+                .toList());
         model.addAttribute("employmentTypes", RequisitionValidator.EMPLOYMENT_TYPES);
-        model.addAttribute("genders", RequisitionValidator.GENDERS);
-        model.addAttribute("probationLimit", RequisitionValidator.PROBATION_CHAR_LIMIT);
-        // Giới hạn số lượng cần tuyển, dùng cho min/max của ô số lượng và nút −/+
         model.addAttribute("positionsMin", RequisitionValidator.POSITIONS_MIN);
-        model.addAttribute("positionsMax", RequisitionValidator.POSITIONS_MAX);
-        model.addAttribute("roundMin", RequisitionValidator.ROUND_MIN);
-        model.addAttribute("roundMax", RequisitionValidator.ROUND_MAX);
     }
 
     private void addErrors(BindingResult errors, RequisitionValidationException e) {

@@ -100,8 +100,8 @@ class RequisitionListServiceTests {
     // ----- Phạm vi dữ liệu theo role -----
 
     @Test
-    @DisplayName("HR mở danh sách -> Câu WHERE luôn có điều kiện chỉ lấy yêu cầu Approved")
-    void getListPage_shouldOnlyQueryApproved_whenViewerIsHr() {
+    @DisplayName("HR mở danh sách -> Câu WHERE chỉ lấy yêu cầu Approved hoặc Closed")
+    void getListPage_shouldOnlyQueryApprovedOrClosed_whenViewerIsHr() {
         // Arrange
         loginAs(RequisitionAccess.ROLE_HR);
 
@@ -116,7 +116,7 @@ class RequisitionListServiceTests {
         Path status = mock(Path.class);
         when(root.get("approvalStatus")).thenReturn(status);
         where.getValue().toPredicate(root, null, builder);
-        verify(builder).equal(status, RequisitionAccess.STATUS_APPROVED);
+        verify(status).in(RequisitionAccess.STATUS_APPROVED, RequisitionAccess.STATUS_CLOSED);
     }
 
     // ----- Trạng thái duyệt -----
@@ -305,13 +305,13 @@ class RequisitionListServiceTests {
         RequisitionListResponse partTime = service.getListPage(
                 new RequisitionSearchRequest(null, null, null, null, null, null, null, null, null, null, "Part-time"));
         RequisitionListResponse unknown = service.getListPage(
-                new RequisitionSearchRequest(null, null, null, null, null, null, null, null, null, null, "Freelance"));
+                new RequisitionSearchRequest(null, null, null, null, null, null, null, null, null, null, "Temp"));
 
         assertTrue(partTime.errors().isEmpty());
         assertEquals("Part-time", partTime.filter().employmentType());
-        assertEquals("Hình thức: Bán thời gian", partTime.chips().get(0).label());
+        assertEquals("Hình thức làm việc: Bán thời gian", partTime.chips().get(0).label());
         assertNull(unknown.filter().employmentType());
-        assertEquals(List.of("Bộ lọc hình thức không hợp lệ. Vui lòng chọn bộ lọc hợp lệ."), unknown.errors());
+        assertEquals(List.of("Bộ lọc hình thức làm việc không hợp lệ. Vui lòng chọn bộ lọc hợp lệ."), unknown.errors());
 
         loginAs(RequisitionAccess.ROLE_DIRECTOR);
         RequisitionListResponse director = service.getListPage(

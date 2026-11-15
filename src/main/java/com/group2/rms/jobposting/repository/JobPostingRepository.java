@@ -59,6 +59,14 @@ public interface JobPostingRepository extends JpaRepository<JobPosting, Integer>
 
     boolean existsByRequisition_RequisitionIdAndPostingStatusIn(Integer requisitionId, Collection<String> statuses);
 
+    @Query("SELECT COUNT(a) FROM Application a WHERE a.jobPosting.requisition.requisitionId = :requisitionId "
+            + "AND a.applicationStatus = 'Hired'")
+    long countHiredByRequisition(@Param("requisitionId") Integer requisitionId);
+
+    @Query("SELECT COUNT(a) FROM Application a WHERE a.jobPosting.requisition.requisitionId = :requisitionId "
+            + "AND a.applicationStatus NOT IN ('Hired', 'Rejected', 'Withdrawn', 'Cancelled')")
+    long countActiveApplicationsByRequisition(@Param("requisitionId") Integer requisitionId);
+
     boolean existsByRequisition_RequisitionIdAndJobPostingIdNotAndPostingStatusIn(
             Integer requisitionId, Integer jobPostingId, Collection<String> statuses);
 

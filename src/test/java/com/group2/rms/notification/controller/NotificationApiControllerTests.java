@@ -76,7 +76,7 @@ class NotificationApiControllerTests {
     void getRecentNotifications_success() {
         NotificationResponse item = new NotificationResponse(
                 10L,
-                "REQ-101 đã bị từ chối",
+                "Yêu cầu tuyển dụng đã bị từ chối",
                 "Lý do: xem lại lương",
                 "REQUISITION_REJECTED",
                 "101",
@@ -98,7 +98,7 @@ class NotificationApiControllerTests {
         @SuppressWarnings("unchecked")
         List<NotificationResponse> list = (List<NotificationResponse>) response.getBody().get("notifications");
         assertThat(list).hasSize(1);
-        assertThat(list.get(0).title()).isEqualTo("REQ-101 đã bị từ chối");
+        assertThat(list.get(0).title()).isEqualTo("Yêu cầu tuyển dụng đã bị từ chối");
     }
 
     @Test

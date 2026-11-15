@@ -101,7 +101,9 @@
 
   const todayKey = toDateKey(new Date());
   let selectedDate = todayKey;
-  let activePreset = 'today'; // today | this-week | this-month | all | custom
+  let activePreset = 'today'; // today | this-week | this-month | all | custom | upcoming
+  // Chỉ bật khi đến từ dashboard (?evaluation=pending): các buổi mình chưa gửi phiếu đánh giá
+  let pendingEvaluationOnly = false;
   let calMonth = new Date().getMonth();
   let calYear = new Date().getFullYear();
 
@@ -185,6 +187,8 @@
     const search = searchInput.value.trim().toLowerCase();
     const week = weekRange(new Date());
     const monthPrefix = todayKey.substring(0, 7);
+    const now = new Date();
+    const upcomingEnd = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
     let visible = 0;
 
     cards.forEach(function (card) {
@@ -194,6 +198,11 @@
 
       if (activePreset === 'today' || activePreset === 'custom') {
         match = date === selectedDate;
+      } else if (activePreset === 'upcoming') {
+        // Giống KPI "Buổi phỏng vấn sắp tới": chưa bắt đầu, trong 7 ngày tới, lịch còn hiệu lực
+        const start = new Date(card.dataset.start);
+        match = start >= now && start < upcomingEnd
+          && (card.dataset.status === 'Scheduled' || card.dataset.status === 'Rescheduled');
       } else if (activePreset === 'this-week') {
         match = date >= week.start && date <= week.end;
       } else if (activePreset === 'this-month') {
@@ -202,6 +211,9 @@
         match = true;
       }
 
+      if (match && pendingEvaluationOnly) {
+        match = (card.dataset.evaluation || '').startsWith('EVALUATION_');
+      }
       if (match && search) {
         match = [card.dataset.candidate, card.dataset.candidateEmail, job, card.dataset.appId]
           .some(function (value) {
@@ -273,6 +285,14 @@
       addPill('Tuần này', resetDate);
     } else if (activePreset === 'this-month') {
       addPill('Tháng này', resetDate);
+    } else if (activePreset === 'upcoming') {
+      addPill('7 ngày tới', resetDate);
+    }
+    if (pendingEvaluationOnly) {
+      addPill('Chờ tôi đánh giá', function () {
+        pendingEvaluationOnly = false;
+        applyFilters();
+      });
     }
     if (searchInput.value.trim()) {
       addPill('“' + searchInput.value.trim() + '”', function () {
@@ -315,6 +335,7 @@
 
   function clearAllFilters() {
     searchInput.value = '';
+    pendingEvaluationOnly = false;
     [jobSelect, levelSelect, statusSelect, resultSelect, interviewerSelect].forEach(function (select) {
       if (select) {
         select.value = '';
@@ -389,6 +410,44 @@
     });
   }
 
+  // 7. Đặt sẵn bộ lọc từ URL (link trên dashboard): ?period= ?date= ?status= ?result= ?evaluation=pending ?focus=
+  const params = new URLSearchParams(window.location.search);
+  const period = params.get('period');
+  const dateParam = params.get('date');
+  if (dateParam && /^\d{4}-\d{2}-\d{2}$/.test(dateParam)) {
+    selectedDate = dateParam;
+    activePreset = 'custom';
+    calYear = Number(dateParam.substring(0, 4));
+    calMonth = Number(dateParam.substring(5, 7)) - 1;
+  } else if (period && (presets[period] || period === 'upcoming')) {
+    activePreset = period;
+    if (period !== 'today') {
+      selectedDate = null;
+    }
+  }
+  [[statusSelect, 'status'], [resultSelect, 'result']].forEach(function (pair) {
+    const value = params.get(pair[1]);
+    if (pair[0] && value && Array.from(pair[0].options).some(function (o) { return o.value === value; })) {
+      pair[0].value = value;
+    }
+  });
+  if (params.get('evaluation') === 'pending') {
+    pendingEvaluationOnly = true;
+    if (!period && !dateParam) {
+      activePreset = 'all';
+      selectedDate = null;
+    }
+  }
+  Object.entries(presets).forEach(function (entry) {
+    entry[1].classList.toggle('is-active', entry[0] === activePreset);
+  });
+
   renderCalendar();
   applyFilters();
+
+  const focusCard = params.get('focus') && document.getElementById('interview-' + params.get('focus'));
+  if (focusCard && !focusCard.hidden) {
+    focusCard.classList.add('is-focused');
+    focusCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
 })();

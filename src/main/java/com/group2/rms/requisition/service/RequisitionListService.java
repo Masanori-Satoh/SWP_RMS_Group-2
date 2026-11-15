@@ -48,13 +48,15 @@ public class RequisitionListService {
             RequisitionAccess.STATUS_DRAFT,
             RequisitionAccess.STATUS_PENDING_DIRECTOR,
             RequisitionAccess.STATUS_APPROVED,
-            RequisitionAccess.STATUS_REJECTED);
+            RequisitionAccess.STATUS_REJECTED,
+            RequisitionAccess.STATUS_CLOSED);
 
 
     private static final List<String> STATUSES_WITHOUT_DRAFT = List.of(
             RequisitionAccess.STATUS_PENDING_DIRECTOR,
             RequisitionAccess.STATUS_APPROVED,
-            RequisitionAccess.STATUS_REJECTED);
+            RequisitionAccess.STATUS_REJECTED,
+            RequisitionAccess.STATUS_CLOSED);
 
 
     private static final List<String> POSTING_FILTER_VALUES = List.of(
@@ -127,7 +129,8 @@ public class RequisitionListService {
                     cb.equal(root.get("hiringManager").get("userId"), currentUser.getUserId()));
         }
         if (RequisitionAccess.ROLE_HR.equals(role)) {
-            return (root, query, cb) -> cb.equal(root.get("approvalStatus"), RequisitionAccess.STATUS_APPROVED);
+            return (root, query, cb) -> root.get("approvalStatus")
+                    .in(RequisitionAccess.STATUS_APPROVED, RequisitionAccess.STATUS_CLOSED);
         }
         throw new org.springframework.security.access.AccessDeniedException(
                 "Vai trò không có quyền xem yêu cầu tuyển dụng.");
@@ -191,7 +194,7 @@ public class RequisitionListService {
         }
         String employmentType = null;
         if (ListFilters.isInvalidChoice(raw.employmentType(), options.showEmploymentType(), options.employmentTypes())) {
-            errors.add(ListFilters.invalidFilterMessage("hình thức"));
+            errors.add(ListFilters.invalidFilterMessage("hình thức làm việc"));
         } else if (raw.employmentType() != null && !raw.employmentType().isBlank()) {
             employmentType = raw.employmentType();
         }
@@ -262,19 +265,21 @@ public class RequisitionListService {
         RequisitionSort sortOption = RequisitionSort.fromParam(filter.sort());
         Sort sort = sortOption.toSort();
         if (sortOption == RequisitionSort.NEWEST) {
-            // CASE ordering can't be expressed with Sort; the spec sets ORDER BY, so pass unsorted.
             where = where.and(RequisitionSpecifications.pendingFirstThenNewest());
             sort = Sort.unsorted();
         }
+
         Page<JobRequisition> result = requisitions.findAll(where, PageRequest.of(filter.page(), filter.size(), sort));
         if (filter.page() > 0 && filter.page() >= result.getTotalPages()) {
             errors.add("Trang bạn yêu cầu không tồn tại.");
             return Page.empty(result.getPageable());
         }
+
         List<Integer> ids = new ArrayList<>();
         for (JobRequisition jobRequisition : result.getContent()) {
             ids.add(jobRequisition.getRequisitionId());
         }
+
         Map<Integer, JobPosting> latestPostings = latestPostingsOf(ids);
         Set<Integer> idsWithLaterRounds = idsWithLaterRounds(ids);
 
@@ -326,6 +331,7 @@ public class RequisitionListService {
                     "Phòng ban: " + ListFilters.labelOf(filter.departmentId(), options.departments()),
                     List.of("departmentId")));
         }
+
         if (filter.creatorId() != null) {
             chips.add(new FilterChip(
                     "Người tạo yêu cầu: " + ListFilters.labelOf(filter.creatorId(), options.creators()),
@@ -333,7 +339,7 @@ public class RequisitionListService {
         }
         if (filter.employmentType() != null) {
             chips.add(new FilterChip(
-                    "Hình thức: " + RequisitionLabels.employmentType(filter.employmentType()),
+                    "Hình thức làm việc: " + RequisitionLabels.employmentType(filter.employmentType()),
                     List.of("employmentType")));
         }
         if (filter.createdFrom() != null || filter.createdTo() != null) {

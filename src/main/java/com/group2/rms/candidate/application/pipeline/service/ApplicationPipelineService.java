@@ -139,7 +139,7 @@ public class ApplicationPipelineService {
                 account.getFullName(), account.getEmail(), account.getPhoneNumber(),
                 candidate.getLinkedInUrl(), candidate.getPortfolioUrl(),
                 candidate.getDateOfBirth(), candidate.getGender(), candidate.getAddress(),
-                requisition.getRequisitionId(), requisition.getRequisitionCode(),
+                requisition.getRequisitionId(),
                 job.getJobPostingId(), job.getPostingTitle(),
                 requisition.getDepartment() == null ? null : requisition.getDepartment().getDepartmentName(),
                 application.getSubmissionDate(),
