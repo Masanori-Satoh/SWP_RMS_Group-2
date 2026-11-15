@@ -37,6 +37,10 @@
 
     initToasts();
 
+    document.querySelectorAll('[data-auto-dismiss-notice]').forEach(notice => {
+        setTimeout(() => notice.remove(), 3000);
+    });
+
     // Hỗ trợ hiển thị pendingFlashToast từ sessionStorage (sau khi reload / chuyển trang)
     try {
         const pending = sessionStorage.getItem('pendingFlashToast');

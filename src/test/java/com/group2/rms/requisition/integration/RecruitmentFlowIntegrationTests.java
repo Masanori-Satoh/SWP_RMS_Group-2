@@ -412,16 +412,20 @@ class RecruitmentFlowIntegrationTests {
         }
 
         @Test
-        @DisplayName("HM lưu nháp trùng tên với bản nháp đang có trong phòng -> Báo lỗi ô tiêu đề")
-        void saveDraft_shouldReject_whenSameTitleDraftExistsInDepartment() {
+        @DisplayName("HM lưu nháp trùng tên với bản nháp đang có trong phòng -> Tạo thêm bản nháp")
+        void saveDraft_shouldAllow_whenSameTitleDraftExistsInDepartment() {
             // Arrange
-            savedRequisition(TITLE, otherManager, RequisitionAccess.STATUS_DRAFT);
+            Integer existingId = savedRequisition(TITLE, otherManager, RequisitionAccess.STATUS_DRAFT)
+                    .getRequisitionId();
             loginAs(hiringManager);
 
-            // Act + Assert
-            RequisitionValidationException ex = assertThrows(RequisitionValidationException.class,
-                    () -> requisitionService.createRequisition(fullRequest(RequisitionValidator.ACTION_DRAFT)));
-            assertTrue(ex.getErrors().containsKey("title"));
+            // Act
+            Integer newId = requisitionService.createRequisition(fullRequest(RequisitionValidator.ACTION_DRAFT));
+
+            // Assert
+            assertNotEquals(existingId, newId);
+            assertEquals(RequisitionAccess.STATUS_DRAFT, approvalStatusOf(newId));
+            assertEquals(TITLE, requisitions.findById(newId).orElseThrow().getTitle());
         }
 
         @Test

@@ -225,29 +225,23 @@ class RequisitionServiceTests {
         }
 
         @Test
-        @DisplayName("Phòng ban đã có bản nháp cùng tên vị trí -> Báo lỗi ở ô tên vị trí, không lưu")
-        void createRequisition_shouldReject_whenDraftWithSameTitleExistsInDepartment() {
-            // Arrange
-            when(requisitions.existsDraftByTitleAndDepartment("Java Engineer", 1, null)).thenReturn(true);
+        @DisplayName("Lưu bản nháp cùng tên vị trí trong phòng -> Vẫn lưu")
+        void createRequisition_shouldSave_whenSameTitleIsAlreadyUsedInDepartment() {
+            service.createRequisition(draft("Java Engineer"));
 
-            // Act
-            RequisitionValidationException error = assertThrows(RequisitionValidationException.class,
-                    () -> service.createRequisition(draft("Java Engineer")));
-
-            // Assert
-            assertTrue(error.getErrors().get("title").startsWith("Bạn đang có một bản nháp"));
-            verify(requisitions, never()).saveAndFlush(any());
+            JobRequisition saved = savedRequisition();
+            assertEquals("Java Engineer", saved.getTitle());
+            assertEquals(RequisitionAccess.STATUS_DRAFT, saved.getApprovalStatus());
         }
 
         @Test
-        @DisplayName("Gửi duyệt khi phòng có bản nháp khác cùng tên -> Vẫn gửi được (chỉ chặn trùng khi lưu nháp)")
+        @DisplayName("Gửi duyệt khi phòng có bản nháp khác cùng tên -> Vẫn gửi được")
         void createRequisition_shouldSubmit_whenOtherDraftWithSameTitleExists() {
             // Act
             service.createRequisition(submit("Java Engineer"));
 
             // Assert
             assertEquals(RequisitionAccess.STATUS_PENDING_DIRECTOR, savedRequisition().getApprovalStatus());
-            verify(requisitions, never()).existsDraftByTitleAndDepartment(any(), any(), any());
         }
 
         @Test
@@ -547,29 +541,24 @@ class RequisitionServiceTests {
     class UpdateRequisition {
 
         @Test
-        @DisplayName("Đổi tên nháp thành tên của nháp khác cùng phòng -> Không lưu, không ghi audit")
-        void updateRequisition_shouldReject_whenAnotherDraftHasSameTitle() {
+        @DisplayName("Đổi tên nháp thành tên của nháp khác cùng phòng -> Vẫn cập nhật")
+        void updateRequisition_shouldSave_whenAnotherDraftHasSameTitle() {
             JobRequisition requisition = requisitionWithStatus(70, RequisitionAccess.STATUS_DRAFT);
             RequisitionRequest request = draft("Java Engineer");
-            when(requisitions.existsDraftByTitleAndDepartment("Java Engineer", 1, 70)).thenReturn(true);
 
-            RequisitionValidationException error = assertThrows(RequisitionValidationException.class,
-                    () -> service.updateRequisition(70, request));
+            service.updateRequisition(70, request);
 
-            assertTrue(error.getErrors().containsKey("title"));
-            assertEquals("Senior Java", requisition.getTitle());
-            verify(requisitions, never()).saveAndFlush(any());
-            verifyNoInteractions(audit, notificationService);
+            assertEquals("Java Engineer", requisition.getTitle());
+            verify(requisitions).saveAndFlush(requisition);
         }
 
         @Test
-        @DisplayName("Giữ tên nháp của chính mình -> Không coi là trùng với bản ghi đang sửa")
-        void updateRequisition_shouldExcludeCurrentId_whenCheckingDuplicateDraft() {
+        @DisplayName("Giữ tên nháp của chính mình -> Không đổi trạng thái")
+        void updateRequisition_shouldKeepDraft_whenTitleIsUnchanged() {
             JobRequisition requisition = requisitionWithStatus(70, RequisitionAccess.STATUS_DRAFT);
 
             service.updateRequisition(70, draft("Senior Java"));
 
-            verify(requisitions).existsDraftByTitleAndDepartment("Senior Java", 1, 70);
             assertEquals(RequisitionAccess.STATUS_DRAFT, requisition.getApprovalStatus());
         }
 

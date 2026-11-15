@@ -99,7 +99,7 @@ public class RequisitionServiceImpl implements RequisitionService {
 
         Integer departmentId = request.getDepartmentId();
         if (departmentId == null && !access.isDirector(currentUser)) {
-            // HM chỉ có một phòng: form không có ô chọn, mặc định là phòng của mình.
+
             if (currentUser.getDepartment() == null) {
                 throw createValidationException("departmentId",
                         "Tài khoản của bạn chưa được gán phòng ban đang hoạt động. Vui lòng liên hệ quản trị viên.");
@@ -109,9 +109,6 @@ public class RequisitionServiceImpl implements RequisitionService {
         request.setDepartmentId(requireDepartmentFor(currentUser, departmentId));
 
         validator.validate(request);
-
-        requireNoOtherDraft(request, null,
-                "Bạn đang có một bản nháp cho vị trí này trong phòng ban. Vui lòng hoàn thiện bản nháp hiện có.");
 
         JobRequisition jobRequisition = new JobRequisition();
         jobRequisition.setHiringManager(currentUser);
@@ -157,8 +154,6 @@ public class RequisitionServiceImpl implements RequisitionService {
         }
 
         validator.validate(request);
-        requireNoOtherDraft(request, id, "Bạn đang có một bản nháp khác cho vị trí này trong phòng ban.");
-
         Map<String, String> before = auditLogger.snapshot(jobRequisition);
         applyDataToEntity(jobRequisition, request);
 
@@ -281,21 +276,6 @@ public class RequisitionServiceImpl implements RequisitionService {
     private void requireCopyableSource(JobRequisition source) {
         if (RequisitionAccess.STATUS_DRAFT.equals(source.getApprovalStatus())) {
             throw createValidationException("action", "Không thể sao chép yêu cầu đang là bản nháp.");
-        }
-    }
-
-    // Requires that no matching draft exists.
-    private void requireNoOtherDraft(RequisitionRequest request, Integer excludeId, String message) {
-        if (RequisitionValidator.isSubmit(request.getAction())) {
-            return;
-        }
-        if (request.getDepartmentId() == null || request.getTitle() == null || request.getTitle().isBlank()) {
-            return;
-        }
-        boolean hasDraft = requisitions.existsDraftByTitleAndDepartment(
-                request.getTitle().trim(), request.getDepartmentId(), excludeId);
-        if (hasDraft) {
-            throw createValidationException("title", message);
         }
     }
 
