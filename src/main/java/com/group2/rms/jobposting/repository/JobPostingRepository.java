@@ -137,4 +137,14 @@ public interface JobPostingRepository extends JpaRepository<JobPosting, Integer>
          + "ORDER BY j.postingDate DESC")
     List<JobPosting> findOpenPostings(@Param("now") LocalDateTime now);
 
+//     @Query("""
+//         SELECT DISTINCT j.jobPostingId, j.postingTitle 
+//         FROM JobPosting j 
+//         JOIN Application a ON a.jobPosting = j
+//         JOIN a.candidate c
+//         WHERE c.isPotential = true 
+//           AND a.applicationStatus <> 'HM_Suggested'
+//     """)
+//     List<Object[]> findJobsWithPotentialCandidates();
+    
 }

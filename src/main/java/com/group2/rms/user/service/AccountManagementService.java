@@ -176,11 +176,15 @@ public class AccountManagementService {
         checkEmailAvailable(users, email, userId);
         checkSingleHiringManager(role, department, command.accountStatus(), userId);
 
-        // Keep Department.ManagerId consistent when this account stops being the manager.
+        // Keep Department.ManagerId consistent when this account stops being the
+        // manager.
         Department previous = user.getDepartment();
-        if (previous != null && previous.getManager() != null && userId == previous.getManager().getUserId()
-                && (!isHiringManager(role) || department == null
-                    || !previous.getDepartmentId().equals(department.getDepartmentId()))) {
+        if (previous != null && previous.getManager() != null
+                && userId == previous.getManager().getUserId()
+                && ("Inactive".equals(command.accountStatus())
+                        || !isHiringManager(role)
+                        || department == null
+                        || !previous.getDepartmentId().equals(department.getDepartmentId()))) {
             previous.setManager(null);
             departments.save(previous);
         }
@@ -297,8 +301,6 @@ public class AccountManagementService {
     public record CreateCommand(String fullName, String username, String email, String phoneNumber,
             Integer roleId, Integer departmentId, String password) {
     }
-
-  
 
     public record UpdateCommand(String fullName, String email, String phoneNumber,
             Integer roleId, Integer departmentId, String accountStatus) {

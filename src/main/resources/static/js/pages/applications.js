@@ -13,6 +13,7 @@
     let saving = false;
     let bookmarkLoaded = false;
 
+    //close dialog
     page.querySelectorAll('[data-app-close]').forEach((button) => {
         button.addEventListener('click', () => {
             if (button.closest('dialog') === bookmark && saving) return;

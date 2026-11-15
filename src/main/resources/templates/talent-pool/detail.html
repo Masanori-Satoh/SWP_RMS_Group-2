@@ -21,10 +21,12 @@
         <div class="tpw-main-stack">
     <header class="card tp-profile adw-surface tpw-profile">
         <div class="tp-profile-identity tpw-profile-identity">
-            <span class="tp-profile-avatar tpw-avatar tpw-avatar--profile" aria-hidden="true" th:with="parts=${#strings.arraySplit(detail.candidate.fullName ?: '', ' ')}"
-                  th:text="${#arrays.length(parts) > 0 ? #strings.toUpperCase(#strings.substring(parts[0], 0, 1) + (#arrays.length(parts) > 1 ? #strings.substring(parts[#arrays.length(parts) - 1], 0, 1) : '')) : ''}"></span>
+            <span class="tp-profile-avatar tpw-avatar tpw-avatar--profile" aria-hidden="true" 
+                th:with="parts=${#strings.arraySplit(detail.candidate.fullName ?: '', '     ')}"
+                th:text="${#arrays.length(parts) > 0 ? #strings.toUpperCase(#strings.substring(parts[0], 0, 1) + (#arrays.length(parts) > 1 ? #strings.substring(parts[#arrays.length(parts) - 1], 0, 1) : '')) : ''}"></span>
             <div class="tp-profile-info">
                 <div class="tpw-name-row">
+                    <!--full name-->
                     <h1 class="page-title tp-profile-title adw-title tpw-profile-title" th:text="${detail.candidate.fullName}"></h1>
                     <th:block th:if="${bookmarkSourceId != null}">
                         <span th:replace="~{talent-pool/potential-toggle :: toggle(applicationId=${bookmarkSourceId},candidateName=${detail.candidate.fullName},saved=${detail.potential},keepSource=${true})}"></span>
@@ -36,20 +38,28 @@
                 <ul class="tpw-contact-chips" aria-label="Thông tin liên hệ">
                     <li class="tpw-contact-chip">
                         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+                        <!--mail-->
                         <a th:href="|mailto:${detail.candidate.email}|" th:text="${detail.candidate.email}"></a>
                     </li>
                     <li class="tpw-contact-chip">
                         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2Z"/></svg>
+                        <!--sdt-->
                         <span th:text="${detail.candidate.phoneNumber ?: 'Chưa có số điện thoại'}"></span>
                     </li>
                 </ul>
                 <div th:if="${recommendation != null}" class="tpw-state-row">
-                    <span class="badge tp-profile-badge tpw-status" th:attr="data-tpw-tone=${recommendation.pending ? 'warning' : 'neutral'}" th:classappend="${recommendation.pending ? 'badge--warning' : 'badge--neutral'}" th:text="${recommendation.statusLabel}"></span>
+                    <!--label sâttus-->
+                    <span class="badge tp-profile-badge tpw-status" 
+                    th:attr="data-tpw-tone=${recommendation.pending ? 'warning' : 'neutral'}" 
+                    th:classappend="${recommendation.pending ? 'badge--warning' : 'badge--neutral'}"
+                     th:text="${recommendation.statusLabel}">
+                    </span>
                 </div>
             </div>
             <div class="tpw-profile-actions">
                 <a class="btn btn--secondary btn--sm" th:href="@{${backUrl}}" data-pool-back>
-                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m10 5-7 7 7 7 M3 12h18"/></svg><span th:text="${recommendation != null ? 'Quay lại gợi ý từ Nhân sự' : 'Quay lại danh sách'}"></span>
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m10 5-7 7 7 7 M3 12h18"/></svg>
+                    <span th:text="${recommendation != null ? 'Quay lại gợi ý từ Nhân sự' : 'Quay lại danh sách'}"></span>
                 </a>
             </div>
         </div>
@@ -129,6 +139,7 @@
                     <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
                     <h2 id="tp-candidate-info-title" class="card-title adw-panel-title tpw-section-title">Thông tin ứng viên</h2>
                 </div>
+                <!--info-->
                 <dl class="tpw-info-grid">
                     <div class="tpw-info-item">
                         <dt><span class="tpw-info-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></span><span>Ngày sinh</span></dt>
@@ -173,10 +184,14 @@
                     <h2 id="tp-decision-title" class="card-title adw-panel-title tpw-section-title">Quyết định của Trưởng phòng tuyển dụng</h2>
                     <p class="tpw-section-desc" th:text="${recommendation.pending ? 'Xem xét hồ sơ trước khi phản hồi gợi ý từ Nhân sự.' : recommendation.statusLabel}"></p>
                 </div>
-                <form th:if="${recommendation.canDecide}" data-pool-decision class="tp-recommendation-actions" method="post" th:action="@{/talent-pool/recommendations/{id}/decision(id=${recommendation.applicationId},keyword=${filter.keyword},page=${sourcePage})}"><button class="btn btn--secondary btn--sm" type="submit" name="decision" value="Fail">Từ chối</button><button class="btn btn--primary btn--sm" type="submit" name="decision" value="Pass">Chấp nhận</button></form>
+                <!--decision-->
+                <form th:if="${recommendation.canDecide}" data-pool-decision class="tp-recommendation-actions" method="post" th:action="@{/talent-pool/recommendations/{id}/decision(id=${recommendation.applicationId},keyword=${filter.keyword},page=${sourcePage})}">
+                    <button class="btn btn--secondary btn--sm" type="submit" name="decision" value="Fail">Từ chối</button>
+                    <button class="btn btn--primary btn--sm" type="submit" name="decision" value="Pass">Chấp nhận</button>
+                </form>
                 <p th:if="${recommendation.pending and !recommendation.canDecide}" class="tpw-section-desc">Đang chờ Trưởng bộ phận phản hồi hoặc tin không còn nhận gợi ý.</p>
             </section>
-
+            <!--note-->
             <section th:replace="~{talent-pool/candidate-notes :: panel(candidateId=${detail.candidate.candidateId},potential=${detail.potential},notes=${detail.notes},returnApplicationId=${null},jobPostingId=${jobPostingId},cvPage=${cvHistory.number},recommendationId=${recommendation != null ? recommendation.applicationId : null},filter=${filter},sourcePage=${sourcePage})}"></section>
         </div>
     </div>

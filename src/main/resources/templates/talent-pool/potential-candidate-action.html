@@ -1,6 +1,11 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org"><body>
-<th:block th:fragment="action(applicationId, candidateName)">
-    <span th:replace="~{talent-pool/potential-toggle :: toggle(applicationId=${applicationId},candidateName=${candidateName},saved=${null},keepSource=${false})}"></span>
-</th:block>
-</body></html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<body>
+    <th:block th:fragment="action(applicationId, candidateName)">
+        <span
+            th:replace="~{talent-pool/potential-toggle :: toggle(applicationId=${applicationId},candidateName=${candidateName},saved=${null},keepSource=${false})}"></span>
+    </th:block>
+</body>
+
+</html>

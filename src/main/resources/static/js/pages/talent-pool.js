@@ -1,3 +1,4 @@
+//cv
 document.querySelectorAll('[data-pool-cv]').forEach(select => {
     select.addEventListener('change', () => {
         if (select.closest('.tp-page')) return;
@@ -20,7 +21,7 @@ document.querySelectorAll('[data-pool-cv]').forEach(select => {
     let storage;
     // get session storage
     try { storage = window.sessionStorage; } catch { storage = null; }
-    //get scope
+    //get user id
     const scope = page.dataset.poolScope;
     //check if hr
     const hrMode = page.dataset.poolFlow === 'hr';
@@ -32,11 +33,12 @@ document.querySelectorAll('[data-pool-cv]').forEach(select => {
     let notesButton;
     let saving = false;
     let readyToSubmit = false;
-
+    //close pop-up in list
     page.querySelectorAll('[data-pool-close]').forEach(button => {
-        button.addEventListener('click', () => { if (!saving) button.closest('dialog').close(); });
+        button.addEventListener('click', () => { 
+            if (!saving) button.closest('dialog').close(); });
     });
-
+    //infor
     function currentItem(row) {
         const select = row.querySelector('[data-pool-cv]');
         const option = select?.selectedOptions[0];
@@ -48,22 +50,30 @@ document.querySelectorAll('[data-pool-cv]').forEach(select => {
     }
 
     function syncCv(row) {
+        //dropdown cv
         const select = row.querySelector('[data-pool-cv]');
+        //choosed cv
         const option = select?.selectedOptions[0];
         if (!option) return;
+        //job title
         select.title = option.textContent.trim();
+        //preview cv
         const preview = row.querySelector('[data-app-preview]');
+        //link cv
         preview.dataset.cvUrl = option.dataset.cvUrl;
+        //job apply before
         preview.dataset.job = option.dataset.jobTitle;
+        //update new cv
         const checkbox = row.querySelector('[data-pool-select]');
         if (checkbox) checkbox.value = option.value;
     }
-
+    // slection bar and check box
     function updateSelection() {
         if (!state) return;
         rows.forEach(row => {
             const selected = Boolean(state.get(Number(row.dataset.poolCandidate)));
             const checkbox = row.querySelector('[data-pool-select]');
+            //check box
             if (checkbox) checkbox.checked = selected;
             row.classList.toggle('tp-row--selected', selected);
             row.querySelector('[data-pool-selected-label]').hidden = !selected;
@@ -86,7 +96,7 @@ document.querySelectorAll('[data-pool-cv]').forEach(select => {
             feedback.textContent = 'Trình duyệt không cho lưu lựa chọn qua trang. Hãy kiểm tra hoặc bỏ chọn trước khi chuyển trang/lọc.';
         }
     }
-
+    //get candidate selected, update and check cv selected
     rows.forEach(row => {
         const select = row.querySelector('[data-pool-cv]');
         const checkbox = row.querySelector('[data-pool-select]');
@@ -102,6 +112,7 @@ document.querySelectorAll('[data-pool-cv]').forEach(select => {
                     feedback.textContent = `${row.dataset.poolName}: CV đã chọn không còn trong danh sách; vui lòng chọn lại.`;
                 }
             }
+            //change for check box
             checkbox.addEventListener('change', () => {
                 feedback.className = 'tp-feedback';
                 feedback.textContent = '';
@@ -113,13 +124,14 @@ document.querySelectorAll('[data-pool-cv]').forEach(select => {
             });
         }
         syncCv(row);
+
         select?.addEventListener('change', () => {
             syncCv(row);
             if (state?.get(Number(row.dataset.poolCandidate))) state.set(currentItem(row));
             updateSelection();
         });
     });
-
+    //check type response and get data
     async function json(response) {
         const data = response.headers.get('content-type')?.includes('application/json') ? await response.json() : null;
         if (!response.ok || !data || data.success !== true) throw new Error(data?.message || (response.status === 403
@@ -127,7 +139,7 @@ document.querySelectorAll('[data-pool-cv]').forEach(select => {
             : 'Không tải được dữ liệu. Hãy kiểm tra kết nối và thử lại.'));
         return data.data;
     }
-
+    // input output 
     function ajaxHeaders(jsonBody = false) {
         // response is json 
         const headers = { Accept: 'application/json' };
@@ -186,7 +198,8 @@ document.querySelectorAll('[data-pool-cv]').forEach(select => {
             byId('tp-notes-retry').hidden = false;
         } finally { clearTimeout(timer); }
     }
-    //get pool note
+
+    //quick view note
     page.querySelectorAll('[data-pool-notes]').forEach(button => {
         button.addEventListener('click', () => {
             notesButton = button;
@@ -201,6 +214,7 @@ document.querySelectorAll('[data-pool-cv]').forEach(select => {
     notesDialog.addEventListener('close', () => notesRequest?.abort());
     if (!state) return;
 
+    //set up icon
     function svgIcon(path) {
         const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
         for (const [key, value] of Object.entries({ viewBox: '0 0 24 24', width: '18', height: '18', fill: 'none', stroke: 'currentColor', 'stroke-width': '1.8', 'aria-hidden': 'true' })) svg.setAttribute(key, value);
@@ -209,7 +223,7 @@ document.querySelectorAll('[data-pool-cv]').forEach(select => {
         svg.append(line);
         return svg;
     }
-
+    //review status of selected candidate is available
     function reviewStatus(message, kind) {
         const status = byId('tp-review-status');
         status.className = kind ? `alert alert--${kind} tp-confirm-status` : 'tp-confirm-status';
@@ -219,7 +233,7 @@ document.querySelectorAll('[data-pool-cv]').forEach(select => {
         text.textContent = message;
         status.append(text);
     }
-
+    //store url 
     function detailUrl(candidateId) {
         const query = new URLSearchParams(window.location?.search || '');
         const context = new URLSearchParams();
@@ -229,7 +243,7 @@ document.querySelectorAll('[data-pool-cv]').forEach(select => {
         const suffix = context.toString();
         return `${page.dataset.poolBase || '/talent-pool'}/${candidateId}${suffix ? '?' + suffix : ''}`;
     }
-
+    //list candidate recommend
     function renderReview(results = null) {
         const list = byId('tp-confirm-list');
         list.replaceChildren();
@@ -306,9 +320,9 @@ document.querySelectorAll('[data-pool-cv]').forEach(select => {
         byId('tp-confirm-title').textContent = hrMode ? `Gửi ${state.size} gợi ý cho Trưởng bộ phận` : `Xác nhận thêm ${state.size} ứng viên`;
         byId('tp-confirm-submit').textContent = hrMode ? `Gửi ${state.size} gợi ý cho Trưởng bộ phận` : `Xác nhận thêm ${state.size} ứng viên`;
     }
-
+    //check suggest avaiable
     async function requestReview() {
-        //check if is reviewing
+        //check if is saving
         if (saving) return;
         readyToSubmit = false;
         reviewRequest?.abort();
@@ -330,7 +344,7 @@ document.querySelectorAll('[data-pool-cv]').forEach(select => {
             if (controller.signal.aborted || !confirm.open) return;
             const results = new Map(result.items.map(item => [item.sourceApplicationId, item]));
             renderReview(results);
-            //check dupplicate cv
+            
             const hasErrors = state.values().some(item => {
                 const checked = results.get(item.sourceId);
                 return !checked || checked.error || checked.candidateId !== item.candidateId;
@@ -354,12 +368,15 @@ document.querySelectorAll('[data-pool-cv]').forEach(select => {
             if (reviewRequest === controller) byId('tp-recheck').disabled = false;
         }
     }
+    //action for select
     byId('tp-review-selection').addEventListener('click', () => {
         if (!state.size) return;
         //show pop up confirm
         confirm.showModal();
         requestReview();
     });
+
+    //submit
     byId('tp-recheck').addEventListener('click', requestReview);
     confirm.addEventListener('close', () => reviewRequest?.abort());
     confirm.addEventListener('cancel', event => { if (saving) event.preventDefault(); });
@@ -407,12 +424,15 @@ document.querySelectorAll('[data-pool-cv]').forEach(select => {
             byId('tp-confirm-submit').textContent = `Xác nhận thêm ${state.size} ứng viên`;
         }
     });
+
+    //clear all check box
     byId('tp-clear-selection').addEventListener('click', () => {
         state.clear();
         feedback.className = 'tp-feedback';
         feedback.textContent = '';
         updateSelection();
     });
+    //all
     byId('tp-select-page')?.addEventListener('change', event => {
         feedback.className = 'tp-feedback';
         feedback.textContent = '';
@@ -426,6 +446,8 @@ document.querySelectorAll('[data-pool-cv]').forEach(select => {
         });
         updateSelection();
     });
+
+    // ensure store
     const guardNavigation = event => {
         if (state.size && !state.persistenceAvailable) {
             event.preventDefault();
@@ -433,17 +455,20 @@ document.querySelectorAll('[data-pool-cv]').forEach(select => {
             byId('tp-review-selection').focus();
         }
     };
+    //resotrre check box
     page.querySelectorAll('.pagination-wrapper a, .tp-filter a, [data-pool-detail], #tp-notes-detail, #app-preview-detail')
         .forEach(link => link.addEventListener('click', guardNavigation));
     page.querySelector('.tp-filter').addEventListener('submit', guardNavigation);
     updateSelection();
 })();
+//pop-up talent decline
 document.querySelectorAll('[data-dialog-open^="talent-"]').forEach(button => {
     button.addEventListener('click', () => {
         const dialog = document.getElementById(button.dataset.dialogOpen);
         if (dialog) dialog.showModal();
     });
 });
+//close
 document.querySelectorAll('dialog[id^="talent-"] [data-dialog-close]').forEach(button => {
     button.addEventListener('click', () => button.closest('dialog').close());
 });
