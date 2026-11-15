@@ -1,6 +1,6 @@
 package com.group2.rms.user.dto;
 
-import com.group2.rms.core.validation.PasswordMatches;
+import com.group2.rms.core.validator.PasswordMatches;
 import com.group2.rms.user.service.AccountManagementService.CreateCommand;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

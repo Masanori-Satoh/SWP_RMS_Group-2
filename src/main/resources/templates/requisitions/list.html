@@ -80,9 +80,9 @@
                         </div>
 
                         <div class="mft-field" th:if="${list.options.showEmploymentType}">
-                            <label class="form-label" for="filter-employment-type">Hình thức</label>
+                            <label class="form-label" for="filter-employment-type">Hình thức làm việc</label>
                             <select class="form-select" id="filter-employment-type" name="employmentType">
-                                <option value="">Tất cả hình thức</option>
+                                <option value="">Tất cả hình thức làm việc</option>
                                 <option th:each="option : ${list.options.employmentTypes}" th:value="${option.value}"
                                     th:text="${option.label}"
                                     th:selected="${option.value == list.filter.employmentType}">Toàn thời gian</option>
@@ -128,12 +128,19 @@
                         <path d="m16 16 4 4" />
                     </svg>
                 </button>
+
+
                 <input class="form-control mft-search-input" id="requisition-search" type="search" name="q"
                     th:value="${list.filter.q}" maxlength="120" aria-describedby="requisition-search-error"
                     placeholder="Tìm theo tên vị trí hoặc phòng ban">
                 <p class="field-error mft-search-error" id="requisition-search-error" role="alert" aria-live="polite"
-                    th:style="${#lists.contains(list.errors, 'Từ khóa tìm kiếm không được vượt quá 120 ký tự.')} ? null : 'display:none'">Từ khóa tìm kiếm không được vượt quá 120 ký tự.</p>
+                    th:style="${#lists.contains(list.errors, 'Từ khóa tìm kiếm không được vượt quá 120 ký tự.')} ? null : 'display:none'">
+                    Từ khóa tìm kiếm không được vượt quá 120 ký tự.</p>
             </div>
+            <button type="submit" class="btn btn--primary mft-filter-submit">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                <span>Tìm kiếm</span>
+            </button>
         </form>
 
         <!-- Mỗi bộ lọc đang bật là một chip; bấm vào chip để bỏ riêng bộ lọc đó -->
@@ -170,10 +177,9 @@
                             <col class="col-index">
                             <col class="col-position">
                             <col class="col-department">
-                            <col class="col-round">
                             <col class="col-quantity">
                             <col class="col-type">
-                            <col class="col-status">
+                            <col class="col-salary">
                             <col class="col-posting">
                             <col class="col-date">
                             <col class="col-actions">
@@ -183,31 +189,25 @@
                                 <th scope="col">STT</th>
                                 <th scope="col">Vị trí tuyển dụng</th>
                                 <th scope="col">Phòng ban</th>
-                                <th scope="col">Đợt tuyển dụng</th>
                                 <th scope="col">Số lượng</th>
-                                <th scope="col">Hình thức</th>
-                                <th scope="col">Trạng thái</th>
+                                <th scope="col">Hình thức làm việc</th>
+                                <th scope="col">Mức lương (VND/tháng)</th>
                                 <th scope="col">Tin tuyển dụng</th>
                                 <th scope="col">Ngày tạo</th>
                                 <th scope="col">Thao tác</th>
                             </tr>
                         </thead>
+
                         <tbody>
                             <tr th:each="req,row : ${list.page.content}">
                                 <td th:text="${list.page.number * list.page.size + row.count}"></td>
                                 <td><a class="position-title" th:href="@{/requisitions/{id}(id=${req.requisitionId})}"
                                         th:text="${req.title}"></a></td>
                                 <td th:text="${req.departmentName}"></td>
-                                <td><span class="badge badge--neutral" th:text="|Đợt ${req.recruitmentRound ?: 1}|">Đợt
-                                        1</span></td>
                                 <td th:text="${req.numberOfPositions ?: '—'}"></td>
                                 <!-- Nhãn tiếng Việt do service tính sẵn (RequisitionLabels), template không tự dịch -->
                                 <td th:text="${req.employmentTypeLabel}">Toàn thời gian</td>
-                                <td>
-                                    <!-- statusTone = success / warning / danger / neutral → class badge--... của catalog -->
-                                    <span class="badge" th:classappend="|badge--${req.statusTone}|"
-                                        th:text="${req.statusLabel}">Đã duyệt</span>
-                                </td>
+                                <td class="requisition-salary" th:text="${req.salaryLabel}">20.000.000 – 30.000.000</td>
                                 <td>
                                     <!-- Chỉ thành link khi người xem vào được trang tin tuyển dụng (Director thì không) -->
                                     <a th:if="${req.postingViewable}" class="badge"
@@ -252,7 +252,7 @@
                                 </td>
                             </tr>
                             <tr th:if="${list.page.empty and #lists.isEmpty(list.errors)}">
-                                <td colspan="10" class="empty-state">Không tìm thấy yêu cầu tuyển dụng nào. Hãy
+                                <td colspan="9" class="empty-state">Không tìm thấy yêu cầu tuyển dụng nào. Hãy
                                     thử thay đổi hoặc đặt lại bộ lọc.</td>
                             </tr>
                         </tbody>

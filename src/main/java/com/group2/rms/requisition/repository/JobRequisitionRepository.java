@@ -59,29 +59,6 @@ public interface JobRequisitionRepository
     Page<JobRequisition> findAll(Specification<JobRequisition> spec, Pageable pageable);
 
     @Query("""
-            SELECT COALESCE(MAX(r.recruitmentRound), 1)
-            FROM JobRequisition r
-            LEFT JOIN r.originalRequisition o
-            WHERE r.requisitionId = :rootId
-               OR o.requisitionId = :rootId
-            """)
-    int findMaxRoundInChain(@Param("rootId") Integer rootId);
-
-    /** Finds an existing Draft with the same normalized title and department. */
-    @Query("""
-            SELECT COUNT(r) > 0
-            FROM JobRequisition r
-            WHERE LOWER(TRIM(r.title)) = LOWER(TRIM(:title))
-              AND r.department.departmentId = :departmentId
-              AND r.approvalStatus = 'Draft'
-              AND (:excludeId IS NULL OR r.requisitionId <> :excludeId)
-            """)
-    boolean existsDraftByTitleAndDepartment(
-            @Param("title") String title,
-            @Param("departmentId") Integer departmentId,
-            @Param("excludeId") Integer excludeId);
-
-    @Query("""
             SELECT DISTINCT u
             FROM JobRequisition r
             JOIN r.hiringManager u

@@ -52,7 +52,8 @@ class HiringManagerDashboardServiceTests {
     void setUp() {
         metrics = mock(InternalMetricsRepository.class);
         lists = mock(DashboardListRepository.class);
-        service = new HiringManagerDashboardService(metrics, lists, CLOCK);
+        service = new HiringManagerDashboardService(metrics, lists,
+                mock(com.group2.rms.user.repository.DepartmentRepository.class), CLOCK);
     }
 
     private User hiringManager(Integer departmentId) {
@@ -66,7 +67,7 @@ class HiringManagerDashboardServiceTests {
     }
 
     private ProgressRow progressRow(int id, int needed, long hired, long interviewing, long offered) {
-        return new ProgressRow(id, "REQ-" + id, "Vị trí " + id, needed, hired, interviewing, offered, null);
+        return new ProgressRow(id, "Vị trí " + id, needed, hired, interviewing, offered, null);
     }
 
     @Nested
@@ -93,7 +94,7 @@ class HiringManagerDashboardServiceTests {
             assertEquals("/requisitions?status=" + RequisitionAccess.STATUS_PENDING_DIRECTOR, kpis.get(0).href());
             assertEquals("/internal/job-postings?status=Published", kpis.get(1).href());
             assertEquals("Trong 7 ngày tới", kpis.get(2).detail());
-            assertEquals("/interviews", kpis.get(2).href());
+            assertEquals("/interviews?period=upcoming", kpis.get(2).href());
         }
 
         @Test
@@ -151,7 +152,7 @@ class HiringManagerDashboardServiceTests {
         void build_shouldLinkToJobPosting_whenRequisitionHasPosting() {
             // Arrange
             when(lists.hiringProgress(USER_ID, DEPARTMENT_ID)).thenReturn(List.of(
-                    new ProgressRow(4, "REQ-4", "Vị trí 4", 2, 1, 0, 0, 42)));
+                    new ProgressRow(4, "Vị trí 4", 2, 1, 0, 0, 42)));
 
             // Act
             List<HiringProgressItem> items = service.build(hiringManager(DEPARTMENT_ID)).progress();
@@ -187,17 +188,18 @@ class HiringManagerDashboardServiceTests {
         void build_shouldMapRejectedAndDraft_whenAttentionRowsExist() {
             // Arrange
             when(lists.requisitionsNeedingAttention(USER_ID)).thenReturn(List.of(
-                    new AttentionRow(5, "REQ-0005", "DevOps", RequisitionAccess.STATUS_REJECTED, NOW, "Thiếu ngân sách"),
-                    new AttentionRow(6, null, "QA", RequisitionAccess.STATUS_DRAFT, null, null)));
+                    new AttentionRow(5, "DevOps", RequisitionAccess.STATUS_REJECTED, NOW, "Thiếu ngân sách"),
+                    new AttentionRow(6, "QA", RequisitionAccess.STATUS_DRAFT, null, null)));
 
             // Act
             List<DashboardWorkItem> work = service.build(hiringManager(DEPARTMENT_ID)).needsAttention();
 
             // Assert
-            assertEquals("REQ-0005 · DevOps", work.get(0).title());
+            assertEquals("DevOps", work.get(0).title());
+            assertEquals("/requisitions/5", work.get(0).titleHref());
             assertEquals("Thiếu ngân sách", work.get(0).detail());
             assertEquals("Chỉnh sửa", work.get(0).actionLabel());
-            assertEquals("REQ-0006 · QA", work.get(1).title());
+            assertEquals("QA", work.get(1).title());
             assertNull(work.get(1).detail());
             assertEquals("Gửi duyệt", work.get(1).actionLabel());
         }
@@ -208,7 +210,7 @@ class HiringManagerDashboardServiceTests {
             // Arrange
             List<AttentionRow> rows = new ArrayList<>();
             for (int i = 1; i <= 7; i++) {
-                rows.add(new AttentionRow(i, "REQ-" + i, "Nháp " + i, RequisitionAccess.STATUS_DRAFT, null, null));
+                rows.add(new AttentionRow(i, "Nháp " + i, RequisitionAccess.STATUS_DRAFT, null, null));
             }
             when(lists.requisitionsNeedingAttention(USER_ID)).thenReturn(rows);
 

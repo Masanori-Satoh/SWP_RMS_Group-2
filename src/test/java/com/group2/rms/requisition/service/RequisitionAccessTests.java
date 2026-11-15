@@ -14,6 +14,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -43,6 +44,16 @@ class RequisitionAccessTests {
     private User director;
     private User admin;
     private Department itDepartment;
+
+    @Test
+    void canClose_shouldRequireApprovedAndAuthorizedActor() {
+        JobRequisition approved = ownedByManager(RequisitionAccess.STATUS_APPROVED);
+        assertTrue(access.canClose(manager, approved));
+        assertTrue(access.canClose(director, approved));
+        assertFalse(access.canClose(otherManager, approved));
+        assertFalse(access.canClose(hr, approved));
+        assertFalse(access.canClose(manager, ownedByManager(RequisitionAccess.STATUS_CLOSED)));
+    }
 
     @BeforeEach
     void setUp() {
@@ -89,6 +100,7 @@ class RequisitionAccessTests {
                 "hr, Draft, false",
                 "hr, Pending_Director, false",
                 "hr, Approved, true",
+                "hr, Closed, true",
                 "hr, Rejected, false",
                 // Người tạo: mọi trạng thái
                 "manager, Draft, true",
@@ -197,10 +209,11 @@ class RequisitionAccessTests {
         }
 
         @Test
-        @DisplayName("Sao chép yêu cầu chưa duyệt -> Báo lỗi trạng thái; HR sao chép -> AccessDenied")
-        void requireCopy_shouldSeparateStateFromPermission_whenSourceIsNotApproved() {
+        @DisplayName("Sao chép bản nháp -> Báo lỗi trạng thái; HR sao chép -> AccessDenied")
+        void requireCopy_shouldSeparateStateFromPermission_whenSourceIsDraft() {
             assertThrows(RequisitionStateException.class,
-                    () -> access.requireCopy(manager, ownedByManager(RequisitionAccess.STATUS_REJECTED)));
+                    () -> access.requireCopy(manager, ownedByManager(RequisitionAccess.STATUS_DRAFT)));
+            assertDoesNotThrow(() -> access.requireCopy(manager, ownedByManager(RequisitionAccess.STATUS_REJECTED)));
             assertThrows(AccessDeniedException.class,
                     () -> access.requireCopy(hr, ownedByManager(RequisitionAccess.STATUS_APPROVED)));
         }
@@ -236,10 +249,12 @@ class RequisitionAccessTests {
                     hasPosting, hasLaterRound));
         }
 
-        @Test
-        @DisplayName("Yêu cầu đã duyệt (không sửa được) -> Không xóa được dù chưa có tin")
-        void canDelete_shouldReturnFalse_whenRequisitionIsApproved() {
-            assertFalse(access.canDelete(manager, ownedByManager(RequisitionAccess.STATUS_APPROVED), false, false));
+        @ParameterizedTest
+        @ValueSource(strings = {RequisitionAccess.STATUS_REJECTED,
+                RequisitionAccess.STATUS_PENDING_DIRECTOR, RequisitionAccess.STATUS_APPROVED})
+        @DisplayName("Chỉ bản nháp được xóa; yêu cầu ở trạng thái khác không có nút Xóa")
+        void canDelete_shouldReturnFalse_whenRequisitionIsNotDraft(String status) {
+            assertFalse(access.canDelete(manager, ownedByManager(status), false, false));
         }
 
         @Test
@@ -257,9 +272,10 @@ class RequisitionAccessTests {
         }
 
         @ParameterizedTest(name = "trạng thái {0} -> sao chép được = {1}")
-        @CsvSource({"Approved, true", "Rejected, false", "Draft, false", "Pending_Director, false"})
-        @DisplayName("Sao chép được khi có quyền tạo và yêu cầu đã được duyệt")
-        void canCopy_shouldRequireApprovedStatus_whenViewerCanCreate(String status, boolean expected) {
+        @CsvSource({"Approved, true", "Rejected, true", "Draft, false", "Pending_Director, true",
+                "Closed, true"})
+        @DisplayName("Sao chép được ở mọi trạng thái trừ bản nháp khi có quyền tạo")
+        void canCopy_shouldRejectOnlyDraft_whenViewerCanCreate(String status, boolean expected) {
             assertEquals(expected, access.canCopy(manager, ownedByManager(status)));
         }
 

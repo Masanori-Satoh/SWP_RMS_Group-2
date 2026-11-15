@@ -30,7 +30,6 @@ public record ApplicationDetailResponse(
         String gender,
         String address,
         Integer requisitionId,
-        String requisitionCode,
         Integer jobPostingId,
         String postingTitle,
         String departmentName,

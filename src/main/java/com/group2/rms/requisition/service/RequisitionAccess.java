@@ -22,10 +22,11 @@ public class RequisitionAccess {
     public static final String ROLE_HR = "HR";
     public static final String ROLE_SYSTEM_ADMIN = "System Admin";
 
-    public static final String STATUS_DRAFT = "Draft";
-    public static final String STATUS_PENDING_DIRECTOR = "Pending_Director";
-    public static final String STATUS_APPROVED = "Approved";
-    public static final String STATUS_REJECTED = "Rejected";
+    public static final String STATUS_DRAFT = JobRequisition.STATUS_DRAFT;
+    public static final String STATUS_PENDING_DIRECTOR = JobRequisition.STATUS_PENDING_DIRECTOR;
+    public static final String STATUS_APPROVED = JobRequisition.STATUS_APPROVED;
+    public static final String STATUS_REJECTED = JobRequisition.STATUS_REJECTED;
+    public static final String STATUS_CLOSED = JobRequisition.STATUS_CLOSED;
 
     private static final Set<String> ALLOWED_ROLES = Set.of(
             ROLE_HIRING_MANAGER,
@@ -101,14 +102,15 @@ public class RequisitionAccess {
 
     // Checks whether the requisition can be deleted.
     public boolean canDelete(User user, JobRequisition requisition, boolean hasPosting, boolean hasLaterRound) {
-        return canEdit(user, requisition) && !hasPosting && !hasLaterRound;
+        return canEdit(user, requisition) && STATUS_DRAFT.equals(requisition.getApprovalStatus())
+                && !hasPosting && !hasLaterRound;
     }
     // Checks whether the requisition can be copied.
     public boolean canCopy(User user, JobRequisition requisition) {
         if (requisition == null) {
             return false;
         }
-        return canCreate(user) && STATUS_APPROVED.equals(requisition.getApprovalStatus());
+        return canCreate(user) && !STATUS_DRAFT.equals(requisition.getApprovalStatus());
     }
     // Checks whether a posting can be created from the requisition.
     public boolean canCreatePostingFrom(User user, JobRequisition requisition, boolean hasPosting) {
@@ -138,6 +140,11 @@ public class RequisitionAccess {
         boolean isNotOwner = !owns(user, requisition);
         boolean isPending = STATUS_PENDING_DIRECTOR.equals(requisition.getApprovalStatus());
         return isDirector && isNotOwner && isPending;
+    }
+
+    public boolean canClose(User user, JobRequisition requisition) {
+        return requisition != null && STATUS_APPROVED.equals(requisition.getApprovalStatus())
+                && (isDirector(user) || owns(user, requisition) && ROLE_HIRING_MANAGER.equals(role(user)));
     }
 
 
@@ -181,7 +188,8 @@ public class RequisitionAccess {
         }
         String userRole = role(user);
         if (ROLE_HR.equals(userRole)) {
-            if (STATUS_APPROVED.equals(requisition.getApprovalStatus())) {
+            if (STATUS_APPROVED.equals(requisition.getApprovalStatus())
+                    || STATUS_CLOSED.equals(requisition.getApprovalStatus())) {
                 return;
             }
             throw new AccessDeniedException("HR chỉ có quyền xem các yêu cầu tuyển dụng đã được phê duyệt.");

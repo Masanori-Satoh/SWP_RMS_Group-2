@@ -114,8 +114,9 @@ public interface InterviewSchedulingService {
     /**
      * Lấy danh sách lịch phỏng vấn thuộc về phòng ban của Hiring Manager.
      *
-     * @param departmentId ID phòng ban
-     * @return Danh sách lịch phỏng vấn của phòng ban đó
+     * @param departmentId  ID phòng ban của Hiring Manager
+     * @param managerUserId ID Hiring Manager: lấy thêm lịch của mọi phòng người này làm trưởng phòng
+     * @return Danh sách lịch phỏng vấn của các phòng ban đó
      */
-    List<InterviewScheduleResponse> getSchedulesForDepartment(Integer departmentId);
+    List<InterviewScheduleResponse> getSchedulesForDepartment(Integer departmentId, Integer managerUserId);
 }

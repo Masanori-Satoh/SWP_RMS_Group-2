@@ -26,10 +26,10 @@ import static org.junit.jupiter.api.Assertions.*;
  * - Tên test: hàm_shouldKếtQuả_whenĐiềuKiện; @DisplayName tiếng Việt "điều kiện -> kết quả".
  * - Mỗi quy tắc có test hợp lệ + sai, nhất là ở biên (đúng giới hạn / giới hạn + 1),
  *   null, rỗng, chỉ khoảng trắng, giá trị ngoài danh mục, trùng, ID giả.
- * - Dùng hằng số của validator (POSITIONS_MAX + 1) thay vì gõ số, đổi giới hạn thì test vẫn đúng ý.
+ * - Dùng hằng số của validator (POSITIONS_MIN - 1) thay vì gõ số, đổi giới hạn thì test vẫn đúng ý.
  * - Kiểm tra đúng key lỗi (ví dụ "numberOfPositions"): key quyết định lỗi hiện ở ô nào.
  *
- * Hàm hỗ trợ: valid() = gửi duyệt hợp lệ đủ trường; minimalDraft() = nháp chỉ có 4 trường NOT NULL;
+ * Hàm hỗ trợ: valid() = gửi duyệt hợp lệ đủ trường; minimalDraft() = nháp đủ các trường bắt buộc;
  * expectPass / expectFail dùng để kiểm tra kết quả.
  * Phòng ban và quyền người dùng: kiểm ở RequisitionServiceTests.
  */
@@ -48,10 +48,13 @@ class RequisitionValidatorTests {
                 .action("submit")
                 .title("Java Engineer")
                 .departmentId(1)
+                .expectedStaffingDate(TODAY.plusDays(30))
                 .numberOfPositions(1)
                 .employmentType("Full-time")
                 .workModel("On-site")
                 .workLocation("Office")
+                .minSalary(new BigDecimal("10000000"))
+                .maxSalary(new BigDecimal("20000000"))
                 .reasonForHiring("Expansion")
                 .jobDescription("Develop software")
                 .requirementDetails("Experience")
@@ -65,10 +68,8 @@ class RequisitionValidatorTests {
     }
 
     /**
-     * Bản nháp tối thiểu hợp lệ theo quy tắc mới: Tên vị trí, Số lượng, Hình thức,
-     * Mô hình làm việc
-     * bắt buộc cả khi lưu nháp (các cột NOT NULL trong DB). Những thứ khác được để
-     * trống.
+     * Bản nháp tối thiểu hợp lệ: tên vị trí, số lượng, hình thức và mô hình làm việc.
+     * Hai mức lương chỉ bắt buộc khi gửi duyệt.
      */
     private RequisitionRequest minimalDraft() {
         RequisitionRequest d = emptyDraft();
@@ -96,20 +97,45 @@ class RequisitionValidatorTests {
     }
 
     @Test
-    @DisplayName("Không chọn giới tính -> Mặc định không yêu cầu")
-    void validate_shouldDefaultGenderToAny_whenMissing() {
+    @DisplayName("Gửi duyệt thiếu ngày cần nhân sự -> Báo lỗi đúng ô")
+    void validate_shouldReject_whenSubmitHasNoExpectedStaffingDate() {
         var request = valid();
-        expectPass(request);
-        assertEquals(RequisitionValidator.GENDER_ANY, request.getGender());
+        request.setExpectedStaffingDate(null);
+        assertEquals("Vui lòng chọn ngày dự kiến nhận việc.",
+                expectFail(request).getErrors().get("expectedStaffingDate"));
     }
 
     @Test
-    @DisplayName("Giới tính ngoài danh mục -> Báo lỗi đúng trường")
-    void validate_shouldReject_whenGenderIsInvalid() {
-        var request = valid();
-        request.setGender("Other");
-        assertTrue(expectFail(request).getErrors().containsKey("gender"));
+    @DisplayName("Lưu nháp chưa có ngày cần nhân sự -> Hợp lệ")
+    void validate_shouldAllowDraftWithoutExpectedStaffingDate() {
+        expectPass(minimalDraft());
     }
+
+    @Test
+    @DisplayName("Ngày dự kiến bằng ngày gửi duyệt -> Hợp lệ")
+    void validate_shouldAllowExpectedStaffingToday() {
+        var request = valid();
+        request.setExpectedStaffingDate(TODAY);
+        expectPass(request);
+    }
+
+    @Test
+    @DisplayName("Ngày dự kiến trước ngày gửi duyệt -> Báo lỗi đúng ô")
+    void validate_shouldRejectExpectedStaffingBeforeSubmissionDate() {
+        var request = valid();
+        request.setExpectedStaffingDate(TODAY.minusDays(1));
+        assertEquals("Ngày dự kiến nhận việc không được trước hôm nay.",
+                expectFail(request).getErrors().get("expectedStaffingDate"));
+    }
+
+    @Test
+    @DisplayName("Nháp có ngày dự kiến đã qua -> Vẫn lưu được")
+    void validate_shouldAllowDraftWithPastExpectedStaffingDate() {
+        var request = minimalDraft();
+        request.setExpectedStaffingDate(TODAY.minusDays(1));
+        expectPass(request);
+    }
+
 
     @Test
     @DisplayName("Mô hình Hybrid -> Hợp lệ")
@@ -154,8 +180,7 @@ class RequisitionValidatorTests {
         assertTrue(expectFail(d).getErrors().containsKey("workLocation"));
     }
 
-    // VAL-002 — Draft: chỉ bắt buộc các trường NOT NULL trong DB, còn lại được để
-    // trống
+    // VAL-002 — Draft có thể thiếu nội dung; phòng ban được kiểm tra ở service.
 
     @Test
     @DisplayName("Nháp chỉ có 4 trường NOT NULL -> Hợp lệ")
@@ -164,13 +189,9 @@ class RequisitionValidatorTests {
     }
 
     @Test
-    @DisplayName("Nháp trống hoàn toàn -> Báo lỗi các trường NOT NULL")
-    void validate_shouldReject_whenDraftMissesDbRequiredFields() {
-        var errors = expectFail(emptyDraft()).getErrors();
-        assertTrue(errors.containsKey("title"));
-        assertTrue(errors.containsKey("numberOfPositions"));
-        assertTrue(errors.containsKey("employmentType"));
-        assertTrue(errors.containsKey("workModel"));
+    @DisplayName("Nháp trống nội dung -> Vẫn lưu được")
+    void validate_shouldAllow_whenDraftMissesContentFields() {
+        expectPass(emptyDraft());
     }
 
     @Test
@@ -189,55 +210,71 @@ class RequisitionValidatorTests {
         expectFail(d);
     }
 
-    // VAL-003 — Draft vẫn kiểm tra giá trị đã nhập
+    // VAL-003 — Draft giữ cả giá trị chưa đạt quy tắc gửi duyệt.
 
     @Test
-    @DisplayName("Nháp có mô hình làm việc sai -> Báo lỗi")
-    void validate_shouldReject_whenDraftWorkModelIsInvalid() {
+    @DisplayName("Nháp có mô hình làm việc sai -> Vẫn lưu được")
+    void validate_shouldAllow_whenDraftWorkModelIsInvalid() {
         var d = minimalDraft();
         d.setWorkModel("Flexible");
-        assertTrue(expectFail(d).getErrors().containsKey("workModel"));
+        expectPass(d);
     }
 
     @Test
-    @DisplayName("Nháp có hình thức làm việc sai -> Báo lỗi")
-    void validate_shouldReject_whenDraftEmploymentTypeIsInvalid() {
+    @DisplayName("Nháp có hình thức làm việc sai -> Vẫn lưu được")
+    void validate_shouldAllow_whenDraftEmploymentTypeIsInvalid() {
         var d = minimalDraft();
-        d.setEmploymentType("Freelance");
-        assertTrue(expectFail(d).getErrors().containsKey("employmentType"));
+        d.setEmploymentType("Contract");
+        expectPass(d);
     }
 
     @Test
-    @DisplayName("Nháp có số lượng âm -> Báo lỗi")
-    void validate_shouldReject_whenDraftPositionsIsNegative() {
+    @DisplayName("Nháp có số lượng âm -> Vẫn lưu được")
+    void validate_shouldAllow_whenDraftPositionsIsNegative() {
         var d = minimalDraft();
         d.setNumberOfPositions(-1);
-        assertTrue(expectFail(d).getErrors().containsKey("numberOfPositions"));
+        expectPass(d);
     }
 
     @Test
-    @DisplayName("Nháp có số lượng 0 -> Báo lỗi")
-    void validate_shouldReject_whenDraftPositionsIsZero() {
+    @DisplayName("Nháp có số lượng 0 -> Vẫn lưu được")
+    void validate_shouldAllow_whenDraftPositionsIsZero() {
         var d = minimalDraft();
         d.setNumberOfPositions(0);
-        assertTrue(expectFail(d).getErrors().containsKey("numberOfPositions"));
+        expectPass(d);
     }
 
     @Test
-    @DisplayName("Số lượng đúng bằng tối đa -> Hợp lệ")
-    void validate_shouldPass_whenPositionsEqualsMaximum() {
+    @DisplayName("Số lượng rất lớn -> Hợp lệ (chỉ có giới hạn dưới)")
+    void validate_shouldPass_whenPositionsIsLarge() {
         var d = minimalDraft();
-        d.setNumberOfPositions(RequisitionValidator.POSITIONS_MAX);
+        d.setNumberOfPositions(5000);
         assertDoesNotThrow(() -> validator.validate(d));
     }
 
     @Test
-    @DisplayName("Số lượng tối đa + 1 -> Báo lỗi")
-    void validate_shouldReject_whenPositionsExceedsMaximumByOne() {
+    @DisplayName("Gửi duyệt với số lượng âm hoặc trống -> đúng câu lỗi")
+    void validate_shouldUseSpecMessages_forRoundAndPositions() {
         var d = minimalDraft();
-        d.setNumberOfPositions(RequisitionValidator.POSITIONS_MAX + 1);
-        assertEquals("Số lượng cần tuyển phải từ 1 đến 30 người.",
-                expectFail(d).getErrors().get("numberOfPositions"));
+        d.setAction("submit");
+        d.setNumberOfPositions(-2);
+        var errors = expectFail(d).getErrors();
+        assertEquals("Số lượng cần tuyển phải lớn hơn hoặc bằng 1.", errors.get("numberOfPositions"));
+
+        var empty = minimalDraft();
+        empty.setAction("submit");
+        empty.setNumberOfPositions(null);
+        assertEquals("Số lượng cần tuyển là bắt buộc.", expectFail(empty).getErrors().get("numberOfPositions"));
+    }
+
+    @Test
+    @DisplayName("Ô số nguyên nhận thập phân / chữ / ký tự đặc biệt -> đúng câu lỗi")
+    void integerFormatMessage_shouldDistinguishDecimalFromText() {
+        assertEquals("Đợt tuyển dụng phải là số nguyên.", RequisitionValidator.integerFormatMessage("Đợt tuyển dụng", "1.5"));
+        assertEquals("Đợt tuyển dụng phải là số nguyên.", RequisitionValidator.integerFormatMessage("Đợt tuyển dụng", "-2,5"));
+        assertEquals("Đợt tuyển dụng chỉ được chứa số nguyên.", RequisitionValidator.integerFormatMessage("Đợt tuyển dụng", "abc"));
+        assertEquals("Đợt tuyển dụng chỉ được chứa số nguyên.", RequisitionValidator.integerFormatMessage("Đợt tuyển dụng", "@#"));
+        assertEquals("Đợt tuyển dụng quá lớn.", RequisitionValidator.integerFormatMessage("Đợt tuyển dụng", "99999999999"));
     }
 
     // VAL-004 — Action draft/submit
@@ -383,7 +420,7 @@ class RequisitionValidatorTests {
     // VAL-008 — Employment type, work model
 
     @ParameterizedTest
-    @ValueSource(strings = { "Full-time", "Part-time", "Internship", "Contract" })
+    @ValueSource(strings = { "Full-time", "Part-time", "Internship", "Freelance" })
     @DisplayName("Hình thức làm việc trong danh mục -> Hợp lệ")
     void validate_shouldPass_whenEmploymentTypeIsInList(String type) {
         var d = valid();
@@ -392,7 +429,7 @@ class RequisitionValidatorTests {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = { "full-time", "FULL-TIME", "Freelance", "Temp", "" })
+    @ValueSource(strings = { "full-time", "FULL-TIME", "Contract", "Temp", "" })
     @DisplayName("Hình thức làm việc ngoài danh mục -> Báo lỗi")
     void validate_shouldReject_whenEmploymentTypeIsNotInList(String type) {
         var d = valid();
@@ -556,94 +593,39 @@ class RequisitionValidatorTests {
         assertTrue(expectFail(d).getErrors().containsKey("workLocation"));
     }
 
-    @Test
-    @DisplayName("Không nhập đợt tuyển dụng -> Tự gán đợt 1")
-    void validate_shouldDefaultRoundToOne_whenRoundIsNull() {
-        var d = valid();
-        d.setRecruitmentRound(null);
-        expectPass(d);
-        assertEquals(RequisitionValidator.ROUND_MIN, d.getRecruitmentRound());
-    }
-
-    @ParameterizedTest
-    @ValueSource(ints = { RequisitionValidator.ROUND_MIN, RequisitionValidator.ROUND_MAX })
-    @DisplayName("Đợt tuyển dụng ở biên 1 / 99 -> Hợp lệ")
-    void validate_shouldPass_whenRoundAtBoundary(int round) {
-        var d = valid();
-        d.setRecruitmentRound(round);
-        expectPass(d);
-    }
-
-    @ParameterizedTest
-    @ValueSource(ints = { RequisitionValidator.ROUND_MIN - 1, RequisitionValidator.ROUND_MAX + 1 })
-    @DisplayName("Đợt tuyển dụng ngoài 1..99 -> Báo lỗi ở ô đợt")
-    void validate_shouldReject_whenRoundOutOfRange(int round) {
-        var d = valid();
-        d.setRecruitmentRound(round);
-        assertTrue(expectFail(d).getErrors().containsKey("recruitmentRound"));
-    }
-
-    @ParameterizedTest
-    @ValueSource(strings = { "2 tháng", "60 ngày", "Thỏa thuận" })
-    @DisplayName("Thử việc dạng chữ tự do -> Hợp lệ")
-    void validate_shouldPass_whenProbationPeriodIsFreeText(String period) {
-        var d = valid();
-        d.setProbationPeriod(period);
-        expectPass(d);
-    }
-
-    @Test
-    @DisplayName("Thử việc dài đúng giới hạn -> Hợp lệ")
-    void validate_shouldPass_whenProbationPeriodEqualsLimit() {
-        var d = valid();
-        d.setProbationPeriod("x".repeat(RequisitionValidator.PROBATION_CHAR_LIMIT));
-        expectPass(d);
-    }
-
-    @Test
-    @DisplayName("Thử việc dài quá giới hạn 1 ký tự -> Báo lỗi")
-    void validate_shouldReject_whenProbationPeriodExceedsLimitByOne() {
-        var d = valid();
-        d.setProbationPeriod("x".repeat(RequisitionValidator.PROBATION_CHAR_LIMIT + 1));
-        assertTrue(expectFail(d).getErrors().containsKey("probationPeriod"));
-    }
-
-    @Test
-    @DisplayName("Thử việc chỉ có khoảng trắng -> Lưu NULL (không thử việc)")
-    void validate_shouldClearProbationPeriod_whenOnlySpaces() {
-        var d = valid();
-        d.setProbationPeriod("   ");
-        expectPass(d);
-        assertNull(d.getProbationPeriod());
-    }
-
     // VAL-011 — Salary và độ chính xác thập phân
 
     @Test
-    @DisplayName("Không nhập lương (Thỏa thuận) -> Hợp lệ")
-    void validate_shouldPass_whenBothSalariesAreNull() {
+    @DisplayName("Không nhập hai mức lương -> Báo lỗi cả hai ô")
+    void validate_shouldReject_whenBothSalariesAreNull() {
         var d = valid();
         d.setMinSalary(null);
         d.setMaxSalary(null);
-        expectPass(d);
+        assertTrue(expectFail(d).getErrors().keySet().containsAll(List.of("minSalary", "maxSalary")));
     }
 
     @Test
-    @DisplayName("Chỉ nhập lương tối thiểu -> Hợp lệ")
-    void validate_shouldPass_whenOnlyMinSalaryIsSet() {
+    @DisplayName("Lưu nháp khi hai mức lương để trống -> Hợp lệ")
+    void validate_shouldAllowDraft_whenBothSalariesAreNull() {
+        expectPass(minimalDraft());
+    }
+
+    @Test
+    @DisplayName("Chỉ nhập lương tối thiểu -> Báo thiếu lương tối đa")
+    void validate_shouldReject_whenOnlyMinSalaryIsSet() {
         var d = valid();
         d.setMinSalary(new BigDecimal("10000000"));
         d.setMaxSalary(null);
-        expectPass(d);
+        assertTrue(expectFail(d).getErrors().containsKey("maxSalary"));
     }
 
     @Test
-    @DisplayName("Chỉ nhập lương tối đa -> Hợp lệ")
-    void validate_shouldPass_whenOnlyMaxSalaryIsSet() {
+    @DisplayName("Chỉ nhập lương tối đa -> Báo thiếu lương tối thiểu")
+    void validate_shouldReject_whenOnlyMaxSalaryIsSet() {
         var d = valid();
         d.setMinSalary(null);
         d.setMaxSalary(new BigDecimal("20000000"));
-        expectPass(d);
+        assertTrue(expectFail(d).getErrors().containsKey("minSalary"));
     }
 
     @Test
@@ -772,6 +754,14 @@ class RequisitionValidatorTests {
     }
 
     @Test
+    @DisplayName("Tên vị trí 1 ký tự -> hợp lệ (chỉ bắt buộc không để trống)")
+    void validate_shouldAcceptTitle_whenOneChar() {
+        var ok = valid();
+        ok.setTitle(" Q ");
+        assertDoesNotThrow(() -> validator.validate(ok));
+    }
+
+    @Test
     @DisplayName("cleanString(null) -> null")
     void cleanString_shouldReturnNull_whenInputIsNull() {
         assertNull(RequisitionValidator.cleanString(null));
@@ -799,7 +789,7 @@ class RequisitionValidatorTests {
             "Full-time, On-site",
             "Part-time, Remote",
             "Internship, Hybrid",
-            "Contract, On-site"
+            "Freelance, On-site"
     })
     @ParameterizedTest
     @DisplayName("Các tổ hợp hình thức / mô hình hợp lệ -> Hợp lệ")

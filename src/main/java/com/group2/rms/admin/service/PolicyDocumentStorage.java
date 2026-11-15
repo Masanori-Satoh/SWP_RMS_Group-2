@@ -20,7 +20,7 @@ import java.util.Arrays;
 
 /*
  * Đọc / thay file PDF của 2 tài liệu chính sách.
- * Admin đã tải → {local-root}/policy/<tên cố định>; chưa tải → bản mặc định trong classpath policy/.
+ * Admin đã tải → {local-root}/policy/<tên cố định>; chưa tải → bản mặc định trong classpath documents/policy/.
  * Không lo audit hay quyền (PolicyDocumentService, SecurityConfig).
  */
 @Component
@@ -32,7 +32,7 @@ public class PolicyDocumentStorage {
     public static final String NOT_PDF = "File không phải PDF. Vui lòng chọn file .pdf.";
 
     private static final byte[] PDF_SIGNATURE = "%PDF-".getBytes(StandardCharsets.US_ASCII);
-    private static final String DEFAULT_FOLDER = "policy/";
+    private static final String DEFAULT_FOLDER = "documents/policy/";
 
     private final Path folder;
 

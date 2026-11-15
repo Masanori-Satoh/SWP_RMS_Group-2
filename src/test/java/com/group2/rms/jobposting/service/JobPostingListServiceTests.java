@@ -80,8 +80,8 @@ class JobPostingListServiceTests {
         service = new JobPostingListService(postings, departments, access, mapper, CLOCK);
 
         Department engineering = Department.builder().departmentId(1).departmentName("Engineering").build();
-        requisition = JobRequisition.builder().requisitionId(5).requisitionCode("REQ-0005").title("Java Dev")
-                .department(engineering).employmentType("Full-time").recruitmentRound(1).build();
+        requisition = JobRequisition.builder().requisitionId(5).title("Java Dev")
+                .department(engineering).employmentType("Full-time").build();
 
         lenient().when(postings.findAll(any(Specification.class), any(Pageable.class)))
                 .thenAnswer(invocation -> new PageImpl<>(rows, invocation.getArgument(1), rows.size()));
@@ -278,7 +278,7 @@ class JobPostingListServiceTests {
         JobPostingListResponse list = service.getListPage(raw, userWithRole(RequisitionAccess.ROLE_HR));
 
         List<String> labels = list.chips().stream().map(FilterChip::label).toList();
-        assertEquals(List.of("Trạng thái: Đang đăng", "Hạn nộp: Còn hạn", "Sắp xếp: Nhiều hồ sơ nhất"), labels);
+        assertEquals(List.of("Trạng thái: Đang đăng", "Hạn ứng tuyển: Còn hạn", "Sắp xếp: Nhiều hồ sơ nhất"), labels);
         ArgumentCaptor<Pageable> pageable = ArgumentCaptor.forClass(Pageable.class);
         verify(postings).findAll(any(Specification.class), pageable.capture());
         assertTrue(pageable.getValue().getSort().isUnsorted(), "Sắp theo số hồ sơ nằm trong Specification, không dùng Sort");

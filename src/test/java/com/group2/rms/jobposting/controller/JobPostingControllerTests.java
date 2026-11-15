@@ -155,9 +155,9 @@ class JobPostingControllerTests {
         LocalDateTime now = LocalDateTime.of(2026, 10, 18, 10, 0);
         return InternalJobPostingDetailResponse.builder()
                 .jobPostingId(30).postingTitle("Product Owner (SaaS)").postingNo(2).requisitionId(16)
-                .requisitionCode("REQ-0016").requisitionTitle("Product Owner").departmentName("Product")
+                .requisitionTitle("Product Owner").departmentName("Product")
                 .employmentType("Toàn thời gian").workModelLabel("Kết hợp").numberOfPositions(1)
-                .workLocation("Tầng 8, RMS Tower").salaryDisplay("35 – 45 triệu VND/tháng").numberOfPositionsDisplay("1 người")
+                .workLocation("Tầng 8, RMS Tower").salaryDisplay("35 – 45 triệu VND/tháng").numberOfPositionsDisplay(1)
                 .jobDescription("Mô tả").jobRequirements("Yêu cầu").benefits("- Lương tháng 13")
                 .postingStatus("Published").viewStatus("Published").postingStatusLabel("Đang đăng").statusTone("success")
                 .postingDate(now.minusDays(10)).applicationDeadline(now.plusDays(5)).daysUntilDeadline(5L)
@@ -239,7 +239,8 @@ class JobPostingControllerTests {
     @DisplayName("GET form tạo với requisitionId -> View form, có form, giới hạn độ dài và 'hôm nay' từ validator")
     void showCreateForm_shouldRenderForm_whenRequisitionIsValid() throws Exception {
         JobPostingRequest dto = JobPostingRequest.builder().requisitionId(101).postingTitle("Java Developer")
-                .draftOrNew(true).build();
+                .expectedStartDate(LocalDate.of(2026, 12, 1))
+                .applicationDeadline(LocalDate.of(2026, 11, 1)).draftOrNew(true).build();
         when(service.prepareCreateForm(eq(101), any(User.class))).thenReturn(dto);
 
         mvc.perform(get(BASE + "/create").param("requisitionId", "101"))
@@ -247,7 +248,9 @@ class JobPostingControllerTests {
                 .andExpect(view().name("job-postings/create"))
                 .andExpect(model().attributeExists("form", "requisitionChoices"))
                 .andExpect(model().attribute("titleLimit", JobPostingValidator.TITLE_LIMIT))
-                .andExpect(model().attribute("today", LocalDate.of(2026, 10, 18)));
+                .andExpect(model().attribute("today", LocalDate.of(2026, 10, 18)))
+                .andExpect(content().string(containsString("Mức lương")))
+                .andExpect(content().string(containsString("value=\"2026-11-01\"")));
     }
 
     @Test
@@ -302,13 +305,18 @@ class JobPostingControllerTests {
     @DisplayName("GET form sửa -> Dùng chung template form, không có ô 'Đổi yêu cầu'")
     void showEditForm_shouldRenderSharedForm() throws Exception {
         JobPostingRequest dto = JobPostingRequest.builder().jobPostingId(99).requisitionId(101)
-                .postingTitle("Java Developer").live(true).build();
+                .postingTitle("Java Developer").sourcePostingTitle("Java Developer")
+                .sourcePositionsDisplay(2).salaryRangeLabel("20 – 30 triệu VND/tháng")
+                .live(true).build();
         when(service.prepareEditForm(eq(99), any(User.class))).thenReturn(dto);
 
         mvc.perform(get(BASE + "/99/edit"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("job-postings/create"))
-                .andExpect(model().attribute("requisitionChoices", List.of()));
+                .andExpect(model().attribute("requisitionChoices", List.of()))
+                .andExpect(content().string(containsString("data-from=\"postingTitle\"")))
+                .andExpect(content().string(containsString("data-from=\"numberOfPositionsDisplay\"")))
+                .andExpect(content().string(containsString("data-from=\"salaryCustom\"")));
         verify(service, never()).requisitionChoices(any());
     }
 

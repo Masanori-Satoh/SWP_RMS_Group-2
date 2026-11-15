@@ -25,6 +25,10 @@ public interface DepartmentRepository extends JpaRepository<Department, Integer>
     @Query("select d from Department d where d.departmentId = :id")
     Optional<Department> findForUpdate(@Param("id") Integer id);
 
+    /** Các phòng ban người này đang làm trưởng phòng (một Hiring Manager có thể quản lý nhiều phòng). */
+    java.util.List<Department> findAllByManagerUserIdOrderByDepartmentNameAsc(Integer userId);
+
+
     boolean existsByDepartmentNameIgnoreCase(String departmentName);
     boolean existsByDepartmentNameIgnoreCaseAndDepartmentIdNot(String departmentName, Integer departmentId);
 

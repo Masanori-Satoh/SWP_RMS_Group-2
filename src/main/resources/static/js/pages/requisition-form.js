@@ -12,34 +12,54 @@
         return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
     };
 
+    // Lỗi định dạng / nhỏ hơn min của ô số nguyên; '' nếu hợp lệ (không có giới hạn trên).
+    function integerMessage(label, value, min) {
+        const raw = String(value).trim();
+        if (/^[-+]?\d+[.,]\d+$/.test(raw)) return `${label} phải là số nguyên.`;
+        if (!/^[-+]?\d+$/.test(raw)) return `${label} chỉ được chứa số nguyên.`;
+        return Number(raw) < min ? `${label} phải lớn hơn hoặc bằng ${min}.` : '';
+    }
+
     const FIELD_RULES = [
-        { id: 'title', label: 'Tên vị trí', section: 'rqf-position', requiredForDraft: true },
         {
-            id: 'numberOfPositions', label: 'Số lượng', section: 'rqf-position', requiredForDraft: true,
+            id: 'title', label: 'Vị trí tuyển dụng', section: 'rqf-position', requiredForSubmit: true,
+            // Khớp RequisitionValidator.PLACEHOLDER_TITLE: lưu nháp được, gửi duyệt thì không
+            submitErrorOf: value => value.toLowerCase() === 'chưa nhập vị trí'
+                ? 'Vui lòng nhập chức danh công việc cụ thể trước khi gửi duyệt.' : ''
+        },
+        {
+            id: 'expectedStaffingDate', label: 'Ngày dự kiến nhận việc', section: 'rqf-position', requiredForSubmit: true,
+            errorOf: value => value < today() ? 'Ngày dự kiến nhận việc không được trước hôm nay.' : ''
+        },
+        {
+            id: 'numberOfPositions', label: 'Số lượng cần tuyển', section: 'rqf-position', requiredForSubmit: true,
             errorOf: value => {
                 const input = document.getElementById('numberOfPositions');
-                const min = Number(input.min) || 1;
-                const max = Number(input.max) || 30;
-                const count = Number(value);
-                return Number.isInteger(count) && count >= min && count <= max
-                    ? '' : `Số lượng cần tuyển phải từ ${min} đến ${max} người.`;
+                return integerMessage('Số lượng cần tuyển', value, Number(input.min) || 1);
             }
         },
-        { id: 'employmentType', label: 'Hình thức làm việc', section: 'rqf-work', requiredForDraft: true, radio: true },
-        { id: 'workModel', label: 'Mô hình làm việc', section: 'rqf-work', requiredForDraft: true, radio: true },
+        { id: 'reasonForHiring', label: 'Lý do tuyển dụng', section: 'rqf-position', requiredForSubmit: true },
+        { id: 'employmentType', label: 'Hình thức làm việc', section: 'rqf-work', requiredForSubmit: true },
+        { id: 'workModel', label: 'Mô hình làm việc', section: 'rqf-work', requiredForSubmit: true },
+        { id: 'minSalary', label: 'Mức lương tối thiểu', section: 'rqf-work', requiredForSubmit: true },
+        { id: 'maxSalary', label: 'Mức lương tối đa', section: 'rqf-work', requiredForSubmit: true },
         { id: 'workLocation', label: 'Địa điểm làm việc', section: 'rqf-work', requiredForSubmit: true },
-        { id: 'reasonForHiring', label: 'Lý do tuyển dụng', section: 'rqf-content', requiredForSubmit: true },
         { id: 'jobDescription', label: 'Mô tả công việc', section: 'rqf-content', requiredForSubmit: true },
         { id: 'requirementDetails', label: 'Yêu cầu ứng viên', section: 'rqf-content', requiredForSubmit: true }
     ];
 
-    if (document.getElementById('departmentId')?.tagName === 'SELECT') {
-        FIELD_RULES.splice(1, 0, { id: 'departmentId', label: 'Phòng ban', section: 'rqf-position', requiredForDraft: true });
+    const departmentField = document.getElementById('departmentId');
+    if (departmentField) {
+        FIELD_RULES.splice(1, 0, {
+            id: 'departmentId', label: 'Phòng ban tuyển dụng', section: 'rqf-position', requiredForSubmit: true,
+            target: departmentField.type === 'hidden' ? 'rqf-position' : 'departmentId'
+        });
     }
 
     const workLocation = document.getElementById('workLocation');
+    const workModel = document.getElementById('workModel');
     function isRemote() {
-        return form.querySelector('input[name="workModel"]:checked')?.value === 'Remote';
+        return workModel.value === 'Remote';
     }
 
     function syncWorkLocation() {
@@ -54,19 +74,15 @@
     }
 
     function readFieldValue(rule) {
-        if (rule.radio) {
-            const checked = form.querySelector(`input[name="${rule.id}"]:checked`);
-            return checked ? checked.value : '';
-        }
         const input = document.getElementById(rule.id);
         return input ? input.value.trim() : '';
     }
 
     function showError(fieldId, message) {
-        const input = document.getElementById(fieldId) || document.getElementById(fieldId + '-group');
+        const input = document.getElementById(fieldId);
         const errorEl = document.getElementById(fieldId + '-error');
         if (input) {
-            input.toggleAttribute('aria-invalid', Boolean(message));
+            input.setAttribute('aria-invalid', String(Boolean(message)));
             input.classList.toggle('is-invalid', Boolean(message));
         }
         if (errorEl) {
@@ -80,10 +96,12 @@
             return true;
         }
         const value = readFieldValue(rule);
-        const required = rule.requiredForDraft || (action === 'submit' && rule.requiredForSubmit);
+        const required = action === 'submit' && rule.requiredForSubmit;
         let message = '';
 
-        if (required && !value) {
+        if (rule.id === 'numberOfPositions' && document.getElementById(rule.id)?.validity.badInput) {
+            message = 'Số lượng cần tuyển chỉ được chứa số nguyên.';
+        } else if (required && !value) {
             if (rule.id === 'title') {
                 message = 'Tên vị trí không được để trống.';
             } else if (rule.id === 'departmentId') {
@@ -91,7 +109,7 @@
             } else if (rule.id === 'workLocation') {
                 message = 'Địa điểm làm việc không được để trống.';
             } else if (rule.id === 'numberOfPositions') {
-                message = 'Vui lòng nhập số lượng cần tuyển.';
+                message = 'Số lượng cần tuyển là bắt buộc.';
             } else {
                 message = 'Vui lòng nhập trường này.';
             }
@@ -107,6 +125,7 @@
         if (!input) return;
         const raw = input.value;
         if (!raw) return;
+        if (!/^\d[\d.]*$/.test(raw)) return;
 
         const cursor = input.selectionStart || 0;
         const digitsBeforeCursor = raw.slice(0, cursor).replace(/\D/g, '').length;
@@ -143,45 +162,46 @@
         return isNaN(num) ? null : num;
     }
 
-    function validateNumbers() {
-        let valid = true;
+    const minSalaryInput = document.getElementById('minSalary');
+    const maxSalaryInput = document.getElementById('maxSalary');
+    const SALARY_IDS = new Set(['minSalary', 'maxSalary']);
 
-        const minSalaryInput = document.getElementById('minSalary');
-        const maxSalaryInput = document.getElementById('maxSalary');
+    function salaryMessages() {
+        const minRaw = minSalaryInput?.value.trim() || '';
+        const maxRaw = maxSalaryInput?.value.trim() || '';
         const minVal = parseSalary(minSalaryInput?.value);
         const maxVal = parseSalary(maxSalaryInput?.value);
 
-        let minSalaryMessage = '';
-        let maxSalaryMessage = '';
-
         const SALARY_MAX = 1000000000;
-        const salaryMessage = value => value === null ? ''
-            : value <= 0 ? 'Mức lương phải lớn hơn 0.'
-                : value > SALARY_MAX ? 'Mức lương không được vượt quá 1.000.000.000 VND/tháng.' : '';
-        minSalaryMessage = salaryMessage(minVal);
-        maxSalaryMessage = salaryMessage(maxVal);
-
-        if (minVal > 0 && maxVal > 0) {
-            if (maxVal < minVal) {
-                maxSalaryMessage = 'Mức lương tối đa phải lớn hơn hoặc bằng mức lương tối thiểu.';
-            }
+        const salaryMessage = (raw, value, label) => !raw ? `Vui lòng nhập ${label}.`
+            : value === null ? 'Mức lương không hợp lệ.'
+                : value <= 0 ? 'Mức lương phải lớn hơn 0.'
+                    : value > SALARY_MAX ? 'Mức lương không được vượt quá 1.000.000.000 VND/tháng.' : '';
+        const minSalaryMessage = salaryMessage(minRaw, minVal, 'mức lương tối thiểu');
+        let maxSalaryMessage = salaryMessage(maxRaw, maxVal, 'mức lương tối đa');
+        if (!minSalaryMessage && !maxSalaryMessage && maxVal < minVal) {
+            maxSalaryMessage = 'Mức lương tối đa phải lớn hơn hoặc bằng mức lương tối thiểu.';
         }
+        return { minSalary: minSalaryMessage, maxSalary: maxSalaryMessage };
+    }
 
-        showError('minSalary', minSalaryMessage);
-        showError('maxSalary', maxSalaryMessage);
+    function validateNumbers() {
+        const messages = salaryMessages();
+        showError('minSalary', messages.minSalary);
+        showError('maxSalary', messages.maxSalary);
 
-        const salariesOk = !minSalaryMessage && !maxSalaryMessage;
-        return valid && salariesOk;
+        return !messages.minSalary && !messages.maxSalary;
     }
 
     FIELD_RULES.forEach(rule => {
-        const target = rule.radio ? document.getElementById(rule.id + '-group') : document.getElementById(rule.id);
-        target?.addEventListener('change', () => validateField(rule, 'draft'));
-        target?.addEventListener('blur', () => validateField(rule, 'submit'), true);
+        if (SALARY_IDS.has(rule.id)) return;
+        const target = document.getElementById(rule.id);
+        // Chỉ kiểm tra lại lỗi đã có sau lần Gửi duyệt trước đó.
+        target?.addEventListener('input', () => {
+            if (target.classList.contains('is-invalid')) validateField(rule, 'submit');
+        });
     });
-    form.querySelectorAll('input[name="workModel"]').forEach(input => {
-        input.addEventListener('change', syncWorkLocation);
-    });
+    workModel.addEventListener('change', syncWorkLocation);
 
     ['minSalary', 'maxSalary'].forEach(id => {
         const input = document.getElementById(id);
@@ -191,25 +211,10 @@
             }
             input.addEventListener('input', () => {
                 formatCurrencyInput(input);
-                validateNumbers();
+                if (input.classList.contains('is-invalid')) validateNumbers();
             });
-            input.addEventListener('blur', validateNumbers);
         }
     });
-
-    form.querySelectorAll('[data-step]').forEach(button => button.addEventListener('click', () => {
-        const input = document.getElementById(button.dataset.stepTarget);
-        if (!input) return;
-        const min = input.min === '' ? 1 : Number(input.min);
-        const max = input.max === '' ? Infinity : Number(input.max);
-        if (input.value === '' && input.dataset.stepStart) {
-            input.value = input.dataset.stepStart;
-        } else {
-            const current = input.value === '' ? min - Number(button.dataset.step) : Number(input.value);
-            input.value = Math.min(max, Math.max(min, current + Number(button.dataset.step)));
-        }
-        input.dispatchEvent(new Event('input', { bubbles: true }));
-    }));
 
     form.querySelectorAll('textarea[maxlength]').forEach(textarea => {
         const counter = document.getElementById(textarea.id + '-count');
@@ -226,17 +231,20 @@
     });
 
     function refreshChecklist() {
+        const salaryErrors = salaryMessages();
         const isFieldDone = rule => {
+            if (SALARY_IDS.has(rule.id)) return !salaryErrors[rule.id];
             const value = readFieldValue(rule);
             if (!value) return false;
-            if (rule.errorOf) return !rule.errorOf(value);
-            return true;
+            if (document.getElementById(rule.id)?.validity?.badInput) return false;
+            // Checklist là điều kiện gửi duyệt nên tính cả lỗi chỉ áp dụng khi gửi duyệt
+            return !(rule.errorOf && rule.errorOf(value)) && !(rule.submitErrorOf && rule.submitErrorOf(value));
         };
         const items = FIELD_RULES.filter(rule => rule.id !== 'workLocation' || !isRemote())
-            .map(rule => ({ label: rule.label, target: rule.radio ? rule.id + '-group' : rule.id, done: isFieldDone(rule) }));
+            .map(rule => ({ label: rule.label, target: rule.target || rule.id, done: isFieldDone(rule) }));
 
         const doneCount = items.filter(item => item.done).length;
-        document.getElementById('rqf-progress').textContent = `${doneCount}/${items.length} mục bắt buộc đã xong`;
+        document.getElementById('rqf-progress').textContent = `${doneCount}/${items.length} mục đã xong`;
 
         const list = document.getElementById('rqf-checklist');
         list.replaceChildren(...items.map(item => {
@@ -258,7 +266,8 @@
     form.addEventListener('change', refreshChecklist);
 
     function validateAll(action) {
-        const fieldsOk = FIELD_RULES.map(rule => validateField(rule, action)).every(Boolean);
+        const fieldsOk = FIELD_RULES.filter(rule => !SALARY_IDS.has(rule.id))
+            .map(rule => validateField(rule, action)).every(Boolean);
         const numbersOk = validateNumbers();
         if (!(fieldsOk && numbersOk)) {
             const firstError = form.querySelector('[aria-invalid="true"], .is-invalid input');
@@ -294,7 +303,7 @@
         }
 
         const action = event.submitter?.value === 'submit' ? 'submit' : 'draft';
-        if (!validateAll(action)) {
+        if (action === 'submit' && !validateAll(action)) {
             event.preventDefault();
             confirmBox.hidden = true;
             buttons.hidden = false;
@@ -307,24 +316,6 @@
         submitting = false;
         form.querySelectorAll('button[type=submit]').forEach(button => { button.disabled = false; });
     });
-
-    // Thời gian thử việc: chọn mẫu thì ghi thẳng vào ô probationPeriod (ẩn); "Khác" thì hiện ô để nhập tay.
-    const probationChoice = document.getElementById('probationChoice');
-    const probationInput = document.getElementById('probationPeriod');
-    if (probationChoice && probationInput) {
-        const syncProbation = userChanged => {
-            const isOther = probationChoice.value === '__other__';
-            probationInput.hidden = !isOther;
-            if (!isOther) {
-                probationInput.value = probationChoice.value;
-            } else if (userChanged) {
-                probationInput.value = '';
-                probationInput.focus();
-            }
-        };
-        probationChoice.addEventListener('change', () => syncProbation(true));
-        syncProbation(false);
-    }
 
     syncWorkLocation();
     document.getElementById('validation-summary')?.focus();

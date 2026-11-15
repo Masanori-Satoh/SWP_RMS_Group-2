@@ -101,6 +101,15 @@ class RequisitionServiceTests {
         // lenient(): stub dùng chung, test nào không dùng cũng không bị Mockito báo "unnecessary stubbing"
         lenient().when(access.actor()).thenReturn(manager);
         lenient().when(departments.findById(1)).thenReturn(Optional.of(itDepartment));
+        // Giống RequisitionAccess.canManageDepartment: Director mọi phòng, HM phòng mình thuộc về hoặc làm trưởng phòng
+        lenient().when(access.canManageDepartment(any(), any(), any())).thenAnswer(invocation -> {
+            User user = invocation.getArgument(0);
+            Integer departmentId = invocation.getArgument(1);
+            User departmentManager = invocation.getArgument(2);
+            return access.isDirector(user)
+                    || (user.getDepartment() != null && departmentId.equals(user.getDepartment().getDepartmentId()))
+                    || (departmentManager != null && departmentManager.getUserId().equals(user.getUserId()));
+        });
         lenient().when(requisitions.saveAndFlush(any())).thenAnswer(invocation -> {
             JobRequisition saved = invocation.getArgument(0);
             if (saved.getRequisitionId() == null) {
@@ -125,13 +134,13 @@ class RequisitionServiceTests {
     }
 
     private RequisitionRequest draft(String title) {
-        return RequisitionRequest.builder().action(RequisitionValidator.ACTION_DRAFT).title(title).recruitmentRound(1)
-                .gender("Any").build();
+        return RequisitionRequest.builder().action(RequisitionValidator.ACTION_DRAFT).title(title)
+                .build();
     }
 
     private RequisitionRequest submit(String title) {
-        return RequisitionRequest.builder().action(RequisitionValidator.ACTION_SUBMIT).title(title).recruitmentRound(1)
-                .build();
+        return RequisitionRequest.builder().action(RequisitionValidator.ACTION_SUBMIT).title(title)
+                .expectedStaffingDate(LocalDate.of(2026, 12, 1)).build();
     }
 
     /** Yêu cầu của HM đang đăng nhập, ở trạng thái cho trước; findForUpdate / findById đều trả về nó. */
@@ -139,7 +148,7 @@ class RequisitionServiceTests {
         JobRequisition requisition = JobRequisition.builder()
                 .requisitionId(id)
                 .title("Senior Java")
-                .recruitmentRound(1)
+
                 .approvalStatus(status)
                 .hiringManager(manager)
                 .department(itDepartment)
@@ -158,6 +167,42 @@ class RequisitionServiceTests {
     class CreateRequisition {
 
         @Test
+        @DisplayName("Lưu nháp thiếu nội dung vẫn giữ các trường trống")
+        void createRequisition_shouldKeepMissingDraftFields() {
+            RequisitionRequest request = RequisitionRequest.builder()
+                    .action(RequisitionValidator.ACTION_DRAFT)
+                    .departmentId(itDepartment.getDepartmentId())
+                    .numberOfPositions(0)
+                    .minSalary(new BigDecimal("30000000"))
+                    .maxSalary(new BigDecimal("20000000"))
+                    .build();
+
+            service.createRequisition(request);
+
+            JobRequisition saved = savedRequisition();
+            assertEquals(RequisitionAccess.STATUS_DRAFT, saved.getApprovalStatus());
+            assertNull(saved.getTitle());
+            assertEquals(0, saved.getNumberOfPositions());
+            assertNull(saved.getEmploymentType());
+            assertNull(saved.getWorkModel());
+            assertEquals(new BigDecimal("30000000"), saved.getMinSalary());
+            assertEquals(new BigDecimal("20000000"), saved.getMaxSalary());
+        }
+
+        @Test
+        @DisplayName("Giám đốc lưu nháp khi chưa chọn phòng ban")
+        void createRequisition_shouldAllowDraftWithoutDepartment() {
+            when(access.actor()).thenReturn(director);
+            when(access.isDirector(director)).thenReturn(true);
+
+            service.createRequisition(RequisitionRequest.builder()
+                    .action(RequisitionValidator.ACTION_DRAFT)
+                    .build());
+
+            assertNull(savedRequisition().getDepartment());
+        }
+
+        @Test
         @DisplayName("Lưu nháp đủ trường -> Lưu đúng dữ liệu, người tạo, Draft, tiêu chí 2 chiều, audit CREATE")
         void createRequisition_shouldSaveDraftWithAllFields_whenDataIsValid() {
             // Arrange
@@ -170,7 +215,7 @@ class RequisitionServiceTests {
                     .maxSalary(new BigDecimal("35000000"))
                     .workLocation("Hanoi")
                     .workModel("Hybrid")
-                    .probationPeriod("60 ngày")
+                    .expectedStaffingDate(LocalDate.of(2026, 12, 1))
                     .reasonForHiring("Expansion")
                     .jobDescription("Develop RMS")
                     .requirementDetails("Spring Boot, SQL")
@@ -202,7 +247,7 @@ class RequisitionServiceTests {
         }
 
         @Test
-        @DisplayName("Nháp chỉ có tên vị trí -> Mô tả / yêu cầu lưu chuỗi rỗng (cột NOT NULL), sinh mã REQ-0101")
+        @DisplayName("Nháp chỉ có tên vị trí -> Mô tả / yêu cầu lưu chuỗi rỗng (cột NOT NULL)")
         void createRequisition_shouldSaveEmptyTextAndGenerateCode_whenOptionalFieldsAreMissing() {
             // Act
             service.createRequisition(draft("Kế toán tổng hợp"));
@@ -213,44 +258,37 @@ class RequisitionServiceTests {
             assertSame(itDepartment, saved.getDepartment());
             assertEquals("", saved.getJobDescription());
             assertEquals("", saved.getRequirementDetails());
-            assertEquals("REQ-0101", saved.getRequisitionCode());
         }
 
         @Test
-        @DisplayName("Phòng ban đã có bản nháp cùng tên vị trí -> Báo lỗi ở ô tên vị trí, không lưu")
-        void createRequisition_shouldReject_whenDraftWithSameTitleExistsInDepartment() {
-            // Arrange
-            when(requisitions.existsDraftByTitleAndDepartment("Java Engineer", 1, null)).thenReturn(true);
+        @DisplayName("Lưu bản nháp cùng tên vị trí trong phòng -> Vẫn lưu")
+        void createRequisition_shouldSave_whenSameTitleIsAlreadyUsedInDepartment() {
+            service.createRequisition(draft("Java Engineer"));
 
-            // Act
-            RequisitionValidationException error = assertThrows(RequisitionValidationException.class,
-                    () -> service.createRequisition(draft("Java Engineer")));
-
-            // Assert
-            assertTrue(error.getErrors().get("title").startsWith("Bạn đang có một bản nháp"));
-            verify(requisitions, never()).saveAndFlush(any());
+            JobRequisition saved = savedRequisition();
+            assertEquals("Java Engineer", saved.getTitle());
+            assertEquals(RequisitionAccess.STATUS_DRAFT, saved.getApprovalStatus());
         }
 
         @Test
-        @DisplayName("Gửi duyệt khi phòng có bản nháp khác cùng tên -> Vẫn gửi được (chỉ chặn trùng khi lưu nháp)")
+        @DisplayName("Gửi duyệt khi phòng có bản nháp khác cùng tên -> Vẫn gửi được")
         void createRequisition_shouldSubmit_whenOtherDraftWithSameTitleExists() {
             // Act
             service.createRequisition(submit("Java Engineer"));
 
             // Assert
             assertEquals(RequisitionAccess.STATUS_PENDING_DIRECTOR, savedRequisition().getApprovalStatus());
-            verify(requisitions, never()).existsDraftByTitleAndDepartment(any(), any(), any());
         }
 
         @Test
-        @DisplayName("Tài khoản chưa có phòng ban -> Báo lỗi dễ hiểu, không lưu")
-        void createRequisition_shouldReject_whenCreatorHasNoDepartment() {
+        @DisplayName("Gửi duyệt khi tài khoản chưa có phòng ban -> Báo lỗi dễ hiểu, không lưu")
+        void createRequisition_shouldRejectSubmit_whenCreatorHasNoDepartment() {
             // Arrange
             manager.setDepartment(null);
 
             // Act
             RequisitionValidationException error = assertThrows(RequisitionValidationException.class,
-                    () -> service.createRequisition(draft("Kế toán")));
+                    () -> service.createRequisition(submit("Kế toán")));
 
             // Assert
             assertEquals("Tài khoản của bạn chưa được gán phòng ban đang hoạt động. Vui lòng liên hệ quản trị viên.",
@@ -272,18 +310,49 @@ class RequisitionServiceTests {
         }
 
         @Test
-        @DisplayName("Form gửi departmentId khác (sửa HTML) -> Bị ghi đè bằng phòng ban của người tạo")
-        void createRequisition_shouldIgnoreFormDepartment_whenCreatorIsHiringManager() {
-            // Arrange
+        @DisplayName("HM gửi departmentId của phòng mình không quản lý (sửa HTML) -> Báo lỗi, không lưu")
+        void createRequisition_shouldReject_whenHiringManagerPicksUnmanagedDepartment() {
+            // Arrange: phòng 2 đang hoạt động nhưng trưởng phòng là người khác
+            User otherManager = User.builder().userId(99).build();
+            when(departments.findById(2)).thenReturn(Optional.of(Department.builder().departmentId(2)
+                    .departmentName("Sales").departmentStatus("Active").manager(otherManager).build()));
             RequisitionRequest request = draft("Kế toán");
-            request.setDepartmentId(99);
+            request.setDepartmentId(2);
+
+            // Act
+            RequisitionValidationException error = assertThrows(RequisitionValidationException.class,
+                    () -> service.createRequisition(request));
+
+            // Assert
+            assertEquals("Bạn chỉ được chọn phòng ban mình thuộc về hoặc đang quản lý.", error.getErrors().get("departmentId"));
+            verify(requisitions, never()).saveAndFlush(any());
+        }
+
+        @Test
+        @DisplayName("HM làm trưởng phòng thêm một phòng khác -> Tạo được yêu cầu cho phòng đó")
+        void createRequisition_shouldUseManagedDepartment_whenHiringManagerManagesSeveral() {
+            // Arrange: HM thuộc IT nhưng là trưởng phòng Sales
+            Department sales = Department.builder().departmentId(2).departmentName("Sales").departmentStatus("Active")
+                    .manager(manager).build();
+            when(departments.findById(2)).thenReturn(Optional.of(sales));
+            RequisitionRequest request = draft("Kế toán");
+            request.setDepartmentId(2);
 
             // Act
             service.createRequisition(request);
 
             // Assert
+            assertEquals(sales, savedRequisition().getDepartment());
+        }
+
+        @Test
+        @DisplayName("HM không gửi departmentId (chỉ có 1 phòng, form không có ô chọn) -> Dùng phòng của mình")
+        void createRequisition_shouldDefaultToOwnDepartment_whenHiringManagerSendsNoDepartment() {
+            RequisitionRequest request = draft("Kế toán");
+
+            service.createRequisition(request);
+
             assertEquals(1, request.getDepartmentId());
-            verify(departments, never()).findById(99);
         }
 
         @Test
@@ -350,7 +419,7 @@ class RequisitionServiceTests {
         @DisplayName("Giám đốc chưa chọn phòng ban, hoặc chọn phòng ban ngừng hoạt động -> Báo lỗi, không lưu")
         void createRequisition_shouldReject_whenDirectorPicksNoActiveDepartment(String departmentIdText) {
             // Arrange
-            when(access.isDirector(manager)).thenReturn(true);
+            lenient().when(access.isDirector(manager)).thenReturn(true);
             lenient().when(departments.findById(5)).thenReturn(Optional.of(
                     Department.builder().departmentId(5).departmentName("Cũ").departmentStatus("Inactive").build()));
             Integer departmentId = null;
@@ -383,11 +452,11 @@ class RequisitionServiceTests {
     }
 
     // =========================================================================
-    // createRequisition từ bản sao chép: đợt tuyển
+    // createRequisition từ bản sao chép
     // =========================================================================
 
     @Nested
-    @DisplayName("createRequisition (sao chép sang đợt mới)")
+    @DisplayName("createRequisition (sao chép yêu cầu)")
     class CreateFromCopy {
 
         private JobRequisition root;
@@ -399,12 +468,12 @@ class RequisitionServiceTests {
         }
 
         @Test
-        @DisplayName("Giữ tên vị trí (khác hoa/thường, thừa khoảng trắng) -> Trỏ về phiếu gốc, đợt = số HM nhập")
+        @DisplayName("Giữ tên vị trí -> Trỏ về phiếu gốc và lưu ngày cần nhân sự mới")
         void createRequisition_shouldUseNextRound_whenCopyKeepsTitle() {
             // Arrange
             RequisitionRequest request = draft("  java engineer ");
             request.setOriginalRequisitionId(80);
-            request.setRecruitmentRound(3);
+            request.setExpectedStaffingDate(LocalDate.of(2026, 12, 3));
 
             // Act
             service.createRequisition(request);
@@ -412,29 +481,28 @@ class RequisitionServiceTests {
             // Assert
             JobRequisition saved = savedRequisition();
             assertSame(root, saved.getOriginalRequisition());
-            assertEquals(3, saved.getRecruitmentRound());
+            assertEquals(LocalDate.of(2026, 12, 3), saved.getExpectedStaffingDate());
         }
 
         @Test
-        @DisplayName("Đổi tên vị trí -> Không nối phiếu gốc, đợt giữ số HM nhập")
+        @DisplayName("Đổi tên vị trí -> Vẫn giữ nguồn sao chép và ngày cần nhân sự mới")
         void createRequisition_shouldResetToRound1_whenCopyChangesTitle() {
             // Arrange
             RequisitionRequest request = draft("Python Engineer");
             request.setOriginalRequisitionId(80);
-            request.setRecruitmentRound(2);
+            request.setExpectedStaffingDate(LocalDate.of(2026, 12, 2));
 
             // Act
             service.createRequisition(request);
 
             // Assert
             JobRequisition saved = savedRequisition();
-            assertNull(saved.getOriginalRequisition());
-            assertEquals(2, saved.getRecruitmentRound());
-            verify(requisitions, never()).findMaxRoundInChain(any());
+            assertSame(root, saved.getOriginalRequisition());
+            assertEquals(LocalDate.of(2026, 12, 2), saved.getExpectedStaffingDate());
         }
 
         @Test
-        @DisplayName("Giám đốc sao chép rồi chọn phòng ban khác -> Không nối chuỗi phòng cũ, đợt giữ số HM nhập")
+        @DisplayName("Giám đốc sao chép sang phòng ban khác -> Vẫn giữ nguồn sao chép")
         void createRequisition_shouldResetToRound1_whenDirectorCopiesToAnotherDepartment() {
             // Arrange
             Department sales = Department.builder().departmentId(2).departmentName("Sales").departmentStatus("Active").build();
@@ -449,18 +517,14 @@ class RequisitionServiceTests {
 
             // Assert
             JobRequisition saved = savedRequisition();
-            assertNull(saved.getOriginalRequisition());
-            assertEquals(1, saved.getRecruitmentRound());
-            verify(requisitions, never()).findMaxRoundInChain(any());
+            assertSame(root, saved.getOriginalRequisition());
         }
 
-        @ParameterizedTest(name = "phiếu nguồn {0}")
-        @ValueSource(strings = {RequisitionAccess.STATUS_DRAFT, RequisitionAccess.STATUS_PENDING_DIRECTOR,
-                RequisitionAccess.STATUS_REJECTED})
-        @DisplayName("Phiếu nguồn chưa được duyệt -> Không sao chép được (sai trạng thái)")
-        void createRequisition_shouldReject_whenCopySourceIsNotApproved(String status) {
+        @Test
+        @DisplayName("Phiếu nguồn là bản nháp -> Không sao chép được")
+        void createRequisition_shouldReject_whenCopySourceIsDraft() {
             // Arrange
-            root.setApprovalStatus(status);
+            root.setApprovalStatus(RequisitionAccess.STATUS_DRAFT);
             RequisitionRequest request = draft("Java Engineer");
             request.setOriginalRequisitionId(80);
 
@@ -471,6 +535,20 @@ class RequisitionServiceTests {
             // Assert
             assertTrue(error.getErrors().containsKey("action"));
             verify(requisitions, never()).saveAndFlush(any());
+        }
+
+        @ParameterizedTest(name = "phiếu nguồn {0}")
+        @ValueSource(strings = {RequisitionAccess.STATUS_PENDING_DIRECTOR, RequisitionAccess.STATUS_REJECTED,
+                "Closed"})
+        @DisplayName("Phiếu nguồn không phải bản nháp -> Tạo được yêu cầu mới")
+        void createRequisition_shouldAllowCopyFromNonDraftSource(String status) {
+            root.setApprovalStatus(status);
+            RequisitionRequest request = draft("Java Engineer");
+            request.setOriginalRequisitionId(80);
+
+            service.createRequisition(request);
+
+            assertSame(root, savedRequisition().getOriginalRequisition());
         }
 
         @Test
@@ -499,15 +577,90 @@ class RequisitionServiceTests {
     class UpdateRequisition {
 
         @Test
-        @DisplayName("Admin sửa phiếu của HM -> Phiếu giữ nguyên phòng ban cũ, bỏ departmentId trên form")
-        void updateRequisition_shouldKeepSavedDepartment_whenEditorIsNotDirector() {
-            // Arrange
+        @DisplayName("Đổi tên nháp thành tên của nháp khác cùng phòng -> Vẫn cập nhật")
+        void updateRequisition_shouldSave_whenAnotherDraftHasSameTitle() {
+            JobRequisition requisition = requisitionWithStatus(70, RequisitionAccess.STATUS_DRAFT);
+            RequisitionRequest request = draft("Java Engineer");
+
+            service.updateRequisition(70, request);
+
+            assertEquals("Java Engineer", requisition.getTitle());
+            verify(requisitions).saveAndFlush(requisition);
+        }
+
+        @Test
+        @DisplayName("Giữ tên nháp của chính mình -> Không đổi trạng thái")
+        void updateRequisition_shouldKeepDraft_whenTitleIsUnchanged() {
+            JobRequisition requisition = requisitionWithStatus(70, RequisitionAccess.STATUS_DRAFT);
+
+            service.updateRequisition(70, draft("Senior Java"));
+
+            assertEquals(RequisitionAccess.STATUS_DRAFT, requisition.getApprovalStatus());
+        }
+
+        @Test
+        @DisplayName("Phiếu bị từ chối lưu lại thành nháp -> Draft, chưa gửi thông báo duyệt")
+        void updateRequisition_shouldSaveDraftWithoutNotification_whenRejectedRequestIsEdited() {
+            JobRequisition requisition = requisitionWithStatus(71, RequisitionAccess.STATUS_REJECTED);
+
+            service.updateRequisition(71, draft("Senior Java revised"));
+
+            assertEquals(RequisitionAccess.STATUS_DRAFT, requisition.getApprovalStatus());
+            assertEquals("Senior Java revised", requisition.getTitle());
+            verify(requisitions).saveAndFlush(requisition);
+            verifyNoInteractions(approvals, notificationService);
+        }
+
+        @Test
+        @DisplayName("HM sửa phiếu, chuyển sang phòng mình thuộc về/quản lý -> Đổi được phòng ban")
+        void updateRequisition_shouldMoveDepartment_whenHiringManagerPicksManagedDepartment() {
+            // Arrange: phiếu đang ở Sales, HM (thuộc IT) chọn IT
             Department sales = Department.builder().departmentId(2).departmentName("Sales").departmentStatus("Active").build();
-            when(departments.findById(2)).thenReturn(Optional.of(sales));
             JobRequisition requisition = requisitionWithStatus(70, RequisitionAccess.STATUS_DRAFT);
             requisition.setDepartment(sales);
             RequisitionRequest request = draft("Sales Executive");
             request.setDepartmentId(1);
+
+            // Act
+            service.updateRequisition(70, request);
+
+            // Assert
+            assertEquals(1, request.getDepartmentId());
+            assertSame(itDepartment, requisition.getDepartment());
+        }
+
+        @Test
+        @DisplayName("HM sửa phiếu, chọn phòng mình không quản lý (sửa HTML) -> Báo lỗi, giữ phòng cũ")
+        void updateRequisition_shouldReject_whenHiringManagerPicksUnmanagedDepartment() {
+            // Arrange: phiếu ở IT, HM chọn Sales do người khác làm trưởng phòng
+            Department sales = Department.builder().departmentId(2).departmentName("Sales").departmentStatus("Active")
+                    .manager(User.builder().userId(99).build()).build();
+            when(departments.findById(2)).thenReturn(Optional.of(sales));
+            JobRequisition requisition = requisitionWithStatus(70, RequisitionAccess.STATUS_DRAFT);
+            requisition.setDepartment(itDepartment);
+            RequisitionRequest request = draft("Kế toán");
+            request.setDepartmentId(2);
+
+            // Act
+            RequisitionValidationException error = assertThrows(RequisitionValidationException.class,
+                    () -> service.updateRequisition(70, request));
+
+            // Assert
+            assertEquals("Bạn chỉ được chọn phòng ban mình thuộc về hoặc đang quản lý.", error.getErrors().get("departmentId"));
+            assertSame(itDepartment, requisition.getDepartment());
+            verify(requisitions, never()).saveAndFlush(any());
+        }
+
+        @Test
+        @DisplayName("HM sửa phiếu của phòng đã thôi quản lý, giữ nguyên phòng -> Vẫn lưu được")
+        void updateRequisition_shouldKeepSavedDepartment_whenHiringManagerKeepsIt() {
+            // Arrange: phiếu ở Sales (HM không còn quản lý), form gửi lại đúng Sales
+            Department sales = Department.builder().departmentId(2).departmentName("Sales").departmentStatus("Active").build();
+            lenient().when(departments.findById(2)).thenReturn(Optional.of(sales));
+            JobRequisition requisition = requisitionWithStatus(70, RequisitionAccess.STATUS_DRAFT);
+            requisition.setDepartment(sales);
+            RequisitionRequest request = draft("Sales Executive");
+            request.setDepartmentId(2);
 
             // Act
             service.updateRequisition(70, request);
@@ -554,22 +707,21 @@ class RequisitionServiceTests {
         }
 
         @Test
-        @DisplayName("Bản nháp đợt 2 đổi tên vị trí, HM nhập đợt 1 -> Bỏ phiếu gốc, audit ghi 'Đợt tuyển dụng: 2 → 1'")
+        @DisplayName("Đổi tên bản nháp sao chép -> Giữ nguồn và ghi audit tên mới")
         void updateRequisition_shouldResetToRound1_whenCopiedDraftChangesTitle() {
             // Arrange
-            JobRequisition root = JobRequisition.builder().requisitionId(80).title("Java Engineer").recruitmentRound(1).build();
+            JobRequisition root = JobRequisition.builder().requisitionId(80).title("Java Engineer").build();
             JobRequisition requisition = requisitionWithStatus(81, RequisitionAccess.STATUS_DRAFT);
             requisition.setTitle("Java Engineer");
-            requisition.setRecruitmentRound(2);
             requisition.setOriginalRequisition(root);
 
             // Act
             service.updateRequisition(81, draft("Python Engineer"));
 
             // Assert
-            assertNull(requisition.getOriginalRequisition());
-            assertEquals(1, requisition.getRecruitmentRound());
-            assertTrue(savedAudit().getNewValue().contains("Đợt tuyển dụng: 2 → 1"));
+            assertSame(root, requisition.getOriginalRequisition());
+            assertEquals("Python Engineer", requisition.getTitle());
+            assertTrue(savedAudit().getNewValue().contains("Python Engineer"));
         }
 
         @Test
@@ -620,31 +772,44 @@ class RequisitionServiceTests {
     class ReadOperations {
 
         @Test
-        @DisplayName("Sao chép yêu cầu đã duyệt -> Form mới gợi ý đợt tiếp theo, không ghi DB")
+        @DisplayName("Sao chép yêu cầu đã duyệt -> Form mới giữ nguồn, xóa ngày dự kiến, chưa ghi DB")
         void copy_shouldSuggestNextRoundWithoutSaving_whenSourceIsApproved() {
             // Arrange
             JobRequisition source = requisitionWithStatus(80, RequisitionAccess.STATUS_APPROVED);
-            when(requisitions.findMaxRoundInChain(80)).thenReturn(1);
 
             // Act
             RequisitionRequest copied = service.copy(80);
 
             // Assert
             assertEquals(80, copied.getOriginalRequisitionId());
-            assertEquals(2, copied.getRecruitmentRound());
+            assertNull(copied.getExpectedStaffingDate());
+            verify(requisitions, never()).saveAndFlush(any());
+        }
+
+        @ParameterizedTest(name = "phiếu nguồn {0}")
+        @ValueSource(strings = {RequisitionAccess.STATUS_PENDING_DIRECTOR, RequisitionAccess.STATUS_REJECTED,
+                "Closed"})
+        @DisplayName("Sao chép phiếu không phải bản nháp -> Form mới giữ nguồn được chọn")
+        void copy_shouldPrepareNewForm_whenSourceIsNotDraft(String status) {
+            JobRequisition source = requisitionWithStatus(80, status);
+
+            RequisitionRequest copied = service.copy(source.getRequisitionId());
+
+            assertEquals(source.getRequisitionId(), copied.getOriginalRequisitionId());
+            assertEquals(source.getTitle(), copied.getOriginalTitle());
+            assertNull(copied.getExpectedStaffingDate());
             verify(requisitions, never()).saveAndFlush(any());
         }
 
         @Test
-        @DisplayName("Sao chép yêu cầu chưa được duyệt (gõ URL) -> RequisitionStateException, không tính số đợt")
-        void copy_shouldThrowStateException_whenSourceIsNotApproved() {
+        @DisplayName("Sao chép bản nháp -> RequisitionStateException")
+        void copy_shouldThrowStateException_whenSourceIsDraft() {
             // Arrange
-            JobRequisition source = requisitionWithStatus(80, RequisitionAccess.STATUS_PENDING_DIRECTOR);
+            JobRequisition source = requisitionWithStatus(80, RequisitionAccess.STATUS_DRAFT);
             doThrow(new RequisitionStateException()).when(access).requireCopy(manager, source);
 
             // Act + Assert
             assertThrows(RequisitionStateException.class, () -> service.copy(80));
-            verify(requisitions, never()).findMaxRoundInChain(any());
         }
 
         @Test
@@ -764,7 +929,7 @@ class RequisitionServiceTests {
         }
 
         @Test
-        @DisplayName("Ý kiến có xuống dòng \\r\\n -> Đếm mỗi lần xuống dòng là 1 ký tự (khớp bộ đếm trên trình duyệt)")
+        @DisplayName("Ý kiến có xuống dòng CRLF -> Đếm mỗi lần xuống dòng là 1 ký tự")
         void decide_shouldCountLineBreakAsOneChar_whenCommentHasCrLf() {
             // Arrange: 999 chữ + 1 lần xuống dòng = 1000 ký tự theo trình duyệt (1001 nếu đếm cả \r)
             String comment = "x".repeat(500) + "\r\n" + "x".repeat(499);
@@ -772,7 +937,7 @@ class RequisitionServiceTests {
             // Act
             service.decide(50, false, comment);
 
-            // Assert: hợp lệ, ý kiến lưu với \n
+            // Assert: hợp lệ, ý kiến lưu với LF
             assertEquals(RequisitionAccess.STATUS_REJECTED, pending.getApprovalStatus());
             ArgumentCaptor<RequisitionApproval> decision = ArgumentCaptor.forClass(RequisitionApproval.class);
             verify(approvals).save(decision.capture());
@@ -825,10 +990,10 @@ class RequisitionServiceTests {
     class DeleteRequisition {
 
         @Test
-        @DisplayName("Không có tin tuyển dụng, không có đợt sau -> Xóa lịch sử duyệt rồi xóa phiếu, ghi audit DELETE")
+        @DisplayName("Không có tin tuyển dụng hoặc phiếu sao chép -> Xóa lịch sử duyệt rồi xóa phiếu")
         void deleteRequisition_shouldDelete_whenNothingDependsOnIt() {
             // Arrange
-            JobRequisition requisition = requisitionWithStatus(60, RequisitionAccess.STATUS_REJECTED);
+            JobRequisition requisition = requisitionWithStatus(60, RequisitionAccess.STATUS_DRAFT);
             when(requisitions.findApprovalHistory(60)).thenReturn(List.of());
 
             // Act
@@ -845,7 +1010,7 @@ class RequisitionServiceTests {
         @DisplayName("Đã có tin tuyển dụng -> Không xóa, báo lỗi rõ ràng")
         void deleteRequisition_shouldReject_whenPostingExists() {
             // Arrange
-            requisitionWithStatus(60, RequisitionAccess.STATUS_REJECTED);
+            requisitionWithStatus(60, RequisitionAccess.STATUS_DRAFT);
             when(postings.existsByRequisition_RequisitionId(60)).thenReturn(true);
 
             // Act
@@ -858,10 +1023,10 @@ class RequisitionServiceTests {
         }
 
         @Test
-        @DisplayName("Đã có đợt tuyển sau sao chép từ nó -> Không xóa, báo lỗi rõ ràng")
+        @DisplayName("Đã có phiếu sao chép từ nó -> Không xóa, báo lỗi rõ ràng")
         void deleteRequisition_shouldReject_whenLaterRoundExists() {
             // Arrange
-            requisitionWithStatus(60, RequisitionAccess.STATUS_REJECTED);
+            requisitionWithStatus(60, RequisitionAccess.STATUS_DRAFT);
             when(requisitions.existsByOriginalRequisition_RequisitionId(60)).thenReturn(true);
 
             // Act
@@ -869,10 +1034,81 @@ class RequisitionServiceTests {
                     () -> service.deleteRequisition(60));
 
             // Assert
-            assertEquals("Yêu cầu này đã có đợt tuyển sau được sao chép từ nó và không thể xóa.",
+            assertEquals("Yêu cầu này đã được dùng làm nguồn sao chép và không thể xóa.",
                     error.getErrors().get("action"));
             verify(requisitions, never()).delete(any(JobRequisition.class));
             verifyNoInteractions(audit);
+        }
+
+        @Test
+        @DisplayName("Yêu cầu bị từ chối -> Không xóa dù người tạo gửi request trực tiếp")
+        void deleteRequisition_shouldReject_whenStatusIsRejected() {
+            requisitionWithStatus(60, RequisitionAccess.STATUS_REJECTED);
+
+            assertThrows(RequisitionStateException.class, () -> service.deleteRequisition(60));
+
+            verify(requisitions, never()).delete(any(JobRequisition.class));
+            verifyNoInteractions(postings, approvals, audit);
+        }
+    }
+
+    @Nested
+    class CloseRequisition {
+        private JobRequisition approved() {
+            JobRequisition requisition = requisitionWithStatus(95, RequisitionAccess.STATUS_APPROVED);
+            requisition.setNumberOfPositions(2);
+            when(access.canClose(manager, requisition)).thenReturn(true);
+            return requisition;
+        }
+
+        @Test
+        void closeRequisition_shouldRecordClosedAt_whenFullyStaffedAndAllWorkHandled() {
+            JobRequisition requisition = approved();
+            when(postings.countHiredByRequisition(95)).thenReturn(2L);
+
+            service.closeRequisition(95);
+
+            assertEquals(RequisitionAccess.STATUS_CLOSED, requisition.getApprovalStatus());
+            assertEquals(NOW, requisition.getClosedAt());
+            assertEquals(NOW, requisition.getUpdatedAt());
+            verify(requisitions).saveAndFlush(requisition);
+            verify(audit).save(any(AuditLog.class));
+        }
+
+        @Test
+        void closeRequisition_shouldKeepApproved_whenNotFullyStaffed() {
+            JobRequisition requisition = approved();
+            when(postings.countHiredByRequisition(95)).thenReturn(1L);
+
+            assertThrows(RequisitionValidationException.class, () -> service.closeRequisition(95));
+
+            assertEquals(RequisitionAccess.STATUS_APPROVED, requisition.getApprovalStatus());
+            assertNull(requisition.getClosedAt());
+            verify(requisitions, never()).saveAndFlush(any());
+        }
+
+        @Test
+        void closeRequisition_shouldKeepApproved_whenPostingIsOpen() {
+            JobRequisition requisition = approved();
+            when(postings.countHiredByRequisition(95)).thenReturn(2L);
+            when(postings.existsByRequisition_RequisitionIdAndPostingStatusIn(eq(95), any())).thenReturn(true);
+
+            assertThrows(RequisitionValidationException.class, () -> service.closeRequisition(95));
+
+            assertEquals(RequisitionAccess.STATUS_APPROVED, requisition.getApprovalStatus());
+            verify(requisitions, never()).saveAndFlush(any());
+        }
+
+        @Test
+        void closeRequisition_shouldKeepApproved_whenApplicationsRemainActive() {
+            JobRequisition requisition = approved();
+            when(postings.countHiredByRequisition(95)).thenReturn(2L);
+            when(postings.countActiveApplicationsByRequisition(95)).thenReturn(1L);
+
+            assertThrows(RequisitionValidationException.class, () -> service.closeRequisition(95));
+
+            assertEquals(RequisitionAccess.STATUS_APPROVED, requisition.getApprovalStatus());
+            verify(requisitions, never()).saveAndFlush(any());
         }
     }
 }

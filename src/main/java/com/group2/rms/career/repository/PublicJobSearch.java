@@ -2,7 +2,7 @@ package com.group2.rms.career.repository;
 
 import com.group2.rms.core.util.ListFilters;
 import com.group2.rms.jobposting.entity.JobPosting;
-import com.group2.rms.jobposting.service.JobPostingAccess;
+
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
@@ -75,7 +75,7 @@ public final class PublicJobSearch {
             Expression<LocalDateTime> now = cb.localDateTime();
 
             List<Predicate> where = new ArrayList<>();
-            where.add(cb.equal(root.get("postingStatus"), JobPostingAccess.STATUS_PUBLISHED));
+            where.add(cb.equal(root.get("postingStatus"), JobPosting.STATUS_PUBLISHED));
             // Giữ tin cũ có PostingDate ở tương lai ngoài trang công khai cho tới khi dữ liệu được xử lý.
             where.add(cb.or(cb.isNull(root.get("postingDate")),
                     cb.lessThanOrEqualTo(root.<LocalDateTime>get("postingDate"), now)));

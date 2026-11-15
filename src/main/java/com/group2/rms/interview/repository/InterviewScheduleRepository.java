@@ -196,9 +196,12 @@ public interface InterviewScheduleRepository extends JpaRepository<InterviewSche
            "LEFT JOIN FETCH s.createdBy u " +
            "LEFT JOIN FETCH s.interviewPanels p " +
            "LEFT JOIN FETCH p.interviewer i " +
-           "WHERE req.department.departmentId = :departmentId " +
+           "LEFT JOIN req.department d " +
+           "LEFT JOIN d.manager m " +
+           "WHERE d.departmentId = :departmentId OR m.userId = :managerUserId " +
            "ORDER BY s.startTime DESC")
-    List<InterviewSchedule> findAllByDepartmentId(@Param("departmentId") Integer departmentId);
+    List<InterviewSchedule> findAllByDepartmentId(@Param("departmentId") Integer departmentId,
+                                                  @Param("managerUserId") Integer managerUserId);
 
     /**
      * Kiểm tra trùng lịch của Ứng viên (ApplicationId) trong khoảng thời gian [startTime, endTime].

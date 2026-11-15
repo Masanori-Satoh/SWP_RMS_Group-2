@@ -65,8 +65,7 @@
                             <p class="app-lineage apd-lineage">
                                 <span class="app-lineage__label">Nguồn gốc:</span>
                                 <a th:href="@{/requisitions/{id}(id=${detail.requisitionId})}"
-                                    th:text="|Yêu cầu tuyển dụng ${detail.requisitionCode ?: '#' + detail.requisitionId}|">Yêu
-                                    cầu tuyển dụng REQ-007</a>
+                                    th:text="'Yêu cầu tuyển dụng'">Yêu cầu tuyển dụng</a>
                                 <span aria-hidden="true">›</span>
                                 <a th:if="${detail.actions.openJobPosting}"
                                     th:href="@{/internal/job-postings/{id}(id=${detail.jobPostingId})}"

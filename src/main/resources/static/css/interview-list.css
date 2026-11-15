@@ -283,6 +283,13 @@
   min-width: 0;
 }
 
+/* Thẻ được mở từ dashboard (?focus=id) */
+.il-card.is-focused {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+  scroll-margin-top: 96px;
+}
+
 .il-card[hidden] {
   display: none;
 }

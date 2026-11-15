@@ -111,7 +111,10 @@ class InterviewerDashboardServiceTests {
 
         // Assert
         assertEquals("Ứng viên chưa có tên", result.pendingEvaluations().get(1).candidateName());
-        assertEquals(DashboardViews.INTERVIEWS_HREF, result.pendingEvaluations().get(0).href());
+        assertEquals("/interviews/5/result", result.pendingEvaluations().get(0).href());
+        assertEquals("/interviews?period=upcoming", result.kpis().get(0).href());
+        assertEquals("/interviews?status=Completed&evaluation=pending", result.kpis().get(1).href());
+        assertEquals("/interviews?period=all&result=PASSED", result.kpis().get(2).href());
         assertEquals("Đánh giá chưa hoàn thành", result.kpis().get(1).title());
         assertEquals("2", result.kpis().get(1).value());
         assertEquals("Đang chờ đánh giá", result.kpis().get(1).detail());

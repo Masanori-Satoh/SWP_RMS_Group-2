@@ -52,7 +52,6 @@
                 <span class="dash-kpi__delta" th:if="${kpi.delta != null}"
                       th:classappend="|dash-kpi__delta--${kpi.deltaTone}|" th:text="${kpi.delta}">↑ 0%</span>
             </span>
-            <span class="dash-kpi__detail" th:text="${kpi.detail}">Dòng phụ</span>
         </span>
         <span class="dash-kpi__action" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M7 7h10v10"/></svg></span>
     </a>
@@ -68,7 +67,7 @@
 <ul th:fragment="workItems(items)" class="dash-work">
     <li th:each="item : ${items}" class="dash-work__item">
         <div class="dash-work__body">
-            <p class="dash-work__title" th:text="${item.title}">Tiêu đề</p>
+            <p class="dash-work__title"><a th:href="@{${item.titleHref}}" th:text="${item.title}">Tiêu đề</a></p>
             <p class="dash-work__detail" th:if="${item.detail != null}" th:text="${item.detail}">Chi tiết</p>
         </div>
         <span th:if="${item.waitText != null}" class="badge" th:classappend="|badge--${item.waitTone}|">

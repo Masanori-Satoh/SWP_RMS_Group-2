@@ -10,6 +10,7 @@ import com.group2.rms.requisition.repository.JobRequisitionRepository;
 import com.group2.rms.requisition.repository.RequisitionApprovalRepository;
 import com.group2.rms.requisition.service.RequisitionAccess;
 import com.group2.rms.requisition.service.RequisitionListService;
+import com.group2.rms.requisition.service.RequisitionLabels;
 import com.group2.rms.requisition.service.RequisitionService;
 import com.group2.rms.requisition.validator.RequisitionValidator;
 import com.group2.rms.user.entity.Department;
@@ -104,7 +105,7 @@ class RequisitionIntegrationTests {
         /** Các trường NOT NULL của bảng JobRequisition; từng test tự đặt trạng thái / người tạo / phòng ban. */
         private JobRequisition.JobRequisitionBuilder validRequisition() {
                 return JobRequisition.builder()
-                                .recruitmentRound(1)
+
                                 .numberOfPositions(1)
                                 .employmentType("Full-time")
                                 .workModel("On-site")
@@ -114,7 +115,9 @@ class RequisitionIntegrationTests {
 
         private JobRequisition saveRequisition(String title, User creator, Department inDepartment, String status) {
                 return requisitions.saveAndFlush(validRequisition().title(title).hiringManager(creator)
-                                .department(inDepartment).approvalStatus(status).build());
+                                .department(inDepartment).approvalStatus(status)
+                                .expectedStaffingDate(RequisitionAccess.STATUS_DRAFT.equals(status) ? null
+                                                : java.time.LocalDate.now().plusDays(30)).build());
         }
 
         private JobPosting savePosting(JobRequisition requisition, int postingNo, String status) {
@@ -154,7 +157,6 @@ class RequisitionIntegrationTests {
                 assertEquals("Integration Java Dev", saved.getTitle());
                 assertEquals(hiringManager.getUserId(), saved.getHiringManager().getUserId());
                 assertEquals(department.getDepartmentId(), saved.getDepartment().getDepartmentId());
-                assertEquals(String.format("REQ-%04d", id), saved.getRequisitionCode());
         }
 
         // ----- Đọc: danh sách và chi tiết -----
@@ -167,7 +169,8 @@ class RequisitionIntegrationTests {
                 JobRequisition requisition = requisitions.saveAndFlush(validRequisition()
                                 .title("Unicode read regression").hiringManager(hiringManager).department(department)
                                 .approvalStatus(RequisitionAccess.STATUS_DRAFT)
-                                .workLocation("Văn phòng Hà Nội").workModel("Hybrid").probationPeriod("60 ngày").build());
+                                .workLocation("Văn phòng Hà Nội").workModel("Hybrid")
+                                .expectedStaffingDate(java.time.LocalDate.of(2026, 12, 1)).build());
                 Integer id = requisition.getRequisitionId();
                 entityManager.clear(); // Đọc lại từ JDBC, không lấy từ cache của persistence context
 
@@ -177,11 +180,11 @@ class RequisitionIntegrationTests {
                 RequisitionResponse detail = service.getById(id);
 
                 // Assert
-                assertEquals("60 ngày", entityManager.createNativeQuery(
-                                "SELECT ProbationPeriod FROM JobRequisition WHERE RequisitionId = :id")
+                assertNotNull(entityManager.createNativeQuery(
+                                "SELECT ExpectedStaffingDate FROM JobRequisition WHERE RequisitionId = :id")
                                 .setParameter("id", id).getSingleResult());
                 assertEquals("Văn phòng Hà Nội", row.workLocation());
-                assertEquals("60 ngày", detail.probationLabel());
+                assertEquals(java.time.LocalDate.of(2026, 12, 1), detail.expectedStaffingDate());
                 assertEquals("Kết hợp", detail.workModelLabel());
                 mvc.perform(get("/requisitions")).andExpect(status().isOk()).andExpect(view().name("requisitions/list"));
                 mvc.perform(get("/requisitions/{id}", id)).andExpect(status().isOk())
@@ -232,6 +235,40 @@ class RequisitionIntegrationTests {
                 assertEquals("HM Tester", rowB.hiringManagerName());
         }
 
+        @Test
+        @WithMockUser(username = "it_hm", roles = "HIRING_MANAGER")
+        @DisplayName("Lọc đồng thời từ khóa, trạng thái phiếu và trạng thái tin mới nhất")
+        void getListPage_shouldCombineKeywordStatusAndLatestPostingFilter() {
+                JobRequisition matching = saveRequisition("Filter combo matching", hiringManager, department,
+                                RequisitionAccess.STATUS_APPROVED);
+                JobRequisition wrongStatus = saveRequisition("Filter combo draft", hiringManager, department,
+                                RequisitionAccess.STATUS_DRAFT);
+                JobRequisition wrongLatestPosting = saveRequisition("Filter combo closed", hiringManager, department,
+                                RequisitionAccess.STATUS_APPROVED);
+                savePosting(matching, 1, RequisitionLabels.POSTING_CLOSED);
+                savePosting(matching, 2, RequisitionLabels.POSTING_PUBLISHED);
+                savePosting(wrongLatestPosting, 1, RequisitionLabels.POSTING_PUBLISHED);
+                savePosting(wrongLatestPosting, 2, RequisitionLabels.POSTING_CLOSED);
+                entityManager.flush();
+                entityManager.clear();
+
+                var statusOnly = listService.getListPage(new RequisitionSearchRequest(
+                                "Filter combo", List.of(RequisitionAccess.STATUS_APPROVED),
+                                null, null, null, null, null, "newest", 0, 10, null));
+                assertFalse(statusOnly.page().getContent().stream()
+                                .anyMatch(row -> row.requisitionId().equals(wrongStatus.getRequisitionId())));
+                assertEquals(2, statusOnly.page().getContent().size());
+
+                var result = listService.getListPage(new RequisitionSearchRequest(
+                                "Filter combo", List.of(RequisitionAccess.STATUS_APPROVED),
+                                RequisitionLabels.POSTING_PUBLISHED, null, null, null, null,
+                                "newest", 0, 10, null));
+
+                assertTrue(result.errors().isEmpty());
+                assertEquals(List.of(matching.getRequisitionId()), result.page().getContent().stream()
+                                .map(RequisitionResponse::requisitionId).toList());
+        }
+
         // ----- Chuyển trạng thái -----
 
         @Test
@@ -242,10 +279,13 @@ class RequisitionIntegrationTests {
                 RequisitionRequest request = RequisitionRequest.builder()
                                 .action(RequisitionValidator.ACTION_SUBMIT)
                                 .title("DevOps Engineer")
+                                .expectedStaffingDate(java.time.LocalDate.now().plusDays(30))
                                 .numberOfPositions(2)
                                 .employmentType("Full-time")
                                 .workLocation("Hà Nội")
                                 .workModel("On-site")
+                                .minSalary(new BigDecimal("10000000"))
+                                .maxSalary(new BigDecimal("20000000"))
                                 .jobDescription("DevOps responsibilities")
                                 .requirementDetails("DevOps requirements")
                                 .reasonForHiring("Dự án mở rộng cần thêm DevOps")
@@ -314,7 +354,7 @@ class RequisitionIntegrationTests {
 
         @Test
         @WithMockUser(username = "it_hm", roles = "HIRING_MANAGER")
-        @DisplayName("Sao chép yêu cầu đã duyệt -> Trả về form mới cùng tên, gợi ý đợt 2, chưa ghi DB")
+        @DisplayName("Sao chép yêu cầu đã duyệt -> Trả về form mới cùng tên, chưa ghi DB")
         void copy_shouldReturnNewForm_whenSourceIsApproved() {
                 // Arrange
                 JobRequisition original = saveRequisition("Original Requisition", hiringManager, department,
@@ -326,7 +366,7 @@ class RequisitionIntegrationTests {
 
                 // Assert
                 assertEquals("Original Requisition", copy.getTitle());
-                assertEquals(2, copy.getRecruitmentRound());
+                assertNull(copy.getExpectedStaffingDate());
                 assertEquals(countBefore, requisitions.count());
         }
 

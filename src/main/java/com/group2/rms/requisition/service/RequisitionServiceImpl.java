@@ -9,6 +9,7 @@ import com.group2.rms.requisition.dto.RequisitionRequest;
 import com.group2.rms.requisition.dto.RequisitionResponse;
 import com.group2.rms.requisition.entity.JobRequisition;
 import com.group2.rms.requisition.entity.RequisitionApproval;
+import com.group2.rms.requisition.exception.RequisitionStateException;
 import com.group2.rms.requisition.exception.RequisitionValidationException;
 import com.group2.rms.requisition.repository.JobRequisitionRepository;
 import com.group2.rms.requisition.repository.RequisitionApprovalRepository;
@@ -56,8 +57,11 @@ public class RequisitionServiceImpl implements RequisitionService {
         JobPosting latestPosting = postings.findTopByRequisition_RequisitionIdOrderByJobPostingIdDesc(id).orElse(null);
         boolean hasLaterRound = requisitions.existsByOriginalRequisition_RequisitionId(id);
         List<RequisitionApproval> approvalHistory = requisitions.findApprovalHistory(id);
-        return mapper.toDetail(jobRequisition, currentUser, latestPosting, hasLaterRound,
+        RequisitionResponse detail = mapper.toDetail(jobRequisition, currentUser, latestPosting, hasLaterRound,
                 approvalHistory, auditLogger.history(id));
+        boolean readyToClose = access.canClose(currentUser, jobRequisition)
+                && postings.countHiredByRequisition(id) >= jobRequisition.getNumberOfPositions();
+        return detail.toBuilder().closable(readyToClose).build();
     }
 
     @Override
@@ -80,11 +84,10 @@ public class RequisitionServiceImpl implements RequisitionService {
         access.requireCopy(currentUser, jobRequisition);
 
         RequisitionRequest copiedRequest = mapper.toEditForm(jobRequisition);
+        copiedRequest.setExpectedStaffingDate(null);
 
-        JobRequisition root = rootOf(jobRequisition);
-        copiedRequest.setOriginalRequisitionId(root.getRequisitionId());
-        copiedRequest.setOriginalTitle(root.getTitle());
-        copiedRequest.setRecruitmentRound(requisitions.findMaxRoundInChain(root.getRequisitionId()) + 1);
+        copiedRequest.setOriginalRequisitionId(jobRequisition.getRequisitionId());
+        copiedRequest.setOriginalTitle(jobRequisition.getTitle());
         return copiedRequest;
     }
 
@@ -94,28 +97,28 @@ public class RequisitionServiceImpl implements RequisitionService {
         User currentUser = access.actor();
         access.requireCreate(currentUser);
 
-        if (access.isDirector(currentUser)) {
-            request.setDepartmentId(requireActiveDepartment(request.getDepartmentId()));
-        } else {
+        Integer departmentId = request.getDepartmentId();
+        if (departmentId == null && !access.isDirector(currentUser)) {
 
-            // HM tự tạo phòng ban
-            Department department = currentUser.getDepartment();
-            if (department == null || !DEPARTMENT_ACTIVE.equals(department.getDepartmentStatus())) {
-                throw createValidationException("departmentId",
-                        "Tài khoản của bạn chưa được gán phòng ban đang hoạt động. Vui lòng liên hệ quản trị viên.");
+            if (currentUser.getDepartment() == null) {
+                if (RequisitionValidator.isSubmit(request.getAction())) {
+                    throw createValidationException("departmentId",
+                            "Tài khoản của bạn chưa được gán phòng ban đang hoạt động. Vui lòng liên hệ quản trị viên.");
+                }
+            } else {
+                departmentId = currentUser.getDepartment().getDepartmentId();
             }
-            request.setDepartmentId(department.getDepartmentId());
+        }
+        if (departmentId != null || RequisitionValidator.isSubmit(request.getAction())) {
+            request.setDepartmentId(requireDepartmentFor(currentUser, departmentId));
         }
 
         validator.validate(request);
 
-        requireNoOtherDraft(request, null,
-                "Bạn đang có một bản nháp cho vị trí này trong phòng ban. Vui lòng hoàn thiện bản nháp hiện có.");
-
         JobRequisition jobRequisition = new JobRequisition();
         jobRequisition.setHiringManager(currentUser);
         jobRequisition.setCreatedBy(currentUser);
-        assignRecruitmentRound(jobRequisition, request, currentUser);
+        assignCopySource(jobRequisition, request, currentUser);
         applyDataToEntity(jobRequisition, request);
 
         applySavedStatus(jobRequisition, request.getAction(), currentUser);
@@ -123,10 +126,11 @@ public class RequisitionServiceImpl implements RequisitionService {
         // lưu db + audit
         requisitions.saveAndFlush(jobRequisition);
 
-        jobRequisition.setRequisitionCode(RequisitionLabels.requisitionCode(jobRequisition.getRequisitionId()));
 
         boolean directlyApproved = recordDirectApprovalIfNeeded(jobRequisition, currentUser);
-        String description = "Tạo yêu cầu: " + jobRequisition.getTitle() + " · " + jobRequisition.getApprovalStatus();
+        String displayTitle = jobRequisition.getTitle() == null
+                ? RequisitionValidator.PLACEHOLDER_TITLE : jobRequisition.getTitle();
+        String description = "Tạo yêu cầu: " + displayTitle + " · " + jobRequisition.getApprovalStatus();
         if (directlyApproved) {
             description = description + " (Giám đốc phê duyệt trực tiếp)";
         }
@@ -146,22 +150,21 @@ public class RequisitionServiceImpl implements RequisitionService {
         JobRequisition jobRequisition = findRequisitionById(id, true);
         access.requireEdit(currentUser, jobRequisition);
 
-        if (access.isDirector(currentUser)) {
-            request.setDepartmentId(requireActiveDepartment(request.getDepartmentId()));
-        } else {
-            request.setDepartmentId(jobRequisition.getDepartment().getDepartmentId());
+        // Đổi phòng: Giám đốc mọi phòng, HM chỉ trong các phòng mình thuộc về/quản lý.
+        // HM giữ nguyên phòng thì không kiểm lại (có thể đã thôi quản lý phòng đó nhưng vẫn sửa được bản của mình).
+        Integer currentDepartmentId = jobRequisition.getDepartment() == null
+                ? null : jobRequisition.getDepartment().getDepartmentId();
+        Integer departmentId = request.getDepartmentId();
+        if (!access.isDirector(currentUser) && currentDepartmentId != null
+                && (departmentId == null || departmentId.equals(currentDepartmentId))) {
+            request.setDepartmentId(currentDepartmentId);
+        } else if (departmentId != null || RequisitionValidator.isSubmit(request.getAction())) {
+            request.setDepartmentId(requireDepartmentFor(currentUser, departmentId));
         }
 
         validator.validate(request);
-        requireNoOtherDraft(request, id, "Bạn đang có một bản nháp khác cho vị trí này trong phòng ban.");
-
         Map<String, String> before = auditLogger.snapshot(jobRequisition);
         applyDataToEntity(jobRequisition, request);
-
-        JobRequisition original = jobRequisition.getOriginalRequisition();
-        if (original != null && !isSameChain(request, original)) {
-            jobRequisition.setOriginalRequisition(null);
-        }
 
         applySavedStatus(jobRequisition, request.getAction(), currentUser);
 
@@ -185,13 +188,17 @@ public class RequisitionServiceImpl implements RequisitionService {
         JobRequisition jobRequisition = findRequisitionById(id, true);
         access.requireEdit(currentUser, jobRequisition);
 
+        if (!RequisitionAccess.STATUS_DRAFT.equals(jobRequisition.getApprovalStatus())) {
+            throw new RequisitionStateException();
+        }
+
         if (postings.existsByRequisition_RequisitionId(id)) {
             throw createValidationException("action",
                     "Yêu cầu này đã được liên kết với tin đăng tuyển và không thể xóa.");
         }
         if (requisitions.existsByOriginalRequisition_RequisitionId(id)) {
             throw createValidationException("action",
-                    "Yêu cầu này đã có đợt tuyển sau được sao chép từ nó và không thể xóa.");
+                    "Yêu cầu này đã được dùng làm nguồn sao chép và không thể xóa.");
         }
 
         auditLogger.log(jobRequisition, currentUser, RequisitionAuditLogger.ACTION_DELETE, null,
@@ -247,30 +254,42 @@ public class RequisitionServiceImpl implements RequisitionService {
         }
     }
 
+    @Override
+    public void closeRequisition(Integer id) {
+        User currentUser = access.actor();
+        JobRequisition requisition = findRequisitionById(id, true);
+        access.requireView(currentUser, requisition);
+        if (!access.canClose(currentUser, requisition)) {
+            throw new RequisitionStateException();
+        }
+        if (postings.countHiredByRequisition(id) < requisition.getNumberOfPositions()) {
+            throw createValidationException("action", "Yêu cầu chưa tuyển đủ số lượng cần tuyển.");
+        }
+        if (postings.existsByRequisition_RequisitionIdAndPostingStatusIn(id, JobPosting.OPEN_STATUSES)) {
+            throw createValidationException("action", "Vui lòng đóng hoặc xử lý tin tuyển dụng còn mở trước.");
+        }
+        if (postings.countActiveApplicationsByRequisition(id) > 0) {
+            throw createValidationException("action", "Vui lòng xử lý các hồ sơ đang hoạt động trước.");
+        }
+        LocalDateTime now = LocalDateTime.now(clock);
+        requisition.setApprovalStatus(RequisitionAccess.STATUS_CLOSED);
+        requisition.setClosedAt(now);
+        requisition.setUpdatedAt(now);
+        requisitions.saveAndFlush(requisition);
+        auditLogger.log(requisition, currentUser, RequisitionAuditLogger.ACTION_UPDATE,
+                "Status: " + RequisitionAccess.STATUS_APPROVED,
+                "Status: " + RequisitionAccess.STATUS_APPROVED + " → " + RequisitionAccess.STATUS_CLOSED);
+    }
+
     // Requires the source requisition to be copyable.
     private void requireCopyableSource(JobRequisition source) {
-        if (!RequisitionAccess.STATUS_APPROVED.equals(source.getApprovalStatus())) {
-            throw createValidationException("action", "Chỉ có thể sao chép yêu cầu đã được phê duyệt.");
+        if (RequisitionAccess.STATUS_DRAFT.equals(source.getApprovalStatus())) {
+            throw createValidationException("action", "Không thể sao chép yêu cầu đang là bản nháp.");
         }
     }
 
-    // Requires that no matching draft exists.
-    private void requireNoOtherDraft(RequisitionRequest request, Integer excludeId, String message) {
-        if (RequisitionValidator.isSubmit(request.getAction())) {
-            return;
-        }
-        if (request.getDepartmentId() == null || request.getTitle() == null || request.getTitle().isBlank()) {
-            return;
-        }
-        boolean hasDraft = requisitions.existsDraftByTitleAndDepartment(
-                request.getTitle().trim(), request.getDepartmentId(), excludeId);
-        if (hasDraft) {
-            throw createValidationException("title", message);
-        }
-    }
-
-    // Assigns the requisition to a recruitment round.
-    private void assignRecruitmentRound(JobRequisition jobRequisition, RequisitionRequest request, User currentUser) {
+    // Keeps the root requisition as copy provenance.
+    private void assignCopySource(JobRequisition jobRequisition, RequisitionRequest request, User currentUser) {
         if (request.getOriginalRequisitionId() == null) {
             return;
         }
@@ -279,9 +298,6 @@ public class RequisitionServiceImpl implements RequisitionService {
                         "Yêu cầu nguồn để sao chép không tồn tại."));
         access.requireView(currentUser, source);
         requireCopyableSource(source);
-        if (!isSameChain(request, rootOf(source))) {
-            return;
-        }
         jobRequisition.setOriginalRequisition(rootOf(source));
     }
 
@@ -293,26 +309,17 @@ public class RequisitionServiceImpl implements RequisitionService {
         return jobRequisition;
     }
 
-    // Checks whether the request belongs to the same requisition chain.
-    private boolean isSameChain(RequisitionRequest request, JobRequisition root) {
-        Integer rootDepartmentId = root.getDepartment() == null ? null : root.getDepartment().getDepartmentId();
-        return Objects.equals(request.getDepartmentId(), rootDepartmentId)
-                && isSameTitle(request.getTitle(), root.getTitle());
-    }
-
-    // Checks whether two titles match.
-    private boolean isSameTitle(String first, String second) {
-        return first != null && second != null && first.trim().equalsIgnoreCase(second.trim());
-    }
-
-    // Requires an active department.
-    private Integer requireActiveDepartment(Integer departmentId) {
+    // Requires an active department the user may create for: Director any, HM own or managed departments.
+    private Integer requireDepartmentFor(User user, Integer departmentId) {
         Department department = null;
         if (departmentId != null) {
             department = departments.findById(departmentId).orElse(null);
         }
         if (department == null || !DEPARTMENT_ACTIVE.equals(department.getDepartmentStatus())) {
             throw createValidationException("departmentId", "Vui lòng chọn phòng ban đang hoạt động.");
+        }
+        if (!access.canManageDepartment(user, department.getDepartmentId(), department.getManager())) {
+            throw createValidationException("departmentId", "Bạn chỉ được chọn phòng ban mình thuộc về hoặc đang quản lý.");
         }
         return department.getDepartmentId();
     }
@@ -351,16 +358,14 @@ public class RequisitionServiceImpl implements RequisitionService {
     // Copies request data to the requisition entity.
     private void applyDataToEntity(JobRequisition jobRequisition, RequisitionRequest request) {
         jobRequisition.setTitle(request.getTitle());
-        jobRequisition.setRecruitmentRound(request.getRecruitmentRound());
+        jobRequisition.setExpectedStaffingDate(request.getExpectedStaffingDate());
         jobRequisition.setDepartment(findDepartment(request.getDepartmentId()));
         jobRequisition.setNumberOfPositions(request.getNumberOfPositions());
         jobRequisition.setEmploymentType(request.getEmploymentType());
         jobRequisition.setMinSalary(request.getMinSalary());
         jobRequisition.setMaxSalary(request.getMaxSalary());
-        jobRequisition.setGender(request.getGender());
         jobRequisition.setWorkLocation(request.getWorkLocation());
         jobRequisition.setWorkModel(request.getWorkModel());
-        jobRequisition.setProbationPeriod(request.getProbationPeriod());
         jobRequisition.setReasonForHiring(request.getReasonForHiring());
         jobRequisition.setJobDescription(Objects.requireNonNullElse(request.getJobDescription(), ""));
         jobRequisition.setRequirementDetails(Objects.requireNonNullElse(request.getRequirementDetails(), ""));

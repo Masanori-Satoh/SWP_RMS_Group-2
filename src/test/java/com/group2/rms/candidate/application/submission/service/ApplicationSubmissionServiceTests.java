@@ -194,12 +194,12 @@ class ApplicationSubmissionServiceTests {
     }
 
     @Test
-    @DisplayName("Đã nộp vào một tin cùng đợt (kể cả tin Đăng lại) -> Báo lỗi, không lưu file, không tạo đơn")
+    @DisplayName("Đã nộp vào chính tin này -> Báo lỗi, không lưu file, không tạo đơn")
     void apply_shouldReject_whenCandidateAppliedInSameRequisition() {
         // Arrange
         givenCandidate();
         givenJob(job("Published", null));
-        when(applications.existsActiveByCandidateInSameRequisition(CANDIDATE_ID, JOB_ID)).thenReturn(true);
+        when(applications.existsActiveByCandidateAndJobPosting(CANDIDATE_ID, JOB_ID)).thenReturn(true);
 
         // Act
         ApplicationSubmissionException e = assertThrows(ApplicationSubmissionException.class,
@@ -239,11 +239,11 @@ class ApplicationSubmissionServiceTests {
     }
 
     @Test
-    @DisplayName("Đã nộp vào một tin cùng đợt -> Trang tin hiện đã ứng tuyển")
+    @DisplayName("Đã nộp vào chính tin này -> Trang tin hiện đã ứng tuyển")
     void hasApplied_shouldBeTrue_whenCandidateAppliedInSameRequisition() {
         // Arrange
         givenCandidate();
-        when(applications.existsActiveByCandidateInSameRequisition(CANDIDATE_ID, JOB_ID)).thenReturn(true);
+        when(applications.existsActiveByCandidateAndJobPosting(CANDIDATE_ID, JOB_ID)).thenReturn(true);
 
         // Act + Assert
         assertTrue(service.hasApplied(USERNAME, JOB_ID));

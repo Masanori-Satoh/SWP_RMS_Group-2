@@ -171,7 +171,7 @@ assertSame(itDepartment, saved.getDepartment());
 
 | Hàm | Trường hợp |
 |---|---|
-| `createRequisition` | ✅ nháp đủ trường; ✅ nháp tối thiểu sinh mã `REQ-0101`; ✅ bỏ dòng tiêu chí chỉ có khoảng trắng; ✅ chặn `criteriaId` giả; ✅ trùng tên bản nháp cùng phòng ban; ✅ không có phòng ban; ✅ phòng ban ngừng hoạt động; ✅ bỏ qua `departmentId` từ form; ✅ gửi duyệt có `SubmittedAt` = giờ Clock; ✅ Giám đốc gửi → Approved; ✅ không có quyền tạo |
+| `createRequisition` | ✅ nháp đủ trường; ✅ nháp tối thiểu sinh mã `REQ-0101`; ✅ bỏ dòng tiêu chí chỉ có khoảng trắng; ✅ chặn `criteriaId` giả; ✅ cho phép bản nháp trùng tên cùng phòng ban; ✅ không có phòng ban; ✅ phòng ban ngừng hoạt động; ✅ bỏ qua `departmentId` từ form; ✅ gửi duyệt có `SubmittedAt` = giờ Clock; ✅ Giám đốc gửi → Approved; ✅ không có quyền tạo |
 | `createRequisition` (sao chép) | ✅ giữ tên → đợt max + 1; ✅ đổi tên → đợt 1; ✅ nguồn Draft / Pending bị chặn; ✅ nguồn không tồn tại |
 | `updateRequisition` | ✅ giữ phòng ban cũ; ✅ Giám đốc phê duyệt trực tiếp; ✅ đổi tên bản đợt 2 → đợt 1; ✅ không đổi gì thì không lưu / không audit; ✅ `criteriaId` của yêu cầu khác; ✅ không có quyền sửa; ✅ id không tồn tại |
 | `copy`, `getById` | ✅ bỏ `criteriaId`, gợi ý đợt sau; ✅ nguồn chưa xong vòng duyệt; ✅ id không tồn tại; ✅ không có quyền xem |
