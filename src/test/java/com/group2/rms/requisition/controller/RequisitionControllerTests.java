@@ -82,6 +82,16 @@ class RequisitionControllerTests {
 
         private User hiringManager;
 
+        @Test
+        @WithMockUser(username = "hm", roles = "HIRING_MANAGER")
+        void close_shouldRedirectToDetail_whenConfirmed() throws Exception {
+                mvc.perform(post("/requisitions/95/close").with(csrf()))
+                                .andExpect(status().is3xxRedirection())
+                                .andExpect(redirectedUrl("/requisitions/95"))
+                                .andExpect(flash().attribute("successMessage", "Đã đóng yêu cầu tuyển dụng."));
+                verify(service).closeRequisition(95);
+        }
+
         @BeforeEach
         void setUp() {
                 Department department = Department.builder().departmentId(1).departmentName("IT").build();
@@ -220,7 +230,7 @@ class RequisitionControllerTests {
         @DisplayName("GET /requisitions/{id} -> View chi tiết với model req, đọc được trường của record")
         void detail_shouldRenderDetailView_whenRequisitionExists() throws Exception {
                 // Arrange
-                RequisitionResponse detail = RequisitionResponse.builder().requisitionId(1).requisitionCode("REQ-0001")
+                RequisitionResponse detail = RequisitionResponse.builder().requisitionId(1)
                                 .title("Backend Engineer").approvalStatus(RequisitionAccess.STATUS_DRAFT)
                                 .approvals(List.of()).activityLog(List.of()).build();
                 when(service.getById(1)).thenReturn(detail);
@@ -667,8 +677,8 @@ class RequisitionControllerTests {
 
         @Test
         @WithMockUser(username = "hm", roles = "HIRING_MANAGER")
-        @DisplayName("GET /requisitions/copy/{id} của yêu cầu chưa duyệt -> Về chi tiết, flash 'không có quyền'")
-        void copy_shouldRedirectToDetailWithError_whenSourceIsNotApproved() throws Exception {
+        @DisplayName("GET /requisitions/copy/{id} của bản nháp -> Về chi tiết, flash 'không có quyền'")
+        void copy_shouldRedirectToDetailWithError_whenSourceIsDraft() throws Exception {
                 // Arrange
                 when(service.copy(2796)).thenThrow(new RequisitionStateException());
 

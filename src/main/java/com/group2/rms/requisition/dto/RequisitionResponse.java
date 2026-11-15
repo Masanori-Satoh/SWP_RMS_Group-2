@@ -19,6 +19,7 @@ public record RequisitionResponse(
                 boolean editable,
                 boolean deletable,
                 boolean decidable,
+                boolean closable,
                 boolean incomplete,
                 String rejectionReason,
                 String departmentName,
@@ -27,7 +28,6 @@ public record RequisitionResponse(
                 String approvalStatus,
                 LocalDateTime createdAt,
                 LocalDate expectedStaffingDate,
-                String requisitionCode,
                 String postingStatus,
                 Integer jobPostingId,
 
@@ -46,6 +46,7 @@ public record RequisitionResponse(
 
                 // ----- Chỉ có ở màn Chi tiết -----
                 LocalDateTime submittedAt, // JobRequisition.SubmittedAt: lúc gửi duyệt gần nhất
+                LocalDateTime closedAt,
                 Long waitingDays, // số ngày đã chờ Giám đốc duyệt (chỉ khi Pending_Director)
                 String salaryLabel, // "20 – 30 triệu VND/tháng" hoặc "Thỏa thuận"
                 String workModelLabel,

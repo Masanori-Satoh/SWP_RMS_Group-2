@@ -31,7 +31,6 @@ public class JobPostingRequest {
     private Integer requisitionId;
 
     // ----- Thông tin yêu cầu nguồn (chỉ hiển thị, service điền từ DB; server không dùng giá trị gửi lên) -----
-    private String requisitionCode;
     private String requisitionTitle;
     private String departmentName;
     private Integer numberOfPositions;

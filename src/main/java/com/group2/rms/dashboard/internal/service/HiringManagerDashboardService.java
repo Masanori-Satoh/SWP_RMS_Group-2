@@ -153,8 +153,7 @@ public class HiringManagerDashboardService {
         if (row.hired() >= needed) {
             pipelineText = "Đã tuyển đủ, chờ đóng yêu cầu";
         }
-        return new HiringProgressItem(RequisitionLabels.requisitionCode(row.requisitionId(), row.requisitionCode()),
-                row.title(), row.hired(), needed, pipelineText, progressHref(row));
+        return new HiringProgressItem(row.title(), row.hired(), needed, pipelineText, progressHref(row));
     }
 
     // Đã có tin thì mở chi tiết tin tuyển dụng; HR chưa đăng tin thì mở chi tiết yêu cầu

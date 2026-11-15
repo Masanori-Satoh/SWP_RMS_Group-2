@@ -14,7 +14,6 @@ public record InternalJobPostingDetailResponse(
         Integer jobPostingId,
         String postingTitle,
         Integer requisitionId,
-        String requisitionCode,
         String requisitionTitle,
         String departmentName,
         Integer numberOfPositions,

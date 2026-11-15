@@ -22,7 +22,7 @@
                     <div class="dash-work__body">
                         <p class="dash-work__title" th:text="${requisition.title}">Vị trí</p>
                         <p class="dash-work__detail">
-                            <span th:text="|${requisition.code} · ${requisition.departmentName} · ${requisition.positions} người|">REQ-0001 · Phòng ban · 1 người</span>
+                            <span th:text="|${requisition.departmentName} · ${requisition.positions} người|">Phòng ban · 1 người</span>
                         </p>
                     </div>
                     <span class="badge" th:classappend="|badge--${requisition.waitTone}|">

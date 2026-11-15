@@ -241,7 +241,7 @@ public class RequisitionController {
     }
 
     @PostMapping("/{id}/decision")
-    public String decide(@PathVariable Integer id, @RequestParam String decision,
+    public String decide(@PathVariable Integer id, @RequestParam(defaultValue = "") String decision,
             @RequestParam(defaultValue = "") String comment, RedirectAttributes flash, HttpServletRequest request) {
         boolean isApprove = DECISION_APPROVE.equals(decision);
         boolean isReject = DECISION_REJECT.equals(decision);
@@ -262,6 +262,19 @@ public class RequisitionController {
         } catch (RequisitionValidationException e) {
             flash.addFlashAttribute("failureMessage", e.getMessage());
             flash.addFlashAttribute("decisionComment", comment);
+        }
+        return "redirect:/requisitions/" + id;
+    }
+
+    @PostMapping("/{id}/close")
+    public String close(@PathVariable Integer id, RedirectAttributes flash, HttpServletRequest request) {
+        try {
+            service.closeRequisition(id);
+            flash.addFlashAttribute("successMessage", "Đã đóng yêu cầu tuyển dụng.");
+        } catch (RequisitionStateException e) {
+            return backToPreviousPage(id, e, flash, request);
+        } catch (RequisitionValidationException e) {
+            flash.addFlashAttribute("failureMessage", e.getMessage());
         }
         return "redirect:/requisitions/" + id;
     }

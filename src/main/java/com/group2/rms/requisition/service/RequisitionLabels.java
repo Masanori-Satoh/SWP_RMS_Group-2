@@ -18,24 +18,7 @@ public final class RequisitionLabels {
     public static final String POSTING_CLOSED = "Closed";
 
 
-    private static final String REQUISITION_CODE_FORMAT = "REQ-%04d";
-
     private RequisitionLabels() {
-    }
-
-
-    // Returns the display code for the requisition.
-    public static String requisitionCode(Integer requisitionId) {
-        return String.format(REQUISITION_CODE_FORMAT, requisitionId);
-    }
-
-
-    // Returns the display code for the requisition.
-    public static String requisitionCode(Integer requisitionId, String savedCode) {
-        if (savedCode == null || savedCode.isBlank()) {
-            return requisitionCode(requisitionId);
-        }
-        return savedCode;
     }
 
 
@@ -52,6 +35,9 @@ public final class RequisitionLabels {
         }
         if (RequisitionAccess.STATUS_REJECTED.equals(status)) {
             return "Từ chối";
+        }
+        if (RequisitionAccess.STATUS_CLOSED.equals(status)) {
+            return "Đã đóng";
         }
         return status;
     }

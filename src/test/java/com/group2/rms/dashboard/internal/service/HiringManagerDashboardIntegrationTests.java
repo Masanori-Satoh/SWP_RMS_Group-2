@@ -92,7 +92,9 @@ class HiringManagerDashboardIntegrationTests {
     private JobRequisition saveRequisition(String title, String status, LocalDateTime submittedAt) {
         return requisitions.saveAndFlush(JobRequisition.builder()
                 .title(title).hiringManager(hiringManager).department(department).approvalStatus(status)
-                .submittedAt(submittedAt).numberOfPositions(2).employmentType("Full-time")
+                .submittedAt(submittedAt)
+                .expectedStaffingDate(RequisitionAccess.STATUS_DRAFT.equals(status) ? null : now.toLocalDate().plusDays(30))
+                .numberOfPositions(2).employmentType("Full-time")
                 .workModel("On-site").jobDescription("Mô tả kiểm thử")
                 .requirementDetails("Yêu cầu kiểm thử").build());
     }

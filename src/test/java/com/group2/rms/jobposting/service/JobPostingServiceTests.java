@@ -102,7 +102,7 @@ class JobPostingServiceTests {
                 auditLogger, notificationService, talentPoolService, CLOCK);
 
         hr = User.builder().userId(1).fullName("HR").build();
-        requisition = JobRequisition.builder().requisitionId(101).requisitionCode("REQ-0101").title("Key Account Manager")
+        requisition = JobRequisition.builder().requisitionId(101).title("Key Account Manager")
                 .approvalStatus(RequisitionAccess.STATUS_APPROVED)
                 .department(Department.builder().departmentId(2).departmentName("Sales").build())
                 .minSalary(new BigDecimal("20000000")).maxSalary(new BigDecimal("30000000"))
@@ -646,7 +646,7 @@ class JobPostingServiceTests {
         @Test
         @DisplayName("Ô 'Đổi yêu cầu': số lần đã đăng tra gộp 1 câu (không N+1), nhãn '(đã đăng 2 lần)'")
         void requisitionChoices_shouldBatchPostingCounts() {
-            JobRequisition other = JobRequisition.builder().requisitionId(102).requisitionCode("REQ-0102").title("Tester").build();
+            JobRequisition other = JobRequisition.builder().requisitionId(102).title("Tester").build();
             when(postings.findRequisitionIdsWithPostingStatusIn(JobPostingAccess.OPEN_STATUSES)).thenReturn(Set.of());
             when(requisitions.findWithDepartmentByApprovalStatusOrderByCreatedAtDesc(RequisitionAccess.STATUS_APPROVED))
                     .thenReturn(List.of(requisition, other));
@@ -654,8 +654,8 @@ class JobPostingServiceTests {
 
             List<FilterOption> choices = service.requisitionChoices(hr);
 
-            assertEquals("Key Account Manager · REQ-0101 (đã đăng 2 lần)", choices.get(0).label());
-            assertEquals("Tester · REQ-0102", choices.get(1).label());
+            assertEquals("Key Account Manager (đã đăng 2 lần)", choices.get(0).label());
+            assertEquals("Tester", choices.get(1).label());
             verify(postings, times(1)).findMaxPostingNoByRequisitionIds(anyCollection());
             verify(postings, never()).findMaxPostingNo(anyInt());
         }

@@ -105,7 +105,7 @@ class HrDashboardServiceTests {
         application(2, ApplicationStage.SCREENING, "Trưởng bộ phận", 9);
         application(3, ApplicationStage.INTERVIEW, HrDashboardService.HR_OWNER, 5);
         when(lists.requisitionsAwaitingPosting()).thenReturn(List.of(
-                new AwaitingPostingRow(40, "REQ-0040", "Kế toán", NOW.minusDays(4))));
+                new AwaitingPostingRow(40, "Kế toán", NOW.minusDays(4))));
 
         // Act
         List<DashboardWorkItem> work = build().work();

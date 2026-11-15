@@ -80,7 +80,7 @@ class JobPostingListServiceTests {
         service = new JobPostingListService(postings, departments, access, mapper, CLOCK);
 
         Department engineering = Department.builder().departmentId(1).departmentName("Engineering").build();
-        requisition = JobRequisition.builder().requisitionId(5).requisitionCode("REQ-0005").title("Java Dev")
+        requisition = JobRequisition.builder().requisitionId(5).title("Java Dev")
                 .department(engineering).employmentType("Full-time").build();
 
         lenient().when(postings.findAll(any(Specification.class), any(Pageable.class)))

@@ -447,7 +447,7 @@ class ApplicationPipelineWebTests {
                 .andExpect(model().attribute("activeMenu", "applications"))
                 .andExpect(model().attribute("viewerRole", "HR"))
                 .andExpect(content().string(containsString("href=\"/requisitions/7\"")))
-                .andExpect(content().string(containsString("Yêu cầu tuyển dụng REQ-007")))
+                .andExpect(content().string(containsString("Yêu cầu tuyển dụng")))
                 .andExpect(content().string(containsString("href=\"/internal/job-postings/12\"")))
                 .andExpect(content().string(containsString("src=\"/applications/298/cv#view=FitH&amp;navpanes=0\"")))
                 .andExpect(content().string(not(containsString("/100<"))))
@@ -1139,7 +1139,7 @@ class ApplicationPipelineWebTests {
         return new ApplicationDetailResponse(298, 15, false, "An Võ", "an.vo@example.com", "0901 234 567", linkedIn, null,
                 personalFacts ? java.time.LocalDate.of(1995, 8, 17) : null, personalFacts ? "Nữ" : null,
                 personalFacts ? "Số 88 Láng Hạ, Đống Đa, Hà Nội" : "  ",
-                7, "REQ-007", 12, "Digital Marketing Executive", "Sales & Marketing", SUBMITTED,
+                7, 12, "Digital Marketing Executive", "Sales & Marketing", SUBMITTED,
                 status, ApplicationStatusLabels.label(status), ApplicationStatusLabels.badge(status),
                 List.of(new TimelineItem(SUBMITTED.plusDays(1), "HR: Đạt", "Lan HR", "Hợp vị trí", "success"),
                         new TimelineItem(SUBMITTED, "Nộp hồ sơ", "An Võ", null, "neutral")),

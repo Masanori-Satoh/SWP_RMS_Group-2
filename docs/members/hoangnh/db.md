@@ -241,8 +241,7 @@ CREATE TABLE JobRequisition (
             N'Pending_Director',
             N'Approved', 
             N'Rejected',
-            N'Closed',
-            N'Cancelled'
+            N'Closed'
         )),
 
     CONSTRAINT CK_JobRequisition_Salary_Range
@@ -767,7 +766,7 @@ GO
 | | `OriginalRequisitionId` | `INT NULL, FK -> JobRequisition(RequisitionId)` | Liên kết về phiếu yêu cầu đợt 1 (gốc) khi mở đợt tuyển tiếp theo |
 | | `HiringType` | `NVARCHAR(20) NULL, CHECK (New/Replacement)` | Loại nhu cầu: Tuyển mới (`New`) hoặc Tuyển thay thế (`Replacement`) |
 | | `SubmittedAt` | `DATETIME2 NULL` | Thời điểm nộp đơn lên Giám đốc phê duyệt |
-| | `ClosedAt` | `DATETIME2 NULL` | Thời điểm kết thúc/đóng đợt tuyển dụng |
+| | `ClosedAt` | `DATETIME2 NULL` | Thời điểm xác nhận đóng yêu cầu sau khi tuyển đủ và xử lý tin, hồ sơ còn hoạt động |
 | | `CK_JobRequisition_RoundOrigin` | Ràng buộc kiểm tra logic đợt tuyển | Round = 1 thì OriginalRequisitionId = NULL; Round > 1 thì bắt buộc có OriginalRequisitionId |
 | | `UX_JobRequisition_Original_Round` | `UNIQUE FILTERED INDEX` | Chống tạo trùng lặp số đợt tuyển cho cùng một phiếu gốc |
 | **`JobPosting`** | `PostingNo` | `INT NOT NULL, DEFAULT 1` | Đánh số thứ tự lần đăng tin của cùng một Requisition |

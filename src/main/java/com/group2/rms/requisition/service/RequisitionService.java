@@ -25,4 +25,7 @@ public interface RequisitionService {
     // Processes the approval decision.
     void decide(Integer id, boolean approved, String comment);
 
+    // Confirms that a fully staffed requisition is complete.
+    void closeRequisition(Integer id);
+
 }

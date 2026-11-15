@@ -155,7 +155,7 @@ class JobPostingControllerTests {
         LocalDateTime now = LocalDateTime.of(2026, 10, 18, 10, 0);
         return InternalJobPostingDetailResponse.builder()
                 .jobPostingId(30).postingTitle("Product Owner (SaaS)").postingNo(2).requisitionId(16)
-                .requisitionCode("REQ-0016").requisitionTitle("Product Owner").departmentName("Product")
+                .requisitionTitle("Product Owner").departmentName("Product")
                 .employmentType("Toàn thời gian").workModelLabel("Kết hợp").numberOfPositions(1)
                 .workLocation("Tầng 8, RMS Tower").salaryDisplay("35 – 45 triệu VND/tháng").numberOfPositionsDisplay(1)
                 .jobDescription("Mô tả").jobRequirements("Yêu cầu").benefits("- Lương tháng 13")

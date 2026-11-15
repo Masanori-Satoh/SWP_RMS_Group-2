@@ -57,8 +57,11 @@ public class RequisitionServiceImpl implements RequisitionService {
         JobPosting latestPosting = postings.findTopByRequisition_RequisitionIdOrderByJobPostingIdDesc(id).orElse(null);
         boolean hasLaterRound = requisitions.existsByOriginalRequisition_RequisitionId(id);
         List<RequisitionApproval> approvalHistory = requisitions.findApprovalHistory(id);
-        return mapper.toDetail(jobRequisition, currentUser, latestPosting, hasLaterRound,
+        RequisitionResponse detail = mapper.toDetail(jobRequisition, currentUser, latestPosting, hasLaterRound,
                 approvalHistory, auditLogger.history(id));
+        boolean readyToClose = access.canClose(currentUser, jobRequisition)
+                && postings.countHiredByRequisition(id) >= jobRequisition.getNumberOfPositions();
+        return detail.toBuilder().closable(readyToClose).build();
     }
 
     @Override
@@ -83,9 +86,8 @@ public class RequisitionServiceImpl implements RequisitionService {
         RequisitionRequest copiedRequest = mapper.toEditForm(jobRequisition);
         copiedRequest.setExpectedStaffingDate(null);
 
-        JobRequisition root = rootOf(jobRequisition);
-        copiedRequest.setOriginalRequisitionId(root.getRequisitionId());
-        copiedRequest.setOriginalTitle(root.getTitle());
+        copiedRequest.setOriginalRequisitionId(jobRequisition.getRequisitionId());
+        copiedRequest.setOriginalTitle(jobRequisition.getTitle());
         return copiedRequest;
     }
 
@@ -122,7 +124,6 @@ public class RequisitionServiceImpl implements RequisitionService {
         // lưu db + audit
         requisitions.saveAndFlush(jobRequisition);
 
-        jobRequisition.setRequisitionCode(RequisitionLabels.requisitionCode(jobRequisition.getRequisitionId()));
 
         boolean directlyApproved = recordDirectApprovalIfNeeded(jobRequisition, currentUser);
         String description = "Tạo yêu cầu: " + jobRequisition.getTitle() + " · " + jobRequisition.getApprovalStatus();
@@ -249,10 +250,37 @@ public class RequisitionServiceImpl implements RequisitionService {
         }
     }
 
+    @Override
+    public void closeRequisition(Integer id) {
+        User currentUser = access.actor();
+        JobRequisition requisition = findRequisitionById(id, true);
+        access.requireView(currentUser, requisition);
+        if (!access.canClose(currentUser, requisition)) {
+            throw new RequisitionStateException();
+        }
+        if (postings.countHiredByRequisition(id) < requisition.getNumberOfPositions()) {
+            throw createValidationException("action", "Yêu cầu chưa tuyển đủ số lượng cần tuyển.");
+        }
+        if (postings.existsByRequisition_RequisitionIdAndPostingStatusIn(id, JobPosting.OPEN_STATUSES)) {
+            throw createValidationException("action", "Vui lòng đóng hoặc xử lý tin tuyển dụng còn mở trước.");
+        }
+        if (postings.countActiveApplicationsByRequisition(id) > 0) {
+            throw createValidationException("action", "Vui lòng xử lý các hồ sơ đang hoạt động trước.");
+        }
+        LocalDateTime now = LocalDateTime.now(clock);
+        requisition.setApprovalStatus(RequisitionAccess.STATUS_CLOSED);
+        requisition.setClosedAt(now);
+        requisition.setUpdatedAt(now);
+        requisitions.saveAndFlush(requisition);
+        auditLogger.log(requisition, currentUser, RequisitionAuditLogger.ACTION_UPDATE,
+                "Status: " + RequisitionAccess.STATUS_APPROVED,
+                "Status: " + RequisitionAccess.STATUS_APPROVED + " → " + RequisitionAccess.STATUS_CLOSED);
+    }
+
     // Requires the source requisition to be copyable.
     private void requireCopyableSource(JobRequisition source) {
-        if (!RequisitionAccess.STATUS_APPROVED.equals(source.getApprovalStatus())) {
-            throw createValidationException("action", "Chỉ có thể sao chép yêu cầu đã được phê duyệt.");
+        if (RequisitionAccess.STATUS_DRAFT.equals(source.getApprovalStatus())) {
+            throw createValidationException("action", "Không thể sao chép yêu cầu đang là bản nháp.");
         }
     }
 

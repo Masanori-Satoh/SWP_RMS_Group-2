@@ -61,7 +61,7 @@ class DirectorDashboardServiceTests {
     }
 
     private PendingRequisitionRow requisition(int id, Integer day, int waitedDays) {
-        return new PendingRequisitionRow(id, null, "Vị trí " + id, "Kỹ thuật", "Hoài Nam", 2, java.time.LocalDate.of(2026, 12, day),
+        return new PendingRequisitionRow(id, "Vị trí " + id, "Kỹ thuật", "Hoài Nam", 2, java.time.LocalDate.of(2026, 12, day),
                 NOW.minusDays(waitedDays));
     }
 
@@ -77,7 +77,7 @@ class DirectorDashboardServiceTests {
         List<PendingRequisitionItem> items = service.build(director()).pendingRequisitions();
 
         // Assert
-        assertEquals("REQ-0012", items.get(0).code());
+        assertEquals("Vị trí 12", items.get(0).title());
         assertEquals("Ngày dự kiến nhận việc: 02/12/2026", items.get(0).staffingDateText());
         assertEquals("danger", items.get(0).waitTone());
         assertEquals("Ngày dự kiến nhận việc: 01/12/2026", items.get(1).staffingDateText());

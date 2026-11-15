@@ -680,7 +680,6 @@ class NotificationServiceImplTests {
     @Test
     @DisplayName("notifyRequisitionPendingDirector: Gửi thông báo REQUISITION_PENDING_DIRECTOR tới các Giám đốc đang hoạt động")
     void notifyRequisitionPendingDirector_success() {
-        requisition.setRequisitionCode("REQ-0101");
         requisition.setSubmittedAt(LocalDateTime.of(2026, 10, 19, 10, 0));
         com.group2.rms.user.entity.Department dept = com.group2.rms.user.entity.Department.builder()
                 .departmentId(1).departmentName("Phòng Công Nghệ").build();
@@ -705,7 +704,7 @@ class NotificationServiceImplTests {
         assertEquals("101", savedList.get(0).getReferenceId());
         assertTrue(savedList.get(0).getTitle().contains("Senior Java Engineer"));
         assertTrue(savedList.get(0).getContent().contains("Hiring Manager A"));
-        assertTrue(savedList.get(0).getContent().contains("REQ-0101"));
+        assertFalse(savedList.get(0).getContent().contains("Mã:"));
         assertTrue(savedList.get(0).getContent().contains("Phòng Công Nghệ"));
         assertTrue(savedList.get(0).getEventId().startsWith("REQ_PENDING_DIR_101_20_"));
         assertTrue(savedList.get(1).getEventId().startsWith("REQ_PENDING_DIR_101_21_"));

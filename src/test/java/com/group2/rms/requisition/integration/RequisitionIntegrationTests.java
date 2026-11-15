@@ -115,7 +115,9 @@ class RequisitionIntegrationTests {
 
         private JobRequisition saveRequisition(String title, User creator, Department inDepartment, String status) {
                 return requisitions.saveAndFlush(validRequisition().title(title).hiringManager(creator)
-                                .department(inDepartment).approvalStatus(status).build());
+                                .department(inDepartment).approvalStatus(status)
+                                .expectedStaffingDate(RequisitionAccess.STATUS_DRAFT.equals(status) ? null
+                                                : java.time.LocalDate.now().plusDays(30)).build());
         }
 
         private JobPosting savePosting(JobRequisition requisition, int postingNo, String status) {
@@ -155,7 +157,6 @@ class RequisitionIntegrationTests {
                 assertEquals("Integration Java Dev", saved.getTitle());
                 assertEquals(hiringManager.getUserId(), saved.getHiringManager().getUserId());
                 assertEquals(department.getDepartmentId(), saved.getDepartment().getDepartmentId());
-                assertEquals(String.format("REQ-%04d", id), saved.getRequisitionCode());
         }
 
         // ----- Đọc: danh sách và chi tiết -----
@@ -278,6 +279,7 @@ class RequisitionIntegrationTests {
                 RequisitionRequest request = RequisitionRequest.builder()
                                 .action(RequisitionValidator.ACTION_SUBMIT)
                                 .title("DevOps Engineer")
+                                .expectedStaffingDate(java.time.LocalDate.now().plusDays(30))
                                 .numberOfPositions(2)
                                 .employmentType("Full-time")
                                 .workLocation("Hà Nội")
@@ -350,7 +352,7 @@ class RequisitionIntegrationTests {
 
         @Test
         @WithMockUser(username = "it_hm", roles = "HIRING_MANAGER")
-        @DisplayName("Sao chép yêu cầu đã duyệt -> Trả về form mới cùng tên, gợi ý đợt 2, chưa ghi DB")
+        @DisplayName("Sao chép yêu cầu đã duyệt -> Trả về form mới cùng tên, chưa ghi DB")
         void copy_shouldReturnNewForm_whenSourceIsApproved() {
                 // Arrange
                 JobRequisition original = saveRequisition("Original Requisition", hiringManager, department,

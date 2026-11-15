@@ -167,13 +167,11 @@ public class JobPostingMapper {
 
         if (requisition != null) {
             detail.requisitionId(requisition.getRequisitionId())
-                    .requisitionCode(requisition.getRequisitionCode())
                     .requisitionTitle(requisition.getTitle())
                     .numberOfPositions(requisition.getNumberOfPositions())
                     .hiringManagerName(fullName(requisition.getHiringManager()));
         } else {
-            detail.requisitionCode(JobPostingLabels.MISSING)
-                    .requisitionTitle(JobPostingLabels.MISSING)
+            detail.requisitionTitle(JobPostingLabels.MISSING)
                     .hiringManagerName(JobPostingLabels.MISSING);
         }
         return detail.build();
@@ -330,7 +328,6 @@ public class JobPostingMapper {
     /** Thông tin yêu cầu nguồn (chỉ hiển thị) và các giá trị gốc cho nút "Khôi phục bản gốc". Luôn nạp lại từ DB. */
     public void fillSourceInfo(JobPostingRequest form, JobRequisition requisition) {
         form.setRequisitionId(requisition.getRequisitionId());
-        form.setRequisitionCode(requisition.getRequisitionCode());
         form.setRequisitionTitle(requisition.getTitle());
         form.setDepartmentName(departmentName(requisition));
         form.setExpectedStartDate(requisition.getExpectedStaffingDate());

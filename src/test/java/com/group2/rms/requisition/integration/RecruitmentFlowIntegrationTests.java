@@ -543,8 +543,8 @@ class RecruitmentFlowIntegrationTests {
         }
 
         @Test
-        @DisplayName("Sao chép yêu cầu chưa được duyệt -> Lỗi trạng thái")
-        void copy_shouldFailWithStateError_whenSourceIsNotApproved() {
+        @DisplayName("Sao chép bản nháp -> Lỗi trạng thái")
+        void copy_shouldFailWithStateError_whenSourceIsDraft() {
             Integer id = savedRequisition(TITLE, hiringManager, RequisitionAccess.STATUS_DRAFT).getRequisitionId();
             loginAs(hiringManager);
             assertThrows(RequisitionStateException.class, () -> requisitionService.copy(id));

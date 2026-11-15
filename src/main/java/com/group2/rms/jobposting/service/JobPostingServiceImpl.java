@@ -73,7 +73,7 @@ public class JobPostingServiceImpl implements JobPostingService {
 
         List<FilterOption> choices = new ArrayList<>();
         for (JobRequisition requisition : awaiting) {
-            String label = requisition.getTitle() + " · " + requisition.getRequisitionCode();
+            String label = requisition.getTitle();
             int posted = postedTimes.getOrDefault(requisition.getRequisitionId(), 0);
             if (posted > 0) {
                 label = label + " (đã đăng " + posted + " lần)";

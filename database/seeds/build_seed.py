@@ -186,7 +186,7 @@ REQS = [
     (8, "DevOps Engineer", "devops", 1, HM_TUAN, 1, "Full-time", 30e6, 40e6, "Hybrid", HN, "Pending_Director", -3, -2),
     (9, "Data Analyst", "data", 4, HM_MINH, 1, "Full-time", None, None, "On-site", HN, "Draft", -1, None),
     (10, "Sales Admin bán thời gian", "salesadmin", 2, HM_HUONG, 1, "Part-time", 6e6, 8e6, "On-site", HCM, "Rejected", -20, -19),
-    (11, "Mobile Developer (Flutter)", "mobile", 1, HM_TUAN, 1, "Full-time", 20e6, 30e6, "On-site", HN, "Cancelled", -30, None),
+    (11, "Mobile Developer (Flutter)", "mobile", 1, HM_TUAN, 1, "Full-time", 20e6, 30e6, "On-site", HN, "Draft", -30, None),
     (12, "Customer Support Executive", "cs", 2, HM_HUONG, 2, "Full-time", 9e6, 12e6, "On-site", HCM, "Closed", -110, -109),
     (13, "Customer Support Executive", "cs", 2, HM_HUONG, 1, "Full-time", 9e6, 13e6, "On-site", HCM, "Approved", -6, -5),
     (14, "Business Analyst", "ba", 1, HM_TUAN, 1, "Full-time", 22e6, 32e6, "Hybrid", HN, "Approved", -5, -4),
@@ -198,7 +198,7 @@ for rid, title, key, dept, hm, pos, etype, mn, mx, model, loc, st, cday, sday in
                     loc=loc)
     approved_day = (sday or cday) + 2
     add("JobRequisition", {
-        "RequisitionId": rid, "Title": title, "RequisitionCode": f"REQ-{rid:04d}", "DepartmentId": dept,
+        "RequisitionId": rid, "Title": title, "DepartmentId": dept,
         "HiringManagerId": hm, "CreatedBy": hm, "ExpectedStaffingDate": DAY(70) if st != "Draft" else None,
         "OriginalRequisitionId": orig,
         "NumberOfPositions": pos, "EmploymentType": etype,
@@ -238,8 +238,6 @@ for rid, title, key, dept, hm, pos, etype, mn, mx, model, loc, st, cday, sday in
         audit(DIRECTOR, "UPDATE", "JobRequisition", rid, "Pending_Director", "Rejected", at(sday + 1, 11))
         notify(hm, DIRECTOR, "Yêu cầu tuyển dụng bị từ chối", f"Yêu cầu \"{title}\" đã bị Giám đốc từ chối.",
                "REQUISITION_REJECTED", rid, f"/requisitions/{rid}", f"REQ_REJECT_{rid}", at(sday + 1, 11))
-    if st == "Cancelled":
-        audit(hm, "UPDATE", "JobRequisition", rid, "Draft", "Cancelled", at(cday + 3, 16))
     if st == "Closed":
         audit(HR_LAN, "UPDATE", "JobRequisition", rid, "Approved", "Closed", at(-12, 17))
 
@@ -836,7 +834,7 @@ w(f"--   candidate_demo  ứng viên demo: đơn #{DEMO_APPS['sent']} có offer 
 w(f"--                   #{DEMO_APPS['applied']} Applied (rút được), #{DEMO_APPS['rejected']} Rejected, 1 đơn Cancelled do đóng tin")
 w("--   ung_vien_moi    chưa đồng ý điều khoản (PolicyAgreedAt NULL), chưa ứng tuyển")
 w("--   ung_vien_khoa   tài khoản Inactive")
-w("-- YÊU CẦU: 1-7,13,14 Approved (14 chưa có tin) | 8 Pending_Director | 9 Draft | 10 Rejected | 11 Cancelled | 12 Closed (13 là đợt 2 của 12)")
+w("-- YÊU CẦU: 1-7,13,14 Approved (14 chưa có tin) | 8 Pending_Director | 9,11 Draft | 10 Rejected | 12 Closed (13 là đợt 2 của 12)")
 w("-- TIN: 1,2,4,6,8 Published (5 Published nhưng quá hạn) | 3 Paused | 7,9 Closed | 10 Draft | 8 = lần đăng 2 của yêu cầu 7")
 w("-- SỐ HỒ SƠ THEO TRẠNG THÁI: " + ", ".join(f"{k} {v}" for k, v in sorted(status_count.items())))
 w("-- =============================================================================")
@@ -890,7 +888,7 @@ w("-- TỰ KIỂM TRA: mọi giá trị trạng thái trong CHECK constraint ph�
 w("-- =============================================================================")
 CHECKS = [
     ("Application", "ApplicationStatus", ["Applied", "HR_Passed", "HM_Passed", "HM_Suggested", "Interviewing", "Offered", "Hired", "Rejected", "Withdrawn", "Cancelled"]),
-    ("JobRequisition", "ApprovalStatus", ["Draft", "Pending_Director", "Approved", "Rejected", "Closed", "Cancelled"]),
+    ("JobRequisition", "ApprovalStatus", ["Draft", "Pending_Director", "Approved", "Rejected", "Closed"]),
     ("JobPosting", "PostingStatus", ["Draft", "Published", "Paused", "Closed"]),
     ("OfferProposal", "OfferStatus", ["Draft", "Pending_Director", "Director_Approved", "Director_Rejected", "Sent_Candidate", "Expired", "Accepted", "Declined"]),
     ("InterviewSchedule", "InterviewStatus", ["Scheduled", "Completed", "Cancelled", "Rescheduled"]),

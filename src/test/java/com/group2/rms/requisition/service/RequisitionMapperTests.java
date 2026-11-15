@@ -146,14 +146,6 @@ class RequisitionMapperTests {
         assertFalse(forManager.postingViewable());
     }
 
-    @Test
-    @DisplayName("Yêu cầu cũ chưa lưu mã -> Mã hiển thị sinh từ id: REQ-0025")
-    void toListRow_shouldGenerateCode_whenRequisitionCodeIsMissing() {
-        RequisitionResponse row = mapper.toListRow(requisition(RequisitionAccess.STATUS_DRAFT), manager, null, false);
-
-        assertEquals("REQ-0025", row.requisitionCode());
-    }
-
     // ----- Trang chi tiết -----
 
     @Test

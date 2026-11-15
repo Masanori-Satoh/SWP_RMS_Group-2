@@ -67,7 +67,7 @@ class HiringManagerDashboardServiceTests {
     }
 
     private ProgressRow progressRow(int id, int needed, long hired, long interviewing, long offered) {
-        return new ProgressRow(id, "REQ-" + id, "Vị trí " + id, needed, hired, interviewing, offered, null);
+        return new ProgressRow(id, "Vị trí " + id, needed, hired, interviewing, offered, null);
     }
 
     @Nested
@@ -152,7 +152,7 @@ class HiringManagerDashboardServiceTests {
         void build_shouldLinkToJobPosting_whenRequisitionHasPosting() {
             // Arrange
             when(lists.hiringProgress(USER_ID, DEPARTMENT_ID)).thenReturn(List.of(
-                    new ProgressRow(4, "REQ-4", "Vị trí 4", 2, 1, 0, 0, 42)));
+                    new ProgressRow(4, "Vị trí 4", 2, 1, 0, 0, 42)));
 
             // Act
             List<HiringProgressItem> items = service.build(hiringManager(DEPARTMENT_ID)).progress();
@@ -188,8 +188,8 @@ class HiringManagerDashboardServiceTests {
         void build_shouldMapRejectedAndDraft_whenAttentionRowsExist() {
             // Arrange
             when(lists.requisitionsNeedingAttention(USER_ID)).thenReturn(List.of(
-                    new AttentionRow(5, "REQ-0005", "DevOps", RequisitionAccess.STATUS_REJECTED, NOW, "Thiếu ngân sách"),
-                    new AttentionRow(6, null, "QA", RequisitionAccess.STATUS_DRAFT, null, null)));
+                    new AttentionRow(5, "DevOps", RequisitionAccess.STATUS_REJECTED, NOW, "Thiếu ngân sách"),
+                    new AttentionRow(6, "QA", RequisitionAccess.STATUS_DRAFT, null, null)));
 
             // Act
             List<DashboardWorkItem> work = service.build(hiringManager(DEPARTMENT_ID)).needsAttention();
@@ -210,7 +210,7 @@ class HiringManagerDashboardServiceTests {
             // Arrange
             List<AttentionRow> rows = new ArrayList<>();
             for (int i = 1; i <= 7; i++) {
-                rows.add(new AttentionRow(i, "REQ-" + i, "Nháp " + i, RequisitionAccess.STATUS_DRAFT, null, null));
+                rows.add(new AttentionRow(i, "Nháp " + i, RequisitionAccess.STATUS_DRAFT, null, null));
             }
             when(lists.requisitionsNeedingAttention(USER_ID)).thenReturn(rows);
 

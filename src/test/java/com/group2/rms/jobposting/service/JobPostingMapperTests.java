@@ -58,7 +58,7 @@ class JobPostingMapperTests {
         admin = userWithRole(2, RequisitionAccess.ROLE_SYSTEM_ADMIN);
         director = userWithRole(3, RequisitionAccess.ROLE_DIRECTOR);
         manager = userWithRole(4, RequisitionAccess.ROLE_HIRING_MANAGER);
-        requisition = JobRequisition.builder().requisitionId(5).requisitionCode("REQ-0005").title("Java Dev")
+        requisition = JobRequisition.builder().requisitionId(5).title("Java Dev")
                 .approvalStatus(RequisitionAccess.STATUS_APPROVED).employmentType("Full-time").workModel("Hybrid")
                 .department(Department.builder().departmentId(1).departmentName("Engineering").build())
                 .numberOfPositions(2).workLocation("Hà Nội")

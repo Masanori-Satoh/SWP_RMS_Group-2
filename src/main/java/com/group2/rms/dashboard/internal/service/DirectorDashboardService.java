@@ -11,7 +11,6 @@ import com.group2.rms.dashboard.internal.repository.DashboardListRepository.Pend
 import com.group2.rms.dashboard.internal.repository.DashboardListRepository.PendingRequisitionRow;
 import com.group2.rms.dashboard.internal.repository.InternalMetricsRepository;
 import com.group2.rms.requisition.service.RequisitionAccess;
-import com.group2.rms.requisition.service.RequisitionLabels;
 import com.group2.rms.user.entity.User;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -89,7 +88,6 @@ public class DirectorDashboardService {
     private List<PendingRequisitionItem> pendingRequisitions(List<PendingRequisitionRow> rows, LocalDateTime now) {
         List<PendingRequisitionItem> items = new ArrayList<>();
         for (PendingRequisitionRow row : rows) {
-            String code = RequisitionLabels.requisitionCode(row.requisitionId(), row.requisitionCode());
             String department = row.departmentName();
             if (department == null) {
                 department = "Chưa xác định";
@@ -97,7 +95,7 @@ public class DirectorDashboardService {
             String staffingDateText = row.expectedStaffingDate() == null ? null
                     : "Ngày dự kiến nhận việc: " + row.expectedStaffingDate().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy"));
             long days = DashboardLabels.waitDays(row.waitingSince(), now);
-            items.add(new PendingRequisitionItem(code, row.title(), department, row.requesterName(),
+            items.add(new PendingRequisitionItem(row.title(), department, row.requesterName(),
                     row.numberOfPositions(), staffingDateText,
                     DashboardLabels.waitText(days), DashboardLabels.waitTone(days),
                     "/requisitions/" + row.requisitionId()));

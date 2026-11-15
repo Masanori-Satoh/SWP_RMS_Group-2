@@ -37,14 +37,13 @@ public class JobRequisition extends BaseEntity {
     public static final String STATUS_PENDING_DIRECTOR = "Pending_Director";
     public static final String STATUS_APPROVED = "Approved";
     public static final String STATUS_REJECTED = "Rejected";
+    public static final String STATUS_CLOSED = "Closed";
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "RequisitionId")
     private Integer requisitionId;
 
-    @Column(name = "RequisitionCode", length = 50)
-    private String requisitionCode;
 
     @Column(name = "Title", nullable = false, length = 200)
     private String title;
@@ -104,7 +103,7 @@ public class JobRequisition extends BaseEntity {
     private String workModel;
     @Column(name = "SubmittedAt")
     private java.time.LocalDateTime submittedAt;
-    // Cột có trong DB nhưng luồng requisition hiện chưa ghi (không có trạng thái đóng yêu cầu)
+    // Thời điểm người có quyền xác nhận kết thúc yêu cầu sau khi tuyển đủ.
     @Column(name = "ClosedAt")
     private java.time.LocalDateTime closedAt;
 }

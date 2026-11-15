@@ -122,7 +122,6 @@ GO
 CREATE TABLE JobRequisition (
     RequisitionId          INT IDENTITY(1,1) PRIMARY KEY,
     Title                  NVARCHAR(200) NOT NULL,
-    RequisitionCode        NVARCHAR(50) NULL,
     DepartmentId           INT NOT NULL,
     HiringManagerId        INT NOT NULL,
     CreatedBy              INT NULL,
@@ -170,8 +169,7 @@ CREATE TABLE JobRequisition (
             N'Pending_Director',
             N'Approved',
             N'Rejected',
-            N'Closed',
-            N'Cancelled'
+            N'Closed'
         )),
  
     CONSTRAINT CK_JobRequisition_Salary_Range
@@ -189,7 +187,7 @@ CREATE TABLE JobRequisition (
             (ExpectedStaffingDate >= CONVERT(DATE, CreatedAt)
              AND (SubmittedAt IS NULL OR ExpectedStaffingDate >= CONVERT(DATE, SubmittedAt)))),
     CONSTRAINT CK_JobRequisition_Submitted_Content
-        CHECK (ApprovalStatus IN (N'Draft', N'Cancelled') OR (
+        CHECK (ApprovalStatus = N'Draft' OR (
             SubmittedAt IS NOT NULL
             AND ReasonForHiring IS NOT NULL AND LEN(TRIM(ReasonForHiring)) > 0
             AND LEN(TRIM(JobDescription)) > 0

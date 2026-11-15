@@ -69,8 +69,6 @@ public class RequisitionMapper {
         if (jobRequisition.getDepartment() != null) {
             departmentName = jobRequisition.getDepartment().getDepartmentName();
         }
-        String requisitionCode = RequisitionLabels.requisitionCode(jobRequisition.getRequisitionId(),
-                jobRequisition.getRequisitionCode());
 
         RequisitionResponse.RequisitionResponseBuilder row = RequisitionResponse.builder()
                 .requisitionId(jobRequisition.getRequisitionId())
@@ -80,7 +78,6 @@ public class RequisitionMapper {
                 .numberOfPositions(jobRequisition.getNumberOfPositions())
                 .approvalStatus(approvalStatus)
                 .expectedStaffingDate(jobRequisition.getExpectedStaffingDate())
-                .requisitionCode(requisitionCode)
                 .createdAt(jobRequisition.getCreatedAt())
                 .workLocation(jobRequisition.getWorkLocation());
         String postingStatus = null;
@@ -137,6 +134,7 @@ public class RequisitionMapper {
                 .jobDescriptionHtml(RequisitionLabels.multilineHtml(jobRequisition.getJobDescription()))
                 .requirementDetailsHtml(RequisitionLabels.multilineHtml(jobRequisition.getRequirementDetails()))
                 .submittedAt(jobRequisition.getSubmittedAt())
+                .closedAt(jobRequisition.getClosedAt())
                 .waitingDays(waitingDays)
                 .approvals(approvals)
                 .activityLog(toActivityResponses(activityLogs))

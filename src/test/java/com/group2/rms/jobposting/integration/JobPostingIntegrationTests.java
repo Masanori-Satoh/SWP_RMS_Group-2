@@ -124,6 +124,7 @@ class JobPostingIntegrationTests {
     private JobRequisition savedRequisition(String title, Department inDepartment) {
         return requisitions.saveAndFlush(JobRequisition.builder().title(title).numberOfPositions(1)
                 .employmentType("Full-time").workModel("On-site")
+                .expectedStaffingDate(now.toLocalDate().plusDays(30))
                 .jobDescription("Integration-test responsibilities").requirementDetails("Integration-test requirements")
                 .approvalStatus(RequisitionAccess.STATUS_APPROVED).hiringManager(hiringManager)
                 .department(inDepartment).build());

@@ -5,7 +5,6 @@ package com.group2.rms.dashboard.internal.dto;
  * staffingDateText = null với dữ liệu cũ chưa có ngày dự kiến.
  */
 public record PendingRequisitionItem(
-        String code,
         String title,
         String departmentName,
         String requesterName,

@@ -211,7 +211,7 @@ class RequisitionServiceTests {
         }
 
         @Test
-        @DisplayName("Nháp chỉ có tên vị trí -> Mô tả / yêu cầu lưu chuỗi rỗng (cột NOT NULL), sinh mã REQ-0101")
+        @DisplayName("Nháp chỉ có tên vị trí -> Mô tả / yêu cầu lưu chuỗi rỗng (cột NOT NULL)")
         void createRequisition_shouldSaveEmptyTextAndGenerateCode_whenOptionalFieldsAreMissing() {
             // Act
             service.createRequisition(draft("Kế toán tổng hợp"));
@@ -222,7 +222,6 @@ class RequisitionServiceTests {
             assertSame(itDepartment, saved.getDepartment());
             assertEquals("", saved.getJobDescription());
             assertEquals("", saved.getRequirementDetails());
-            assertEquals("REQ-0101", saved.getRequisitionCode());
         }
 
         @Test
@@ -491,13 +490,11 @@ class RequisitionServiceTests {
             assertSame(root, saved.getOriginalRequisition());
         }
 
-        @ParameterizedTest(name = "phiếu nguồn {0}")
-        @ValueSource(strings = {RequisitionAccess.STATUS_DRAFT, RequisitionAccess.STATUS_PENDING_DIRECTOR,
-                RequisitionAccess.STATUS_REJECTED})
-        @DisplayName("Phiếu nguồn chưa được duyệt -> Không sao chép được (sai trạng thái)")
-        void createRequisition_shouldReject_whenCopySourceIsNotApproved(String status) {
+        @Test
+        @DisplayName("Phiếu nguồn là bản nháp -> Không sao chép được")
+        void createRequisition_shouldReject_whenCopySourceIsDraft() {
             // Arrange
-            root.setApprovalStatus(status);
+            root.setApprovalStatus(RequisitionAccess.STATUS_DRAFT);
             RequisitionRequest request = draft("Java Engineer");
             request.setOriginalRequisitionId(80);
 
@@ -508,6 +505,20 @@ class RequisitionServiceTests {
             // Assert
             assertTrue(error.getErrors().containsKey("action"));
             verify(requisitions, never()).saveAndFlush(any());
+        }
+
+        @ParameterizedTest(name = "phiếu nguồn {0}")
+        @ValueSource(strings = {RequisitionAccess.STATUS_PENDING_DIRECTOR, RequisitionAccess.STATUS_REJECTED,
+                "Closed"})
+        @DisplayName("Phiếu nguồn không phải bản nháp -> Tạo được yêu cầu mới")
+        void createRequisition_shouldAllowCopyFromNonDraftSource(String status) {
+            root.setApprovalStatus(status);
+            RequisitionRequest request = draft("Java Engineer");
+            request.setOriginalRequisitionId(80);
+
+            service.createRequisition(request);
+
+            assertSame(root, savedRequisition().getOriginalRequisition());
         }
 
         @Test
@@ -750,11 +761,26 @@ class RequisitionServiceTests {
             verify(requisitions, never()).saveAndFlush(any());
         }
 
+        @ParameterizedTest(name = "phiếu nguồn {0}")
+        @ValueSource(strings = {RequisitionAccess.STATUS_PENDING_DIRECTOR, RequisitionAccess.STATUS_REJECTED,
+                "Closed"})
+        @DisplayName("Sao chép phiếu không phải bản nháp -> Form mới giữ nguồn được chọn")
+        void copy_shouldPrepareNewForm_whenSourceIsNotDraft(String status) {
+            JobRequisition source = requisitionWithStatus(80, status);
+
+            RequisitionRequest copied = service.copy(source.getRequisitionId());
+
+            assertEquals(source.getRequisitionId(), copied.getOriginalRequisitionId());
+            assertEquals(source.getTitle(), copied.getOriginalTitle());
+            assertNull(copied.getExpectedStaffingDate());
+            verify(requisitions, never()).saveAndFlush(any());
+        }
+
         @Test
-        @DisplayName("Sao chép yêu cầu chưa được duyệt -> RequisitionStateException")
-        void copy_shouldThrowStateException_whenSourceIsNotApproved() {
+        @DisplayName("Sao chép bản nháp -> RequisitionStateException")
+        void copy_shouldThrowStateException_whenSourceIsDraft() {
             // Arrange
-            JobRequisition source = requisitionWithStatus(80, RequisitionAccess.STATUS_PENDING_DIRECTOR);
+            JobRequisition source = requisitionWithStatus(80, RequisitionAccess.STATUS_DRAFT);
             doThrow(new RequisitionStateException()).when(access).requireCopy(manager, source);
 
             // Act + Assert
@@ -998,6 +1024,66 @@ class RequisitionServiceTests {
 
             verify(requisitions, never()).delete(any(JobRequisition.class));
             verifyNoInteractions(postings, approvals, audit);
+        }
+    }
+
+    @Nested
+    class CloseRequisition {
+        private JobRequisition approved() {
+            JobRequisition requisition = requisitionWithStatus(95, RequisitionAccess.STATUS_APPROVED);
+            requisition.setNumberOfPositions(2);
+            when(access.canClose(manager, requisition)).thenReturn(true);
+            return requisition;
+        }
+
+        @Test
+        void closeRequisition_shouldRecordClosedAt_whenFullyStaffedAndAllWorkHandled() {
+            JobRequisition requisition = approved();
+            when(postings.countHiredByRequisition(95)).thenReturn(2L);
+
+            service.closeRequisition(95);
+
+            assertEquals(RequisitionAccess.STATUS_CLOSED, requisition.getApprovalStatus());
+            assertEquals(NOW, requisition.getClosedAt());
+            assertEquals(NOW, requisition.getUpdatedAt());
+            verify(requisitions).saveAndFlush(requisition);
+            verify(audit).save(any(AuditLog.class));
+        }
+
+        @Test
+        void closeRequisition_shouldKeepApproved_whenNotFullyStaffed() {
+            JobRequisition requisition = approved();
+            when(postings.countHiredByRequisition(95)).thenReturn(1L);
+
+            assertThrows(RequisitionValidationException.class, () -> service.closeRequisition(95));
+
+            assertEquals(RequisitionAccess.STATUS_APPROVED, requisition.getApprovalStatus());
+            assertNull(requisition.getClosedAt());
+            verify(requisitions, never()).saveAndFlush(any());
+        }
+
+        @Test
+        void closeRequisition_shouldKeepApproved_whenPostingIsOpen() {
+            JobRequisition requisition = approved();
+            when(postings.countHiredByRequisition(95)).thenReturn(2L);
+            when(postings.existsByRequisition_RequisitionIdAndPostingStatusIn(eq(95), any())).thenReturn(true);
+
+            assertThrows(RequisitionValidationException.class, () -> service.closeRequisition(95));
+
+            assertEquals(RequisitionAccess.STATUS_APPROVED, requisition.getApprovalStatus());
+            verify(requisitions, never()).saveAndFlush(any());
+        }
+
+        @Test
+        void closeRequisition_shouldKeepApproved_whenApplicationsRemainActive() {
+            JobRequisition requisition = approved();
+            when(postings.countHiredByRequisition(95)).thenReturn(2L);
+            when(postings.countActiveApplicationsByRequisition(95)).thenReturn(1L);
+
+            assertThrows(RequisitionValidationException.class, () -> service.closeRequisition(95));
+
+            assertEquals(RequisitionAccess.STATUS_APPROVED, requisition.getApprovalStatus());
+            verify(requisitions, never()).saveAndFlush(any());
         }
     }
 }
