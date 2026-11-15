@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * - Dùng hằng số của validator (POSITIONS_MIN - 1) thay vì gõ số, đổi giới hạn thì test vẫn đúng ý.
  * - Kiểm tra đúng key lỗi (ví dụ "numberOfPositions"): key quyết định lỗi hiện ở ô nào.
  *
- * Hàm hỗ trợ: valid() = gửi duyệt hợp lệ đủ trường; minimalDraft() = nháp chỉ có 4 trường NOT NULL;
+ * Hàm hỗ trợ: valid() = gửi duyệt hợp lệ đủ trường; minimalDraft() = nháp đủ các trường bắt buộc;
  * expectPass / expectFail dùng để kiểm tra kết quả.
  * Phòng ban và quyền người dùng: kiểm ở RequisitionServiceTests.
  */
@@ -53,6 +53,8 @@ class RequisitionValidatorTests {
                 .employmentType("Full-time")
                 .workModel("On-site")
                 .workLocation("Office")
+                .minSalary(new BigDecimal("10000000"))
+                .maxSalary(new BigDecimal("20000000"))
                 .reasonForHiring("Expansion")
                 .jobDescription("Develop software")
                 .requirementDetails("Experience")
@@ -66,10 +68,8 @@ class RequisitionValidatorTests {
     }
 
     /**
-     * Bản nháp tối thiểu hợp lệ theo quy tắc mới: Tên vị trí, Số lượng, Hình thức,
-     * Mô hình làm việc
-     * bắt buộc cả khi lưu nháp (các cột NOT NULL trong DB). Những thứ khác được để
-     * trống.
+     * Bản nháp tối thiểu hợp lệ: tên vị trí, số lượng, hình thức và mô hình làm việc.
+     * Hai mức lương chỉ bắt buộc khi gửi duyệt.
      */
     private RequisitionRequest minimalDraft() {
         RequisitionRequest d = emptyDraft();
@@ -129,11 +129,11 @@ class RequisitionValidatorTests {
     }
 
     @Test
-    @DisplayName("Nháp có ngày dự kiến đã qua -> Phải sửa ngày hoặc để trống")
-    void validate_shouldRejectDraftWithPastExpectedStaffingDate() {
+    @DisplayName("Nháp có ngày dự kiến đã qua -> Vẫn lưu được")
+    void validate_shouldAllowDraftWithPastExpectedStaffingDate() {
         var request = minimalDraft();
         request.setExpectedStaffingDate(TODAY.minusDays(1));
-        assertTrue(expectFail(request).getErrors().containsKey("expectedStaffingDate"));
+        expectPass(request);
     }
 
 
@@ -180,8 +180,7 @@ class RequisitionValidatorTests {
         assertTrue(expectFail(d).getErrors().containsKey("workLocation"));
     }
 
-    // VAL-002 — Draft: chỉ bắt buộc các trường NOT NULL trong DB, còn lại được để
-    // trống
+    // VAL-002 — Draft có thể thiếu nội dung; phòng ban được kiểm tra ở service.
 
     @Test
     @DisplayName("Nháp chỉ có 4 trường NOT NULL -> Hợp lệ")
@@ -190,13 +189,9 @@ class RequisitionValidatorTests {
     }
 
     @Test
-    @DisplayName("Nháp trống hoàn toàn -> Báo lỗi các trường NOT NULL")
-    void validate_shouldReject_whenDraftMissesDbRequiredFields() {
-        var errors = expectFail(emptyDraft()).getErrors();
-        assertTrue(errors.containsKey("title"));
-        assertTrue(errors.containsKey("numberOfPositions"));
-        assertTrue(errors.containsKey("employmentType"));
-        assertTrue(errors.containsKey("workModel"));
+    @DisplayName("Nháp trống nội dung -> Vẫn lưu được")
+    void validate_shouldAllow_whenDraftMissesContentFields() {
+        expectPass(emptyDraft());
     }
 
     @Test
@@ -215,38 +210,38 @@ class RequisitionValidatorTests {
         expectFail(d);
     }
 
-    // VAL-003 — Draft vẫn kiểm tra giá trị đã nhập
+    // VAL-003 — Draft giữ cả giá trị chưa đạt quy tắc gửi duyệt.
 
     @Test
-    @DisplayName("Nháp có mô hình làm việc sai -> Báo lỗi")
-    void validate_shouldReject_whenDraftWorkModelIsInvalid() {
+    @DisplayName("Nháp có mô hình làm việc sai -> Vẫn lưu được")
+    void validate_shouldAllow_whenDraftWorkModelIsInvalid() {
         var d = minimalDraft();
         d.setWorkModel("Flexible");
-        assertTrue(expectFail(d).getErrors().containsKey("workModel"));
+        expectPass(d);
     }
 
     @Test
-    @DisplayName("Nháp có hình thức làm việc sai -> Báo lỗi")
-    void validate_shouldReject_whenDraftEmploymentTypeIsInvalid() {
+    @DisplayName("Nháp có hình thức làm việc sai -> Vẫn lưu được")
+    void validate_shouldAllow_whenDraftEmploymentTypeIsInvalid() {
         var d = minimalDraft();
         d.setEmploymentType("Contract");
-        assertTrue(expectFail(d).getErrors().containsKey("employmentType"));
+        expectPass(d);
     }
 
     @Test
-    @DisplayName("Nháp có số lượng âm -> Báo lỗi")
-    void validate_shouldReject_whenDraftPositionsIsNegative() {
+    @DisplayName("Nháp có số lượng âm -> Vẫn lưu được")
+    void validate_shouldAllow_whenDraftPositionsIsNegative() {
         var d = minimalDraft();
         d.setNumberOfPositions(-1);
-        assertTrue(expectFail(d).getErrors().containsKey("numberOfPositions"));
+        expectPass(d);
     }
 
     @Test
-    @DisplayName("Nháp có số lượng 0 -> Báo lỗi")
-    void validate_shouldReject_whenDraftPositionsIsZero() {
+    @DisplayName("Nháp có số lượng 0 -> Vẫn lưu được")
+    void validate_shouldAllow_whenDraftPositionsIsZero() {
         var d = minimalDraft();
         d.setNumberOfPositions(0);
-        assertTrue(expectFail(d).getErrors().containsKey("numberOfPositions"));
+        expectPass(d);
     }
 
     @Test
@@ -258,14 +253,16 @@ class RequisitionValidatorTests {
     }
 
     @Test
-    @DisplayName("Số lượng = âm hoặc trống -> đúng câu lỗi")
+    @DisplayName("Gửi duyệt với số lượng âm hoặc trống -> đúng câu lỗi")
     void validate_shouldUseSpecMessages_forRoundAndPositions() {
         var d = minimalDraft();
+        d.setAction("submit");
         d.setNumberOfPositions(-2);
         var errors = expectFail(d).getErrors();
         assertEquals("Số lượng cần tuyển phải lớn hơn hoặc bằng 1.", errors.get("numberOfPositions"));
 
         var empty = minimalDraft();
+        empty.setAction("submit");
         empty.setNumberOfPositions(null);
         assertEquals("Số lượng cần tuyển là bắt buộc.", expectFail(empty).getErrors().get("numberOfPositions"));
     }
@@ -599,30 +596,36 @@ class RequisitionValidatorTests {
     // VAL-011 — Salary và độ chính xác thập phân
 
     @Test
-    @DisplayName("Không nhập lương (Thỏa thuận) -> Hợp lệ")
-    void validate_shouldPass_whenBothSalariesAreNull() {
+    @DisplayName("Không nhập hai mức lương -> Báo lỗi cả hai ô")
+    void validate_shouldReject_whenBothSalariesAreNull() {
         var d = valid();
         d.setMinSalary(null);
         d.setMaxSalary(null);
-        expectPass(d);
+        assertTrue(expectFail(d).getErrors().keySet().containsAll(List.of("minSalary", "maxSalary")));
     }
 
     @Test
-    @DisplayName("Chỉ nhập lương tối thiểu -> Hợp lệ")
-    void validate_shouldPass_whenOnlyMinSalaryIsSet() {
+    @DisplayName("Lưu nháp khi hai mức lương để trống -> Hợp lệ")
+    void validate_shouldAllowDraft_whenBothSalariesAreNull() {
+        expectPass(minimalDraft());
+    }
+
+    @Test
+    @DisplayName("Chỉ nhập lương tối thiểu -> Báo thiếu lương tối đa")
+    void validate_shouldReject_whenOnlyMinSalaryIsSet() {
         var d = valid();
         d.setMinSalary(new BigDecimal("10000000"));
         d.setMaxSalary(null);
-        expectPass(d);
+        assertTrue(expectFail(d).getErrors().containsKey("maxSalary"));
     }
 
     @Test
-    @DisplayName("Chỉ nhập lương tối đa -> Hợp lệ")
-    void validate_shouldPass_whenOnlyMaxSalaryIsSet() {
+    @DisplayName("Chỉ nhập lương tối đa -> Báo thiếu lương tối thiểu")
+    void validate_shouldReject_whenOnlyMaxSalaryIsSet() {
         var d = valid();
         d.setMinSalary(null);
         d.setMaxSalary(new BigDecimal("20000000"));
-        expectPass(d);
+        assertTrue(expectFail(d).getErrors().containsKey("minSalary"));
     }
 
     @Test

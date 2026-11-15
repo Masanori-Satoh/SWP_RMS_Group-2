@@ -81,7 +81,15 @@ public class RequisitionValidator {
             requisitionRequest.setWorkLocation(null);
         }
 
-        // Rule: tên vị trí bắt buộc cả khi lưu nháp
+        // Bản nháp chỉ cần hành động hợp lệ; nội dung được kiểm tra khi gửi duyệt.
+        if (!isSubmitAction) {
+            if (!errors.isEmpty()) {
+                throw new RequisitionValidationException(errors);
+            }
+            return;
+        }
+
+        // Rule: tên vị trí bắt buộc khi gửi duyệt
         validateTextField(errors, "title", requisitionRequest.getTitle(), TITLE_CHAR_LIMIT, true);
         validateTextField(errors, "reasonForHiring", requisitionRequest.getReasonForHiring(), REASON_CHAR_LIMIT,
                 isSubmitAction);
@@ -117,6 +125,12 @@ public class RequisitionValidator {
         }
 
         // Rule: Mức lương phải lớn hơn 0 và lương tối đa >= lương tối thiểu
+        if (isSubmitAction && requisitionRequest.getMinSalary() == null) {
+            errors.put("minSalary", "Vui lòng nhập mức lương tối thiểu.");
+        }
+        if (isSubmitAction && requisitionRequest.getMaxSalary() == null) {
+            errors.put("maxSalary", "Vui lòng nhập mức lương tối đa.");
+        }
         validateMoneyField(errors, "minSalary", requisitionRequest.getMinSalary());
         validateMoneyField(errors, "maxSalary", requisitionRequest.getMaxSalary());
         if (requisitionRequest.getMinSalary() != null && requisitionRequest.getMaxSalary() != null

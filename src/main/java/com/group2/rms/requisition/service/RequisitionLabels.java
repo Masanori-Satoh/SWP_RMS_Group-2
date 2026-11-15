@@ -4,6 +4,9 @@ import org.springframework.web.util.HtmlUtils;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.util.Locale;
 
 
 public final class RequisitionLabels {
@@ -114,6 +117,30 @@ public final class RequisitionLabels {
             return "Từ " + millions(min) + " triệu VND/tháng";
         }
         return "Đến " + millions(max) + " triệu VND/tháng";
+    }
+
+    /** Bảng danh sách ghi đơn vị ở tiêu đề cột nên mỗi dòng chỉ hiển thị số tiền. */
+    public static String salaryForList(BigDecimal min, BigDecimal max) {
+        if (min == null && max == null) {
+            return "Chưa cập nhật";
+        }
+        if (min != null && max != null) {
+            return vnd(min) + " – " + vnd(max);
+        }
+        return min != null ? "Từ " + vnd(min) : "Đến " + vnd(max);
+    }
+
+    /** Chi tiết yêu cầu hiển thị đúng số VND đã lưu, không quy đổi hoặc làm tròn sang triệu. */
+    public static String salaryForDetail(BigDecimal min, BigDecimal max) {
+        String salary = salaryForList(min, max);
+        return min == null && max == null ? salary : salary + " VND/tháng";
+    }
+
+    private static String vnd(BigDecimal amount) {
+        DecimalFormatSymbols symbols = DecimalFormatSymbols.getInstance(Locale.forLanguageTag("vi-VN"));
+        symbols.setGroupingSeparator('.');
+        symbols.setDecimalSeparator(',');
+        return new DecimalFormat("#,##0.##", symbols).format(amount);
     }
 
     // Formats an amount in millions.

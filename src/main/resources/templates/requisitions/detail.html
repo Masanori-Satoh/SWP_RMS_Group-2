@@ -101,7 +101,7 @@
                     <dl class="rqd-facts">
                         <div>
                             <dt>Số lượng cần tuyển</dt>
-                            <dd th:text="|${req.numberOfPositions} người|">2 người</dd>
+                            <dd th:text="${req.numberOfPositions != null} ? |${req.numberOfPositions} người| : 'Chưa cập nhật'">2 người</dd>
                         </div>
                         <div>
                             <dt>Người tạo yêu cầu</dt>
@@ -117,7 +117,7 @@
                         </div>
                         <div>
                             <dt>Mức lương</dt>
-                            <dd th:text="${req.salaryLabel}">20 – 30 triệu VND/tháng</dd>
+                            <dd th:text="${req.salaryLabel}">20.000.000 – 30.000.000 VND/tháng</dd>
                         </div>
                         <div>
                             <dt>Ngày dự kiến nhận việc</dt>

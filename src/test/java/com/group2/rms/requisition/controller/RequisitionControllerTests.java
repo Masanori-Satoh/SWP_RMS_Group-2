@@ -376,34 +376,31 @@ class RequisitionControllerTests {
                 verify(service, never()).createRequisition(any());
         }
 
-        // ----- Bean Validation (@Valid, AG §2.4): chặn trước khi gọi service -----
+        // Bản nháp đi đến service; chỉ lỗi chuyển kiểu dữ liệu bị chặn khi binding.
 
         @Test
         @WithMockUser(username = "hm", roles = "HIRING_MANAGER")
-        @DisplayName("POST /requisitions/create -> Tên vị trí dài TITLE_CHAR_LIMIT + 1 thì báo lỗi ở ô tên, không gọi service")
-        void create_shouldShowFieldError_whenTitleIsTooLong() throws Exception {
+        @DisplayName("POST /requisitions/create -> Bản nháp không kiểm tra nội dung trước service")
+        void create_shouldPassDraftContentToService() throws Exception {
+                when(service.createRequisition(any(RequisitionRequest.class))).thenReturn(10);
                 mvc.perform(post("/requisitions/create").with(csrf())
                                 .param("action", RequisitionValidator.ACTION_DRAFT)
                                 .param("title", "a".repeat(RequisitionValidator.TITLE_CHAR_LIMIT + 1)))
-                                .andExpect(status().isOk())
-                                .andExpect(view().name("requisitions/form"))
-                                .andExpect(model().attributeHasFieldErrorCode("form", "title", "Size"));
-                verify(service, never()).createRequisition(any());
+                                .andExpect(status().is3xxRedirection());
+                verify(service).createRequisition(any());
         }
 
         @Test
         @WithMockUser(username = "hm", roles = "HIRING_MANAGER")
-        @DisplayName("POST /requisitions/create -> Số lượng 0, lương quá 1 tỷ -> Lỗi đúng từng ô, không gọi service")
-        void create_shouldShowFieldErrors_whenNumbersAreOutOfRange() throws Exception {
+        @DisplayName("POST /requisitions/create -> Nháp số lượng 0 và lương quá giới hạn vẫn gọi service")
+        void create_shouldPassBusinessInvalidDraftNumbersToService() throws Exception {
+                when(service.createRequisition(any(RequisitionRequest.class))).thenReturn(10);
                 mvc.perform(post("/requisitions/create").with(csrf())
                                 .param("action", RequisitionValidator.ACTION_DRAFT).param("title", "New Dev")
                                 .param("numberOfPositions", String.valueOf(RequisitionValidator.POSITIONS_MIN - 1))
                                 .param("maxSalary", "1000000001"))
-                                .andExpect(status().isOk())
-                                .andExpect(view().name("requisitions/form"))
-                                .andExpect(model().attributeHasFieldErrors("form",
-                                                "numberOfPositions", "maxSalary"));
-                verify(service, never()).createRequisition(any());
+                                .andExpect(status().is3xxRedirection());
+                verify(service).createRequisition(any());
         }
 
         @Test

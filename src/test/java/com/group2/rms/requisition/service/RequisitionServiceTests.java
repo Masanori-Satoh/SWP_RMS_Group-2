@@ -167,6 +167,42 @@ class RequisitionServiceTests {
     class CreateRequisition {
 
         @Test
+        @DisplayName("Lưu nháp thiếu nội dung vẫn giữ các trường trống")
+        void createRequisition_shouldKeepMissingDraftFields() {
+            RequisitionRequest request = RequisitionRequest.builder()
+                    .action(RequisitionValidator.ACTION_DRAFT)
+                    .departmentId(itDepartment.getDepartmentId())
+                    .numberOfPositions(0)
+                    .minSalary(new BigDecimal("30000000"))
+                    .maxSalary(new BigDecimal("20000000"))
+                    .build();
+
+            service.createRequisition(request);
+
+            JobRequisition saved = savedRequisition();
+            assertEquals(RequisitionAccess.STATUS_DRAFT, saved.getApprovalStatus());
+            assertNull(saved.getTitle());
+            assertEquals(0, saved.getNumberOfPositions());
+            assertNull(saved.getEmploymentType());
+            assertNull(saved.getWorkModel());
+            assertEquals(new BigDecimal("30000000"), saved.getMinSalary());
+            assertEquals(new BigDecimal("20000000"), saved.getMaxSalary());
+        }
+
+        @Test
+        @DisplayName("Giám đốc lưu nháp khi chưa chọn phòng ban")
+        void createRequisition_shouldAllowDraftWithoutDepartment() {
+            when(access.actor()).thenReturn(director);
+            when(access.isDirector(director)).thenReturn(true);
+
+            service.createRequisition(RequisitionRequest.builder()
+                    .action(RequisitionValidator.ACTION_DRAFT)
+                    .build());
+
+            assertNull(savedRequisition().getDepartment());
+        }
+
+        @Test
         @DisplayName("Lưu nháp đủ trường -> Lưu đúng dữ liệu, người tạo, Draft, tiêu chí 2 chiều, audit CREATE")
         void createRequisition_shouldSaveDraftWithAllFields_whenDataIsValid() {
             // Arrange
@@ -245,14 +281,14 @@ class RequisitionServiceTests {
         }
 
         @Test
-        @DisplayName("Tài khoản chưa có phòng ban -> Báo lỗi dễ hiểu, không lưu")
-        void createRequisition_shouldReject_whenCreatorHasNoDepartment() {
+        @DisplayName("Gửi duyệt khi tài khoản chưa có phòng ban -> Báo lỗi dễ hiểu, không lưu")
+        void createRequisition_shouldRejectSubmit_whenCreatorHasNoDepartment() {
             // Arrange
             manager.setDepartment(null);
 
             // Act
             RequisitionValidationException error = assertThrows(RequisitionValidationException.class,
-                    () -> service.createRequisition(draft("Kế toán")));
+                    () -> service.createRequisition(submit("Kế toán")));
 
             // Assert
             assertEquals("Tài khoản của bạn chưa được gán phòng ban đang hoạt động. Vui lòng liên hệ quản trị viên.",

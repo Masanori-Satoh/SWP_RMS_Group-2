@@ -48,7 +48,7 @@ public record RequisitionResponse(
                 LocalDateTime submittedAt, // JobRequisition.SubmittedAt: lúc gửi duyệt gần nhất
                 LocalDateTime closedAt,
                 Long waitingDays, // số ngày đã chờ Giám đốc duyệt (chỉ khi Pending_Director)
-                String salaryLabel, // "20 – 30 triệu VND/tháng" hoặc "Thỏa thuận"
+                String salaryLabel, // "20.000.000 – 30.000.000 VND/tháng" trên trang chi tiết
                 String workModelLabel,
                 String reasonForHiringHtml, // nội dung nhiều dòng đã escape + <br/> (hiển thị bằng th:utext)
                 String jobDescriptionHtml,

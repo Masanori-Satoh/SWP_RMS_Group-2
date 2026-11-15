@@ -72,10 +72,11 @@ public class RequisitionMapper {
 
         RequisitionResponse.RequisitionResponseBuilder row = RequisitionResponse.builder()
                 .requisitionId(jobRequisition.getRequisitionId())
-                .title(jobRequisition.getTitle())
+                .title(jobRequisition.getTitle() == null ? RequisitionValidator.PLACEHOLDER_TITLE : jobRequisition.getTitle())
                 .departmentName(departmentName)
                 .hiringManagerName(jobRequisition.getHiringManager().getFullName())
                 .numberOfPositions(jobRequisition.getNumberOfPositions())
+                .salaryLabel(RequisitionLabels.salaryForList(jobRequisition.getMinSalary(), jobRequisition.getMaxSalary()))
                 .approvalStatus(approvalStatus)
                 .expectedStaffingDate(jobRequisition.getExpectedStaffingDate())
                 .createdAt(jobRequisition.getCreatedAt())
@@ -127,7 +128,7 @@ public class RequisitionMapper {
 
         return toListRow(jobRequisition, viewer, latestPosting, hasLaterRound).toBuilder()
                 .incomplete(incomplete)
-                .salaryLabel(RequisitionLabels.salary(jobRequisition.getMinSalary(), jobRequisition.getMaxSalary()))
+                .salaryLabel(RequisitionLabels.salaryForDetail(jobRequisition.getMinSalary(), jobRequisition.getMaxSalary()))
                 .workModelLabel(RequisitionLabels.workModel(jobRequisition.getWorkModel()))
                 // Văn bản nhiều dòng: escape HTML rồi đổi xuống dòng thành <br/> (AG §6.3)
                 .reasonForHiringHtml(RequisitionLabels.multilineHtml(jobRequisition.getReasonForHiring()))
@@ -145,6 +146,9 @@ public class RequisitionMapper {
 
     // Checks whether the requisition is ready for submission.
     private boolean isReadyToSubmit(JobRequisition jobRequisition) {
+        if (jobRequisition.getDepartment() == null) {
+            return false;
+        }
         RequisitionRequest submissionCheck = toEditForm(jobRequisition);
         submissionCheck.setAction(RequisitionValidator.ACTION_SUBMIT);
         try {

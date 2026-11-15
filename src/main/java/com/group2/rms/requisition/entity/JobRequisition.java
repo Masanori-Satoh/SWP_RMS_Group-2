@@ -45,11 +45,11 @@ public class JobRequisition extends BaseEntity {
     private Integer requisitionId;
 
 
-    @Column(name = "Title", nullable = false, length = 200)
+    @Column(name = "Title", length = 200)
     private String title;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "DepartmentId", nullable = false, referencedColumnName = "DepartmentId")
+    @JoinColumn(name = "DepartmentId", referencedColumnName = "DepartmentId")
     private Department department;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -67,13 +67,13 @@ public class JobRequisition extends BaseEntity {
     @JoinColumn(name = "OriginalRequisitionId", referencedColumnName = "RequisitionId")
     private JobRequisition originalRequisition;
 
-    @Column(name = "NumberOfPositions", nullable = false)
+    @Column(name = "NumberOfPositions")
     private Integer numberOfPositions;
 
     /**
      * Full-time, Part-time, Internship, Freelance
      */
-    @Column(name = "EmploymentType", nullable = false, length = 50)
+    @Column(name = "EmploymentType", length = 50)
     private String employmentType;
 
     @Column(name = "MinSalary", precision = 18, scale = 2)
@@ -99,7 +99,7 @@ public class JobRequisition extends BaseEntity {
 
     @Column(name = "WorkLocation", length = 255)
     private String workLocation;
-    @Column(name = "WorkModel", nullable = false, length = 20)
+    @Column(name = "WorkModel", length = 20)
     private String workModel;
     @Column(name = "SubmittedAt")
     private java.time.LocalDateTime submittedAt;

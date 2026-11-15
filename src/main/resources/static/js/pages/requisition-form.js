@@ -22,32 +22,38 @@
 
     const FIELD_RULES = [
         {
-            id: 'title', label: 'Vị trí tuyển dụng', section: 'rqf-position', requiredForDraft: true,
+            id: 'title', label: 'Vị trí tuyển dụng', section: 'rqf-position', requiredForSubmit: true,
             // Khớp RequisitionValidator.PLACEHOLDER_TITLE: lưu nháp được, gửi duyệt thì không
             submitErrorOf: value => value.toLowerCase() === 'chưa nhập vị trí'
                 ? 'Vui lòng nhập chức danh công việc cụ thể trước khi gửi duyệt.' : ''
         },
         {
-            id: 'numberOfPositions', label: 'Số lượng cần tuyển', section: 'rqf-position', requiredForDraft: true,
+            id: 'expectedStaffingDate', label: 'Ngày dự kiến nhận việc', section: 'rqf-position', requiredForSubmit: true,
+            errorOf: value => value < today() ? 'Ngày dự kiến nhận việc không được trước hôm nay.' : ''
+        },
+        {
+            id: 'numberOfPositions', label: 'Số lượng cần tuyển', section: 'rqf-position', requiredForSubmit: true,
             errorOf: value => {
                 const input = document.getElementById('numberOfPositions');
                 return integerMessage('Số lượng cần tuyển', value, Number(input.min) || 1);
             }
         },
-        {
-            id: 'expectedStaffingDate', label: 'Ngày dự kiến nhận việc', section: 'rqf-position', requiredForSubmit: true,
-            errorOf: value => value < today() ? 'Ngày dự kiến nhận việc không được trước hôm nay.' : ''
-        },
-        { id: 'employmentType', label: 'Hình thức làm việc', section: 'rqf-work', requiredForDraft: true },
-        { id: 'workModel', label: 'Mô hình làm việc', section: 'rqf-work', requiredForDraft: true },
+        { id: 'reasonForHiring', label: 'Lý do tuyển dụng', section: 'rqf-position', requiredForSubmit: true },
+        { id: 'employmentType', label: 'Hình thức làm việc', section: 'rqf-work', requiredForSubmit: true },
+        { id: 'workModel', label: 'Mô hình làm việc', section: 'rqf-work', requiredForSubmit: true },
+        { id: 'minSalary', label: 'Mức lương tối thiểu', section: 'rqf-work', requiredForSubmit: true },
+        { id: 'maxSalary', label: 'Mức lương tối đa', section: 'rqf-work', requiredForSubmit: true },
         { id: 'workLocation', label: 'Địa điểm làm việc', section: 'rqf-work', requiredForSubmit: true },
-        { id: 'reasonForHiring', label: 'Lý do tuyển dụng', section: 'rqf-content', requiredForSubmit: true },
         { id: 'jobDescription', label: 'Mô tả công việc', section: 'rqf-content', requiredForSubmit: true },
         { id: 'requirementDetails', label: 'Yêu cầu ứng viên', section: 'rqf-content', requiredForSubmit: true }
     ];
 
-    if (document.getElementById('departmentId')?.tagName === 'SELECT') {
-        FIELD_RULES.splice(1, 0, { id: 'departmentId', label: 'Phòng ban tuyển dụng', section: 'rqf-position', requiredForDraft: true });
+    const departmentField = document.getElementById('departmentId');
+    if (departmentField) {
+        FIELD_RULES.splice(1, 0, {
+            id: 'departmentId', label: 'Phòng ban tuyển dụng', section: 'rqf-position', requiredForSubmit: true,
+            target: departmentField.type === 'hidden' ? 'rqf-position' : 'departmentId'
+        });
     }
 
     const workLocation = document.getElementById('workLocation');
@@ -76,7 +82,7 @@
         const input = document.getElementById(fieldId);
         const errorEl = document.getElementById(fieldId + '-error');
         if (input) {
-            input.toggleAttribute('aria-invalid', Boolean(message));
+            input.setAttribute('aria-invalid', String(Boolean(message)));
             input.classList.toggle('is-invalid', Boolean(message));
         }
         if (errorEl) {
@@ -90,7 +96,7 @@
             return true;
         }
         const value = readFieldValue(rule);
-        const required = rule.requiredForDraft || (action === 'submit' && rule.requiredForSubmit);
+        const required = action === 'submit' && rule.requiredForSubmit;
         let message = '';
 
         if (rule.id === 'numberOfPositions' && document.getElementById(rule.id)?.validity.badInput) {
@@ -119,6 +125,7 @@
         if (!input) return;
         const raw = input.value;
         if (!raw) return;
+        if (!/^\d[\d.]*$/.test(raw)) return;
 
         const cursor = input.selectionStart || 0;
         const digitsBeforeCursor = raw.slice(0, cursor).replace(/\D/g, '').length;
@@ -155,42 +162,41 @@
         return isNaN(num) ? null : num;
     }
 
-    function validateNumbers() {
-        let valid = true;
+    const minSalaryInput = document.getElementById('minSalary');
+    const maxSalaryInput = document.getElementById('maxSalary');
+    const SALARY_IDS = new Set(['minSalary', 'maxSalary']);
 
-        const minSalaryInput = document.getElementById('minSalary');
-        const maxSalaryInput = document.getElementById('maxSalary');
+    function salaryMessages() {
+        const minRaw = minSalaryInput?.value.trim() || '';
+        const maxRaw = maxSalaryInput?.value.trim() || '';
         const minVal = parseSalary(minSalaryInput?.value);
         const maxVal = parseSalary(maxSalaryInput?.value);
 
-        let minSalaryMessage = '';
-        let maxSalaryMessage = '';
-
         const SALARY_MAX = 1000000000;
-        const salaryMessage = value => value === null ? ''
-            : value <= 0 ? 'Mức lương phải lớn hơn 0.'
-                : value > SALARY_MAX ? 'Mức lương không được vượt quá 1.000.000.000 VND/tháng.' : '';
-        minSalaryMessage = salaryMessage(minVal);
-        maxSalaryMessage = salaryMessage(maxVal);
-
-        if (minVal > 0 && maxVal > 0) {
-            if (maxVal < minVal) {
-                maxSalaryMessage = 'Mức lương tối đa phải lớn hơn hoặc bằng mức lương tối thiểu.';
-            }
+        const salaryMessage = (raw, value, label) => !raw ? `Vui lòng nhập ${label}.`
+            : value === null ? 'Mức lương không hợp lệ.'
+                : value <= 0 ? 'Mức lương phải lớn hơn 0.'
+                    : value > SALARY_MAX ? 'Mức lương không được vượt quá 1.000.000.000 VND/tháng.' : '';
+        const minSalaryMessage = salaryMessage(minRaw, minVal, 'mức lương tối thiểu');
+        let maxSalaryMessage = salaryMessage(maxRaw, maxVal, 'mức lương tối đa');
+        if (!minSalaryMessage && !maxSalaryMessage && maxVal < minVal) {
+            maxSalaryMessage = 'Mức lương tối đa phải lớn hơn hoặc bằng mức lương tối thiểu.';
         }
+        return { minSalary: minSalaryMessage, maxSalary: maxSalaryMessage };
+    }
 
-        showError('minSalary', minSalaryMessage);
-        showError('maxSalary', maxSalaryMessage);
+    function validateNumbers() {
+        const messages = salaryMessages();
+        showError('minSalary', messages.minSalary);
+        showError('maxSalary', messages.maxSalary);
 
-        const salariesOk = !minSalaryMessage && !maxSalaryMessage;
-        return valid && salariesOk;
+        return !messages.minSalary && !messages.maxSalary;
     }
 
     FIELD_RULES.forEach(rule => {
+        if (SALARY_IDS.has(rule.id)) return;
         const target = document.getElementById(rule.id);
-        target?.addEventListener('change', () => validateField(rule, 'draft'));
-        target?.addEventListener('blur', () => validateField(rule, 'submit'), true);
-        // Ô đang báo lỗi thì kiểm tra lại ngay khi sửa (kể cả bấm +/− của ô số lượng), để lỗi cũ không bị kẹt lại
+        // Chỉ kiểm tra lại lỗi đã có sau lần Gửi duyệt trước đó.
         target?.addEventListener('input', () => {
             if (target.classList.contains('is-invalid')) validateField(rule, 'submit');
         });
@@ -205,9 +211,8 @@
             }
             input.addEventListener('input', () => {
                 formatCurrencyInput(input);
-                validateNumbers();
+                if (input.classList.contains('is-invalid')) validateNumbers();
             });
-            input.addEventListener('blur', validateNumbers);
         }
     });
 
@@ -226,17 +231,20 @@
     });
 
     function refreshChecklist() {
+        const salaryErrors = salaryMessages();
         const isFieldDone = rule => {
+            if (SALARY_IDS.has(rule.id)) return !salaryErrors[rule.id];
             const value = readFieldValue(rule);
             if (!value) return false;
+            if (document.getElementById(rule.id)?.validity?.badInput) return false;
             // Checklist là điều kiện gửi duyệt nên tính cả lỗi chỉ áp dụng khi gửi duyệt
             return !(rule.errorOf && rule.errorOf(value)) && !(rule.submitErrorOf && rule.submitErrorOf(value));
         };
         const items = FIELD_RULES.filter(rule => rule.id !== 'workLocation' || !isRemote())
-            .map(rule => ({ label: rule.label, target: rule.id, done: isFieldDone(rule) }));
+            .map(rule => ({ label: rule.label, target: rule.target || rule.id, done: isFieldDone(rule) }));
 
         const doneCount = items.filter(item => item.done).length;
-        document.getElementById('rqf-progress').textContent = `${doneCount}/${items.length} mục bắt buộc đã xong`;
+        document.getElementById('rqf-progress').textContent = `${doneCount}/${items.length} mục đã xong`;
 
         const list = document.getElementById('rqf-checklist');
         list.replaceChildren(...items.map(item => {
@@ -258,7 +266,8 @@
     form.addEventListener('change', refreshChecklist);
 
     function validateAll(action) {
-        const fieldsOk = FIELD_RULES.map(rule => validateField(rule, action)).every(Boolean);
+        const fieldsOk = FIELD_RULES.filter(rule => !SALARY_IDS.has(rule.id))
+            .map(rule => validateField(rule, action)).every(Boolean);
         const numbersOk = validateNumbers();
         if (!(fieldsOk && numbersOk)) {
             const firstError = form.querySelector('[aria-invalid="true"], .is-invalid input');
@@ -294,7 +303,7 @@
         }
 
         const action = event.submitter?.value === 'submit' ? 'submit' : 'draft';
-        if (!validateAll(action)) {
+        if (action === 'submit' && !validateAll(action)) {
             event.preventDefault();
             confirmBox.hidden = true;
             buttons.hidden = false;

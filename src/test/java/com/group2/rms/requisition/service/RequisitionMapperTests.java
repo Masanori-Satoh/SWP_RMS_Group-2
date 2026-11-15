@@ -83,6 +83,18 @@ class RequisitionMapperTests {
     // ----- Dòng danh sách -----
 
     @Test
+    @DisplayName("Danh sách hiển thị mức lương đã lưu và nhãn khi chưa nhập")
+    void toListRow_shouldShowStoredSalary() {
+        JobRequisition requisition = requisition(RequisitionAccess.STATUS_DRAFT);
+        assertEquals("Chưa cập nhật", mapper.toListRow(requisition, manager, null, false).salaryLabel());
+
+        requisition.setMinSalary(new BigDecimal("1234.50"));
+        requisition.setMaxSalary(new BigDecimal("5678.75"));
+        assertEquals("1.234,5 – 5.678,75",
+                mapper.toListRow(requisition, manager, null, false).salaryLabel());
+    }
+
+    @Test
     @DisplayName("Bản nháp của chính mình, chưa có tin / đợt sau -> Sửa và xóa được, không sao chép / tạo tin")
     void toListRow_shouldAllowEditAndDelete_whenOwnerViewsOwnDraft() {
         // Act
@@ -149,6 +161,18 @@ class RequisitionMapperTests {
     // ----- Trang chi tiết -----
 
     @Test
+    @DisplayName("Chi tiết yêu cầu hiển thị số VND đã lưu, kể cả mức nhỏ hơn một triệu")
+    void toDetail_shouldShowExactStoredSalaryInVnd() {
+        JobRequisition requisition = requisition(RequisitionAccess.STATUS_APPROVED);
+        requisition.setMinSalary(new BigDecimal("1234.50"));
+        requisition.setMaxSalary(new BigDecimal("5678.75"));
+
+        RequisitionResponse detail = mapper.toDetail(requisition, manager, null, false, List.of(), List.of());
+
+        assertEquals("1.234,5 – 5.678,75 VND/tháng", detail.salaryLabel());
+    }
+
+    @Test
     @DisplayName("Bản nháp thiếu thông tin bắt buộc khi gửi duyệt -> incomplete = true")
     void toDetail_shouldMarkIncomplete_whenDraftMissesRequiredFields() {
         RequisitionResponse detail = mapper.toDetail(requisition(RequisitionAccess.STATUS_DRAFT), manager, null, false,
@@ -167,6 +191,8 @@ class RequisitionMapperTests {
         draft.setJobDescription("Phát triển RMS");
         draft.setRequirementDetails("Spring Boot");
         draft.setExpectedStaffingDate(java.time.LocalDate.of(2026, 12, 1));
+        draft.setMinSalary(new BigDecimal("10000000"));
+        draft.setMaxSalary(new BigDecimal("20000000"));
 
         // Act
         RequisitionResponse detail = mapper.toDetail(draft, manager, null, false, List.of(), List.of());

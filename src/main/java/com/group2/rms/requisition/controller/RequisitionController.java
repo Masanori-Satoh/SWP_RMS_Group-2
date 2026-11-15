@@ -13,7 +13,6 @@ import com.group2.rms.requisition.service.RequisitionService;
 import com.group2.rms.requisition.validator.RequisitionValidator;
 
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.access.AccessDeniedException;
@@ -188,7 +187,7 @@ public class RequisitionController {
     }
 
     @PostMapping("/create")
-    public String create(@Valid @ModelAttribute("form") RequisitionRequest form, BindingResult errors, Model model,
+    public String create(@ModelAttribute("form") RequisitionRequest form, BindingResult errors, Model model,
             RedirectAttributes flash) {
         access.requireCreate(access.actor());
         if (!errors.hasErrors()) {
@@ -206,7 +205,7 @@ public class RequisitionController {
     }
 
     @PostMapping("/edit/{id}")
-    public String update(@PathVariable Integer id, @Valid @ModelAttribute("form") RequisitionRequest form,
+    public String update(@PathVariable Integer id, @ModelAttribute("form") RequisitionRequest form,
             BindingResult errors, Model model, RedirectAttributes flash, HttpServletRequest request) {
         if (!errors.hasErrors()) {
             try {

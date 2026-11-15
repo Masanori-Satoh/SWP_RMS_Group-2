@@ -284,6 +284,8 @@ class RequisitionIntegrationTests {
                                 .employmentType("Full-time")
                                 .workLocation("Hà Nội")
                                 .workModel("On-site")
+                                .minSalary(new BigDecimal("10000000"))
+                                .maxSalary(new BigDecimal("20000000"))
                                 .jobDescription("DevOps responsibilities")
                                 .requirementDetails("DevOps requirements")
                                 .reasonForHiring("Dự án mở rộng cần thêm DevOps")

@@ -101,12 +101,17 @@ public class RequisitionServiceImpl implements RequisitionService {
         if (departmentId == null && !access.isDirector(currentUser)) {
 
             if (currentUser.getDepartment() == null) {
-                throw createValidationException("departmentId",
-                        "Tài khoản của bạn chưa được gán phòng ban đang hoạt động. Vui lòng liên hệ quản trị viên.");
+                if (RequisitionValidator.isSubmit(request.getAction())) {
+                    throw createValidationException("departmentId",
+                            "Tài khoản của bạn chưa được gán phòng ban đang hoạt động. Vui lòng liên hệ quản trị viên.");
+                }
+            } else {
+                departmentId = currentUser.getDepartment().getDepartmentId();
             }
-            departmentId = currentUser.getDepartment().getDepartmentId();
         }
-        request.setDepartmentId(requireDepartmentFor(currentUser, departmentId));
+        if (departmentId != null || RequisitionValidator.isSubmit(request.getAction())) {
+            request.setDepartmentId(requireDepartmentFor(currentUser, departmentId));
+        }
 
         validator.validate(request);
 
@@ -123,7 +128,9 @@ public class RequisitionServiceImpl implements RequisitionService {
 
 
         boolean directlyApproved = recordDirectApprovalIfNeeded(jobRequisition, currentUser);
-        String description = "Tạo yêu cầu: " + jobRequisition.getTitle() + " · " + jobRequisition.getApprovalStatus();
+        String displayTitle = jobRequisition.getTitle() == null
+                ? RequisitionValidator.PLACEHOLDER_TITLE : jobRequisition.getTitle();
+        String description = "Tạo yêu cầu: " + displayTitle + " · " + jobRequisition.getApprovalStatus();
         if (directlyApproved) {
             description = description + " (Giám đốc phê duyệt trực tiếp)";
         }
@@ -145,11 +152,13 @@ public class RequisitionServiceImpl implements RequisitionService {
 
         // Đổi phòng: Giám đốc mọi phòng, HM chỉ trong các phòng mình thuộc về/quản lý.
         // HM giữ nguyên phòng thì không kiểm lại (có thể đã thôi quản lý phòng đó nhưng vẫn sửa được bản của mình).
-        Integer currentDepartmentId = jobRequisition.getDepartment().getDepartmentId();
+        Integer currentDepartmentId = jobRequisition.getDepartment() == null
+                ? null : jobRequisition.getDepartment().getDepartmentId();
         Integer departmentId = request.getDepartmentId();
-        if (!access.isDirector(currentUser) && (departmentId == null || departmentId.equals(currentDepartmentId))) {
+        if (!access.isDirector(currentUser) && currentDepartmentId != null
+                && (departmentId == null || departmentId.equals(currentDepartmentId))) {
             request.setDepartmentId(currentDepartmentId);
-        } else {
+        } else if (departmentId != null || RequisitionValidator.isSubmit(request.getAction())) {
             request.setDepartmentId(requireDepartmentFor(currentUser, departmentId));
         }
 

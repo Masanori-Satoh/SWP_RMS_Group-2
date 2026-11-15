@@ -23,6 +23,9 @@
 .req-form-page .rqf-field .form-label { margin:0; }
 .req-form-page .rqf-field .form-input:disabled { color:var(--muted); background:var(--page); border-color:var(--line); cursor:not-allowed; }
 .req-form-page .rqf-hint { color:var(--muted); font-size:var(--font-sm); font-weight:400; }
+.req-form-page .rqf-salary-input { position:relative; min-width:0; }
+.req-form-page .rqf-salary-input .form-input { padding-right:calc(var(--s4) + 88px); }
+.req-form-page .rqf-salary-unit { position:absolute; right:var(--s4); top:50%; transform:translateY(-50%); color:var(--muted); font-size:var(--font-sm); pointer-events:none; white-space:nowrap; }
 /* Ô chỉ đọc trông giống ô nhập readonly (components.css .form-input[readonly]) */
 .req-form-page .rqf-readonly { display:flex; flex-wrap:wrap; align-items:center; gap:var(--s2); min-height:var(--input-h, 48px); padding:10px var(--s4); border:1px solid var(--control-line); border-radius:var(--radius-md); background:var(--page); color:var(--muted); font-size:var(--font-md, 16px); cursor:default; }
 .req-form-page .rqf-counter { color:var(--muted); font-size:var(--font-xs); text-align:right; font-variant-numeric:tabular-nums; }

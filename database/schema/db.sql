@@ -121,20 +121,20 @@ GO
 
 CREATE TABLE JobRequisition (
     RequisitionId          INT IDENTITY(1,1) PRIMARY KEY,
-    Title                  NVARCHAR(200) NOT NULL,
-    DepartmentId           INT NOT NULL,
+    Title                  NVARCHAR(200) NULL,
+    DepartmentId           INT NULL,
     HiringManagerId        INT NOT NULL,
     CreatedBy              INT NULL,
     ExpectedStaffingDate   DATE NULL,
     OriginalRequisitionId  INT NULL,
-    NumberOfPositions      INT NOT NULL,
-    EmploymentType         NVARCHAR(50) NOT NULL,
+    NumberOfPositions      INT NULL,
+    EmploymentType         NVARCHAR(50) NULL,
     MinSalary              DECIMAL(18,2) NULL,
     MaxSalary              DECIMAL(18,2) NULL,
     ReasonForHiring        NVARCHAR(2000) NULL,
     JobDescription         NVARCHAR(MAX) NOT NULL,
     RequirementDetails     NVARCHAR(MAX) NOT NULL,
-    WorkModel              NVARCHAR(20) NOT NULL CONSTRAINT DF_JobRequisition_WorkModel DEFAULT N'On-site',
+    WorkModel              NVARCHAR(20) NULL CONSTRAINT DF_JobRequisition_WorkModel DEFAULT N'On-site',
     WorkLocation           NVARCHAR(255) NULL,
     ApprovalStatus         NVARCHAR(30) NOT NULL CONSTRAINT DF_JobRequisition_ApprovalStatus DEFAULT N'Draft',
     SubmittedAt            DATETIME2 NULL,
@@ -155,13 +155,13 @@ CREATE TABLE JobRequisition (
         FOREIGN KEY (OriginalRequisitionId) REFERENCES JobRequisition(RequisitionId),
  
     CONSTRAINT CK_JobRequisition_NumberOfPositions
-        CHECK (NumberOfPositions > 0),
+        CHECK (ApprovalStatus = N'Draft' OR (NumberOfPositions IS NOT NULL AND NumberOfPositions > 0)),
  
     CONSTRAINT CK_JobRequisition_EmploymentType
-        CHECK (EmploymentType IN (N'Full-time', N'Part-time', N'Internship', N'Freelance')),
+        CHECK (ApprovalStatus = N'Draft' OR (EmploymentType IS NOT NULL AND EmploymentType IN (N'Full-time', N'Part-time', N'Internship', N'Freelance'))),
 
     CONSTRAINT CK_JobRequisition_WorkModel
-        CHECK (WorkModel IN (N'On-site', N'Remote', N'Hybrid')),
+        CHECK (ApprovalStatus = N'Draft' OR (WorkModel IS NOT NULL AND WorkModel IN (N'On-site', N'Remote', N'Hybrid'))),
  
     CONSTRAINT CK_JobRequisition_ApprovalStatus
         CHECK (ApprovalStatus IN (
@@ -173,17 +173,19 @@ CREATE TABLE JobRequisition (
         )),
  
     CONSTRAINT CK_JobRequisition_Salary_Range
-        CHECK (MinSalary IS NULL OR MaxSalary IS NULL OR MinSalary <= MaxSalary),
+        CHECK (ApprovalStatus = N'Draft' OR MinSalary IS NULL OR MaxSalary IS NULL OR MinSalary <= MaxSalary),
  
     CONSTRAINT CK_JobRequisition_Salary_NonNegative
-        CHECK ((MinSalary IS NULL OR MinSalary BETWEEN 0.01 AND 1000000000)
+        CHECK (ApprovalStatus = N'Draft' OR (MinSalary IS NULL OR MinSalary BETWEEN 0.01 AND 1000000000)
             AND (MaxSalary IS NULL OR MaxSalary BETWEEN 0.01 AND 1000000000)),
     CONSTRAINT CK_JobRequisition_Title_NotBlank
-        CHECK (LEN(TRIM(Title)) > 0),
+        CHECK (ApprovalStatus = N'Draft' OR (Title IS NOT NULL AND LEN(TRIM(Title)) > 0)),
+    CONSTRAINT CK_JobRequisition_Department_Required
+        CHECK (ApprovalStatus = N'Draft' OR DepartmentId IS NOT NULL),
     CONSTRAINT CK_JobRequisition_ExpectedStaffingDate_Required
         CHECK (ApprovalStatus = N'Draft' OR ExpectedStaffingDate IS NOT NULL),
     CONSTRAINT CK_JobRequisition_ExpectedStaffingDate_Chronology
-        CHECK (ExpectedStaffingDate IS NULL OR
+        CHECK (ApprovalStatus = N'Draft' OR ExpectedStaffingDate IS NULL OR
             (ExpectedStaffingDate >= CONVERT(DATE, CreatedAt)
              AND (SubmittedAt IS NULL OR ExpectedStaffingDate >= CONVERT(DATE, SubmittedAt)))),
     CONSTRAINT CK_JobRequisition_Submitted_Content

@@ -179,7 +179,7 @@
                             <col class="col-department">
                             <col class="col-quantity">
                             <col class="col-type">
-                            <col class="col-status">
+                            <col class="col-salary">
                             <col class="col-posting">
                             <col class="col-date">
                             <col class="col-actions">
@@ -191,7 +191,7 @@
                                 <th scope="col">Phòng ban</th>
                                 <th scope="col">Số lượng</th>
                                 <th scope="col">Hình thức làm việc</th>
-                                <th scope="col">Trạng thái</th>
+                                <th scope="col">Mức lương (VND/tháng)</th>
                                 <th scope="col">Tin tuyển dụng</th>
                                 <th scope="col">Ngày tạo</th>
                                 <th scope="col">Thao tác</th>
@@ -207,11 +207,7 @@
                                 <td th:text="${req.numberOfPositions ?: '—'}"></td>
                                 <!-- Nhãn tiếng Việt do service tính sẵn (RequisitionLabels), template không tự dịch -->
                                 <td th:text="${req.employmentTypeLabel}">Toàn thời gian</td>
-                                <td>
-                                    <!-- statusTone = success / warning / danger / neutral → class badge--... của catalog -->
-                                    <span class="badge" th:classappend="|badge--${req.statusTone}|"
-                                        th:text="${req.statusLabel}">Đã duyệt</span>
-                                </td>
+                                <td class="requisition-salary" th:text="${req.salaryLabel}">20.000.000 – 30.000.000</td>
                                 <td>
                                     <!-- Chỉ thành link khi người xem vào được trang tin tuyển dụng (Director thì không) -->
                                     <a th:if="${req.postingViewable}" class="badge"

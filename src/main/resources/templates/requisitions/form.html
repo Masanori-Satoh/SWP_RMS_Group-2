@@ -158,25 +158,27 @@
 
 
                             <div class="rqf-field">
-                                <label class="form-label" for="minSalary">Mức lương tối thiểu <span
-                                        class="rqf-hint">VND/tháng</span></label>
-                                <input class="form-input" type="text" th:field="*{minSalary}" inputmode="numeric"
-                                    placeholder="Nhập lương tối thiểu" aria-describedby="minSalary-error"
-                                    th:attr="aria-invalid=${#fields.hasErrors('minSalary')}">
+                                <label class="form-label" for="minSalary">Mức lương tối thiểu <span class="required-asterisk">*</span></label>
+                                <div class="rqf-salary-input">
+                                    <input class="form-input" type="text" th:field="*{minSalary}" inputmode="numeric"
+                                        placeholder="Nhập lương tối thiểu" aria-describedby="minSalary-unit minSalary-error"
+                                        th:attr="aria-invalid=${#fields.hasErrors('minSalary')}">
+                                    <span id="minSalary-unit" class="rqf-salary-unit">VND/tháng</span>
+                                </div>
                                 <small id="minSalary-error" class="field-error"
                                     th:text="${#fields.hasErrors('minSalary')} ? ${#strings.listJoin(#fields.errors('minSalary'), '; ')} : ''"></small>
                             </div>
                             <div class="rqf-field">
-                                <label class="form-label" for="maxSalary">Mức lương tối đa <span
-                                        class="rqf-hint">VND/tháng</span></label>
-                                <input class="form-input" type="text" th:field="*{maxSalary}" inputmode="numeric"
-                                    placeholder="Nhập lương tối đa" aria-describedby="salary-help maxSalary-error"
-                                    th:attr="aria-invalid=${#fields.hasErrors('maxSalary')}">
+                                <label class="form-label" for="maxSalary">Mức lương tối đa <span class="required-asterisk">*</span></label>
+                                <div class="rqf-salary-input">
+                                    <input class="form-input" type="text" th:field="*{maxSalary}" inputmode="numeric"
+                                        placeholder="Nhập lương tối đa" aria-describedby="maxSalary-unit maxSalary-error"
+                                        th:attr="aria-invalid=${#fields.hasErrors('maxSalary')}">
+                                    <span id="maxSalary-unit" class="rqf-salary-unit">VND/tháng</span>
+                                </div>
                                 <small id="maxSalary-error" class="field-error"
                                     th:text="${#fields.hasErrors('maxSalary')} ? ${#strings.listJoin(#fields.errors('maxSalary'), '; ')} : ''"></small>
                             </div>
-                            <small id="salary-help" class="rqf-hint rqf-full">Để trống nếu lương thỏa thuận.</small>
-
                             <div class="rqf-field rqf-full">
                                 <label class="form-label" for="workLocation">Địa điểm làm việc <span
                                         class="required-asterisk" id="workLocation-required"
@@ -226,7 +228,7 @@
             <aside class="rqf-rail" aria-label="Tình trạng biểu mẫu">
                 <section class="card rqf-rail-card adw-surface">
                     <h2 class="rqf-rail-title">Sẵn sàng gửi duyệt</h2>
-                    <p class="rqf-hint" id="rqf-progress">0/9 mục bắt buộc đã xong</p>
+                    <p class="rqf-hint" id="rqf-progress">0/12 mục đã xong</p>
                     <ul class="rqf-checklist" id="rqf-checklist"></ul>
                 </section>
 
