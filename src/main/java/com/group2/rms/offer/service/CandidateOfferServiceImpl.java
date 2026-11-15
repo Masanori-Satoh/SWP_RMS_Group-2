@@ -289,6 +289,12 @@ public class CandidateOfferServiceImpl implements CandidateOfferService {
                 ? app.getSubmissionDate()
                 : (offer.getCreatedAt() != null ? offer.getCreatedAt().minusDays(11) : null);
 
+        // Khi phát hành: ResponseDeadline = thời điểm phát hành + ResponsePeriodDays.
+        // CreatedAt là ngày lập đề xuất; UpdatedAt còn đổi khi ứng viên phản hồi hoặc Offer hết hạn.
+        LocalDateTime sentAt = offer.getResponseDeadline() != null
+                && offer.getResponsePeriodDays() != null && offer.getResponsePeriodDays() > 0
+                ? offer.getResponseDeadline().minusDays(offer.getResponsePeriodDays()) : null;
+
         return new CandidateOfferDetailResponse(
                 offer.getOfferId(),
                 offerCode,
@@ -317,7 +323,7 @@ public class CandidateOfferServiceImpl implements CandidateOfferService {
                 offer.getDeclineReason(),
                 offer.getResponsePeriodDays(),
                 offer.getResponseDeadline(),
-                offer.getCreatedAt(),
+                sentAt,
                 offer.getUpdatedAt(),
                 appId,
                 appCode,

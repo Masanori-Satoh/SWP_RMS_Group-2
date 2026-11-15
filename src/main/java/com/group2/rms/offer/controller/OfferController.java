@@ -407,10 +407,10 @@ public class OfferController {
 
     /**
      * 10. EXPORT EXCEL: Chỉ HR được xuất dữ liệu Offer theo phạm vi và bộ cột được chọn (Screen
-     * 30)
+     * 30). Thành công trả file XLSX; lỗi nghiệp vụ trả JSON để modal hiển thị đúng thông báo.
      */
     @PostMapping("/export")
-    public org.springframework.http.ResponseEntity<byte[]> exportOffers(
+    public ResponseEntity<?> exportOffers(
             @Valid @RequestBody com.group2.rms.offer.dto.OfferExportRequest request,
             Principal principal) {
         if (!(principal instanceof org.springframework.security.core.Authentication auth)
@@ -418,15 +418,21 @@ public class OfferController {
                 || auth.getAuthorities().stream().noneMatch(a -> "ROLE_HR".equals(a.getAuthority()))) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
-        String exportedBy = principal.getName();
-        byte[] excelBytes = offerExportService.exportOffersToExcel(request, exportedBy);
-        String filename = offerExportService.generateExportFilename(request);
+        try {
+            String exportedBy = principal.getName();
+            byte[] excelBytes = offerExportService.exportOffersToExcel(request, exportedBy);
+            String filename = offerExportService.generateExportFilename(request);
 
-        return org.springframework.http.ResponseEntity.ok()
-                .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION,
-                        "attachment; filename=\"" + filename + "\"")
-                .header(org.springframework.http.HttpHeaders.CONTENT_TYPE,
-                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-                .body(excelBytes);
+            return ResponseEntity.ok()
+                    .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION,
+                            "attachment; filename=\"" + filename + "\"")
+                    .header(org.springframework.http.HttpHeaders.CONTENT_TYPE,
+                            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                    .body(excelBytes);
+        } catch (OfferValidationException e) {
+            return ResponseEntity.badRequest()
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(new ApiResponse<Void>(false, e.getMessage()));
+        }
     }
 }

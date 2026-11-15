@@ -33,6 +33,7 @@ public final class NotificationLabels {
             case "OFFER_LETTER_SENT" -> "Thư mời nhận việc";
             case "OFFER_ACCEPTED" -> "Ứng viên nhận việc";
             case "OFFER_DECLINED" -> "Ứng viên từ chối thư mời";
+            case "OFFER_EXPIRED" -> "Thư mời hết hạn";
             default -> null;
         };
     }
@@ -45,7 +46,7 @@ public final class NotificationLabels {
             case "REQUISITION_APPROVED", "JOB_POSTING_PUBLISHED", "JOB_POSTING_REOPENED", "APPLICATION_HM_PASSED",
                  "INTERVIEW_SCHEDULED", "OFFER_DIRECTOR_APPROVED", "OFFER_LETTER_SENT", "OFFER_ACCEPTED" -> "success";
             case "REQUISITION_PENDING_DIRECTOR", "APPLICATION_HR_PASSED", "INTERVIEW_RESCHEDULED",
-                 "OFFER_PENDING_DIRECTOR", "JOB_POSTING_PAUSED" -> "warning";
+                 "OFFER_PENDING_DIRECTOR", "OFFER_EXPIRED", "JOB_POSTING_PAUSED" -> "warning";
             case "REQUISITION_REJECTED", "APPLICATION_REJECTED", "INTERVIEW_CANCELLED", "OFFER_DIRECTOR_REJECTED",
                  "OFFER_DECLINED" -> "danger";
             default -> "neutral";

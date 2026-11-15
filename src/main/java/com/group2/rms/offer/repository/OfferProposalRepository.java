@@ -52,6 +52,18 @@ public interface OfferProposalRepository extends JpaRepository<OfferProposal, In
             """)
     int expireDue(@Param("now") java.time.LocalDateTime now, @Param("today") java.time.LocalDate today);
 
+    /** Khóa theo batch để chỉ thông báo những offer thực sự hết hạn, không ghi đè phản hồi ứng viên. */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+            SELECT o FROM OfferProposal o
+            WHERE o.offerStatus = 'Sent_Candidate' AND (o.isDeleted IS NULL OR o.isDeleted = false)
+                AND ((o.responseDeadline IS NOT NULL AND o.responseDeadline < :now)
+                    OR (o.expectedStartDate IS NOT NULL AND o.expectedStartDate < :today))
+            ORDER BY o.offerId
+            """)
+    List<OfferProposal> findDueForUpdate(@Param("now") LocalDateTime now,
+                                       @Param("today") java.time.LocalDate today, Pageable pageable);
+
     @Query("SELECT COUNT(o) FROM OfferProposal o WHERE (o.isDeleted IS NULL OR o.isDeleted = false) AND o.offerStatus = 'Expired'")
     long countExpired();
 

@@ -44,6 +44,39 @@ class CandidateOfferServiceTests {
 
     private CandidateOfferServiceImpl service;
 
+    @ParameterizedTest
+    @org.junit.jupiter.params.provider.CsvSource({
+            "Sent_Candidate, 1", "Accepted, 5", "Declined, 60", "Expired, 5"
+    })
+    void detailShowsIssuanceTimeInsteadOfCreationOrLaterUpdates(String status, int responseDays) {
+        var issuedAt = java.time.LocalDateTime.of(2026, 11, 14, 9, 15, 30);
+        OfferProposal testOffer = offer(OFFER_ID, status);
+        testOffer.setCreatedAt(issuedAt.minusDays(7));
+        testOffer.setUpdatedAt(issuedAt.plusDays(3));
+        testOffer.setResponsePeriodDays(responseDays);
+        testOffer.setResponseDeadline(issuedAt.plusDays(responseDays));
+        when(offers.findVisibleById(eq(OFFER_ID), eq(USER_ID), anyCollection()))
+                .thenReturn(Optional.of(testOffer));
+
+        assertEquals(issuedAt, service.getDetail(OFFER_ID).sentAt());
+    }
+
+    @ParameterizedTest
+    @org.junit.jupiter.params.provider.CsvSource({", true", "0, true", "-1, true", "5, false"})
+    void detailDoesNotInventIssuanceTimeWhenDeadlineMetadataIsMissingOrInvalid(
+            Integer responseDays, boolean hasDeadline) {
+        OfferProposal testOffer = offer(OFFER_ID, "Accepted");
+        testOffer.setCreatedAt(java.time.LocalDateTime.of(2026, 11, 7, 9, 0));
+        testOffer.setUpdatedAt(java.time.LocalDateTime.of(2026, 11, 20, 10, 0));
+        testOffer.setResponsePeriodDays(responseDays);
+        testOffer.setResponseDeadline(hasDeadline
+                ? java.time.LocalDateTime.of(2026, 11, 19, 9, 0) : null);
+        when(offers.findVisibleById(eq(OFFER_ID), eq(USER_ID), anyCollection()))
+                .thenReturn(Optional.of(testOffer));
+
+        assertNull(service.getDetail(OFFER_ID).sentAt());
+    }
+
     @Test
     void persistedExpiredOfferRemainsVisibleButCannotBeAnswered() {
         OfferProposal expired = offer(OFFER_ID, "Expired");

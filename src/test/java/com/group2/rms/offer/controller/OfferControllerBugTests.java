@@ -7,6 +7,12 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.ResultMatcher;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.regex.Pattern;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -106,8 +112,7 @@ public class OfferControllerBugTests {
                 .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.view().name("offers/director-list"))
                 .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.model().attribute("currentStatus", "Pending_Director"))
                 .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.model().attribute("currentTab", "PENDING"))
-                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.content().string(org.hamcrest.Matchers.containsString("Phê duyệt đề xuất thư mời")))
-                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.content().string(org.hamcrest.Matchers.containsString("Danh Sách Đề Xuất Chờ Phê Duyệt")));
+                .andExpect(directorPageShowsSelectedStatus("Pending_Director"));
     }
 
     @Test
@@ -131,7 +136,7 @@ public class OfferControllerBugTests {
                 .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.model().attribute("currentTab", "HISTORY"))
                 .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.model().attribute("search", "Huynh"))
                 .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.model().attribute("currentTimeSort", "LATEST"))
-                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.content().string(org.hamcrest.Matchers.containsString("Danh Sách Đề Xuất Đã Phê Duyệt")));
+                .andExpect(directorPageShowsSelectedStatus("Director_Approved"));
     }
 
     @Test
@@ -153,6 +158,26 @@ public class OfferControllerBugTests {
                 .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.view().name("offers/director-list"))
                 .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.model().attribute("currentStatus", "Director_Rejected"))
                 .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.model().attribute("currentTab", "HISTORY"))
-                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.content().string(org.hamcrest.Matchers.containsString("Danh Sách Đề Xuất Đã Từ Chối")));
+                .andExpect(directorPageShowsSelectedStatus("Director_Rejected"));
+    }
+
+    /** Kiểm tra h1 và đúng thẻ được chọn; không phụ thuộc class CSS hay thứ tự thuộc tính HTML. */
+    private static ResultMatcher directorPageShowsSelectedStatus(String selectedStatus) {
+        return result -> {
+            String html = result.getResponse().getContentAsString(StandardCharsets.UTF_8);
+            assertTrue(Pattern.compile("<h1\\b[^>]*>\\s*Phê duyệt thư mời nhận việc\\s*</h1>", Pattern.DOTALL)
+                    .matcher(html).find(), "Director page must render the current h1 heading");
+
+            for (String status : List.of("Pending_Director", "Director_Approved", "Director_Rejected")) {
+                var card = Pattern.compile("<button\\b(?=[^>]*\\bdata-offer-status=\""
+                        + Pattern.quote(status) + "\")[^>]*>").matcher(html);
+                assertTrue(card.find(), "Missing status card: " + status);
+                String openingTag = card.group();
+                String expectedPressed = status.equals(selectedStatus) ? "true" : "false";
+                assertTrue(openingTag.contains("aria-pressed=\"" + expectedPressed + "\""),
+                        "Wrong aria-pressed on " + status + "; selected filter: " + selectedStatus);
+                assertFalse(card.find(), "Duplicate status card: " + status);
+            }
+        };
     }
 }

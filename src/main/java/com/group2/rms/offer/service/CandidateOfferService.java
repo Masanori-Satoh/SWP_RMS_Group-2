@@ -24,7 +24,7 @@ public interface CandidateOfferService {
     String accept(Integer offerId);
 
     /**
-     * Ứng viên từ chối offer kèm lý do: offer thành {@code Declined}, hồ sơ thành {@code Rejected}.
+     * Ứng viên từ chối offer kèm lý do: offer thành {@code Declined}, hồ sơ thành {@code Withdrawn}.
      *
      * @return tên vị trí, cho thông báo thành công
      */

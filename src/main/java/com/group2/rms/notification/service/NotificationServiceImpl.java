@@ -633,6 +633,39 @@ public class NotificationServiceImpl implements NotificationService {
         }
     }
 
+    @Override
+    @Transactional
+    public void notifyOfferExpired(OfferProposal offer) {
+        if (offer == null || offer.getOfferId() == null || Boolean.TRUE.equals(offer.getIsDeleted())
+                || !"Expired".equals(offer.getOfferStatus())) {
+            return;
+        }
+        Map<Integer, User> recipients = new LinkedHashMap<>();
+        if (offer.getProposedBy() != null && offer.getProposedBy().getUserId() != null) {
+            recipients.put(offer.getProposedBy().getUserId(), offer.getProposedBy());
+        }
+        List<User> activeHrs = userRepository.findAllActiveHrs();
+        if (activeHrs != null) {
+            for (User hr : activeHrs) {
+                if (hr != null && hr.getUserId() != null) {
+                    recipients.putIfAbsent(hr.getUserId(), hr);
+                }
+            }
+        }
+        String referenceId = String.valueOf(offer.getOfferId());
+        String eventId = "OFFER_EXPIRED_" + offer.getOfferId();
+        String title = "Thư mời nhận việc đã hết hạn: " + NotificationMessages.positionTitle(offer);
+        String content = NotificationMessages.offerExpiredContent(offer);
+        LocalDateTime createdAt = LocalDateTime.now(clock);
+        for (User recipient : recipients.values()) {
+            int inserted = notificationRepository.insertOfferExpiredIfAbsent(recipient.getUserId(), title, content,
+                    referenceId, "/offers/" + referenceId, eventId, createdAt);
+            if (inserted == 1) {
+                events.publishEvent(new NotificationPushListener.Created(recipient.getUserId(), recipient.getUsername()));
+            }
+        }
+    }
+
     private void saveIfNotDuplicate(Notification notification) {
         Integer recipientId = notification.getRecipient().getUserId();
         if (notificationRepository.existsByRecipient_UserIdAndEventId(recipientId, notification.getEventId())) {

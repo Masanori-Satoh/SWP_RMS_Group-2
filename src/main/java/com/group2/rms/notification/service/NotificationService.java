@@ -69,6 +69,9 @@ public interface NotificationService {
 
     void notifyOfferResponseFromCandidate(OfferProposal offer, boolean accepted, String declineReason);
 
+    /** Báo HR đề xuất và các HR Active sau khi Offer đã commit Expired; một thông báo/người/sự kiện. */
+    void notifyOfferExpired(OfferProposal offer);
+
     Page<NotificationResponse> getNotificationsForUser(User user, int page, int size);
 
     long getUnreadCount(User user);

@@ -72,6 +72,87 @@ class NotificationServiceImplTests {
         rejection = rejection(7, "Kinh phí dự kiến vượt trần");
     }
 
+    @Test
+    void notifyOfferExpired_shouldNotifyProposerAndActiveHrsOnceWithStableEventAndLink() {
+        User proposer = User.builder().userId(15).username("hr.proposer").build();
+        User anotherHr = User.builder().userId(16).username("hr.other").build();
+        var offer = com.group2.rms.offer.entity.OfferProposal.builder().offerId(41)
+                .offerStatus("Expired").proposedBy(proposer).offeredPositionTitle("Java Engineer")
+                .responseDeadline(LocalDateTime.of(2026, 10, 29, 12, 0)).build();
+        when(userRepository.findAllActiveHrs()).thenReturn(List.of(proposer, anotherHr, proposer));
+        when(notificationRepository.insertOfferExpiredIfAbsent(anyInt(), anyString(), anyString(),
+                anyString(), anyString(), anyString(), any())).thenReturn(1);
+
+        notificationService.notifyOfferExpired(offer);
+
+        ArgumentCaptor<Integer> recipients = ArgumentCaptor.forClass(Integer.class);
+        verify(notificationRepository, times(2)).insertOfferExpiredIfAbsent(recipients.capture(),
+                eq("Thư mời nhận việc đã hết hạn: Java Engineer"), contains("29/10/2026 12:00"),
+                eq("41"), eq("/offers/41"), eq("OFFER_EXPIRED_41"), eq(LocalDateTime.now(CLOCK)));
+        assertEquals(List.of(15, 16), recipients.getAllValues());
+        verify(events, times(2)).publishEvent(any(NotificationPushListener.Created.class));
+        assertEquals("Thư mời hết hạn", NotificationLabels.eventLabel("OFFER_EXPIRED"));
+        assertEquals("warning", NotificationLabels.eventTone("OFFER_EXPIRED"));
+    }
+
+    @Test
+    void notifyOfferExpired_shouldNotPublishAgainWhenAtomicInsertReportsExistingEvent() {
+        User proposer = User.builder().userId(15).username("hr.proposer").build();
+        var offer = com.group2.rms.offer.entity.OfferProposal.builder().offerId(41)
+                .offerStatus("Expired").proposedBy(proposer).build();
+        when(notificationRepository.insertOfferExpiredIfAbsent(eq(15), anyString(), anyString(),
+                eq("41"), eq("/offers/41"), eq("OFFER_EXPIRED_41"), any())).thenReturn(1, 0);
+
+        notificationService.notifyOfferExpired(offer);
+        notificationService.notifyOfferExpired(offer);
+
+        verify(events, times(1)).publishEvent(any(NotificationPushListener.Created.class));
+        verify(notificationRepository, times(2)).insertOfferExpiredIfAbsent(eq(15), anyString(), anyString(),
+                eq("41"), eq("/offers/41"), eq("OFFER_EXPIRED_41"), any());
+    }
+
+    @Test
+    void notifyOfferExpired_shouldUseActiveHrsWhenProposerIsUnavailable() {
+        User activeHr = User.builder().userId(16).username("hr.other").build();
+        var offer = com.group2.rms.offer.entity.OfferProposal.builder().offerId(41).offerStatus("Expired").build();
+        when(userRepository.findAllActiveHrs()).thenReturn(List.of(activeHr));
+
+        notificationService.notifyOfferExpired(offer);
+
+        verify(notificationRepository).insertOfferExpiredIfAbsent(eq(16), anyString(), anyString(),
+                eq("41"), eq("/offers/41"), eq("OFFER_EXPIRED_41"), any());
+    }
+
+    @Test
+    void notifyOfferExpired_shouldIgnoreInvalidDeletedOrNonExpiredOffers() {
+        notificationService.notifyOfferExpired(null);
+        notificationService.notifyOfferExpired(com.group2.rms.offer.entity.OfferProposal.builder()
+                .offerStatus("Expired").build());
+        for (String state : List.of("Draft", "Pending_Director", "Director_Approved", "Director_Rejected",
+                "Sent_Candidate", "Accepted", "Declined")) {
+            notificationService.notifyOfferExpired(com.group2.rms.offer.entity.OfferProposal.builder()
+                    .offerId(41).offerStatus(state).build());
+        }
+        notificationService.notifyOfferExpired(com.group2.rms.offer.entity.OfferProposal.builder()
+                .offerId(41).offerStatus("Expired").isDeleted(true).build());
+
+        verifyNoInteractions(userRepository, notificationRepository, events);
+    }
+
+    @Test
+    void notifyOfferExpired_shouldNotPublishWhenInsertFails() {
+        User proposer = User.builder().userId(15).username("hr.proposer").build();
+        var offer = com.group2.rms.offer.entity.OfferProposal.builder().offerId(41)
+                .offerStatus("Expired").proposedBy(proposer).build();
+        when(notificationRepository.insertOfferExpiredIfAbsent(anyInt(), anyString(), anyString(),
+                anyString(), anyString(), anyString(), any()))
+                .thenThrow(new org.springframework.dao.DataAccessResourceFailureException("insert failed"));
+
+        assertThrows(org.springframework.dao.DataAccessResourceFailureException.class,
+                () -> notificationService.notifyOfferExpired(offer));
+        verifyNoInteractions(events);
+    }
+
     private RequisitionApproval rejection(int approvalId, String comment) {
         return RequisitionApproval.builder()
                 .approvalId(approvalId)
