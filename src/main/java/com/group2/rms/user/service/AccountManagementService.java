@@ -302,8 +302,6 @@ public class AccountManagementService {
             Integer roleId, Integer departmentId, String password) {
     }
 
-  
-
     public record UpdateCommand(String fullName, String email, String phoneNumber,
             Integer roleId, Integer departmentId, String accountStatus) {
     }

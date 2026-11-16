@@ -4,7 +4,6 @@
 
 ## Yêu cầu và kết quả
 
-Đổi bố cục theo mockup, dùng cùng giao diện Mộc với Talent Pool / HR Recommend. Áp dụng UI UX Pro Max, Impeccable, Taste và Awesome Design Reference trong phạm vi hệ thiết kế đang có.
 
 - Cột trái khoảng 64%: nhận diện ứng viên, trạng thái/nguồn gốc, thông báo chờ đồng ý, hành trình và CV.
 - Cột phải khoảng 36%: thông tin ứng viên gọn hai cột, ghi chú chung, hoạt động và thao tác theo quyền.
@@ -33,10 +32,6 @@ Danh sách file, số dòng thêm/xóa và phạm vi bảo toàn nằm trong [wo
 - **67/67 MVC, 3/3 JavaScript qua**; chạy lại kịch bản 4 biến thể sau chỉnh dialog cũng qua.
 - Chrome: kiểm tra desktop 1440px, tablet 768px, mobile 390px; không tràn ngang, không JS exception; các dialog mở/Hủy hoạt động.
 - Không gửi mutation nghiệp vụ trong browser fixture; chưa chạy end-to-end với SQL Server/SMTP/CV thật. Không commit/push.
-
-## Triage cảnh báo Impeccable
-
-`flat-type-hierarchy` là báo nhầm: detector đọc HTML chưa nạp CSS ngoài và báo body/h1/h2 đều 16px. Trình duyệt đo tên ứng viên 26px desktop, 23px mobile; tiêu đề thẻ 17px; nội dung 13,5–15px. Giữ phân cấp hiện có và ghi ngoại lệ **chỉ quy tắc này trên file `candidate/application-detail.html`** qua CLI của skill. Chạy detect lại không còn finding; không tắt quy tắc toàn dự án. Cấu hình `.impeccable/config.json` hiện được Git ignore và được ghi nhận tại máy này.
 
 ## Cách ghi nhận các lượt sau
 

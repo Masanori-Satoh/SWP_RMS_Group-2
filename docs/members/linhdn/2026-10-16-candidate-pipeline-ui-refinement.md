@@ -1,6 +1,6 @@
 # 2026-10-16 — Tinh chỉnh Giao diện Quản lý Hồ sơ Ứng tuyển & Tuân thủ Kiến trúc Tuyệt đối
 
-1. **Người thực hiện:** Nhóm phát triển Candidate Feature / AI Assistant — nhánh `feature/potential-candidate`.
+1. **Người thực hiện:** Nhóm phát triển Candidate Feature — nhánh `feature/potential-candidate`.
 2. **Yêu cầu & Quyết định:**
    - **Tối ưu Pop-up Ghi chú Ứng viên tiềm năng (`#app-bookmark`):**
      - Nâng cấp Banner nhận diện ứng viên nổi bật hơn: bổ sung avatar initials, họ tên, vị trí ứng tuyển, badge trạng thái tiềm năng (`.badge.badge--success` / `.badge.badge--neutral`).

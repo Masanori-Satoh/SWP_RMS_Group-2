@@ -4,7 +4,7 @@
 
 ## Phạm vi và quy tắc
 
-Tinh gọn luồng HM mở Job Posting → kho tiềm năng → chọn ứng viên/CV nguồn → kiểm tra danh sách. Áp dụng `docs/architecture/ARCHITECTURE_GUIDE.md`, bộ `docs/architecture/UI/` và giao diện mộc. RMS hiện có; tham khảo Impeccable/UI UX Pro Max.
+Tinh gọn luồng HM mở Job Posting → kho tiềm năng → chọn ứng viên/CV nguồn → kiểm tra danh sách. Áp dụng `docs/architecture/ARCHITECTURE_GUIDE.md`, bộ `docs/architecture/UI/` và giao diện mộc. RMS hiện có.
 
 Không thay đổi schema, entity, repository, dependency, bảo mật chung, layout, sidebar hay token toàn hệ thống. Không commit/push. Giữ nguyên các thay đổi tài liệu đã có sẵn trong working tree của người dùng.
 

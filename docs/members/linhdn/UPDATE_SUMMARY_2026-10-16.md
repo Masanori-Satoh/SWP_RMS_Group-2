@@ -6,7 +6,6 @@ Cập nhật chức năng lưu ứng viên tiềm năng, ghi chú chung, xem nha
 
 - Nền tảng hiện tại: Spring Boot, Thymeleaf, HTML/CSS/JavaScript.
 - Giữ phong cách giao diện mộc. RMS, sử dụng token và component sẵn có.
-- Áp dụng Impeccable và UI UX Pro Max cho phần giao diện ứng viên.
 - Tài liệu bao gồm đợt triển khai ban đầu và lượt tinh gọn giao diện/bổ sung bỏ lưu theo phản hồi. Kế hoạch 11 commit ở cuối tài liệu thuộc đợt ban đầu; trạng thái commit thực tế cần xem bằng `git status`/`git log`.
 - Không thay đổi schema database, không chạy SQL cập nhật dữ liệu và không commit/push trong quá trình thực hiện.
 

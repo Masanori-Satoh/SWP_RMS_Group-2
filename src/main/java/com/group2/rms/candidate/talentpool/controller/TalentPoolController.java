@@ -97,9 +97,11 @@ public class TalentPoolController {
         model.addAttribute("detail", detail);
         model.addAttribute("bookmarkSourceId", pool.bookmarkSource(id));
         int currentCvPage = Math.min(Math.max(0, cvPage), Math.max(0, (detail.cvs().size() - 1) / 3));
-        model.addAttribute("cvHistory", new PageImpl<>(detail.cvs().subList(currentCvPage * 3,
-                Math.min(detail.cvs().size(), (currentCvPage + 1) * 3)), PageRequest.of(currentCvPage, 3),
-                detail.cvs().size()));
+        model.addAttribute("cvHistory",
+                new PageImpl<>(
+                        detail.cvs().subList(currentCvPage * 3, Math.min(detail.cvs().size(), (currentCvPage + 1) * 3)),
+                        PageRequest.of(currentCvPage, 3),
+                        detail.cvs().size()));
         model.addAttribute("jobPostingId", jobPostingId);
         model.addAttribute("jobTitle", jobPostingId == null ? null : pool.targetJobTitle(jobPostingId));
         model.addAttribute("viewerRole", pool.viewerRole());
@@ -120,10 +122,11 @@ public class TalentPoolController {
 
     @GetMapping(value = "/{id}/notes", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
+    //get note
     public ApiResponse<java.util.List<TalentPoolNoteResponse>> sharedNotes(@PathVariable Integer id) {
         return new ApiResponse<>(true, "Đã tải ghi chú chung.", pool.detail(id).notes());
     }
-
+    //reivew selection
     @PostMapping(value = "/jobs/{id}/selection-review", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     public ResponseEntity<ApiResponse<TalentPoolSelectionReviewResponse>> reviewSelection(@PathVariable Integer id,
@@ -178,6 +181,7 @@ public class TalentPoolController {
     }
 
     @PostMapping("/{id}/notes/{noteId}/edit")
+    //update note
     public String editNote(@PathVariable Integer id, @PathVariable Integer noteId,
             @Valid @ModelAttribute TalentPoolNoteRequest request, BindingResult errors,
             @RequestParam(required = false) Integer jobPostingId,
@@ -210,6 +214,7 @@ public class TalentPoolController {
     }
 
     @PostMapping("/{id}/notes/{noteId}/delete")
+    //delete note
     public String deleteNote(@PathVariable Integer id, @PathVariable Integer noteId,
             @RequestParam(required = false) Integer jobPostingId,
             @RequestParam(required = false) Integer recommendationId,
@@ -243,7 +248,7 @@ public class TalentPoolController {
     @GetMapping("/jobs/{id}/recommendations")
     public String recommendations(@PathVariable Integer id, @RequestParam(defaultValue = "") String keyword,
             @RequestParam(defaultValue = "0") int page, Model model) {
-        // view all cv
+        // view all recommend candidate jobposting
         var all = pool.recommendations(id);
         var filtered = all;
         int current = Math.min(Math.max(0, page), Math.max(0, (filtered.size() - 1) / 20));
@@ -261,6 +266,7 @@ public class TalentPoolController {
     }
 
     @PostMapping("/jobs/{jobId}/recommendations/{id}/withdraw")
+    //withdrawn recommend
     public String withdrawRecommendation(@PathVariable Integer jobId, @PathVariable Integer id,
             @RequestParam(defaultValue = "") String keyword, @RequestParam(defaultValue = "0") int page,
             RedirectAttributes flash) {
@@ -274,6 +280,7 @@ public class TalentPoolController {
         return "redirect:" + recommendationListUrl(jobId, keyword, page);
     }
 
+    // buirl url recommend
     private static String recommendationListUrl(Integer jobId, String keyword, int page) {
         return UriComponentsBuilder.fromPath("/talent-pool/jobs/" + jobId + "/recommendations")
                 .queryParamIfPresent("keyword", Optional.ofNullable(keyword).filter(k -> !k.isBlank()))
@@ -281,6 +288,7 @@ public class TalentPoolController {
     }
 
     @PostMapping("/recommendations/{id}/decision")
+    //desicíion of recommend
     public String decideRecommendation(@PathVariable Integer id,
             @Valid @ModelAttribute TalentPoolRecommendationDecisionRequest request, BindingResult errors,
             @RequestParam(defaultValue = "") String keyword, @RequestParam(defaultValue = "0") int page,
@@ -299,7 +307,7 @@ public class TalentPoolController {
             }
         return "redirect:" + recommendationListUrl(recommendation.jobPostingId(), keyword, page);
     }
-
+    //recommend hr
     @PostMapping(value = "/jobs/{id}/recommend", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     public ResponseEntity<ApiResponse<TalentPoolSuggestResponse>> recommend(@PathVariable Integer id,
@@ -316,6 +324,7 @@ public class TalentPoolController {
         }
     }
 
+    // url build
     private static String poolUrl(Integer candidateId, Integer jobPostingId, TalentPoolSearch filter, int page) {
         var url = UriComponentsBuilder.fromPath(candidateId == null ? "/talent-pool" : "/talent-pool/" + candidateId)
                 .queryParamIfPresent("jobPostingId", Optional.ofNullable(jobPostingId))
@@ -330,12 +339,14 @@ public class TalentPoolController {
 
     @GetMapping(value = "/applications/{id}/bookmark", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
+    // get status potential and note
     public TalentPoolBookmarkResponse bookmark(@PathVariable Integer id) {
         return pool.bookmark(id);
     }
 
     @PostMapping(value = "/applications/{id}/bookmark", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
+    //mark candidate potential
     public ResponseEntity<?> saveBookmark(@PathVariable Integer id,
             @Valid @ModelAttribute TalentPoolBookmarkRequest request, BindingResult errors) {
         if (errors.hasErrors()) {
@@ -351,10 +362,12 @@ public class TalentPoolController {
 
     @PostMapping(value = "/applications/{id}/bookmark/remove", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
+    //remove potential candidate
     public TalentPoolBookmarkResponse removeBookmark(@PathVariable Integer id) {
         return pool.removeBookmark(id);
     }
-
+    
+    //suggest  hm
     @PostMapping(value = "/jobs/{id}/suggest", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     public ResponseEntity<ApiResponse<TalentPoolSuggestResponse>> suggest(@PathVariable Integer id,
@@ -392,7 +405,7 @@ public class TalentPoolController {
     }
 
     @PostMapping("/applications/{id}/decline")
-    // decline a candidate
+    // candidate decline participate
     public String decline(@PathVariable Integer id, RedirectAttributes flash) {
         try {
             Integer jobId = pool.decline(id);
@@ -460,7 +473,7 @@ public class TalentPoolController {
                 .header("Content-Disposition", "inline").body(cv.file());
     }
 
-    @ExceptionHandler({AccessDeniedException.class, ResourceNotFoundException.class, TalentPoolException.class})
+    @ExceptionHandler({ AccessDeniedException.class, ResourceNotFoundException.class, TalentPoolException.class })
     public Object handleUnavailableTalentPoolData(
             RuntimeException exception, HttpServletRequest request,
             HttpServletResponse response) {

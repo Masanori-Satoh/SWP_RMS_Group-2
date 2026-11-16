@@ -1,8 +1,6 @@
 <!DOCTYPE html>
-<html lang="vi"
-      xmlns:th="http://www.thymeleaf.org"
-      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-      layout:decorate="~{layout/internal}">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layout/internal}">
 <!--
     INTERVIEW/FORM.HTML — Tạo / sửa lịch phỏng vấn (/interviews/new, /interviews/{id}/edit)
     Form truyền thống (th:object scheduleRequest); lỗi hiện cạnh ô, lỗi nghiệp vụ ở alert đầu form.
@@ -11,6 +9,7 @@
     Giao diện Admin workspace (adw-) như Offer/Yêu cầu tuyển dụng: scene + scripts của fragments/ui/admin-workspace.
     CSS riêng: css/pages/interview-common.css (iv-) + css/interview-form.css (if-) + css/pages/interview-workspace.css (ivw-).
 -->
+
 <head>
     <title th:text="${isEdit ? 'Chỉnh sửa lịch phỏng vấn' : 'Lên lịch phỏng vấn mới'}">Lên lịch phỏng vấn mới</title>
     <th:block layout:fragment="styles">
@@ -19,163 +18,197 @@
         <link rel="stylesheet" th:href="@{/css/pages/interview-workspace.css}">
     </th:block>
 </head>
+
 <body>
-<main id="main" layout:fragment="content" class="page-content container adw-page ivw-page if-page" tabindex="-1">
-    <th:block th:replace="~{fragments/ui/admin-workspace :: scene}"></th:block>
+    <main id="main" layout:fragment="content" class="page-content container adw-page ivw-page if-page" tabindex="-1">
+        <th:block th:replace="~{fragments/ui/admin-workspace :: scene}"></th:block>
 
-    <div class="adw-heading ivw-heading">
-        <h1 class="page-title adw-title"
-            th:text="${isEdit ? 'Chỉnh sửa lịch phỏng vấn #' + interviewId : 'Lên lịch phỏng vấn mới'}">Lên lịch phỏng vấn mới</h1>
-    </div>
-
-    <!-- Vai trò xem được danh sách lịch (HM, Interviewer) nhưng không có quyền tạo/sửa: ẩn form, hiện banner -->
-    <!--/* th:replace chạy trước th:if trên cùng một thẻ, nên điều kiện phải đặt ở thẻ bọc ngoài */-->
-    <th:block th:if="${accessDenied}">
-        <div th:replace="~{fragments/ui/access-denied-banner :: banner('Bạn không có quyền truy cập vào trang này.')}"></div>
-    </th:block>
-
-    <form th:unless="${accessDenied}" class="card if-form adw-surface" th:action="${isEdit ? '/interviews/' + interviewId + '/edit' : '/interviews/new'}"
-          th:object="${scheduleRequest}" method="post">
-
-        <!-- Lỗi nghiệp vụ (GBR-01, MSG26, hội đồng...) -->
-        <div th:if="${#fields.hasGlobalErrors()}" class="adw-validation-summary" role="alert">
-            <h2>Không lưu được lịch phỏng vấn</h2>
-            <ul class="if-error-list">
-                <li th:each="err : ${#fields.globalErrors()}" th:text="${err}">Lỗi nghiệp vụ.</li>
-            </ul>
+        <div class="adw-heading ivw-heading">
+            <h1 class="page-title adw-title"
+                th:text="${isEdit ? 'Chỉnh sửa lịch phỏng vấn #' + interviewId : 'Lên lịch phỏng vấn mới'}">Lên lịch
+                phỏng vấn mới</h1>
+            <div th:if="${successMessage}" class="alert alert--success" role="status" th:text="${successMessage}"></div>
         </div>
 
-        <!-- 1. Hồ sơ ứng tuyển -->
-        <!-- Mở từ danh sách / chi tiết hồ sơ (?applicationId=): cố định hồ sơ, không cho đổi ứng viên -->
-        <div class="form-group" th:if="${lockedApplication != null}">
-            <span class="form-label form-label--required">Hồ sơ ứng tuyển</span>
-            <div class="card if-locked-app" aria-live="polite">
-                <strong th:text="|Hồ sơ #${lockedApplication.applicationId}|">Hồ sơ #1</strong>
-                <span th:text="${lockedApplication.candidate != null and lockedApplication.candidate.account != null ? lockedApplication.candidate.account.fullName : 'Ứng viên'}">Nguyễn Văn A</span>
-                <span class="text-muted" th:if="${lockedApplication.candidate != null and lockedApplication.candidate.account != null and lockedApplication.candidate.account.email != null}"
-                      th:text="${lockedApplication.candidate.account.email}">a.nguyen@example.com</span>
-                <span class="text-muted" th:text="${lockedApplication.jobPosting != null ? lockedApplication.jobPosting.postingTitle : 'Chưa gắn tin'}">Kỹ sư phần mềm Java</span>
+        <!-- Vai trò xem được danh sách lịch (HM, Interviewer) nhưng không có quyền tạo/sửa: ẩn form, hiện banner -->
+        <!--/* th:replace chạy trước th:if trên cùng một thẻ, nên điều kiện phải đặt ở thẻ bọc ngoài */-->
+        <th:block th:if="${accessDenied}">
+            <div
+                th:replace="~{fragments/ui/access-denied-banner :: banner('Bạn không có quyền truy cập vào trang này.')}">
             </div>
-            <input type="hidden" name="applicationId" th:value="${lockedApplication.applicationId}">
-            <input type="hidden" name="lockApplication" value="true">
-            <p class="form-hint">Lịch được tạo cho đúng hồ sơ bạn đã chọn.
-                <a th:href="@{/interviews/new}">Chọn hồ sơ khác</a></p>
-            <p class="form-error" th:if="${#fields.hasErrors('applicationId')}" th:errors="*{applicationId}">Vui lòng chọn hồ sơ.</p>
-        </div>
+        </th:block>
 
-        <div class="form-group" th:unless="${lockedApplication != null}">
-            <label class="form-label form-label--required" for="applicationId">Hồ sơ ứng tuyển</label>
-            <div class="if-search">
-                <input type="text" id="applicationSearchBox" class="form-input"
-                       placeholder="Tìm theo tên ứng viên, email, vị trí tuyển dụng..." aria-controls="applicationId">
-                <button type="button" id="btnClearAppSearch" class="btn btn--secondary btn--sm">Xóa tìm kiếm</button>
+        <form th:unless="${accessDenied}" class="card if-form adw-surface"
+            th:action="${isEdit ? '/interviews/' + interviewId + '/edit' : '/interviews/new'}"
+            th:object="${scheduleRequest}" method="post">
+
+            <!-- Lỗi nghiệp vụ (GBR-01, MSG26, hội đồng...) -->
+            <div th:if="${#fields.hasGlobalErrors()}" class="adw-validation-summary" role="alert">
+                <h2>Không lưu được lịch phỏng vấn</h2>
+                <ul class="if-error-list">
+                    <li th:each="err : ${#fields.globalErrors()}" th:text="${err}">Lỗi nghiệp vụ.</li>
+                </ul>
             </div>
-            <select id="applicationId" class="form-select" th:field="*{applicationId}" required
+
+            <!-- 1. Hồ sơ ứng tuyển -->
+            <!-- Mở từ danh sách / chi tiết hồ sơ (?applicationId=): cố định hồ sơ, không cho đổi ứng viên -->
+            <div class="form-group" th:if="${lockedApplication != null}">
+                <span class="form-label form-label--required">Hồ sơ ứng tuyển</span>
+                <div class="card if-locked-app" aria-live="polite">
+                    <strong th:text="|Hồ sơ #${lockedApplication.applicationId}|">Hồ sơ #1</strong>
+                    <span
+                        th:text="${lockedApplication.candidate != null and lockedApplication.candidate.account != null ? lockedApplication.candidate.account.fullName : 'Ứng viên'}">Nguyễn
+                        Văn A</span>
+                    <span class="text-muted"
+                        th:if="${lockedApplication.candidate != null and lockedApplication.candidate.account != null and lockedApplication.candidate.account.email != null}"
+                        th:text="${lockedApplication.candidate.account.email}">a.nguyen@example.com</span>
+                    <span class="text-muted"
+                        th:text="${lockedApplication.jobPosting != null ? lockedApplication.jobPosting.postingTitle : 'Chưa gắn tin'}">Kỹ
+                        sư phần mềm Java</span>
+                </div>
+                <input type="hidden" name="applicationId" th:value="${lockedApplication.applicationId}">
+                <input type="hidden" name="lockApplication" value="true">
+                <p class="form-hint">Lịch được tạo cho đúng hồ sơ bạn đã chọn.
+                    <a th:href="@{/interviews/new}">Chọn hồ sơ khác</a>
+                </p>
+                <p class="form-error" th:if="${#fields.hasErrors('applicationId')}" th:errors="*{applicationId}">Vui
+                    lòng chọn hồ sơ.</p>
+            </div>
+
+            <div class="form-group" th:unless="${lockedApplication != null}">
+                <label class="form-label form-label--required" for="applicationId">Hồ sơ ứng tuyển</label>
+                <div class="if-search">
+                    <input type="text" id="applicationSearchBox" class="form-input"
+                        placeholder="Tìm theo tên ứng viên, email, vị trí tuyển dụng..." aria-controls="applicationId">
+                    <button type="button" id="btnClearAppSearch" class="btn btn--secondary btn--sm">Xóa tìm
+                        kiếm</button>
+                </div>
+                <select id="applicationId" class="form-select" th:field="*{applicationId}" required
                     th:attr="aria-invalid=${#fields.hasErrors('applicationId')}">
-                <option value="" disabled selected>-- Chọn hồ sơ ứng viên cần phỏng vấn --</option>
-                <option th:each="app : ${applications}" th:value="${app.applicationId}"
+                    <option value="" disabled selected>-- Chọn hồ sơ ứng viên cần phỏng vấn --</option>
+                    <option th:each="app : ${applications}" th:value="${app.applicationId}"
                         th:data-search="${#strings.toLowerCase('hồ sơ #' + app.applicationId + ' ' + (app.candidate != null and app.candidate.account != null ? app.candidate.account.fullName + ' ' + (app.candidate.account.email != null ? app.candidate.account.email : '') : '') + ' ' + (app.jobPosting != null ? app.jobPosting.postingTitle : ''))}"
                         th:text="'Hồ sơ #' + ${app.applicationId} + ' - Ứng viên: ' + (${app.candidate != null and app.candidate.account != null ? app.candidate.account.fullName : 'Ứng viên #' + app.candidate.candidateId}) + (${app.candidate != null and app.candidate.account != null and app.candidate.account.email != null ? ' (' + app.candidate.account.email + ')' : ''}) + ' - ' + (${app.jobPosting != null ? app.jobPosting.postingTitle : 'Chưa gắn tin'})">
-                    Hồ sơ #1 - Ứng viên: Nguyễn Văn A (a.nguyen@example.com) - Kỹ sư phần mềm Java
-                </option>
-            </select>
-            <p id="appSearchSummary" class="form-hint" hidden></p>
-            <p class="form-error" th:if="${#fields.hasErrors('applicationId')}" th:errors="*{applicationId}">Vui lòng chọn hồ sơ.</p>
-        </div>
+                        Hồ sơ #1 - Ứng viên: Nguyễn Văn A (a.nguyen@example.com) - Kỹ sư phần mềm Java
+                    </option>
+                </select>
+                <p id="appSearchSummary" class="form-hint" hidden></p>
+                <p class="form-error" th:if="${#fields.hasErrors('applicationId')}" th:errors="*{applicationId}">Vui
+                    lòng chọn hồ sơ.</p>
+            </div>
 
-        <!-- 2. Hình thức phỏng vấn -->
-        <!-- ducnm sửa: bỏ ô chọn trạng thái — hệ thống tự suy (tạo mới: Scheduled, hoặc Rescheduled nếu hồ sơ
+            <!-- 2. Hình thức phỏng vấn -->
+            <!-- ducnm sửa: bỏ ô chọn trạng thái — hệ thống tự suy (tạo mới: Scheduled, hoặc Rescheduled nếu hồ sơ
              đã có lịch đang hoạt động; sửa lịch đang hoạt động: luôn chuyển sang Rescheduled). Hủy lịch có
              nút riêng ở trang danh sách. -->
-        <div class="form-group">
-            <label class="form-label form-label--required" for="interviewFormat">Hình thức phỏng vấn</label>
-            <select id="interviewFormat" class="form-select" th:field="*{interviewFormat}" required>
-                <option th:each="fmt : ${interviewFormats}" th:value="${fmt}"
-                        th:text="${fmt.name() == 'Online_GoogleMeet' ? 'Trực tuyến (Google Meet)' : 'Trực tiếp tại văn phòng'}">Trực tuyến</option>
-            </select>
-            <p class="form-error" th:if="${#fields.hasErrors('interviewFormat')}" th:errors="*{interviewFormat}">Vui lòng chọn hình thức.</p>
-            <p class="form-hint" th:if="${isEdit}">Lưu thay đổi sẽ tự chuyển lịch sang trạng thái "Đã đổi lịch".</p>
-        </div>
-
-        <!-- 3. Thời gian (MSG26: kết thúc sau bắt đầu) -->
-        <div class="grid-2-col if-row">
             <div class="form-group">
-                <label class="form-label form-label--required" for="startTime">Thời gian bắt đầu</label>
-                <input type="datetime-local" id="startTime" class="form-input" th:field="*{startTime}" required
-                       th:attr="aria-invalid=${#fields.hasErrors('startTime')}">
-                <p class="form-error" th:if="${#fields.hasErrors('startTime')}" th:errors="*{startTime}">Thời gian bắt đầu không hợp lệ.</p>
+                <label class="form-label form-label--required" for="interviewFormat">Hình thức phỏng vấn</label>
+                <select id="interviewFormat" class="form-select" th:field="*{interviewFormat}" required>
+                    <option th:each="fmt : ${interviewFormats}" th:value="${fmt}"
+                        th:text="${fmt.name() == 'Online_GoogleMeet' ? 'Trực tuyến (Google Meet)' : 'Trực tiếp tại văn phòng'}">
+                        Trực tuyến</option>
+                </select>
+                <p class="form-error" th:if="${#fields.hasErrors('interviewFormat')}" th:errors="*{interviewFormat}">Vui
+                    lòng chọn hình thức.</p>
+                <p class="form-hint" th:if="${isEdit}">Lưu thay đổi sẽ tự chuyển lịch sang trạng thái "Đã đổi lịch".</p>
             </div>
-            <div class="form-group">
-                <label class="form-label form-label--required" for="endTime">Thời gian kết thúc</label>
-                <input type="datetime-local" id="endTime" class="form-input" th:field="*{endTime}" required
-                       th:attr="aria-invalid=${#fields.hasErrors('endTime') or #fields.hasErrors('endTimeAfterStartTime')}">
-                <p class="form-error" th:if="${#fields.hasErrors('endTime')}" th:errors="*{endTime}">Thời gian kết thúc không được để trống.</p>
-                <p class="form-error" th:if="${#fields.hasErrors('endTimeAfterStartTime')}" th:errors="*{endTimeAfterStartTime}">Thời gian kết thúc phải sau thời gian bắt đầu.</p>
-            </div>
-        </div>
 
-        <!-- 4. Địa điểm / link (bắt buộc) -->
-        <div class="form-group">
-            <label class="form-label form-label--required" for="locationOrLink">Địa điểm hoặc liên kết phòng họp</label>
-            <input type="text" id="locationOrLink" class="form-input" th:field="*{locationOrLink}" required
-                   th:attr="aria-invalid=${#fields.hasErrors('locationOrLink') or #fields.hasErrors('locationValidForFormat')}"
-                   placeholder="VD: https://meet.google.com/xyz-abcd-uvw hoặc Phòng 204, Tòa nhà Mộc">
-            <p class="form-hint">Phỏng vấn trực tuyến: nhập liên kết http:// hoặc https://. Trực tiếp: nhập địa chỉ phòng.</p>
-            <p class="form-error" th:if="${#fields.hasErrors('locationOrLink')}" th:errors="*{locationOrLink}">Địa điểm không được để trống.</p>
-            <p class="form-error" th:if="${#fields.hasErrors('locationValidForFormat')}" th:errors="*{locationValidForFormat}">Liên kết không hợp lệ.</p>
-        </div>
-
-        <!-- 5. Hội đồng phỏng vấn -->
-        <div class="form-group">
-            <label class="form-label form-label--required" for="interviewerIds">Hội đồng phỏng vấn</label>
-            <div class="if-panel-tools">
-                <div class="if-search">
-                    <input type="text" id="interviewerSearchBox" class="form-input"
-                           placeholder="Tìm theo tên, email, vai trò, phòng ban..." aria-controls="interviewerIds">
-                    <button type="button" id="btnClearSearch" class="btn btn--secondary btn--sm">Xóa tìm kiếm</button>
+            <!-- 3. Thời gian (MSG26: kết thúc sau bắt đầu) -->
+            <div class="grid-2-col if-row">
+                <div class="form-group">
+                    <label class="form-label form-label--required" for="startTime">Thời gian bắt đầu</label>
+                    <input type="datetime-local" id="startTime" class="form-input" th:field="*{startTime}" required
+                        th:attr="aria-invalid=${#fields.hasErrors('startTime')}">
+                    <p class="form-error" th:if="${#fields.hasErrors('startTime')}" th:errors="*{startTime}">Thời gian
+                        bắt đầu không hợp lệ.</p>
                 </div>
-                <div class="if-roles" role="group" aria-label="Lọc theo vai trò">
-                    <span class="if-roles__label">Lọc theo vai trò:</span>
-                    <button type="button" class="btn btn--secondary btn--sm if-role-pill is-active" data-role="ALL" aria-pressed="true">Tất cả</button>
-                    <button type="button" class="btn btn--secondary btn--sm if-role-pill" data-role="Hiring Manager" aria-pressed="false">Hiring Manager</button>
-                    <button type="button" class="btn btn--secondary btn--sm if-role-pill" data-role="Interviewer" aria-pressed="false">Interviewer</button>
-                    <button type="button" class="btn btn--secondary btn--sm if-role-pill" data-role="HR" aria-pressed="false">HR</button>
-                    <button type="button" class="btn btn--secondary btn--sm if-role-pill" data-role="Director" aria-pressed="false">Director</button>
+                <div class="form-group">
+                    <label class="form-label form-label--required" for="endTime">Thời gian kết thúc</label>
+                    <input type="datetime-local" id="endTime" class="form-input" th:field="*{endTime}" required
+                        th:attr="aria-invalid=${#fields.hasErrors('endTime') or #fields.hasErrors('endTimeAfterStartTime')}">
+                    <p class="form-error" th:if="${#fields.hasErrors('endTime')}" th:errors="*{endTime}">Thời gian kết
+                        thúc không được để trống.</p>
+                    <p class="form-error" th:if="${#fields.hasErrors('endTimeAfterStartTime')}"
+                        th:errors="*{endTimeAfterStartTime}">Thời gian kết thúc phải sau thời gian bắt đầu.</p>
                 </div>
             </div>
 
-            <select multiple="multiple" id="interviewerIds" class="form-select if-panel-select" th:field="*{interviewerIds}" required
+            <!-- 4. Địa điểm / link (bắt buộc) -->
+            <div class="form-group">
+                <label class="form-label form-label--required" for="locationOrLink">Địa điểm hoặc liên kết phòng
+                    họp</label>
+                <input type="text" id="locationOrLink" class="form-input" th:field="*{locationOrLink}" required
+                    th:attr="aria-invalid=${#fields.hasErrors('locationOrLink') or #fields.hasErrors('locationValidForFormat')}"
+                    placeholder="VD: https://meet.google.com/xyz-abcd-uvw hoặc Phòng 204, Tòa nhà Mộc">
+                <p class="form-hint">Phỏng vấn trực tuyến: nhập liên kết http:// hoặc https://. Trực tiếp: nhập địa chỉ
+                    phòng.</p>
+                <p class="form-error" th:if="${#fields.hasErrors('locationOrLink')}" th:errors="*{locationOrLink}">Địa
+                    điểm không được để trống.</p>
+                <p class="form-error" th:if="${#fields.hasErrors('locationValidForFormat')}"
+                    th:errors="*{locationValidForFormat}">Liên kết không hợp lệ.</p>
+            </div>
+
+            <!-- 5. Hội đồng phỏng vấn -->
+            <div class="form-group">
+                <label class="form-label form-label--required" for="interviewerIds">Hội đồng phỏng vấn</label>
+                <div class="if-panel-tools">
+                    <div class="if-search">
+                        <input type="text" id="interviewerSearchBox" class="form-input"
+                            placeholder="Tìm theo tên, email, vai trò, phòng ban..." aria-controls="interviewerIds">
+                        <button type="button" id="btnClearSearch" class="btn btn--secondary btn--sm">Xóa tìm
+                            kiếm</button>
+                    </div>
+                    <div class="if-roles" role="group" aria-label="Lọc theo vai trò">
+                        <span class="if-roles__label">Lọc theo vai trò:</span>
+                        <button type="button" class="btn btn--secondary btn--sm if-role-pill is-active" data-role="ALL"
+                            aria-pressed="true">Tất cả</button>
+                        <button type="button" class="btn btn--secondary btn--sm if-role-pill" data-role="Hiring Manager"
+                            aria-pressed="false">Hiring Manager</button>
+                        <button type="button" class="btn btn--secondary btn--sm if-role-pill" data-role="Interviewer"
+                            aria-pressed="false">Interviewer</button>
+                        <button type="button" class="btn btn--secondary btn--sm if-role-pill" data-role="HR"
+                            aria-pressed="false">HR</button>
+                        <button type="button" class="btn btn--secondary btn--sm if-role-pill" data-role="Director"
+                            aria-pressed="false">Director</button>
+                    </div>
+                </div>
+
+                <select multiple="multiple" id="interviewerIds" class="form-select if-panel-select"
+                    th:field="*{interviewerIds}" required
                     th:attr="aria-invalid=${#fields.hasErrors('panelMembers') or #fields.hasErrors('interviewerIds')}">
-                <option th:each="user : ${availableInterviewers}" th:value="${user.userId}"
+                    <option th:each="user : ${availableInterviewers}" th:value="${user.userId}"
                         th:data-role="${user.role != null ? user.role.roleName : ''}"
                         th:data-search="${#strings.toLowerCase(user.fullName + ' ' + (user.email != null ? user.email : '') + ' ' + (user.role != null ? user.role.roleName : '') + ' ' + (user.department != null ? user.department.departmentName : ''))}"
                         th:text="${user.fullName} + (${user.email != null ? ' (' + user.email + ')' : ''}) + ' — ' + (${user.role != null ? user.role.roleName : 'Chuyên môn'}) + ' (' + (${user.department != null ? user.department.departmentName : 'Chưa phân bổ'}) + ')'">
-                    Nguyễn Chuyên Gia (chuyengia@company.com) — Hiring Manager (Phòng Kỹ thuật)
-                </option>
-            </select>
+                        Nguyễn Chuyên Gia (chuyengia@company.com) — Hiring Manager (Phòng Kỹ thuật)
+                    </option>
+                </select>
 
-            <div class="if-selected" aria-live="polite">
-                <span>Đã chọn <strong id="selectedCount">0</strong> thành viên</span>
-                <div id="selectedChipsContainer" class="if-chips"></div>
+                <div class="if-selected" aria-live="polite">
+                    <span>Đã chọn <strong id="selectedCount">0</strong> thành viên</span>
+                    <div id="selectedChipsContainer" class="if-chips"></div>
+                </div>
+                <p class="form-hint">
+                    Giữ <strong>Ctrl</strong> (hoặc <strong>Cmd</strong> trên Mac) để chọn nhiều người.
+                    HR được xếp HR khác vào hội đồng nhưng không tự xếp chính mình; Director được tự đặt lịch cho mình.
+                </p>
+                <p class="form-error" th:if="${#fields.hasErrors('panelMembers')}" th:errors="*{panelMembers}">Hội đồng
+                    phải có ít nhất 1 người.</p>
+                <p class="form-error" th:if="${#fields.hasErrors('interviewerIds')}" th:errors="*{interviewerIds}">Người
+                    phỏng vấn không hợp lệ.</p>
             </div>
-            <p class="form-hint">
-                Giữ <strong>Ctrl</strong> (hoặc <strong>Cmd</strong> trên Mac) để chọn nhiều người.
-                HR được xếp HR khác vào hội đồng nhưng không tự xếp chính mình; Director được tự đặt lịch cho mình.
-            </p>
-            <p class="form-error" th:if="${#fields.hasErrors('panelMembers')}" th:errors="*{panelMembers}">Hội đồng phải có ít nhất 1 người.</p>
-            <p class="form-error" th:if="${#fields.hasErrors('interviewerIds')}" th:errors="*{interviewerIds}">Người phỏng vấn không hợp lệ.</p>
-        </div>
 
-        <div class="form-actions">
-            <a th:href="@{/interviews}" class="btn btn--secondary">Hủy bỏ</a>
-            <button type="submit" class="btn btn--primary"
+            <div class="form-actions">
+                <a th:href="@{/interviews}" class="btn btn--secondary">Hủy bỏ</a>
+                <button type="submit" class="btn btn--primary"
                     th:text="${isEdit ? 'Lưu thay đổi' : 'Lên lịch phỏng vấn'}">Lên lịch phỏng vấn</button>
-        </div>
-    </form>
-</main>
-<th:block layout:fragment="scripts">
-    <script defer th:src="@{/js/interview-form.js}"></script>
-    <th:block th:replace="~{fragments/ui/admin-workspace :: scripts}"></th:block>
-</th:block>
+            </div>
+        </form>
+    </main>
+    <th:block layout:fragment="scripts">
+        <script defer th:src="@{/js/interview-form.js}"></script>
+        <th:block th:replace="~{fragments/ui/admin-workspace :: scripts}"></th:block>
+    </th:block>
 </body>
+
 </html>

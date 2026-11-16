@@ -49,7 +49,7 @@ Checkout thực tế: `D:\KÌ 5\SWP391\hireflow-api\RetireManagement\SWP_RMS_Gro
 
 Người dùng vẫn thấy “Bị khóa” vì source đã đổi nhưng `target/classes/templates/admin/accounts/form.html` còn option Blocked. Các lượt test trước dùng output riêng nên chưa cập nhật tài nguyên của server. Tiến trình cổng 8081 ban đầu chạy đúng checkout SWP391 nhưng tắt DevTools restart.
 
-Đã chạy `mvn.cmd -B -DskipTests compile` ở POM chính để đồng bộ tài nguyên vào `target/classes`. Kiểm tra bytecode `AccountManagementService` chỉ còn hai giá trị Active/Inactive. Các lần agent thử khởi động lại gặp lỗi Java Unix-domain loopback trên Windows; sau đó cổng 8081 đã có tiến trình RMS mới PID 9716 và GET `/login` trả 200. Không sửa cấu hình Windows, POM hoặc source để xử lý lỗi môi trường đó.
+Đã chạy `mvn.cmd -B -DskipTests compile` ở POM chính để đồng bộ tài nguyên vào `target/classes`. Kiểm tra bytecode `AccountManagementService` chỉ còn hai giá trị Active/Inactive. Các lần khởi động lại gặp lỗi Java Unix-domain loopback trên Windows; sau đó cổng 8081 đã có tiến trình RMS mới PID 9716 và GET `/login` trả 200. Không sửa cấu hình Windows, POM hoặc source để xử lý lỗi môi trường đó.
 
 Đã xác minh HTTP thật trên `http://127.0.0.1:8081` bằng tài khoản System Admin kiểm thử riêng, không dùng mật khẩu/tài khoản thật:
 

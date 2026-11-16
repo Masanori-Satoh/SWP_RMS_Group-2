@@ -22,11 +22,9 @@
 - Controller bỏ lọc keyword, vẫn giữ phân trang 20 dòng, tổng đếm đúng toàn bộ gợi ý của tin và xử lý URL cũ an toàn.
 - Không đổi schema/entity/migration/seed. Không sửa luồng gửi, HM phản hồi, thu hồi gợi ý, CSRF hoặc phân quyền backend. Không stage/commit/push.
 
-## Skill và hướng thiết kế
+## Hướng thiết kế
 
 - DESIGN hiện hữu và UI_RULES/UI_CSS_GUIDE/UI_CATALOG giữ vai trò nền; tái dùng adw-, badge, button và token Mộc.
-- UI UX Pro Max: tra table handling/submit feedback, áp dụng wrapper cuộn và trạng thái thao tác rõ ràng.
-- Impeccable: refinement trong Operate mode, craft floor; giữ danh tính sản phẩm và kiểm tra ảnh có dữ liệu/không dữ liệu.
 - Không cần Taste draw hoặc đổi visual world vì mockup đã chỉ rõ bố cục; không thay palette/type chung.
 
 ## Thống kê thay đổi

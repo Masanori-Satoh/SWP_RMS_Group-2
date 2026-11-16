@@ -28,13 +28,9 @@ Làm phần nội dung theo mockup, dùng cùng giao diện Mộc của các tra
 
 ![Sửa tài khoản nội bộ trên mobile](assets/admin-account-edit-2026-10-31/mobile.png)
 
-## Bốn skill và quyết định thiết kế
+## Quyết định thiết kế
 
 - Theo hợp đồng Mộc và UI Rules/Catalog/CSS Guide trước; dùng lại token, font, card, nút và khung `adw-` hiện có.
-- UI UX Pro Max: nhóm trường theo ý nghĩa, phân biệt readonly, lỗi tại trường và phản hồi submit; kiểm tra thao tác bàn phím và responsive.
-- Impeccable: operate/layout/craft floor/polish; giữ nhận diện và quyền truy cập, kiểm tra các trạng thái có lỗi, vô hiệu hóa, thiếu dữ liệu và tên dài.
-- Taste: `accent-ladder`, seed **2934458**, giữ palette/type. Lấy nhịp khoảng cách của app settings, ưu tiên bố cục mockup; không thay shell hoặc đưa palette mới vào sản phẩm.
-- Awesome Design Reference: tham khảo mục Hierarchy của `.agents/references/awesome-design-md/upstream/design-md/sap/DESIGN.md`; lấy cách phân nhóm thông tin, không sao chép màu hoặc font SAP.
 - Câu hỏi chính: đang sửa tài khoản nào, thông tin/quyền hiện tại là gì và cần thay đổi trường nào trước khi lưu?
 - Nhận diện riêng là hệ xanh Mộc; dấu hiệu chính của màn là dải tài khoản đang lưu nằm ngay trước các trường chỉnh sửa.
 - Dữ liệu: một tài khoản, sáu trường chỉnh sửa và một username chỉ đọc, hai trạng thái Active/Inactive; role/phòng ban theo danh sách backend, gồm ngoại lệ giữ phòng hiện tại đã vô hiệu hóa. Người dùng là System Admin; tác vụ chính là kiểm tra đúng tài khoản và lưu thay đổi. Không thêm số liệu hoặc trạng thái giả.

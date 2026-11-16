@@ -4,7 +4,7 @@
 
 ## Phạm vi và file sửa
 
-Chỉnh UI theo brief `Refine Application Detail / HM Proposal Detail UI`, giữ quy tắc `docs/architecture/UI/`, catalog và token mộc. RMS; dùng hướng dẫn Impeccable và UI UX Pro Max. Dùng PDF skill để đọc file mẫu phục vụ kiểm tra nguồn.
+Chỉnh UI theo brief `Refine Application Detail / HM Proposal Detail UI`, giữ quy tắc `docs/architecture/UI/`, catalog và token mộc. RMS.
 
 | File từ project root | Thay đổi trong lượt này |
 | --- | --- |
