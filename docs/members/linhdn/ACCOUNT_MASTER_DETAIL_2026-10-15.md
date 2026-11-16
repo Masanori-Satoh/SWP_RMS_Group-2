@@ -6,7 +6,6 @@ Ngày thực hiện: 15/10/2026. Phạm vi: Internal Accounts và Candidate Acco
 
 Ảnh tham khảo có bảng gọn, phân cấp tên/username rõ và các nhóm tài khoản dễ nhận biết. RMS tiếp tục tách hai nhóm bằng liên kết điều hướng thật, không gộp vòng đời Internal/Candidate như ảnh. Giữ toàn bộ 8 cột Internal và 7 cột Candidate, các bộ lọc hiện có, breadcrumb, H1, CTA và palette Mộc. Không thêm avatar hay thống kê minh họa.
 
-Đã áp dụng Impeccable (Operate: ưu tiên thao tác và khả năng đọc) và UI UX Pro Max (focus rõ, focus không bị che, điều hướng bằng bàn phím). Không thêm framework/thư viện.
 
 ## Bố cục và tương tác
 

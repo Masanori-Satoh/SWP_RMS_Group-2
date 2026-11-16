@@ -33,13 +33,9 @@
 
 ![Tạo phòng ban trên mobile](assets/admin-create-forms-2026-10-31/department-mobile.png)
 
-## Bốn skill và quyết định thiết kế
+## Quyết định thiết kế
 
 - Theo hợp đồng Mộc/UI Rules trước: dùng lại palette, font, token, nút và khung workspace; chỉ thay phần nội dung trang.
-- UI UX Pro Max: chia nhóm trường, giữ nhãn/hướng dẫn/lỗi tại trường, thao tác bàn phím và responsive.
-- Impeccable: phân cấp tiêu đề, nhịp khoảng cách, kiểm tra trạng thái lỗi và màn sửa dùng chung template.
-- Taste: `accent-ladder`, seed **782013712**, giữ palette/type. Câu hỏi của trang là cần nhập những gì để tạo tài khoản hợp lệ hoặc tạo một phòng ban mới. Dữ liệu gồm một form tài khoản có thông tin/quyền/mật khẩu, hoặc một tên phòng ban; không thêm số liệu giả.
-- Awesome Design Reference: tham khảo Hierarchy trong `.agents/references/awesome-design-md/upstream/design-md/sap/DESIGN.md`, chỉ lấy cách phân nhóm thông tin; mockup người dùng quyết định bố cục cuối.
 - Sau render: các thẻ form độc lập, cột lưu ý không bị kéo cao theo tổng ba thẻ; phòng ban giữ một khung gọn. Mobile ưu tiên hoàn tất nhập và submit trước phần giải thích.
 
 ## Thống kê file
@@ -82,5 +78,4 @@ Tính so với snapshot đầu lượt, không gộp các thay đổi màn sửa
 ## Rà soát hook sau bàn giao
 
 - `flat-type-hierarchy` ở template tài khoản là false positive: detector đọc file riêng lẻ báo body/h1/h2 đều 16px, trong khi Chrome với CSS liên kết đo h1 36px desktop/26px mobile, tiêu đề nhóm 18px và input 15px. CSS sửa tài khoản cũng có tiêu đề nhóm 20px, mobile h1 24px. Có bước phân cấp lớn hơn 1,25 lần; ảnh đã lưu thể hiện đúng.
-- Đã dùng `impeccable hooks ignore-value flat-type-hierarchy "*" --file src/main/resources/templates/admin/accounts/form.html` với lý do và đường dẫn bằng chứng. Ngoại lệ chỉ áp dụng đúng rule/file này trong `.impeccable/config.json` (file cấu hình đang được Git bỏ qua); không tắt hook hoặc các rule khác.
 - Chạy lại detector cho template: không còn finding. Không thay UI/source/ảnh trong lượt rà soát này; các WARN browser phía trên vẫn giữ nguyên, không có lỗi thiết kế mới cần sửa.

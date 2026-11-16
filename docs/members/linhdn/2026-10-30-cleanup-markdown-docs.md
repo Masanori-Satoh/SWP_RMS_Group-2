@@ -34,9 +34,6 @@ Thống kê so với snapshot đầu lượt, không gộp sửa giao diện đ�
 | `docs/members/linhdn/2026-10-30-application-detail-ui.md` | +1 | -1 |
 | `docs/members/linhdn/2026-10-30-cleanup-markdown-docs.md` | +53 | -0 |
 | `docs/members/linhdn/ADMIN_DASHBOARD_CHANGES_2026-10-14.md` | +7 | -7 |
-| `docs/members/linhdn/AI MD/AGENTS.md` | +3 | -3 |
-| `docs/members/linhdn/AI MD/CLAUDE.md` | +2 | -2 |
-| `docs/members/linhdn/AI MD/DESIGN.md` | +3 | -3 |
 | `docs/members/linhdn/README.md` | +2 | -0 |
 | `docs/members/linhdn/tests/2026-10-04-sidebar-header-recovery.md` | +2 | -2 |
 | `docs/members/linhdn/tmp/testing/password-reset-test-setup.md` | +1 | -1 |

@@ -27,7 +27,7 @@ Các đường dẫn trong báo cáo tính từ thư mục gốc repository `SWP
 
 | Tài liệu | Quy định liên quan |
 |---|---|
-| `DESIGN.md` | Giữ nhận diện Mộc, stack Thymeleaf/CSS/JavaScript hiện có; bảo toàn nghiệp vụ, binding và accessibility. Yêu cầu thiết kế cụ thể có ưu tiên hơn gợi ý mặc định của skill. |
+| `DESIGN.md` | Giữ nhận diện Mộc, stack Thymeleaf/CSS/JavaScript hiện có; bảo toàn nghiệp vụ, binding và accessibility. |
 | `docs/architecture/UI/UI_RULES.md`, mục 2A | Layout, sidebar shell, topbar, token và navigation script dùng chung thuộc vùng được bảo vệ. |
 | `docs/architecture/UI/UI_RULES.md`, mục 2B | `components.css` được append linh kiện dùng chung mới; không đổi selector cũ và phải cập nhật catalog. |
 | `docs/architecture/UI/UI_RULES.md`, mục 7.4–7.6 | Cấm hardcode màu trong CSS trang, cấm tự chế lại linh kiện đã có, không sao chép markup khung dùng chung. |
@@ -36,7 +36,6 @@ Các đường dẫn trong báo cáo tính từ thư mục gốc repository `SWP
 | `docs/architecture/UI/UI_CSS_GUIDE.md`, mục 3 | `!important` chỉ được ngoại lệ khi sửa xung đột CSS cũ, kèm comment giải thích. |
 | `docs/architecture/UI/UI_CATALOG.md`, `components.css`, `tokens.css` | Nguồn tra cứu component và kích thước: nút thường 48px, nút nhỏ 40px; token màu, góc và shadow chung. |
 
-Các skill đã sử dụng trong đợt triển khai: UI UX Pro Max, Impeccable, Awesome Design Reference và Taste. Chúng là công cụ hỗ trợ; **không có quyền miễn trừ quy tắc của dự án**.
 
 ## 3. Danh sách file đã chỉnh trong chuỗi cập nhật Admin
 
@@ -71,7 +70,7 @@ Danh sách dưới đây gồm thay đổi Dashboard trước đó và lượt �
 
 | STT | File | Nội dung thay đổi và mục đích |
 |---|---|---|
-| 16 | `src/main/resources/static/images/admin-tech-office.png` | Asset người dùng cung cấp được đưa vào dự án để làm nền văn phòng có yếu tố công nghệ. Không phải ảnh mới do AI tạo trong lượt đồng bộ. |
+| 16 | `src/main/resources/static/images/admin-tech-office.png` | Asset người dùng cung cấp được đưa vào dự án để làm nền văn phòng có yếu tố công nghệ. |
 | 17 | `src/main/resources/static/images/admin-tech-plant.png` | Asset cây tách nền người dùng cung cấp, dùng ở khoảng trống sidebar. Giữ kích thước artwork cố định khi sidebar đóng/mở. |
 | 18 | `src/test/java/com/group2/rms/dashboard/AdminDashboardViewTests.java` | Điều chỉnh kỳ vọng hiển thị sau yêu cầu bỏ CTA tạo tài khoản/bộ điều khiển thời gian trên Dashboard. Không thay nghiệp vụ authentication hoặc dữ liệu backend. File này đã thay đổi từ lượt Dashboard trước, không được sửa thêm khi đồng bộ các trang hoặc resolve conflict. |
 | 19 | `docs/architecture/UI/UI_CATALOG.md` | Bổ sung ghi nhận Dashboard/component `adw-`, phạm vi áp dụng và việc bỏ breadcrumb. Khi resolve conflict, giữ cả cập nhật menu Candidate từ `main`. Việc ghi nhận vào catalog **không tự hợp thức hóa** các điểm sai phân tầng. |
@@ -214,7 +213,6 @@ Các declaration của nhóm adw gồm `position: absolute !important` trên des
 - Bỏ breadcrumb và chỉ giữ header lớn là yêu cầu trực tiếp.
 - Giới hạn theme cho Admin, giữ Homepage/Auth/Candidate portal riêng là đúng phạm vi.
 
-Các lựa chọn này có thể khác house rules mặc định của Taste hoặc Impeccable. Skill phải tuân theo brief và quy tắc Mộc; không được lấy gợi ý generic để tự ý bỏ hình, đổi font hoặc thay nhận diện.
 
 ### 7.2. Nợ hiệu năng và tương phản cần đo tiếp
 

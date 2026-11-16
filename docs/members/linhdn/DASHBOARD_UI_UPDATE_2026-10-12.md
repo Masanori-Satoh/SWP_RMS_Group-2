@@ -7,7 +7,6 @@ Ngày: 12/10/2026. Phạm vi: giao diện `/dashboard` của System Admin, HR, H
 ## 1. Yêu cầu và quyết định đã áp dụng
 
 - Đọc quy định trong `docs/architecture/UI/` và implementation homepage `templates/candidate/landing.html` trước khi sửa.
-- Dùng Impeccable theo quy trình polish cho trang hiện có; UI UX Pro Max để đối chiếu trạng thái rỗng, focus, bảng responsive; marketing copy-editing để làm rõ nhãn và hành động. Không làm lại design system.
 - Giữ hướng Mộc: nền sáng ấm, xanh rừng, tiêu đề serif, chữ nội dung theo font chung, đường viền mảnh, trang tổng quan thực dụng.
 - Giao diện Dashboard dùng tiếng Việt. Nội dung nghiệp vụ lấy từ DB vẫn hiển thị nguyên văn bằng `th:text`; không dịch seed hoặc cập nhật DB.
 - Giữ ba DTO đã có: `AdminDashboardResponse`, `CandidateDashboardResponse`, `RecruitmentDashboardResponse`, cùng interface `DashboardResponse`.

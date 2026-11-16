@@ -42,13 +42,9 @@ Tổng cộng **9 file dự án**. Các script/capture phục vụ QA nằm ngo�
 - Git ban đầu có `TalentPoolService.java` đã sửa và một file khóa Excel chưa theo dõi. Cả hai là thay đổi có trước; không đưa vào file change của công việc này. SHA-256 của Service trước/sau vẫn là `4ae3ded63ad1ad6c64dd2d97b9cd3b18a797fee23b32b3cd15d136a652eed8ed`.
 - Không commit, push hoặc stage file.
 
-## 4. Quy tắc kiến trúc và skill
+## 4. Quy tắc kiến trúc
 
-- Đọc UI_RULES, UI_CSS_GUIDE, UI_CATALOG, CSS/template Admin thực tế và hợp đồng DESIGN hiện có trong `docs/members/linhdn/AI MD/DESIGN.md`.
-- UI UX Pro Max: đối chiếu table overflow và reflow của filter; giữ bảng cuộn trong vùng của nó.
-- Impeccable: dùng hướng Operate/Polish và craft floor; ưu tiên khả năng quét dữ liệu, trạng thái và bố cục có sẵn, không thêm màn hình hoặc hiệu ứng mới.
-- Taste: `Accent ladder`, seed `378800654`, `--keep palette,type`; không redraw. Giữ palette Mộc, shell và component Admin đã chốt thay vì thay bằng shell/cỡ nút mẫu của skill. Tính năng đặc trưng vẫn là CV nguồn và danh sách chọn theo tin tuyển dụng.
-- Awesome: tham khảo phân cấp chữ/ô dữ liệu trong bản phân tích SAP ở `.agents/references/awesome-design-md/upstream/design-md/sap/DESIGN.md` (mục Hierarchy và `ex-data-table-cell`). Đây là tham khảo bên thứ ba; không copy màu, font hoặc coi là tài liệu SAP chính thức.
+- Đọc UI_RULES, UI_CSS_GUIDE, UI_CATALOG, CSS/template Admin thực tế.
 - Không chỉnh các file protected: layout, tokens/fonts, workspace/topbar, sidebar-shell, brand hoặc interface.js. Không chỉnh CSS/JS của Admin, Authentication, Homepage hoặc module khác.
 - Tái sử dụng `adw-` có nghĩa vẫn phụ thuộc lớp shell hiện trạng đã được ghi trong báo cáo Admin UI trước đây: trách nhiệm shell nằm trong component/JS opt-in và vấn đề stylesheet lặp chưa được xử lý. **Không tuyên bố lần đồng bộ này đã làm sạch toàn bộ kiến trúc.** Chuyển trách nhiệm đó về tầng 4 cần một thay đổi riêng theo quyền Lead; không tự mở rộng tác vụ hiện tại.
 

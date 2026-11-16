@@ -132,9 +132,10 @@
                     </colgroup>
                     <thead>
                         <tr>
-                            <th th:if="${selectionMode}" scope="col" class="tp-check-cell"><input id="tp-select-page"
-                                    class="tp-checkbox" type="checkbox"
-                                    aria-label="Chọn tất cả ứng viên có CV trên trang này" disabled></th>
+                            <th th:if="${selectionMode}" scope="col" class="tp-check-cell">
+                                <input id="tp-select-page" class="tp-checkbox" type="checkbox"
+                                    aria-label="Chọn tất cả ứng viên có CV trên trang này" disabled>
+                            </th>
                             <th scope="col" class="tp-index">STT</th>
                             <th scope="col">Ứng viên</th>
                             <th scope="col">Liên hệ</th>
@@ -267,7 +268,8 @@
                     </svg></button>
             </div>
             <p id="tp-confirm-summary" class="tp-confirm-subtitle"
-                th:text="${hrMode ? 'Gửi gợi ý cho Trưởng bộ phận xem xét' : 'Thêm ứng viên tiềm năng vào tin tuyển dụng'}"></p>
+                th:text="${hrMode ? 'Gửi gợi ý cho Trưởng bộ phận xem xét' : 'Thêm ứng viên tiềm năng vào tin tuyển dụng'}">
+            </p>
             <p class="tp-confirm-job" th:text="${jobTitle}"></p>
             <p th:if="${hrMode and receivingManager != null}" class="tp-confirm-subtitle"
                 th:text="|Trưởng bộ phận phụ trách: ${receivingManager}|"></p>
@@ -279,10 +281,13 @@
             <form id="tp-selection-form" method="post"
                 th:action="${hrMode ? '/talent-pool/jobs/' + jobPostingId + '/recommend' : '/talent-pool/jobs/' + jobPostingId + '/suggest'}"
                 th:attr="data-review-url=@{/talent-pool/jobs/{id}/selection-review(id=${jobPostingId})},data-suggestions-url=${hrMode ? '/talent-pool/jobs/' + jobPostingId + '/recommendations' : '/talent-pool/jobs/' + jobPostingId + '/suggestions'}">
-                <div class="tp-dialog-footer"><button id="tp-recheck" type="button" class="btn btn--secondary btn--sm"
-                        hidden>Kiểm tra lại</button><button type="button" class="btn btn--secondary btn--sm"
-                        data-pool-close>Quay lại</button><button id="tp-confirm-submit" type="submit"
-                        class="btn btn--primary btn--sm" disabled>Xác nhận thêm</button></div>
+                <div class="tp-dialog-footer">
+                    <button id="tp-recheck" type="button" class="btn btn--secondary btn--sm" hidden>Kiểm tra
+                        lại</button>
+                    <button type="button" class="btn btn--secondary btn--sm" data-pool-close>Quay lại</button>
+                    <button id="tp-confirm-submit" type="submit" class="btn btn--primary btn--sm" disabled>Xác nhận
+                        thêm</button>
+                </div>
             </form>
         </dialog>
         <dialog id="tp-notes" class="dialog tp-dialog" aria-labelledby="tp-notes-title tp-notes-name">

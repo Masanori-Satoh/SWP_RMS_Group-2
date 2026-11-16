@@ -23,7 +23,7 @@ Ngày trong tên báo cáo là ngày công việc được tài liệu ghi nhậ
 | 17/10 | Tích hợp lưu tiềm năng vào kết quả phỏng vấn rồi thống nhất thành một nút mở popup bookmark/ghi chú dùng chung với Application; độc lập với Pass/Fail. | [Bookmark phỏng vấn](../../members/linhdn/2026-10-17-interview-potential-bookmark.md), [Popup dùng chung](../../members/linhdn/2026-10-17-interview-bookmark-toggle.md) |
 | 17–22/10 | Các vòng chỉnh Authentication theo mockup: botanical, đồng bộ Login/Register và các trang OTP/Forgot/Reset. Giữ hợp đồng form/backend; các vòng sau thay hình thức trình bày của vòng trước. | [Botanical](../../members/linhdn/2026-10-17-auth-botanical-redesign.md), [21/10](../../members/linhdn/2026-10-21-login-register-sync.md), [22/10](../../members/linhdn/2026-10-22-auth-reference.md) |
 | 24–26/10 | Rà Talent Pool, refactor package Candidate (`30299fec`, #98), sửa cập nhật phòng ban (`ad3d6b64`), cập nhật UI tài khoản/phòng ban (`f377727d`). Bỏ quyền System Admin khỏi workflow tuyển dụng (`d06d38a2`, #102). | Git của các commit đã nêu; cây source hiện tại trong `candidate/{domain,application,talentpool,infra}`. |
-| 27/10 | Rà kiến trúc UI Admin; ghi nhận nợ phân tầng shell/CSS, stylesheet lặp, màu hardcode và kích thước nút. Hướng dẫn thiết kế hiện được lưu dưới `docs/members/linhdn/AI MD/`; root AGENTS/DESIGN đã bị gỡ trong `d627dd7b` (#110). | [Architecture review](../../members/linhdn/2026-10-27-admin-ui-architecture-review.md), [Design contract](../../members/linhdn/AI%20MD/DESIGN.md) |
+| 27/10 | Rà kiến trúc UI Admin; ghi nhận nợ phân tầng shell/CSS, stylesheet lặp, màu hardcode và kích thước nút. | [Architecture review](../../members/linhdn/2026-10-27-admin-ui-architecture-review.md) |
 | 28/10 | Tài khoản thống nhất Active/Inactive; bổ sung script chuyển dữ liệu Blocked cũ. Sửa clean build Dashboard sau refactor. | [Account status](../../members/linhdn/2026-10-28-account-status-active-inactive.md), [Compile fix](../../members/linhdn/2026-10-28-dashboard-compile-fix.md) |
 | 28/10 | **Thay quyết định CV mới:** ứng viên tự nộp CV luôn về `Applied`, phát `ApplicationSubmittedEvent`, cập nhật cùng draft nếu có; tiếp tục sàng lọc thông thường. Nhánh HR xác nhận dùng CV cũ vẫn giữ `HM_Passed`. | [Luồng CV mới hiện hành](../../members/linhdn/2026-10-28-new-cv-normal-screening.md), commit `e03acee2`. |
 | 28/10 | Đồng bộ list/detail/suggestions/recommendations theo workspace Admin, vẫn dùng role HR/HM. Đợt UI này có 9 file trong phạm vi báo cáo; commit `ddd73d63` còn chứa thay đổi khác nên không lấy toàn commit làm số file UI. | [Work log đồng bộ](2026-10-28-potential-candidate-admin-ui-sync.md), [Thống kê 9 file](../../members/linhdn/2026-10-28-potential-candidate-ui-change-summary.md) |
@@ -63,10 +63,7 @@ Ngày trong tên báo cáo là ngày công việc được tài liệu ghi nhậ
 
 ## 4. Cách dùng hướng dẫn thiết kế
 
-- Theo hợp đồng Mộc lưu tại `docs/members/linhdn/AI MD/DESIGN.md`, UI_RULES, UI_CSS_GUIDE và UI_CATALOG; tái sử dụng khung/card hiện hành.
-- UI UX Pro Max: tra `responsive content reflow` (UX / Text Reflow and Spacing), áp dụng lưới linh hoạt và không cắt chữ dài.
-- Impeccable: context xác nhận có visual system hiện hữu; áp dụng refinement có phạm vi và craft floor, giữ nhận diện Mộc theo mockup.
-- Awesome: tham khảo [SAP Analysis / Hierarchy](../../../.agents/references/awesome-design-md/upstream/design-md/sap/DESIGN.md) về phân cấp tiêu đề/nhãn/giá trị; đây là tài liệu bên thứ ba. Chỉ dùng nguyên tắc phân cấp, giữ font/token Mộc thay vì dùng cỡ chữ và palette SAP.
+- Theo UI_RULES, UI_CSS_GUIDE và UI_CATALOG; tái sử dụng khung/card hiện hành.
 - Taste không cần kích hoạt cho bổ sung thông tin có mockup và nhận diện đã chốt; không mở rộng thành redesign.
 
 ## 5. Kiểm chứng và việc còn lại
@@ -136,7 +133,6 @@ Phần này thay thế quyết định không có menu ở mục 9 và vị trí
 - Lịch sử ứng tuyển & CV có sáu cột: số thứ tự, vị trí, phòng ban, ngày nộp, trạng thái, xem CV. Trạng thái lấy từ Application; trường hợp Đã rút được đối chiếu AuditLog hiện hữu, không suy từ Rejected. Giữ nhãn trạng thái chung của hệ thống, không dựng dữ liệu từ mockup.
 - Phân trang 3 CV/trang bằng `cvPage`, tổng tính trên toàn bộ CV; giữ filter/job/recommendation/back context. Tổng cộng chuyển lên góc phải header. Footer chỉ còn phân trang khi có nhiều trang.
 - Khung ghi chú vẫn ngang đáy cột CV. Form Thêm ghi chú **ghim xuống đáy panel** bằng flex margin tự động và padding 16px; textarea không bị kéo giãn. Feed cuộn theo giới hạn hiện hữu khi nhiều ghi chú; có bộ đếm 0/1000 theo giới hạn backend, không giảm xuống 500 chỉ vì ảnh mẫu.
-- Thay đổi frontend có phạm vi dùng lại token/component Mộc. UI UX Pro Max tra keyboard/focus; Impeccable craft floor và kiểm tra ảnh; Awesome SAP Hierarchy tham khảo như mục 4. Đọc policy Taste và giữ palette/type của Mộc; mockup đã chốt nên không chạy draw để chọn hướng khác.
 
 ### Kiểm tra cuối
 

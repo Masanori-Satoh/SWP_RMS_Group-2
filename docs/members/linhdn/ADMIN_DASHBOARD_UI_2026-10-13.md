@@ -6,7 +6,6 @@ Ngày thực hiện: 13/10/2026. Phạm vi: giao diện Dashboard Admin và bổ
 
 - Giao diện Dashboard bằng tiếng Việt, thống nhất nhận diện Mộc đang dùng ở homepage: xanh rừng, nền trắng ngà, tiêu đề Lora, đường viền nhẹ.
 - Đọc quy định `docs/architecture/UI/UI_RULES.md`, `UI_CATALOG.md`, `UI_CSS_GUIDE.md`; đối chiếu homepage thật trong source và bản render trên trình duyệt.
-- Dùng UI UX Pro Max để đối chiếu cách biểu diễn số liệu; áp dụng Impeccable theo chế độ giao diện nghiệp vụ và lượt polish có giới hạn. Dùng copy-editing để làm rõ nhãn hành động và trạng thái.
 - Không sửa backend, DTO, Security, database, dữ liệu seed hoặc cấu hình. Không đưa số liệu mẫu vào template/source chạy thật.
 - Không sửa khung chung, topbar, sidebar, token, component dùng chung hoặc bất kỳ tài liệu nào trong `docs/architecture/UI/`.
 - Không thêm thư viện biểu đồ/JavaScript mới; dùng HTML, Thymeleaf, CSS và các component hiện có.
@@ -210,7 +209,7 @@ Bộ kiểm tra tạm dùng Spring MVC/Thymeleaf thật và dữ liệu giả l�
 
 ## 9. Nhật ký thực hiện
 
-1. Đọc UI rules/catalog/CSS guide và ba skill; kiểm tra source Dashboard, DTO, Service, route và homepage.
+1. Đọc UI rules/catalog/CSS guide; kiểm tra source Dashboard, DTO, Service, route và homepage.
 2. Chọn bố cục bảng so sánh tài khoản + hai khối phòng ban/API; giữ nguyên nguồn số liệu và design tokens.
 3. Sửa Admin template/CSS, thêm STT ba danh sách theo yêu cầu mới.
 4. Chạy Maven compile và bộ render tạm; bổ sung CSRF filter cho môi trường kiểm tra để kiểm tra đúng form thực tế.

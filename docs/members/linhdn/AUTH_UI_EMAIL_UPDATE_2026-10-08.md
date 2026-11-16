@@ -11,14 +11,6 @@
 - Tất cả output build, harness, profile trình duyệt, ảnh và log chỉ nằm trong `docs/members/linhdn/`. Không tạo file source test mới; đợt đăng ký cập nhật hai file test hiện có cho hợp đồng OTP mới.
 - Một tài liệu này gom quá trình, luồng kỹ thuật và hướng dẫn test; không tách thêm tài liệu MD cho đợt này.
 
-## 2. Skills đã áp dụng
-
-| Skill | Cách áp dụng |
-|---|---|
-| UI/UX Pro Max, bản local `.agents/skills/ui-ux-pro-max/` | Đọc SKILL; tra UX về accessible authentication, paste, error summary và typography. Dùng semantic form, label, autocomplete, focus và bố cục responsive. Typography cuối đối chiếu trực tiếp homepage thực tế. |
-| Marketing Skills — copy-editing | Đọc SKILL và checklist; rút gọn tiêu đề/hướng dẫn/CTA; Việt hóa thông báo và email, bỏ hứa hẹn chức năng backend chưa có. |
-| Impeccable | Đọc SKILL, audit, polish, craft floor; dùng context/detect và review trực quan. Giữ hướng hiện tại, giảm trang trí, chuẩn hóa nhịp và trạng thái. Detector có 2 cảnh báo phụ ở email: preheader ẩn line-height 1px và Arial fallback; giữ vì cần cho email client. |
-
 ## 3. Homepage design analysis
 
 Đã render template homepage hiện tại với model kiểm tra rỗng, dùng HTML/CSS/JS gốc và xem ảnh trên Chrome ở 1440/375px. Không kết nối database, không thay nội dung homepage.
@@ -60,11 +52,11 @@ Các file phụ phục vụ kiểm tra nằm trong `docs/members/linhdn/tmp/auth
 
 ## 5. Nhật ký thực hiện
 
-1. Đọc task, architecture, skills, git status và các hợp đồng Controller/DTO/Service/Security/email hiện tại.
+1. Đọc task, architecture, git status và các hợp đồng Controller/DTO/Service/Security/email hiện tại.
 2. Tạo layout Authentication riêng và form tương ứng flow hiện tại; giữ action/method/name/model/CSRF.
 3. Tách OTP UI khỏi trang nhập mật khẩu mới để khớp controller đã được người dùng sửa.
 4. Chuyển adapter email từ SimpleMailMessage sang MIME UTF-8 HTML + plain text, giữ public contract và lỗi gửi mail.
-5. Dùng Impeccable review/polish, kiểm tra render và thao tác bằng harness trong phạm vi output được phép.
+5. Kiểm tra render và thao tác bằng harness trong phạm vi output được phép.
 6. Khi nhận chỉ dẫn tiếng Việt, kiểm tra lại route thực tế; mở homepage hiện tại, đối chiếu font/màu/brand; Việt hóa toàn bộ copy Authentication/email.
 7. Thông báo backend vẫn giữ nguyên trong DTO/Service/Handler. Fragment Authentication dịch 26 thông báo đã audit; BindingResult và lỗi từng trường vẫn giữ nguyên. Thông báo chưa có trong catalogue dùng fallback tiếng Việt, không đưa chi tiết exception lên UI.
 8. Kiểm tra render phát hiện lookup map trong SpEL cần `translations.get(text)`; sửa ở fragment, xác nhận nội dung từng lỗi tiếng Việt.
@@ -371,54 +363,4 @@ Bằng chứng trong `docs/members/linhdn/tmp/registration-otp-2026-10-08/`:
 - `maven-tests-no-fork-escalated.log`: lượt rộng 22 test và lỗi thật để nối tiếp.
 - `scope-before.json` / `scope-after.json`: hash inventory; artifact tạm không tính là source mới.
 
-`PasswordRecoveryFlowException.java` có thay đổi đồng thời được phát hiện ở các mốc 21:57:23 và 22:15:46; `PasswordResetService.java` có timestamp 22:19:19. Root/agent không ghi hai file này. Compile/test cuối 22:21:55 đã đọc các phiên bản đó. Giữ thay đổi có sẵn và chỉnh sửa đồng thời của luồng Recovery; không restore/overwrite. Diff whitespace còn dòng trống có space trong phần Recovery của GlobalExceptionHandler và các comment test cũ; không dọn phần ngoài Register.
-
-## 13. Ước tính LOC theo `Tính Loc.xlsx`
-
-### 13.1 Cách tính đã đọc
-
-Nguồn: `docs/members/linhdn/Tính Loc.xlsx`, sheet **LOC Estimation guide**, vùng **B2:N10** và hai ảnh ví dụ được nhúng trong workbook. Workbook này quy đổi độ phức tạp chức năng/màn hình thành **LOC tối đa**, không đếm số dòng Java/HTML/CSS thực tế.
-
-| Level | Số field/component hoặc transaction | LOC tối đa |
-|---|---|---:|
-| 1 | 3–5 field hoặc 2 transaction | 60 |
-| 2 | 6–7 field hoặc 3 transaction | 90 |
-| 3 | 8–9 field hoặc 4 transaction | 120 |
-| 4 | 10–11 field hoặc 5 transaction | 150 |
-| 5 | 12–13 field hoặc 6 transaction | 180 |
-| 6 | 14–15 field hoặc 7 transaction | 210 |
-| 7 | >15 field hoặc >7 transaction | 240 |
-
-- Field là input/selector/nút nghiệp vụ, bảng, pagination hoặc loại row action; không nhân theo số hàng. Activate/Deactivate là một action có trạng thái như ảnh ví dụ.
-- Transaction DB/external chưa thể hiện qua component thì quy đổi thêm hai field; không đếm gửi mail thêm lần nữa nếu đã tính nút gửi mã.
-- Create/Update chung màn hình: **nhân đôi level**, không nhân đôi LOC. Ví dụ trong workbook: L2 → L4 → 150 LOC.
-- Sáu ô OTP là **một input nghiệp vụ**, không phải sáu field.
-- Không cộng CSRF hidden input, hiện/ẩn mật khẩu, shared header/sidebar/footer, error copy, email template, tài liệu hoặc test thành chức năng riêng.
-- Có mâu thuẫn nhỏ: B2 ghi field **OR** transaction, O3:O9 ghi **AND**. Ước tính dưới đây theo phần hướng dẫn và ví dụ, cần người chấm xác nhận nếu dùng để báo cáo chính thức.
-
-### 13.2 Danh sách ước tính theo chức năng hiện có
-
-Đây là allowance của nhóm chức năng được kiểm tra trong code, **chưa phải LOC được công nhận riêng cho LinhDN**: workbook hiện vẫn có owner mẫu TuanNV/AnhPT, chưa có phân công LinhDN; một số dashboard dùng chung với team. Cần đối chiếu phân công và lịch sử commit trước khi ghi điểm cá nhân.
-
-| Chức năng | Thành phần tính | Level | LOC ước tính |
-|---|---|---|---:|
-| Login | Username/email, password, submit = 3 | L1 | 60 |
-| Register form | Full name, username, email, password, confirm, gửi mã = 6 | L2 | 90 |
-| Register OTP | Một mã OTP, xác minh/tạo account, gửi lại = 3 | L1 | 60 |
-| Forgot Password | Theo tiêu chí transaction: tìm User và gửi SMTP = 2; không cộng thêm SMTP vào nút Gửi | L1 | 60 |
-| Recovery OTP | Một OTP, xác minh, gửi lại = 3 | L1 | 60 |
-| Reset Password | Password, confirm, lưu = 3 | L1 | 60 |
-| Internal Account List | Keyword/role/status/department/sort, filter/clear/create, table/edit/activate-deactivate/pagination = 12 | L5 | 180 |
-| Candidate Account List | Keyword/status/sort, filter/clear, table/activate-deactivate/pagination = 8 | L3 | 120 |
-| Create/Update Internal Account | Create 9, edit 7; lấy level cao hơn L3 rồi nhân đôi | L6 | 210 |
-| Department List | Keyword/status/filter/clear/create/table/edit/activate-deactivate/pagination = 9 | L3 | 120 |
-| Create/Update Department | Name, manager, save = 3; L1 nhân đôi | L2 | 90 |
-| Dashboard dùng chung | 15 component chức năng tổng hợp; không nhân theo sáu role | L6 | 210 |
-| API Monitoring nội bộ | Hai transaction: loopback HTTP GET và health SELECT 1 | L1 | 60 |
-| **Tổng ước tính** | | | **1.380** |
-
-Khoảng thực tế theo cách phân loại Dashboard: **1.350–1.410 LOC**. Riêng Register + Register OTP là **150 LOC**; nếu form Register cũ đã được tính 90 thì phần chức năng OTP thêm khoảng **60 LOC**, không cộng lại toàn bộ 150 vào điểm cũ. Logout có thể thêm 60 nếu được giao riêng, nhưng chưa cộng vì ownership shared chưa rõ.
-
-Không cộng phần chưa triển khai: AI Configuration, probe AI/email, Candidate notifications/reminders, withdraw, accept/decline/negotiate offer, cập nhật profile/change password từ dashboard, CV upload/application creation. Không nhận feature chỉ có nút disabled là đã hoàn thành.
-
-Bản phân tích máy đọc: `docs/members/linhdn/tmp/registration-otp-2026-10-08/loc-estimate.json`. Workbook gốc giữ nguyên.
+`PasswordRecoveryFlowException.java` có thay đổi đồng thời được phát hiện ở các mốc 21:57:23 và 22:15:46; `PasswordResetService.java` có timestamp 22:19:19. Compile/test cuối 22:21:55 đã đọc các phiên bản đó. Giữ thay đổi có sẵn và chỉnh sửa đồng thời của luồng Recovery; không restore/overwrite. Diff whitespace còn dòng trống có space trong phần Recovery của GlobalExceptionHandler và các comment test cũ; không dọn phần ngoài Register.

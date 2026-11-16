@@ -34,7 +34,7 @@ Các đường dẫn bên dưới tính từ root repository.
 | `src/test/java/com/group2/rms/candidate/application/pipeline/controller/ApplicationPipelineWebTests.java` | Sửa | 1 | 1 | Assertion vẫn kiểm tra nội dung H1 nhưng không phụ thuộc toàn bộ chuỗi class cũ. |
 | `docs/architecture/UI/UI_CATALOG.md` | Thêm mục cuối | 22 | 0 | Ghi cách tái sử dụng `adw-`, toolbar `mft-`, alias `tpw-` và phạm vi role. |
 | `docs/management/WORK_LOG.md` | Thêm mục | 2 | 0 | Ghi đợt đồng bộ và thêm dòng phân cách cho bảng Markdown. |
-| `docs/management/work_logs/2026-10-28-potential-candidate-admin-ui-sync.md` | **Tạo mới** | 83 | 0 | File change, quyết định UI, skill, kiểm thử, giới hạn và việc còn lại. |
+| `docs/management/work_logs/2026-10-28-potential-candidate-admin-ui-sync.md` | **Tạo mới** | 83 | 0 | File change, quyết định UI, kiểm thử, giới hạn và việc còn lại. |
 
 ## 3. Thay đổi người dùng nhìn thấy
 
@@ -90,9 +90,8 @@ Viewport đã kiểm tra: 1440×900, 1366×768, 768×1024, 390×844; list thêm 
 
 Các số liệu trên được đối chiếu lại với work log và artifact QA có sẵn khi xuất báo cáo. Không chạy lại test hoặc render trong lần tạo Markdown này. Tại thời điểm QA của đợt UI, `localhost:8081` không chạy; ảnh lấy từ HTML MockMvc cùng CSS/JS thật. Không kết luận trạng thái chạy hiện tại của ứng dụng từ bằng chứng đó.
 
-## 7. Kiến trúc, skill và giới hạn còn lại
+## 7. Kiến trúc và giới hạn còn lại
 
-- Dùng UI UX Pro Max cho table/filter/reflow; Impeccable theo Operate/Polish; Taste `Accent ladder`, seed `378800654`, giữ palette/type; Awesome tham khảo phân cấp chữ và ô dữ liệu trong bản phân tích SAP. Không thay nhận diện Mộc bằng palette/font do skill đề xuất.
 - CSS mới chỉ phục vụ bốn trang Talent Pool; dùng alias `tpw-` và component `adw-`/`mft-` có sẵn, không sao chép markup sidebar/topbar.
 - Việc tái sử dụng `adw-` vẫn phụ thuộc nợ kiến trúc hiện trạng đã được báo cáo: shell được áp một phần qua component CSS/JS opt-in và có hiện tượng stylesheet lặp. Đợt UI này không sửa chúng và không khẳng định đã tuân thủ sạch toàn bộ phân tầng.
 - Chưa kiểm thử lưu SQL, gửi email, CV thật, native zoom, FPS/Core Web Vitals hoặc tương phản mọi vùng ảnh nền. Muốn xử lý shell dùng chung cần một tác vụ riêng theo quyền sở hữu UI của hệ thống.
