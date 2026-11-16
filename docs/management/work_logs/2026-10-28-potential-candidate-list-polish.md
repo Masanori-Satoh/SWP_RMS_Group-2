@@ -53,12 +53,9 @@ không sửa thủ công, không stage hay đưa vào danh sách source bàn gia
 - Recommendations giữ rõ hàng ứng viên, HR gửi, thời điểm, trạng thái và hành
   động. Không đổi nghiệp vụ HR recommend và HM suggest.
 
-## Skills và kiến trúc
+## Kiến trúc
 
 Đọc UI_RULES/UI_CSS_GUIDE/UI_CATALOG và cấu trúc template/CSS/JS trước khi sửa.
-Áp dụng UI UX Pro Max cho density/reflow; Impeccable cho Operate/polish và
-disclosure; Taste tiếp tục direction `accent-ladder`, seed `378800654`, giữ
-palette/type; Awesome DESIGN.md/SAP chỉ tham khảo hierarchy của bảng.
 
 - Không sửa layout/internal, workspace.css, topbar, tokens, interface.js,
   components.css, sidebar hoặc ảnh nền. Không chép lại shell/pagination.

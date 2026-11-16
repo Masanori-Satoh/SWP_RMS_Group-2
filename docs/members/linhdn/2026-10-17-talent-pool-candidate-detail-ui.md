@@ -6,7 +6,7 @@
 
 Triển khai yêu cầu mới trên danh sách `/talent-pool?jobPostingId=...`, popup tổng kết và trang `/talent-pool/{id}`. Tiếp nối báo cáo `2026-10-17-talent-pool-selection-ui.md`; các mô tả dưới đây thay thế phần hướng dẫn mở rộng tên CV và layout chi tiết cũ trong báo cáo đó.
 
-Tuân thủ `docs/architecture/ARCHITECTURE_GUIDE.md` và bộ `docs/architecture/UI/`; áp dụng Impeccable/UI UX Pro Max trong phạm vi design system hiện có. Dùng layout, card, button, alert và token mộc. RMS. CSS riêng tiền tố `tp-`; không sửa layout/sidebar/topbar, token, schema, security hay workflow tuyển dụng. Không commit/push, không thao tác DB thật.
+Tuân thủ `docs/architecture/ARCHITECTURE_GUIDE.md` và bộ `docs/architecture/UI/`. Dùng layout, card, button, alert và token mộc. RMS. CSS riêng tiền tố `tp-`; không sửa layout/sidebar/topbar, token, schema, security hay workflow tuyển dụng. Không commit/push, không thao tác DB thật.
 
 ## UI/UX đã cập nhật
 

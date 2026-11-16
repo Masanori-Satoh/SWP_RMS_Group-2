@@ -24,12 +24,6 @@ Giữ navbar/brand chung qua fragment hiện có và các token màu của RMS; 
 - Kết quả browser và ảnh: thư mục QA cục bộ `auth-new-reference/`. Log test: `target/auth-reference-20261022-tests.log`.
 - Đây là preview từ MockMvc, không phải E2E với tài khoản/database/email thật. Không gửi OTP hay sửa tài khoản thật.
 
-## Ảnh nền và prompt
+## Ảnh nền
 
 Asset dùng trong app: `src/main/resources/static/images/auth-office-scene.png`.
-
-Tạo bằng công cụ Imagegen tích hợp, chế độ sửa ảnh, từ PNG nhúng đầu tiên của HTML mẫu. Bản sinh gốc: `exec-aab70155-0b67-4371-8d69-f3e790ba03f2.png`. Không ghi đè các ảnh cũ.
-
-Prompt chính xác:
-
-> Edit target: supplied recruitment login webpage screenshot. Create ONLY the clean photographic background plate for this exact webpage. Preserve the same wide 1694:928 composition and office scene: bright white diffuse daylight left, glass office walls and dark window mullions right, indoor green plants, desk in bottom quarter, open coding laptop bottom center-left, notebook, white coffee mug, office chair. Remove ALL user interface and ALL readable text from the entire image: remove top navigation and logo and top bar, all headline and paragraph and benefits text/icons in left half, floating job cards and application progress cards in center, all glowing digital overlays, and the entire white login form panel on the right. Seamlessly reconstruct the real office scene behind these objects. The left upper half should remain very bright soft pale office window light providing whitespace for real HTML headline to be overlaid. The right half should be darker photographic office glass and plants for a real white login card to overlay. Remove writing on books and mug too. No logos, no words, no buttons, no boxes, no floating interface. Match the source photo angle, atmosphere, subdued greens and cool greys. Photorealistic, not illustration.

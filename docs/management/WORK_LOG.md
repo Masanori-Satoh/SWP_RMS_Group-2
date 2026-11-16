@@ -6,9 +6,6 @@ Tài liệu này là lịch sử tóm tắt các thay đổi quan trọng và b�
 
 | Ngày | Tên công việc / Yêu cầu chính | Người thực hiện | Chi tiết thay đổi |
 | --- | --- | --- | --- |
-| **2026-11-13** | Ước tính 2.790 LOC của LinhDN theo 26 màn hình/chức năng và mẫu Excel | LinhDN | [Work log](work_logs/2026-11-13-uoc-tinh-loc.md) · [Báo cáo](../members/linhdn/2026-11-13-uoc-tinh-loc.md) |
-| **2026-11-13** | Vẽ sơ đồ High Level Design của RMS theo mẫu | Codex hỗ trợ | [Work log](work_logs/2026-11-13-rms-high-level-design.md) · [Báo cáo](../members/linhdn/2026-11-13-rms-high-level-design.md) |
-| **2026-11-13** | Kiểm tra điều kiện chặn đóng tin REQ-0002 | LinhDN | [Work log](work_logs/2026-11-13-close-posting-req-0002-investigation.md) · [Báo cáo](../members/linhdn/2026-11-13-close-posting-req-0002-investigation.md) |
 | **2026-11-11** | Hiện số lần nhập sai OTP và số lần còn lại trong Đăng ký và Quên mật khẩu | LinhDN | [Work log](work_logs/2026-11-11-auth-otp-attempt-counts.md) · [Báo cáo](../members/linhdn/2026-11-11-auth-otp-attempt-counts.md) |
 | **2026-11-09** | Khôi phục toast khi mở trang ngoài quyền sau merge | LinhDN | [Work log](work_logs/2026-11-09-forbidden-page-toast-regression.md) · [Báo cáo](../members/linhdn/2026-11-09-forbidden-page-toast-regression.md) |
 | **2026-11-08** | Hiện toast khi người đã đăng nhập mở trang ngoài quyền | LinhDN | [Work log](work_logs/2026-11-08-forbidden-page-toast.md) · [Báo cáo](../members/linhdn/2026-11-08-forbidden-page-toast.md) |

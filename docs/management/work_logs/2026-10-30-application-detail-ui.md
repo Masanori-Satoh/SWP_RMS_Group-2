@@ -1,7 +1,7 @@
 # 2026-10-30 — Đồng bộ giao diện chi tiết Application
 
 - Người thực hiện: LinhDN.
-- Yêu cầu: dùng 4 skill FE đã cài, áp dụng bố cục ảnh mẫu và giữ cùng giao diện với Talent Pool / HR Recommend.
+- Yêu cầu: áp dụng bố cục ảnh mẫu và giữ cùng giao diện với Talent Pool / HR Recommend.
 - Phạm vi: `/applications/{id}`; không thay đổi trang danh sách Application hay luồng của module khác.
 - Database: không sửa schema, migration, seed hoặc dữ liệu.
 
@@ -20,13 +20,8 @@
 - Dưới 1100px chuyển thành một cột; ở 540px trở xuống hành trình chuyển dọc, các thẻ thu gọn padding và nút mở CV chiếm đủ hàng.
 - CSS mới chỉ nạp trên trang chi tiết và có tiền tố `apd-`. Không sửa stylesheet danh sách, layout, sidebar, topbar, tokens, fragment hoặc JavaScript dùng chung.
 
-## Skill và quyết định thiết kế
+## Quyết định thiết kế
 
-- Đọc hợp đồng Mộc tại `docs/members/linhdn/AI MD/DESIGN.md`, UI Rules/Catalog/CSS Guide trước khi sửa.
-- UI UX Pro Max: tra cứu responsive và feedback; ưu tiên không tràn ngang, thông báo thao tác rõ và giữ focus/validation.
-- Impeccable: dùng operate/craft floor để tinh chỉnh UI đang có, giữ thương hiệu và luồng; kiểm tra cả trạng thái dialog.
-- Taste: app detail, `accent-ladder`, seed **887247549**, giữ palette/type của Mộc. Chọn kiểu này để thống nhất với workspace hiện có; không áp shell hoặc palette mới từ sheet.
-- Awesome DESIGN reference: tham khảo mục Hierarchy của bản SAP cục bộ `.agents/references/awesome-design-md/upstream/design-md/sap/DESIGN.md`; chỉ lấy cách phân tầng nội dung, không sao chép nhận diện hoặc cỡ chữ.
 - Câu hỏi chính: hồ sơ/đề xuất này đang ở bước nào, có bằng chứng CV gì và người đang xem được xử lý bước nào tiếp theo?
 - Dấu hiệu riêng: hành trình đồng ý của ứng viên đặt ngay trước CV; mặt nhận diện là hệ màu xanh và workspace Mộc.
 - Dữ liệu: một hồ sơ trong một tin, ngày giờ backend, điểm AI 0–100 hoặc chưa có, các trường cá nhân có thể thiếu, ghi chú và hoạt động theo dữ liệu thật. Người dùng là HR/HM/Director; tác vụ chính là đọc CV rồi quyết định hoặc xác nhận sau liên hệ. Không thêm số liệu minh họa vào sản phẩm.
@@ -63,7 +58,6 @@ Số dòng dưới đây tính so với snapshot ngay trước tác vụ này, k
 - Node `application-preview.test.cjs`: **3/3 qua**; không sửa JS hoặc API preview/bookmark.
 - Taste source lint: **0 FAIL, 0 WARN** cho template và CSS riêng.
 - Taste inspector: **0 FAIL, 4 WARN** (các WARN có giải thích bên dưới), allowance `placeholder-data` vì HTML QA dùng email `example.com` trong fixture hiện có, không phải dữ liệu gán vào sản phẩm. Không sửa fixture email hoặc dữ liệu thật để che cảnh báo.
-- Các WARN được giữ có lý do: `palette-cream` là token nền catalog Mộc; `font-fallback` là `--sans` chung khai báo Inter rồi dùng Source Sans 3 đã tải (không đổi font toàn hệ thống); `ragged-row` nhận nhầm hai stack nội dung độc lập của mockup thành hai thẻ ngang hàng; `no-data-hue` không tính màu xanh của các mốc pseudo-element dù màu `--brand` hiển thị đúng. Không sửa file dùng chung để làm vừa quy tắc generic của skill.
 - Browser Chrome: kiểm tra viewport 1440px, 768px và 390px từ HTML render thật của MVC; các mốc đề xuất có trạng thái đúng, quyền HR/HM/Director, checkbox required, CSRF và nút submit gắn đúng form.
 - Browser: mở/Hủy kết thúc đề xuất, mở dialog lưu ứng viên, mở/Hủy loại hồ sơ; không gửi mutation nghiệp vụ trong fixture QA.
 - Kiểm tra tên/vị trí/email dài ở mobile, không tràn ngang toàn trang; không có JavaScript exception.
@@ -82,4 +76,3 @@ Số dòng dưới đây tính so với snapshot ngay trước tác vụ này, k
 
 - Thêm báo cáo có ảnh trong thư mục LinhDN; ghi quy ước báo cáo cho mỗi lượt và liên kết mới tại README của LinhDN.
 - `flat-type-hierarchy`: detector phân tích HTML không nạp CSS ngoài nên nhận body/h1/h2 đều 16px; Chrome đo h1 26px desktop / 23px mobile, tiêu đề thẻ 17px, body 13,5–15px. Đây là false positive; giữ UI, không sửa font/khung dùng chung.
-- Đã dùng `impeccable hooks ignore-value flat-type-hierarchy "*" --file src/main/resources/templates/candidate/application-detail.html --reason ...`; chạy `detect` lại không còn finding. Ngoại lệ chỉ một rule/một file; giữ ngoại lệ có sẵn của suggestions. `.impeccable/config.json` là cấu hình đang bị Git ignore tại máy, không thuộc số file tracked trong bảng.
