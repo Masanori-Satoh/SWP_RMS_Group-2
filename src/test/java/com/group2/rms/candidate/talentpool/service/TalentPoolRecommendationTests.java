@@ -423,7 +423,7 @@ class TalentPoolRecommendationTests {
         // When: Gọi pool.recommendation với dữ liệu đã chuẩn bị.
         var response=pool.recommendation(219,11);
         // Then: Review Fail về sau không ghi đè quyết định HM Pass đầu tiên của gợi ý.
-        assertEquals("HM đã chấp nhận",response.statusLabel());
+        assertEquals("Trưởng bộ phận đã chấp nhận",response.statusLabel());
         assertEquals(false, response.pending());
         assertEquals(false, response.canDecide());
     }

@@ -10,6 +10,7 @@ public class RequisitionStateException extends BaseBusinessException {
 
     public static final String NO_ACCESS_MESSAGE = "Bạn không có quyền truy cập vào chức năng hoặc tài nguyên này.";
 
+    // Tạo lỗi khi trạng thái không cho phép thao tác.
     public RequisitionStateException() {
         super(NO_ACCESS_MESSAGE, "REQUISITION_STATE_BLOCKED");
     }

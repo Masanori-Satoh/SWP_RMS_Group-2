@@ -45,57 +45,59 @@ public class JobPostingAccess {
 
     // ----- Trạng thái (hàm static: so chuỗi, không cần người dùng) -----
 
-    /** Tin đã đóng thì không sửa được nữa ("Đăng lại" = tạo tin mới). */
+    // Kiểm tra trạng thái cho phép sửa tin.
     public static boolean isEditableStatus(String postingStatus) {
         return EDITABLE_STATUSES.contains(postingStatus);
     }
 
-    /** Tin đang đăng hoặc tạm dừng sau khi đã đăng. */
+    // Kiểm tra tin đang đăng hoặc tạm dừng.
     public static boolean isLive(String viewStatus) {
         return STATUS_PUBLISHED.equals(viewStatus) || STATUS_PAUSED.equals(viewStatus);
     }
 
-    /** Tin đã từng hiện cho ứng viên (đang đăng / tạm dừng / đã đóng) nên mới có hồ sơ để thống kê. */
+    // Kiểm tra tin từng hiển thị cho ứng viên.
     public static boolean hasBeenPublished(String viewStatus) {
         return isLive(viewStatus) || STATUS_CLOSED.equals(viewStatus);
     }
 
     // ----- Người dùng -----
 
-    /** Người đang đăng nhập (lấy từ phiên, không từ form). */
+    // Lấy người dùng đã đăng nhập.
     public User actor() {
         return requisitionAccess.actor();
     }
 
+    // Lấy vai trò người dùng.
     public String role(User user) {
         return requisitionAccess.role(user);
     }
 
-    /** HR được tạo / sửa / đăng / tạm dừng / xóa tin. */
+    // Kiểm tra quyền quản lý tin.
     public boolean canManage(User user) {
         return MANAGER_ROLES.contains(role(user));
     }
 
-    /** Rule (D7): chỉ HR đóng tin, vì đóng tin còn xử lý Offer / đề xuất ứng viên (TalentPoolService#closeJob). */
+    // Kiểm tra quyền đóng tin.
     public boolean canCloseAny(User user) {
         return RequisitionAccess.ROLE_HR.equals(role(user));
     }
 
-    /** Được vào màn tin tuyển dụng nội bộ: HR, Hiring Manager, Director (Director chỉ xem). */
+    // Kiểm tra quyền vào trang tin nội bộ.
     public boolean canAccessPostings(User user) {
         return READER_ROLES.contains(role(user));
     }
 
+    // Kiểm tra vai trò quản lý tuyển dụng.
     public boolean isHiringManager(User user) {
         return RequisitionAccess.ROLE_HIRING_MANAGER.equals(role(user));
     }
 
-    /** Khối "Ứng viên tiềm năng" (module talent pool) ở trang chi tiết: HR và HM. */
+    // Kiểm tra quyền xem ứng viên tiềm năng.
     public boolean canSeeTalentPool(User user) {
         return TALENT_POOL_ROLES.contains(role(user));
     }
 
-    /** Rule (D5): HM chỉ xem tin phòng mình; HM và Director không xem tin nháp. */
+    // Kiểm tra quyền xem tin.
     public boolean canView(User user, JobPosting posting) {
         if (!canAccessPostings(user)) {
             return false;
@@ -109,32 +111,37 @@ public class JobPostingAccess {
 
     // ----- Cờ thao tác theo trạng thái hiển thị (viewStatus) -----
 
+    // Kiểm tra quyền đăng tin.
     public boolean canPublish(User user, String viewStatus) {
         return canManage(user) && STATUS_DRAFT.equals(viewStatus);
     }
 
+    // Kiểm tra quyền mở lại tin.
     public boolean canReopen(User user, String viewStatus) {
         return canManage(user) && STATUS_PAUSED.equals(viewStatus);
     }
 
+    // Kiểm tra quyền sửa tin.
     public boolean canEdit(User user, String viewStatus) {
         return canManage(user) && viewStatus != null && !STATUS_CLOSED.equals(viewStatus);
     }
 
+    // Kiểm tra quyền tạm dừng tin.
     public boolean canPause(User user, String viewStatus) {
         return canManage(user) && STATUS_PUBLISHED.equals(viewStatus);
     }
 
+    // Kiểm tra quyền đóng tin cụ thể.
     public boolean canClose(User user, String viewStatus) {
         return canCloseAny(user) && isLive(viewStatus);
     }
 
-    /** Chỉ xóa bản nháp chưa có hồ sơ ứng tuyển. */
+    // Kiểm tra quyền xóa tin.
     public boolean canDelete(User user, String viewStatus, boolean hasApplications) {
         return canManage(user) && STATUS_DRAFT.equals(viewStatus) && !hasApplications;
     }
 
-    /** Rule (D10): đăng lại khi tin đã đóng, yêu cầu vẫn Approved và chưa có tin nào đang mở. */
+    // Kiểm tra quyền đăng lại tin.
     public boolean canRepost(User user, String viewStatus, JobRequisition requisition, boolean hasOpenPosting) {
         return canManage(user) && STATUS_CLOSED.equals(viewStatus) && requisition != null
                 && RequisitionAccess.STATUS_APPROVED.equals(requisition.getApprovalStatus()) && !hasOpenPosting;
@@ -142,24 +149,28 @@ public class JobPostingAccess {
 
     // ----- requireX: ném AccessDeniedException (trang 403) -----
 
+    // Yêu cầu quyền quản lý tin.
     public void requireManage(User user) {
         if (!canManage(user)) {
             throw new AccessDeniedException("Chỉ HR mới có quyền quản lý tin tuyển dụng.");
         }
     }
 
+    // Yêu cầu quyền vào trang tin nội bộ.
     public void requireAccessPostings(User user) {
         if (!canAccessPostings(user)) {
             throw new AccessDeniedException("Bạn không có quyền xem tin tuyển dụng.");
         }
     }
 
+    // Yêu cầu quyền đóng tin.
     public void requireCloseAny(User user) {
         if (!canCloseAny(user)) {
             throw new AccessDeniedException("Chỉ HR được đóng đợt tuyển dụng.");
         }
     }
 
+    // Yêu cầu quyền xem tin.
     public void requireView(User user, JobPosting posting) {
         requireAccessPostings(user);
         if (!canView(user, posting)) {

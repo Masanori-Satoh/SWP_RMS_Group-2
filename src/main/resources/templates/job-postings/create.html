@@ -184,11 +184,7 @@
                             </div>
                             <input class="form-input" th:field="*{workLocation}" th:maxlength="${locationLimit}"
                                 placeholder="Nhập địa điểm làm việc" th:disabled="*{workModel == 'Remote'}"
-                                aria-describedby="workLocation-help workLocation-error">
-                            <details class="jpf-map-toggle" id="jpf-map-toggle">
-                                <summary class="jpf-map-summary">Xem bản đồ</summary>
-                                <div class="jpf-map" id="jpf-map"></div>
-                            </details>
+                                aria-describedby="workLocation-error">
                             <small id="workLocation-error" class="field-error"
                                 th:text="${#fields.hasErrors('workLocation')} ? ${#fields.errors('workLocation')[0]} : ''"></small>
                         </div>

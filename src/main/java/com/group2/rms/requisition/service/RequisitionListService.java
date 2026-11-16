@@ -84,12 +84,12 @@ public class RequisitionListService {
     private final RequisitionMapper mapper;
 
 
-    // Returns the filtered requisition list page.
+    // Lấy trang danh sách theo bộ lọc.
     public RequisitionListResponse getListPage(RequisitionSearchRequest rawFilter) {
         return getListPage(rawFilter, List.of());
     }
 
-    // unparsableParams: tham số URL sai kiểu (departmentId=abc, createdFrom=xyz) do controller gom từ BindingResult.
+    // Lấy trang danh sách theo bộ lọc.
     public RequisitionListResponse getListPage(RequisitionSearchRequest rawFilter, Collection<String> unparsableParams) {
         User currentUser = access.actor();
         RequisitionFilterOptions options = buildFilterOptions(currentUser);
@@ -106,7 +106,7 @@ public class RequisitionListService {
     }
 
 
-    // Builds the visibility scope for the current user.
+    // Tạo phạm vi yêu cầu được xem.
     private Specification<JobRequisition> scope(User currentUser) {
         String role = access.role(currentUser);
         if (RequisitionAccess.ROLE_HIRING_MANAGER.equals(role)) {
@@ -129,15 +129,14 @@ public class RequisitionListService {
                     cb.equal(root.get("hiringManager").get("userId"), currentUser.getUserId()));
         }
         if (RequisitionAccess.ROLE_HR.equals(role)) {
-            return (root, query, cb) -> root.get("approvalStatus")
-                    .in(RequisitionAccess.STATUS_APPROVED, RequisitionAccess.STATUS_CLOSED);
+            return (root, query, cb) -> cb.equal(root.get("approvalStatus"), RequisitionAccess.STATUS_APPROVED);
         }
         throw new org.springframework.security.access.AccessDeniedException(
                 "Vai trò không có quyền xem yêu cầu tuyển dụng.");
     }
 
 
-    // Builds the filter options available to the current user.
+    // Tạo lựa chọn lọc theo quyền người xem.
     private RequisitionFilterOptions buildFilterOptions(User currentUser) {
         String role = access.role(currentUser);
 
@@ -161,7 +160,7 @@ public class RequisitionListService {
     }
 
 
-    // Validates and normalizes the requisition list filters.
+    // Chuẩn hóa bộ lọc đầu vào.
     private RequisitionSearchRequest normalizeFilter(RequisitionSearchRequest raw, RequisitionFilterOptions options,
             List<String> errors) {
         String keyword = ListFilters.cleanKeyword(raw.q());
@@ -231,7 +230,7 @@ public class RequisitionListService {
     }
 
 
-    // Searches requisitions using the normalized filters.
+    // Tìm yêu cầu theo bộ lọc đã chuẩn hóa.
     private Page<RequisitionResponse> search(RequisitionSearchRequest filter, User currentUser, List<String> errors) {
         Specification<JobRequisition> where = scope(currentUser);
 
@@ -289,7 +288,7 @@ public class RequisitionListService {
     }
 
 
-    // Returns the latest posting for each requisition.
+    // Lấy tin mới nhất của từng yêu cầu.
     private Map<Integer, JobPosting> latestPostingsOf(List<Integer> requisitionIds) {
         Map<Integer, JobPosting> latestByRequisition = new HashMap<>();
         if (requisitionIds.isEmpty()) {
@@ -302,7 +301,7 @@ public class RequisitionListService {
     }
 
 
-    // Returns requisition IDs that have later rounds.
+    // Lấy mã yêu cầu có đợt tuyển sau.
     private Set<Integer> idsWithLaterRounds(List<Integer> requisitionIds) {
         if (requisitionIds.isEmpty()) {
             return new HashSet<>();
@@ -311,7 +310,7 @@ public class RequisitionListService {
     }
 
 
-    // Builds labels for the active filters.
+    // Tạo nhãn cho bộ lọc đang dùng.
     private List<FilterChip> describeActiveFilters(RequisitionSearchRequest filter, RequisitionFilterOptions options) {
         List<FilterChip> chips = new ArrayList<>();
 
@@ -360,7 +359,7 @@ public class RequisitionListService {
         return chips;
     }
 
-    // Builds the available status options.
+    // Tạo lựa chọn lọc trạng thái.
     private List<FilterOption> statusOptions(List<String> statuses) {
         List<FilterOption> options = new ArrayList<>();
         for (String status : statuses) {
@@ -369,7 +368,7 @@ public class RequisitionListService {
         return options;
     }
 
-    // Builds the available posting options.
+    // Tạo lựa chọn lọc tin tuyển dụng.
     private List<FilterOption> postingOptions() {
         List<FilterOption> options = new ArrayList<>();
         for (String posting : POSTING_FILTER_VALUES) {
@@ -378,7 +377,7 @@ public class RequisitionListService {
         return options;
     }
 
-    // Builds the available department options.
+    // Tạo lựa chọn lọc phòng ban.
     private List<FilterOption> departmentOptions() {
         List<FilterOption> options = new ArrayList<>();
         for (Department department : departments.findAll(Sort.by("departmentName"))) {
@@ -388,7 +387,7 @@ public class RequisitionListService {
     }
 
 
-    // Builds the available creator options.
+    // Tạo lựa chọn lọc người tạo.
     private List<FilterOption> creatorOptions(List<String> visibleStatuses) {
         List<FilterOption> options = new ArrayList<>();
         for (User creator : requisitions.findCreatorsWithStatusIn(visibleStatuses)) {
@@ -397,7 +396,7 @@ public class RequisitionListService {
         return options;
     }
 
-    // Builds the available employment type options.
+    // Tạo lựa chọn lọc hình thức làm việc.
     private List<FilterOption> employmentTypeOptions() {
         List<FilterOption> options = new ArrayList<>();
         for (String type : RequisitionValidator.EMPLOYMENT_TYPES) {

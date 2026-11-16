@@ -20,7 +20,7 @@ public record JobPostingSearchRequest(
         Integer page,
         Integer size) {
 
-    /** Số bộ lọc đang bật, hiện trên nút "Bộ lọc" (không tính từ khóa và sắp xếp). */
+    // Đếm số bộ lọc đang bật.
     public int activeFilterCount() {
         int count = 0;
         if (status != null && !status.isEmpty()) {
@@ -41,7 +41,7 @@ public record JobPostingSearchRequest(
         return count;
     }
 
-    /** Trạng thái này có đang được chọn không (dùng trong template). */
+    // Kiểm tra trạng thái đang được chọn.
     public boolean hasStatus(String value) {
         return status != null && status.contains(value);
     }

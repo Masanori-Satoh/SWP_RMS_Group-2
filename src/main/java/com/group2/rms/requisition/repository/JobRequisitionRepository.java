@@ -29,14 +29,18 @@ public interface JobRequisitionRepository
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT r FROM JobRequisition r WHERE r.requisitionId = :id")
+    // Tìm yêu cầu và khóa để cập nhật.
     Optional<JobRequisition> findForUpdate(@Param("id") Integer id);
 
+    // Lấy yêu cầu theo trạng thái, mới trước.
     List<JobRequisition> findByApprovalStatusOrderByCreatedAtDesc(
             String approvalStatus);
 
     @EntityGraph(attributePaths = "department")
+    // Lấy yêu cầu cùng phòng ban theo trạng thái.
     List<JobRequisition> findWithDepartmentByApprovalStatusOrderByCreatedAtDesc(String approvalStatus);
 
+    // Kiểm tra yêu cầu đã có đợt tuyển sau.
     boolean existsByOriginalRequisition_RequisitionId(Integer requisitionId);
 
     @Query("""
@@ -45,6 +49,7 @@ public interface JobRequisitionRepository
             WHERE a.requisition.requisitionId = :requisitionId
             ORDER BY a.approvalDate DESC
             """)
+    // Lấy lịch sử phê duyệt mới trước.
     List<RequisitionApproval> findApprovalHistory(@Param("requisitionId") Integer requisitionId);
 
     @Query("""
@@ -52,10 +57,12 @@ public interface JobRequisitionRepository
             FROM JobRequisition r
             WHERE r.originalRequisition.requisitionId IN :ids
             """)
+    // Lấy mã yêu cầu có đợt tuyển sau.
     List<Integer> findIdsWithLaterRounds(@Param("ids") Collection<Integer> ids);
 
     @Override
     @EntityGraph(attributePaths = { "department", "hiringManager" })
+    // Tìm yêu cầu kèm phòng ban và người tạo.
     Page<JobRequisition> findAll(Specification<JobRequisition> spec, Pageable pageable);
 
     @Query("""
@@ -65,6 +72,7 @@ public interface JobRequisitionRepository
             WHERE r.approvalStatus IN :statuses
             ORDER BY u.fullName ASC
             """)
+    // Lấy người tạo theo các trạng thái.
     List<User> findCreatorsWithStatusIn(
             @Param("statuses") Collection<String> statuses);
 }

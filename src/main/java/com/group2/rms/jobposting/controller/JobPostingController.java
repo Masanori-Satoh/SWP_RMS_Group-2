@@ -59,8 +59,8 @@ public class JobPostingController {
     private final RecruitmentEmailService recruitmentEmailService;
     private final TalentPoolService talentPoolService;
 
-    /** Thông tin người xem cho trang dashboard (khung cũ tự dựng sidebar) và menu đang sáng. */
     @ModelAttribute
+    // Đưa thông tin người xem vào model.
     void populateViewerAttributes(Model model) {
         User currentUser = access.actor();
         model.addAttribute("viewerRole", access.role(currentUser));
@@ -68,16 +68,16 @@ public class JobPostingController {
         model.addAttribute("activeMenu", "job-postings");
     }
 
-    /** Chỉ nhận các ô HR được nhập (CLAUDE.md §22); thông tin nguồn, trạng thái do service lấy từ DB. */
     @InitBinder("form")
+    // Giới hạn các trường được nhập từ form.
     void formBinder(WebDataBinder binder) {
         binder.setAllowedFields("jobPostingId", "requisitionId", "postingTitle", "jobDescription", "jobRequirements",
                 "benefits", "workLocation", "workingHours", "employmentType", "workModel", "salaryMode", "salaryCustom", "showPositions", "numberOfPositionsDisplay",
                 "applicationDeadline", "action");
     }
 
-    /** Màn danh sách; tham số sai định dạng trên URL (?page=abc) -> bảng rỗng kèm lỗi, không lỗi trang. */
     @GetMapping
+    // Hiển thị danh sách tin tuyển dụng.
     public String listJobPostings(@ModelAttribute("searchRequest") JobPostingSearchRequest searchRequest,
             BindingResult invalidParams, HttpServletRequest request, Model model) {
         model.addAttribute("list", listService.getListPage(searchRequest, access.actor(),
@@ -88,8 +88,8 @@ public class JobPostingController {
         return "job-postings/list";
     }
 
-    /** Form tạo tin từ yêu cầu đã duyệt; fromPostingId = "Đăng lại" từ một tin đã đóng. */
     @GetMapping("/create")
+    // Hiển thị form tạo hoặc đăng lại tin.
     public String showCreateForm(@RequestParam(value = "requisitionId", required = false) String requisitionIdParam,
             @RequestParam(value = "fromPostingId", required = false) String fromPostingIdParam,
             Model model, RedirectAttributes flash) {
@@ -118,8 +118,8 @@ public class JobPostingController {
         }
     }
 
-    /** id nhận dạng chuỗi để URL gõ tay như "{1689}" vẫn hiểu là tin 1689 (không ra lỗi 500). */
     @GetMapping("/{id}/edit")
+    // Hiển thị form sửa tin.
     public String showEditForm(@PathVariable("id") String idParam, Model model, RedirectAttributes flash) {
         User currentUser = access.actor();
         Integer id = parseId(idParam);
@@ -138,8 +138,8 @@ public class JobPostingController {
         }
     }
 
-    /** Lưu nháp (action=draft) hoặc đăng ngay (action=publish) tin mới. */
     @PostMapping("/create")
+    // Tạo tin nháp hoặc đăng tin mới.
     public String createJobPosting(@Valid @ModelAttribute("form") JobPostingRequest form,
             BindingResult errors, Model model, RedirectAttributes flash) {
         User currentUser = access.actor();
@@ -161,8 +161,8 @@ public class JobPostingController {
         return renderForm(model, jobPostingService.restoreSourceInfo(form, currentUser), currentUser);
     }
 
-    /** Lưu thay đổi (action=draft) hoặc đăng / mở lại (action=publish) tin đã có. */
     @PostMapping("/{id}/edit")
+    // Lưu thay đổi hoặc đăng tin đã có.
     public String updateJobPosting(@PathVariable Integer id,
             @Valid @ModelAttribute("form") JobPostingRequest form,
             BindingResult errors, Model model, RedirectAttributes flash) {
@@ -185,6 +185,7 @@ public class JobPostingController {
     }
 
     @PostMapping("/{id}/publish")
+    // Đăng hoặc mở lại tin.
     public String publishJobPosting(@PathVariable Integer id, RedirectAttributes flash) {
         try {
             jobPostingService.publishJobPosting(id, access.actor());
@@ -196,6 +197,7 @@ public class JobPostingController {
     }
 
     @PostMapping("/{id}/pause")
+    // Tạm dừng tin đang đăng.
     public String pauseJobPosting(@PathVariable Integer id, RedirectAttributes flash) {
         try {
             jobPostingService.pauseJobPosting(id, access.actor());
@@ -206,8 +208,8 @@ public class JobPostingController {
         return redirectToDetail(id);
     }
 
-    /** Đóng tin (chỉ HR), rồi gửi email báo kết quả cho ứng viên; gửi mail lỗi thì vẫn đóng, chỉ báo lỗi. */
     @PostMapping("/{id}/close")
+    // Đóng tin tuyển dụng.
     public String closeJobPosting(@PathVariable Integer id, RedirectAttributes flash) {
         try {
             jobPostingService.closeJobPosting(id, access.actor());
@@ -225,6 +227,7 @@ public class JobPostingController {
     }
 
     @GetMapping("/{id}")
+    // Hiển thị chi tiết tin.
     public String showJobPostingDetail(@PathVariable("id") String idParam, Model model, RedirectAttributes flash) {
         Integer id = parseId(idParam);
         InternalJobPostingDetailResponse detail;
@@ -245,6 +248,7 @@ public class JobPostingController {
     }
 
     @PostMapping("/delete/{id}")
+    // Xóa tin đủ điều kiện.
     public String deleteJobPosting(@PathVariable("id") Integer id, RedirectAttributes flash) {
         try {
             jobPostingService.deleteJobPosting(id, access.actor());
@@ -255,8 +259,8 @@ public class JobPostingController {
         return "redirect:" + LIST_URL;
     }
 
-    // Gõ URL không đủ quyền (HM / Giám đốc mở tin nháp...): toast lỗi trên danh sách thay vì trang 403.
     @ExceptionHandler(AccessDeniedException.class)
+    // Xử lý lỗi thiếu quyền truy cập.
     public String whenAccessDenied(AccessDeniedException e, RedirectAttributes flash, HttpServletRequest request) {
         flash.addFlashAttribute("errorMessage", e.getMessage());
         if (LIST_URL.equals(request.getRequestURI())) {
@@ -268,7 +272,7 @@ public class JobPostingController {
 
     // ----- Các hàm nhỏ -----
 
-    /** Mọi đường hiển thị form (tạo, sửa, đăng lại, hiện lại khi lỗi) đều đi qua đây. */
+    // Chuẩn bị và hiển thị form tin.
     private String renderForm(Model model, JobPostingRequest form, User currentUser) {
         boolean isEdit = form.getJobPostingId() != null;
         model.addAttribute("form", form);
@@ -291,7 +295,7 @@ public class JobPostingController {
         return FORM_VIEW;
     }
 
-    /** Đưa lỗi theo ô về cạnh từng ô; lỗi chung hiện ở đầu form. */
+    // Đưa lỗi kiểm tra vào form.
     private void addErrors(BindingResult errors, JobPostingValidationException e) {
         if (e.getFieldErrors().isEmpty()) {
             errors.reject("business", e.getMessage());
@@ -306,6 +310,7 @@ public class JobPostingController {
         });
     }
 
+    // Tạo thông báo sau khi lưu.
     private String savedMessage(JobPostingRequest request, boolean isPublish, boolean isCreated) {
         if (!isPublish && isCreated) {
             return "Đã lưu bản nháp tin tuyển dụng.";
@@ -316,7 +321,7 @@ public class JobPostingController {
         return PUBLISHED_NOW_MESSAGE;
     }
 
-    // Lấy phần số của mã gõ trên URL (vd "{1753}" -> 1753); không có số thì trả null để service báo lỗi
+    // Chuyển mã tin trên URL thành số.
     private static Integer parseId(String raw) {
         String digits = raw == null ? "" : raw.replaceAll("\\D", "");
         if (digits.isEmpty() || digits.length() > 9) {
@@ -325,6 +330,7 @@ public class JobPostingController {
         return Integer.valueOf(digits);
     }
 
+    // Chuyển về trang chi tiết tin.
     private static String redirectToDetail(Integer id) {
         return "redirect:" + LIST_URL + "/" + id;
     }

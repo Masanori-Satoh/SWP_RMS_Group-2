@@ -46,10 +46,12 @@ public final class JobPostingLabels {
     /** TalentPoolService#closeJob ghi NewValue = "Closed" khi đóng tin. */
     private static final String LOG_CLOSED_BY_TALENT_POOL = JobPostingAccess.STATUS_CLOSED;
 
+    // Ngăn tạo đối tượng chứa hàm tiện ích.
     private JobPostingLabels() {
         // Chỉ chứa hàm static
     }
 
+    // Lấy nhãn trạng thái tin.
     public static String statusLabel(String viewStatus) {
         if (viewStatus == null) {
             return MISSING;
@@ -63,7 +65,7 @@ public final class JobPostingLabels {
         };
     }
 
-    /** Màu badge theo class catalog: badge--success | warning | danger | neutral. */
+    // Lấy màu trạng thái tin.
     public static String statusTone(String viewStatus) {
         if (viewStatus == null) {
             return "neutral";
@@ -75,6 +77,7 @@ public final class JobPostingLabels {
         };
     }
 
+    // Lấy nhãn bộ lọc hạn nộp.
     public static String deadlineFilterLabel(String value) {
         if (value == null) {
             return "";
@@ -86,7 +89,7 @@ public final class JobPostingLabels {
         };
     }
 
-    /** Nhóm hạn nộp past / soon / open; tin đã đóng hoặc không có hạn nộp thì null. */
+    // Xác định nhóm hạn nộp.
     public static String deadlineState(String viewStatus, LocalDateTime deadline, LocalDateTime now) {
         if (deadline == null || JobPostingAccess.STATUS_CLOSED.equals(viewStatus)) {
             return null;
@@ -100,12 +103,12 @@ public final class JobPostingLabels {
         return DEADLINE_OPEN;
     }
 
-    /** Số ngày từ hôm nay tới một mốc thời gian (âm = đã qua). Tính theo ngày lịch, không theo giờ. */
+    // Đếm số ngày tới một mốc thời gian.
     public static long daysFromToday(LocalDateTime moment, LocalDate today) {
         return ChronoUnit.DAYS.between(today, moment.toLocalDate());
     }
 
-    /** Tên nút sang trang "Ứng viên tiềm năng" của talent pool: HM xem gợi ý cho mình, HR xem đề xuất của HM. */
+    // Lấy nhãn liên kết gợi ý ứng viên.
     public static String suggestionsLinkLabel(boolean viewerIsHiringManager) {
         if (viewerIsHiringManager) {
             return "Ứng viên tiềm năng";
@@ -113,6 +116,7 @@ public final class JobPostingLabels {
         return "Ứng viên được HM đề xuất";
     }
 
+    // Lấy nhãn liên kết đề xuất ứng viên.
     public static String recommendationsLinkLabel(boolean viewerIsHiringManager) {
         if (viewerIsHiringManager) {
             return "Gợi ý từ HR";
@@ -120,7 +124,7 @@ public final class JobPostingLabels {
         return "Gợi ý đã gửi cho HM";
     }
 
-    /** Một dòng audit log → tên hoạt động ở mục "Lịch sử" của trang chi tiết. */
+    // Lấy nhãn sự kiện lịch sử.
     public static String activityLabel(AuditLog log) {
         String detail = Objects.toString(log.getNewValue(), "");
         String action = Objects.toString(log.getAction(), "");
@@ -145,6 +149,7 @@ public final class JobPostingLabels {
         return "Tạo mới";
     }
 
+    // Đọc trạng thái từ dữ liệu lịch sử.
     private static String jsonStatus(String detail) {
         if (!detail.startsWith("{")) return null;
         try {
@@ -155,6 +160,7 @@ public final class JobPostingLabels {
         }
     }
 
+    // Lấy nhãn thay đổi trong lịch sử.
     private static String updateActivityLabel(String detail) {
         if (detail.startsWith(LOG_PUBLISH) || detail.contains(JobPostingAccess.STATUS_PUBLISHED)) {
             return "Đăng tin";

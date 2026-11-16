@@ -30,6 +30,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -211,6 +212,7 @@ class NotificationIntegrationTests {
     private RequisitionApproval saveApproval(String status, String comments) {
         JobRequisition requisition = requisitions.saveAndFlush(JobRequisition.builder()
                 .title("IT Noti Backend").hiringManager(userA).department(department)
+                .expectedStaffingDate(LocalDate.now().plusDays(30))
                 .approvalStatus(status).numberOfPositions(1)
                 .employmentType("Full-time").workModel("On-site")
                 .jobDescription("Integration-test responsibilities").requirementDetails("Integration-test requirements").build());

@@ -131,6 +131,7 @@ class InternalDashboardIntegrationTests {
         assertEquals(3, row.numberOfPositions());
         DepartmentRequisitionRow departmentRow = byDepartment.stream()
                 .filter(item -> item.departmentName().equals(department.getDepartmentName())).findFirst().orElseThrow();
+        assertEquals(department.getDepartmentId(), departmentRow.departmentId());
         assertTrue(departmentRow.pending() >= 1);
         assertTrue(departmentRow.approved() >= 1);
     }

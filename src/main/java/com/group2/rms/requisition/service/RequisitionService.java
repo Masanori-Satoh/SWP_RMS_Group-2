@@ -4,28 +4,28 @@ import com.group2.rms.requisition.dto.RequisitionRequest;
 import com.group2.rms.requisition.dto.RequisitionResponse;
 
 public interface RequisitionService {
-    // Returns requisition details by ID.
+    // Lấy chi tiết yêu cầu theo mã.
     RequisitionResponse getById(Integer id);
 
-    // Prepares the requisition edit form.
+    // Chuẩn bị dữ liệu sửa yêu cầu.
     RequisitionRequest prepareEditForm(Integer id);
 
-    // Prepares a copy of the source requisition.
+    // Chuẩn bị bản sao từ yêu cầu gốc.
     RequisitionRequest copy(Integer id);
 
-    // Creates a requisition.
+    // Tạo yêu cầu tuyển dụng.
     Integer createRequisition(RequisitionRequest request);
 
-    // Updates an existing requisition.
+    // Cập nhật yêu cầu tuyển dụng.
     void updateRequisition(Integer id, RequisitionRequest request);
 
-    // Deletes an eligible requisition.
+    // Xóa yêu cầu đủ điều kiện.
     void deleteRequisition(Integer id);
 
-    // Processes the approval decision.
+    // Xử lý quyết định phê duyệt.
     void decide(Integer id, boolean approved, String comment);
 
-    // Confirms that a fully staffed requisition is complete.
+    // Đóng yêu cầu đã hoàn tất.
     void closeRequisition(Integer id);
 
 }

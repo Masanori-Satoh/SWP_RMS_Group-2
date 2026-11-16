@@ -13,43 +13,45 @@ import java.util.List;
  */
 public interface JobPostingService {
 
-    /** Yêu cầu đã duyệt chưa có tin đang mở, cho ô "Đổi yêu cầu"; kèm "(đã đăng N lần)". */
+    // Lấy yêu cầu có thể chọn để tạo tin.
     List<FilterOption> requisitionChoices(User currentUser);
 
-    /** Form tạo tin điền sẵn từ yêu cầu đã duyệt. */
+    // Chuẩn bị form tạo tin.
     JobPostingRequest prepareCreateForm(Integer requisitionId, User currentUser);
 
-    /** "Đăng lại" tin đã đóng: form tạo tin lần mới, nội dung lấy từ tin đã đóng. */
+    // Chuẩn bị form đăng lại tin.
     JobPostingRequest prepareRepostForm(Integer closedPostingId, User currentUser);
 
-    /** Form chỉnh sửa tin đang nháp / đang đăng / tạm dừng. */
+    // Chuẩn bị form sửa tin.
     JobPostingRequest prepareEditForm(Integer jobPostingId, User currentUser);
 
-    /** Hiện lại form lỗi: điền lại thông tin nguồn từ DB, giữ nội dung người dùng đã nhập. */
+    // Khôi phục thông tin nguồn khi form lỗi.
     JobPostingRequest restoreSourceInfo(JobPostingRequest edited, User currentUser);
 
-    /** Lưu bản nháp từ yêu cầu đã duyệt. */
+    // Tạo tin nháp.
     Integer createJobPosting(JobPostingRequest request, User currentUser);
 
-    /** Tạo và đăng trong cùng một giao dịch khi HR bấm "Đăng tin" trên form tạo. */
+    // Tạo và đăng tin trong một giao dịch.
     Integer createAndPublishJobPosting(JobPostingRequest request, User currentUser);
 
-    /** "Lưu nháp" / "Lưu thay đổi": trạng thái giữ nguyên. */
+    // Lưu thay đổi của tin.
     void updateJobPosting(Integer id, JobPostingRequest request, User currentUser);
 
-    /** "Đăng tin" / "Lưu và mở lại" trên form sửa. */
+    // Lưu và đăng tin.
     void updateAndPublishJobPosting(Integer id, JobPostingRequest request, User currentUser);
 
-    /** Đăng tin nháp hoặc mở lại tin tạm dừng (nút trên trang chi tiết). */
+    // Đăng hoặc mở lại tin.
     void publishJobPosting(Integer id, User currentUser);
 
+    // Tạm dừng tin.
     void pauseJobPosting(Integer id, User currentUser);
 
-    /** Đóng tin (chỉ HR): giao cho TalentPoolService#closeJob xử lý hồ sơ / Offer còn lại. */
+    // Đóng tin tuyển dụng.
     void closeJobPosting(Integer id, User currentUser);
 
-    /** Xóa bản nháp chưa có hồ sơ (kèm audit log). */
+    // Xóa tin nháp đủ điều kiện.
     void deleteJobPosting(Integer id, User currentUser);
 
+    // Lấy chi tiết tin nội bộ.
     InternalJobPostingDetailResponse getInternalJobPostingDetail(Integer id, User currentUser);
 }

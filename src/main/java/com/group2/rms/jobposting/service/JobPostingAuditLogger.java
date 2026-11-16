@@ -35,21 +35,24 @@ public class JobPostingAuditLogger {
     private final ObjectMapper objectMapper;
     private final Clock clock;
 
+    // Ghi sự kiện tạo tin.
     public void logCreate(JobPosting posting, User actor) {
         save(posting.getJobPostingId(), actor, ACTION_CREATE, null, json(snapshot(posting), false));
     }
 
+    // Ghi sự kiện xóa tin.
     public void logDelete(JobPosting posting, User actor) {
         save(posting.getJobPostingId(), actor, ACTION_DELETE, json(snapshot(posting), false), null);
     }
 
+    // Ghi thay đổi trạng thái tin.
     public void logStatusChange(JobPosting posting, User actor, String action, String oldStatus) {
         save(posting.getJobPostingId(), actor, action,
                 json(Map.of("Status", oldStatus), true),
                 json(Map.of("Status", posting.getPostingStatus()), true));
     }
 
-    /** Một lần lưu, một dòng, chỉ gồm các trường có giá trị thay đổi. */
+    // Ghi các trường tin đã thay đổi.
     public void logChanges(JobPosting posting, User actor, String action, List<String> changedKeys,
             Map<String, String> before, Map<String, String> after) {
         if (changedKeys.isEmpty()) return;
@@ -62,12 +65,12 @@ public class JobPostingAuditLogger {
         save(posting.getJobPostingId(), actor, action, json(oldValues, true), json(newValues, true));
     }
 
-    /** Lịch sử hoạt động của một tin, mới nhất trước. */
+    // Lấy lịch sử thao tác của tin.
     public List<AuditLog> history(Integer jobPostingId) {
         return audit.findByEntityNameAndEntityIdOrderByTimestampDesc(ENTITY_NAME, String.valueOf(jobPostingId));
     }
 
-    /** Tên trường ổn định trong JSON và giá trị trước/sau để so sánh. */
+    // Lưu giá trị các trường để đối chiếu.
     public Map<String, String> snapshot(JobPosting posting) {
         Map<String, String> snapshot = new LinkedHashMap<>();
         snapshot.put("Title", posting.getPostingTitle());
@@ -89,10 +92,12 @@ public class JobPostingAuditLogger {
         return snapshot;
     }
 
+    // Chuẩn hóa ký tự xuống dòng.
     private static String lf(String text) {
         return text == null ? null : text.replace("\r\n", "\n");
     }
 
+    // Chuyển dữ liệu thành JSON.
     private String json(Map<String, String> fields, boolean includeNulls) {
         Map<String, Object> values = new LinkedHashMap<>();
         fields.forEach((key, value) -> {
@@ -108,6 +113,7 @@ public class JobPostingAuditLogger {
         }
     }
 
+    // Lưu một sự kiện lịch sử.
     private void save(Integer jobPostingId, User actor, String action, String oldValue, String newValue) {
         audit.save(AuditLog.builder()
                 .user(actor)

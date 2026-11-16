@@ -41,7 +41,7 @@ public class JobPostingMapper {
 
     // ----- Màn danh sách -----
 
-    /** Một dòng của bảng; nhãn và cờ thao tác tính sẵn để template chỉ đọc. */
+    // Chuyển tin thành dòng danh sách.
     public InternalJobPostingResponse toListRow(JobPosting posting, User viewer, long totalApplications,
             long newApplications, LocalDateTime now) {
         String viewStatus = posting.getPostingStatus();
@@ -82,7 +82,7 @@ public class JobPostingMapper {
 
     // ----- Trang chi tiết -----
 
-    /** Trang chi tiết; hasOpenPosting quyết định nút "Đăng lại", stats rỗng nếu tin chưa đăng. */
+    // Chuyển tin thành dữ liệu chi tiết.
     public InternalJobPostingDetailResponse toDetail(JobPosting posting, User viewer, LocalDateTime now,
             boolean hasApplications, boolean hasOpenPosting, ApplicationStats stats, List<PostingRound> rounds,
             List<AuditLog> activityLogs) {
@@ -177,7 +177,7 @@ public class JobPostingMapper {
         return detail.build();
     }
 
-    /** Một lần đăng của yêu cầu, hiện ở mục "Các lần đăng". */
+    // Chuyển một lần đăng để hiển thị.
     public PostingRound toPostingRound(JobPosting round, Integer currentId, long applications, long hired) {
         String viewStatus = round.getPostingStatus();
         return new PostingRound(round.getJobPostingId(), round.getPostingNo(), round.getPostingDate(),
@@ -186,7 +186,7 @@ public class JobPostingMapper {
                 round.getJobPostingId().equals(currentId));
     }
 
-    /** Lịch sử theo thời gian; tin cũ chưa có audit thì dựng tạm từ ngày tạo / sửa / đăng. */
+    // Chuyển lịch sử thao tác để hiển thị.
     public List<ActivityHistoryItem> toActivityHistory(JobPosting posting, List<AuditLog> logs) {
         List<ActivityHistoryItem> history = new ArrayList<>();
         if (logs != null && !logs.isEmpty()) {
@@ -214,6 +214,7 @@ public class JobPostingMapper {
         return history;
     }
 
+    // Lấy các thay đổi từ lịch sử.
     private static List<ActivityHistoryChange> auditChanges(AuditLog log) {
         JsonNode oldValues = auditJson(log.getOldValue());
         JsonNode newValues = auditJson(log.getNewValue());
@@ -229,6 +230,7 @@ public class JobPostingMapper {
         return changes;
     }
 
+    // Đọc JSON của lịch sử thao tác.
     private static JsonNode auditJson(String value) {
         if (value == null || !value.stripLeading().startsWith("{")) return null;
         try {
@@ -239,11 +241,13 @@ public class JobPostingMapper {
         }
     }
 
+    // Lấy giá trị một trường trong lịch sử.
     private static String auditValue(JsonNode values, String field) {
         if (values == null || !values.has(field) || values.get(field).isNull()) return "—";
         return values.get(field).asText();
     }
 
+    // Lấy nhãn trường trong lịch sử.
     private static String auditFieldLabel(String field) {
         return switch (field) {
             case "Title" -> "Tiêu đề";
@@ -264,7 +268,7 @@ public class JobPostingMapper {
 
     // ----- Form tạo / sửa -----
 
-    /** Form tạo tin từ yêu cầu đã duyệt, điền sẵn nội dung; postingNo = lần đăng lớn nhất + 1. */
+    // Chuẩn bị form tạo tin từ yêu cầu.
     public JobPostingRequest toCreateForm(JobRequisition requisition, int postingNo) {
         JobPostingRequest form = new JobPostingRequest();
         fillSourceInfo(form, requisition);
@@ -291,7 +295,7 @@ public class JobPostingMapper {
         return form;
     }
 
-    /** Form sửa một tin có sẵn: nội dung tin và trạng thái form. */
+    // Chuẩn bị form sửa tin.
     public JobPostingRequest toEditForm(JobPosting posting) {
         JobPostingRequest form = toCreateForm(posting.getRequisition(), posting.getPostingNo());
         form.setJobPostingId(posting.getJobPostingId());
@@ -306,7 +310,7 @@ public class JobPostingMapper {
         return form;
     }
 
-    /** Trạng thái form theo trạng thái hiện tại của tin. */
+    // Điền trạng thái form theo tin hiện tại.
     public void fillFormState(JobPostingRequest form, JobPosting posting) {
         String viewStatus = posting.getPostingStatus();
         form.setPostingNo(posting.getPostingNo());
@@ -316,7 +320,7 @@ public class JobPostingMapper {
         form.setPostingDate(posting.getPostingDate());
     }
 
-    /** Trạng thái form khi tạo tin mới (hoặc hiện lại form tạo bị lỗi). */
+    // Điền trạng thái form tạo tin.
     public void fillNewFormState(JobPostingRequest form, int postingNo) {
         form.setPostingNo(postingNo);
         form.setDraftOrNew(true);
@@ -325,7 +329,7 @@ public class JobPostingMapper {
         form.setPostingDate(null);
     }
 
-    /** Thông tin yêu cầu nguồn (chỉ hiển thị) và các giá trị gốc cho nút "Khôi phục bản gốc". Luôn nạp lại từ DB. */
+    // Điền thông tin yêu cầu nguồn.
     public void fillSourceInfo(JobPostingRequest form, JobRequisition requisition) {
         form.setRequisitionId(requisition.getRequisitionId());
         form.setRequisitionTitle(requisition.getTitle());
@@ -343,7 +347,7 @@ public class JobPostingMapper {
         form.setSourcePositionsDisplay(requisition.getNumberOfPositions());
     }
 
-    /** Chép nội dung một tin có sẵn vào form (dùng cho "Chỉnh sửa" và "Đăng lại"). */
+    // Chép nội dung tin vào form.
     public void copyPostingContent(JobPostingRequest form, JobPosting posting) {
         form.setPostingTitle(posting.getPostingTitle());
         form.setJobDescription(posting.getJobDescription());
@@ -375,12 +379,13 @@ public class JobPostingMapper {
 
     // ----- Các hàm nhỏ -----
 
-    /** Yêu cầu ứng viên điền sẵn: chi tiết yêu cầu của phiếu. */
+    // Lấy yêu cầu ứng viên từ phiếu nguồn.
     private String requirementsFromRequisition(JobRequisition requisition) {
         String details = requisition.getRequirementDetails();
         return details == null ? "" : details.trim();
     }
 
+    // Lấy tên phòng ban của tin.
     private static String departmentName(JobRequisition requisition) {
         if (requisition == null || requisition.getDepartment() == null) {
             return JobPostingLabels.DEPARTMENT_MISSING;
@@ -388,7 +393,7 @@ public class JobPostingMapper {
         return requisition.getDepartment().getDepartmentName();
     }
 
-    /** Nhãn hình thức của tin, ví dụ "Toàn thời gian". */
+    // Lấy nhãn hình thức làm việc.
     private static String employmentTypeLabel(JobPosting posting) {
         if (posting.effectiveEmploymentType() == null) {
             return JobPostingLabels.MISSING;
@@ -396,7 +401,7 @@ public class JobPostingMapper {
         return RequisitionLabels.employmentType(posting.effectiveEmploymentType());
     }
 
-    /** Nhãn mô hình của tin, ví dụ "Kết hợp". */
+    // Lấy nhãn mô hình làm việc.
     private static String workModelLabel(JobPosting posting) {
         if (posting.effectiveWorkModel() == null) {
             return JobPostingLabels.MISSING;
@@ -404,6 +409,7 @@ public class JobPostingMapper {
         return RequisitionLabels.workModel(posting.effectiveWorkModel());
     }
 
+    // Lấy họ tên người dùng.
     private static String fullName(User user) {
         if (user == null) {
             return JobPostingLabels.MISSING;
@@ -411,6 +417,7 @@ public class JobPostingMapper {
         return user.getFullName();
     }
 
+    // Lấy họ tên hoặc tên hệ thống.
     private static String fullNameOrSystem(User user) {
         if (user == null) {
             return JobPostingLabels.SYSTEM_ACTOR;

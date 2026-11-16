@@ -12,6 +12,7 @@
     }
     const tabs = [...container.querySelectorAll('[role="tab"]')];
 
+    // Chuyển tab nội dung đang hiển thị.
     function select(tab) {
         tabs.forEach(other => {
             const active = other === tab;

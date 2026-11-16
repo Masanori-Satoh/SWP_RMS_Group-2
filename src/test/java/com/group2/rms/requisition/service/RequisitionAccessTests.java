@@ -100,7 +100,7 @@ class RequisitionAccessTests {
                 "hr, Draft, false",
                 "hr, Pending_Director, false",
                 "hr, Approved, true",
-                "hr, Closed, true",
+                "hr, Closed, false",
                 "hr, Rejected, false",
                 // Người tạo: mọi trạng thái
                 "manager, Draft, true",

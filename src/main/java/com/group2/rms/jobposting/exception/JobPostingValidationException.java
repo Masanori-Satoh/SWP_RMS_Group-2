@@ -11,17 +11,19 @@ public class JobPostingValidationException extends BaseBusinessException {
 
     private final Map<String, String> fieldErrors;
 
+    // Tạo lỗi kiểm tra tin tuyển dụng.
     public JobPostingValidationException(String message) {
         super(message);
         this.fieldErrors = Map.of();
     }
 
+    // Tạo lỗi kiểm tra tin tuyển dụng.
     public JobPostingValidationException(Map<String, String> fieldErrors) {
         super(String.join(" ", fieldErrors.values()));
         this.fieldErrors = fieldErrors;
     }
 
-    /** Lỗi theo ô (rỗng nếu là lỗi chung). */
+    // Lấy lỗi kiểm tra theo từng trường.
     public Map<String, String> getFieldErrors() {
         return fieldErrors;
     }

@@ -76,7 +76,15 @@
                 <li th:each="department : ${dashboard.openByDepartment}" data-chart-point
                     th:data-label="${department.departmentName}" th:data-title="${department.chartTitle}"
                     th:data-pending="${department.pending}" th:data-approved="${department.approved}"
-                    th:text="|${department.departmentName}: ${department.pending} chờ duyệt, ${department.approved} đã duyệt|">Phòng ban: 0 chờ duyệt, 0 đã duyệt</li>
+                    th:data-pending-href="${department.pendingHref}" th:data-approved-href="${department.approvedHref}">
+                    <strong th:text="${department.departmentName}">Phòng ban</strong>
+                    <a th:if="${department.pending > 0}" th:href="@{${department.pendingHref}}"
+                       th:text="|${department.pending} chờ duyệt|">0 chờ duyệt</a>
+                    <span th:unless="${department.pending > 0}">0 chờ duyệt</span>
+                    <a th:if="${department.approved > 0}" th:href="@{${department.approvedHref}}"
+                       th:text="|${department.approved} đã duyệt|">0 đã duyệt</a>
+                    <span th:unless="${department.approved > 0}">0 đã duyệt</span>
+                </li>
             </ul>
         </th:block>
     </section>

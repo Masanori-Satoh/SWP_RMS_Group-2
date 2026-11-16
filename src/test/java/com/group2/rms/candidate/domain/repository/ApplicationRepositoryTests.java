@@ -22,6 +22,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -81,7 +82,9 @@ class ApplicationRepositoryTests {
         return requisitions.saveAndFlush(JobRequisition.builder().title("IT-AR Backend")
                 .originalRequisition(original).numberOfPositions(1).employmentType("Full-time")
                 .workModel("On-site").jobDescription("Integration-test responsibilities")
-                .requirementDetails("Integration-test requirements").approvalStatus(RequisitionAccess.STATUS_APPROVED)
+                .requirementDetails("Integration-test requirements")
+                .expectedStaffingDate(LocalDate.now().plusDays(30))
+                .approvalStatus(RequisitionAccess.STATUS_APPROVED)
                 .hiringManager(hiringManager).department(department).build());
     }
 

@@ -3,6 +3,8 @@ package com.group2.rms.dashboard.internal.controller;
 import com.group2.rms.core.config.SecurityConfig;
 import com.group2.rms.core.security.DatabaseUserDetailsService;
 import com.group2.rms.core.security.RoleAuthorities;
+import com.group2.rms.dashboard.internal.dto.DepartmentRequisitionItem;
+import com.group2.rms.dashboard.internal.dto.DirectorDashboardResponse;
 import com.group2.rms.dashboard.internal.dto.HrDashboardResponse;
 import com.group2.rms.dashboard.internal.dto.InterviewerDashboardResponse;
 import com.group2.rms.dashboard.internal.service.DirectorDashboardService;
@@ -30,6 +32,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
@@ -147,6 +150,27 @@ class InternalDashboardControllerTests {
         // Assert
         verify(hrDashboard).build(any(User.class));
         verifyNoInteractions(hiringManagerDashboard, directorDashboard, interviewerDashboard);
+    }
+
+    @Test
+    @DisplayName("Biểu đồ Director có liên kết tới danh sách theo phòng ban và trạng thái")
+    void dashboard_shouldRenderDepartmentRequisitionLinks_whenDirectorLogsIn() throws Exception {
+        String pendingHref = "/requisitions?departmentId=7&status=Pending_Director";
+        String approvedHref = "/requisitions?departmentId=7&status=Approved";
+        DirectorDashboardResponse response = new DirectorDashboardResponse(DashboardAccess.ROLE_DIRECTOR, "Viewer",
+                List.of(), List.of(), List.of(), 0,
+                List.of(new DepartmentRequisitionItem("Kỹ thuật", 3, 15, "Kỹ thuật · 18 yêu cầu",
+                        pendingHref, approvedHref)));
+        when(users.findByUsernameIgnoreCase(USERNAME))
+                .thenReturn(Optional.of(account(DashboardAccess.ROLE_DIRECTOR, "Active")));
+        when(directorDashboard.build(any(User.class))).thenReturn(response);
+
+        mvc.perform(get(DashboardAccess.INTERNAL_DASHBOARD_URL).with(loginAs(DashboardAccess.ROLE_DIRECTOR)))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("data-pending-href=\"" + pendingHref.replace("&", "&amp;") + "\"")))
+                .andExpect(content().string(containsString("data-approved-href=\"" + approvedHref.replace("&", "&amp;") + "\"")))
+                .andExpect(content().string(containsString("href=\"" + pendingHref.replace("&", "&amp;") + "\"")))
+                .andExpect(content().string(containsString("href=\"" + approvedHref.replace("&", "&amp;") + "\"")));
     }
 
     @Test

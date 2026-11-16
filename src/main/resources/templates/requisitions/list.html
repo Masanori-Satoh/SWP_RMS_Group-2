@@ -180,6 +180,7 @@
                             <col class="col-quantity">
                             <col class="col-type">
                             <col class="col-salary">
+                            <col class="col-status">
                             <col class="col-posting">
                             <col class="col-date">
                             <col class="col-actions">
@@ -192,6 +193,7 @@
                                 <th scope="col">Số lượng</th>
                                 <th scope="col">Hình thức làm việc</th>
                                 <th scope="col">Mức lương (VND/tháng)</th>
+                                <th scope="col">Trạng thái</th>
                                 <th scope="col">Tin tuyển dụng</th>
                                 <th scope="col">Ngày tạo</th>
                                 <th scope="col">Thao tác</th>
@@ -208,6 +210,8 @@
                                 <!-- Nhãn tiếng Việt do service tính sẵn (RequisitionLabels), template không tự dịch -->
                                 <td th:text="${req.employmentTypeLabel}">Toàn thời gian</td>
                                 <td class="requisition-salary" th:text="${req.salaryLabel}">20.000.000 – 30.000.000</td>
+                                <td><span class="badge" th:classappend="|badge--${req.statusTone}|"
+                                        th:text="${req.statusLabel}">Đã duyệt</span></td>
                                 <td>
                                     <!-- Chỉ thành link khi người xem vào được trang tin tuyển dụng (Director thì không) -->
                                     <a th:if="${req.postingViewable}" class="badge"
@@ -252,7 +256,7 @@
                                 </td>
                             </tr>
                             <tr th:if="${list.page.empty and #lists.isEmpty(list.errors)}">
-                                <td colspan="9" class="empty-state">Không tìm thấy yêu cầu tuyển dụng nào. Hãy
+                                <td colspan="10" class="empty-state">Không tìm thấy yêu cầu tuyển dụng nào. Hãy
                                     thử thay đổi hoặc đặt lại bộ lọc.</td>
                             </tr>
                         </tbody>

@@ -72,12 +72,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const commentError = document.getElementById('decision-comment-error');
     const commentLimit = Number(feedback?.dataset.limit) || 1000;
 
-    // Đếm như server: xuống dòng tính 1 ký tự, bỏ khoảng trắng hai đầu
+    // Đếm ký tự ý kiến sau khi chuẩn hóa.
     function commentLength() {
         return feedback.value.replace(/\r\n/g, '\n').trim().length;
     }
 
-    // Cập nhật bộ đếm; quá giới hạn thì báo lỗi đỏ và khóa cả 2 nút Trả lại / Phê duyệt
+    // Báo lỗi khi ý kiến vượt giới hạn.
     function checkCommentLength() {
         if (!feedback) return true;
         const length = commentLength();

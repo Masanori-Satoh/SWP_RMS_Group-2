@@ -132,6 +132,7 @@ class RecruitmentFlowIntegrationTests {
         return RequisitionRequest.builder()
                 .action(action)
                 .title(TITLE)
+                .expectedStaffingDate(LocalDate.now(clock).plusDays(30))
                 .numberOfPositions(2)
                 .employmentType("Full-time")
                 .workModel("Hybrid")
@@ -147,7 +148,9 @@ class RecruitmentFlowIntegrationTests {
     /** Yêu cầu nằm sẵn ở trạng thái cho trước (bỏ qua các bước trước đó của luồng). */
     private JobRequisition savedRequisition(String title, User owner, String status) {
         return requisitions.saveAndFlush(JobRequisition.builder().title(title)
+                .expectedStaffingDate(LocalDate.now(clock).plusDays(30))
                 .numberOfPositions(1).employmentType("Full-time").workModel("On-site")
+                .minSalary(new BigDecimal("20000000")).maxSalary(new BigDecimal("30000000"))
                 .jobDescription("Mô tả").requirementDetails("Yêu cầu").approvalStatus(status)
                 .hiringManager(owner).createdBy(owner).department(department).build());
     }
@@ -446,12 +449,12 @@ class RecruitmentFlowIntegrationTests {
         }
 
         @Test
-        @DisplayName("HM chưa được gán phòng ban -> Báo lỗi departmentId")
+        @DisplayName("HM chưa được gán phòng ban khi gửi duyệt -> Báo lỗi departmentId")
         void create_shouldReject_whenManagerHasNoDepartment() {
             User noDept = savedUser("flow_hm_nodept", RequisitionAccess.ROLE_HIRING_MANAGER, null, "Active");
             loginAs(noDept);
             RequisitionValidationException ex = assertThrows(RequisitionValidationException.class,
-                    () -> requisitionService.createRequisition(fullRequest(RequisitionValidator.ACTION_DRAFT)));
+                    () -> requisitionService.createRequisition(fullRequest(RequisitionValidator.ACTION_SUBMIT)));
             assertTrue(ex.getErrors().containsKey("departmentId"));
         }
 
@@ -537,13 +540,13 @@ class RecruitmentFlowIntegrationTests {
         @Test
         @DisplayName("Xóa yêu cầu đã có tin tuyển dụng -> Báo lỗi, yêu cầu vẫn còn")
         void delete_shouldReject_whenRequisitionHasPosting() {
-            JobRequisition rejected = savedRequisition(TITLE, hiringManager, RequisitionAccess.STATUS_REJECTED);
-            savedPosting(rejected, 1, JobPostingAccess.STATUS_CLOSED);
+            JobRequisition draft = savedRequisition(TITLE, hiringManager, RequisitionAccess.STATUS_DRAFT);
+            savedPosting(draft, 1, JobPostingAccess.STATUS_CLOSED);
             loginAs(hiringManager);
 
             assertThrows(RequisitionValidationException.class,
-                    () -> requisitionService.deleteRequisition(rejected.getRequisitionId()));
-            assertTrue(requisitions.findById(rejected.getRequisitionId()).isPresent());
+                    () -> requisitionService.deleteRequisition(draft.getRequisitionId()));
+            assertTrue(requisitions.findById(draft.getRequisitionId()).isPresent());
         }
 
         @Test

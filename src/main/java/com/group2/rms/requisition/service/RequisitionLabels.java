@@ -21,11 +21,12 @@ public final class RequisitionLabels {
     public static final String POSTING_CLOSED = "Closed";
 
 
+    // Ngăn tạo đối tượng chứa hàm tiện ích.
     private RequisitionLabels() {
     }
 
 
-    // Returns the display label for an approval status.
+    // Lấy nhãn trạng thái phê duyệt.
     public static String approvalStatus(String status) {
         if (RequisitionAccess.STATUS_DRAFT.equals(status)) {
             return "Bản nháp";
@@ -46,7 +47,7 @@ public final class RequisitionLabels {
     }
 
 
-    // Returns the visual tone for an approval status.
+    // Lấy màu trạng thái phê duyệt.
     public static String approvalTone(String status) {
         if (RequisitionAccess.STATUS_APPROVED.equals(status)) {
             return "success";
@@ -61,7 +62,7 @@ public final class RequisitionLabels {
     }
 
 
-    // Returns the visual tone for a posting status.
+    // Lấy màu trạng thái tin tuyển dụng.
     public static String postingTone(String status) {
         if (POSTING_PUBLISHED.equals(status)) {
             return "success";
@@ -73,7 +74,7 @@ public final class RequisitionLabels {
     }
 
 
-    // Returns the display label for an employment type.
+    // Lấy nhãn hình thức làm việc.
     public static String employmentType(String type) {
         if ("Full-time".equals(type)) {
             return "Toàn thời gian";
@@ -91,7 +92,7 @@ public final class RequisitionLabels {
     }
 
 
-    // Returns the display label for a work model.
+    // Lấy nhãn mô hình làm việc.
     public static String workModel(String model) {
         if ("On-site".equals(model)) {
             return "Tại văn phòng";
@@ -105,7 +106,7 @@ public final class RequisitionLabels {
         return model == null ? "—" : model;
     }
 
-    /** Lương theo đơn vị triệu: "20 – 30 triệu VND/tháng"; không nhập thì "Thỏa thuận". */
+    // Định dạng mức lương theo triệu đồng.
     public static String salary(BigDecimal min, BigDecimal max) {
         if (min == null && max == null) {
             return "Thỏa thuận";
@@ -119,7 +120,7 @@ public final class RequisitionLabels {
         return "Đến " + millions(max) + " triệu VND/tháng";
     }
 
-    /** Bảng danh sách ghi đơn vị ở tiêu đề cột nên mỗi dòng chỉ hiển thị số tiền. */
+    // Định dạng mức lương cho danh sách.
     public static String salaryForList(BigDecimal min, BigDecimal max) {
         if (min == null && max == null) {
             return "Chưa cập nhật";
@@ -130,12 +131,13 @@ public final class RequisitionLabels {
         return min != null ? "Từ " + vnd(min) : "Đến " + vnd(max);
     }
 
-    /** Chi tiết yêu cầu hiển thị đúng số VND đã lưu, không quy đổi hoặc làm tròn sang triệu. */
+    // Định dạng mức lương cho chi tiết.
     public static String salaryForDetail(BigDecimal min, BigDecimal max) {
         String salary = salaryForList(min, max);
         return min == null && max == null ? salary : salary + " VND/tháng";
     }
 
+    // Định dạng số tiền theo đồng Việt Nam.
     private static String vnd(BigDecimal amount) {
         DecimalFormatSymbols symbols = DecimalFormatSymbols.getInstance(Locale.forLanguageTag("vi-VN"));
         symbols.setGroupingSeparator('.');
@@ -143,13 +145,13 @@ public final class RequisitionLabels {
         return new DecimalFormat("#,##0.##", symbols).format(amount);
     }
 
-    // Formats an amount in millions.
+    // Quy đổi số tiền sang triệu đồng.
     private static String millions(BigDecimal amount) {
         BigDecimal value = amount.divide(BigDecimal.valueOf(1_000_000), 2, RoundingMode.HALF_UP);
         return value.stripTrailingZeros().toPlainString().replace('.', ',');
     }
 
-    // Converts plain text to safe multiline HTML.
+    // Chuyển văn bản nhiều dòng thành HTML an toàn.
     public static String multilineHtml(String text) {
         if (text == null || text.isBlank()) {
             return null;
@@ -158,7 +160,7 @@ public final class RequisitionLabels {
     }
 
 
-    // Returns the display label for a posting status.
+    // Lấy nhãn trạng thái tin tuyển dụng.
     public static String postingStatus(String status) {
         if (status == null || POSTING_NONE.equals(status)) {
             return "Chưa có tin";
