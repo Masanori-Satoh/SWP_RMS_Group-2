@@ -251,18 +251,18 @@ public class DashboardListRepository {
 
     /** Số yêu cầu chờ duyệt và đang tuyển của từng phòng ban; nhiều nhất lên đầu. */
     public List<DepartmentRequisitionRow> openRequisitionsByDepartment() {
-        List<Object[]> rows = entityManager.createQuery("select d.departmentName, "
+        List<Object[]> rows = entityManager.createQuery("select d.departmentId, d.departmentName, "
                         + "sum(case when r.approvalStatus = :pending then 1 else 0 end), "
                         + "sum(case when r.approvalStatus = :approved then 1 else 0 end) "
                         + "from JobRequisition r join r.department d "
                         + "where r.approvalStatus in (:pending, :approved) "
-                        + "group by d.departmentName order by count(r) desc, d.departmentName asc", Object[].class)
+                        + "group by d.departmentId, d.departmentName order by count(r) desc, d.departmentName asc", Object[].class)
                 .setParameter("pending", JobRequisition.STATUS_PENDING_DIRECTOR)
                 .setParameter("approved", JobRequisition.STATUS_APPROVED)
                 .getResultList();
         List<DepartmentRequisitionRow> result = new ArrayList<>();
         for (Object[] row : rows) {
-            result.add(new DepartmentRequisitionRow((String) row[0], toLong(row[1]), toLong(row[2])));
+            result.add(new DepartmentRequisitionRow((Integer) row[0], (String) row[1], toLong(row[2]), toLong(row[3])));
         }
         return result;
     }
@@ -339,6 +339,6 @@ public class DashboardListRepository {
             BigDecimal proposedSalary, LocalDateTime waitingSince) {
     }
 
-    public record DepartmentRequisitionRow(String departmentName, long pending, long approved) {
+    public record DepartmentRequisitionRow(int departmentId, String departmentName, long pending, long approved) {
     }
 }

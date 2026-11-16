@@ -122,7 +122,10 @@ public class DirectorDashboardService {
         for (DepartmentRequisitionRow row : rows) {
             long total = row.pending() + row.approved();
             String chartTitle = row.departmentName() + " · " + total + " yêu cầu";
-            items.add(new DepartmentRequisitionItem(row.departmentName(), row.pending(), row.approved(), chartTitle));
+            String departmentFilter = "/requisitions?departmentId=" + row.departmentId() + "&status=";
+            items.add(new DepartmentRequisitionItem(row.departmentName(), row.pending(), row.approved(), chartTitle,
+                    departmentFilter + RequisitionAccess.STATUS_PENDING_DIRECTOR,
+                    departmentFilter + RequisitionAccess.STATUS_APPROVED));
         }
         return items;
     }

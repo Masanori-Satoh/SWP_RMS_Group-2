@@ -188,8 +188,7 @@ public class RequisitionAccess {
         }
         String userRole = role(user);
         if (ROLE_HR.equals(userRole)) {
-            if (STATUS_APPROVED.equals(requisition.getApprovalStatus())
-                    || STATUS_CLOSED.equals(requisition.getApprovalStatus())) {
+            if (STATUS_APPROVED.equals(requisition.getApprovalStatus())) {
                 return;
             }
             throw new AccessDeniedException("HR chỉ có quyền xem các yêu cầu tuyển dụng đã được phê duyệt.");

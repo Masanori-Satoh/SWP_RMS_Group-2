@@ -100,8 +100,8 @@ class RequisitionListServiceTests {
     // ----- Phạm vi dữ liệu theo role -----
 
     @Test
-    @DisplayName("HR mở danh sách -> Câu WHERE chỉ lấy yêu cầu Approved hoặc Closed")
-    void getListPage_shouldOnlyQueryApprovedOrClosed_whenViewerIsHr() {
+    @DisplayName("HR mở danh sách -> Câu WHERE chỉ lấy yêu cầu Approved")
+    void getListPage_shouldOnlyQueryApproved_whenViewerIsHr() {
         // Arrange
         loginAs(RequisitionAccess.ROLE_HR);
 
@@ -116,7 +116,7 @@ class RequisitionListServiceTests {
         Path status = mock(Path.class);
         when(root.get("approvalStatus")).thenReturn(status);
         where.getValue().toPredicate(root, null, builder);
-        verify(status).in(RequisitionAccess.STATUS_APPROVED, RequisitionAccess.STATUS_CLOSED);
+        verify(builder).equal(status, RequisitionAccess.STATUS_APPROVED);
     }
 
     // ----- Trạng thái duyệt -----

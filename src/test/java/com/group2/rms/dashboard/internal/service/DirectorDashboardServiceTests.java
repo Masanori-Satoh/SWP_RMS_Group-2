@@ -155,8 +155,8 @@ class DirectorDashboardServiceTests {
     void build_shouldBuildDepartmentColumns_whenRequisitionsOpen() {
         // Arrange
         when(lists.openRequisitionsByDepartment()).thenReturn(List.of(
-                new DepartmentRequisitionRow("Kỹ thuật", 3, 15),
-                new DepartmentRequisitionRow("Tài chính", 0, 4)));
+                new DepartmentRequisitionRow(7, "Kỹ thuật", 3, 15),
+                new DepartmentRequisitionRow(9, "Tài chính", 0, 4)));
 
         // Act
         List<DepartmentRequisitionItem> departments = service.build(director()).openByDepartment();
@@ -167,6 +167,8 @@ class DirectorDashboardServiceTests {
         assertEquals(3, departments.get(0).pending());
         assertEquals(15, departments.get(0).approved());
         assertEquals("Kỹ thuật · 18 yêu cầu", departments.get(0).chartTitle());
+        assertEquals("/requisitions?departmentId=7&status=Pending_Director", departments.get(0).pendingHref());
+        assertEquals("/requisitions?departmentId=7&status=Approved", departments.get(0).approvedHref());
         assertEquals(0, departments.get(1).pending());
     }
 

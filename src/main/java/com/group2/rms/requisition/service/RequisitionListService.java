@@ -129,8 +129,7 @@ public class RequisitionListService {
                     cb.equal(root.get("hiringManager").get("userId"), currentUser.getUserId()));
         }
         if (RequisitionAccess.ROLE_HR.equals(role)) {
-            return (root, query, cb) -> root.get("approvalStatus")
-                    .in(RequisitionAccess.STATUS_APPROVED, RequisitionAccess.STATUS_CLOSED);
+            return (root, query, cb) -> cb.equal(root.get("approvalStatus"), RequisitionAccess.STATUS_APPROVED);
         }
         throw new org.springframework.security.access.AccessDeniedException(
                 "Vai trò không có quyền xem yêu cầu tuyển dụng.");

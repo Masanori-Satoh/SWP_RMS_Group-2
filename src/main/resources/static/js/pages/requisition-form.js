@@ -115,7 +115,7 @@
             }
         } else if (value) {
             message = (rule.errorOf ? rule.errorOf(value) : '')
-                || (action === 'submit' && rule.submitErrorOf ? rule.submitErrorOf(value) : '');
+                || (rule.submitErrorOf ? rule.submitErrorOf(value) : '');
         }
         showError(rule.id, message);
         return !message;
@@ -166,40 +166,39 @@
     const maxSalaryInput = document.getElementById('maxSalary');
     const SALARY_IDS = new Set(['minSalary', 'maxSalary']);
 
-    function salaryMessages() {
+    function salaryMessages(required = true) {
         const minRaw = minSalaryInput?.value.trim() || '';
         const maxRaw = maxSalaryInput?.value.trim() || '';
         const minVal = parseSalary(minSalaryInput?.value);
         const maxVal = parseSalary(maxSalaryInput?.value);
 
         const SALARY_MAX = 1000000000;
-        const salaryMessage = (raw, value, label) => !raw ? `Vui lòng nhập ${label}.`
+        const salaryMessage = (raw, value, label) => !raw ? (required ? `Vui lòng nhập ${label}.` : '')
             : value === null ? 'Mức lương không hợp lệ.'
                 : value <= 0 ? 'Mức lương phải lớn hơn 0.'
                     : value > SALARY_MAX ? 'Mức lương không được vượt quá 1.000.000.000 VND/tháng.' : '';
         const minSalaryMessage = salaryMessage(minRaw, minVal, 'mức lương tối thiểu');
         let maxSalaryMessage = salaryMessage(maxRaw, maxVal, 'mức lương tối đa');
-        if (!minSalaryMessage && !maxSalaryMessage && maxVal < minVal) {
+        if (minRaw && maxRaw && !minSalaryMessage && !maxSalaryMessage && maxVal < minVal) {
             maxSalaryMessage = 'Mức lương tối đa phải lớn hơn hoặc bằng mức lương tối thiểu.';
         }
         return { minSalary: minSalaryMessage, maxSalary: maxSalaryMessage };
     }
 
-    function validateNumbers() {
-        const messages = salaryMessages();
+    function validateNumbers(required = true) {
+        const messages = salaryMessages(required);
         showError('minSalary', messages.minSalary);
         showError('maxSalary', messages.maxSalary);
 
         return !messages.minSalary && !messages.maxSalary;
     }
 
+    let attemptedSubmit = false;
     FIELD_RULES.forEach(rule => {
         if (SALARY_IDS.has(rule.id)) return;
         const target = document.getElementById(rule.id);
-        // Chỉ kiểm tra lại lỗi đã có sau lần Gửi duyệt trước đó.
-        target?.addEventListener('input', () => {
-            if (target.classList.contains('is-invalid')) validateField(rule, 'submit');
-        });
+        target?.addEventListener('input', () => validateField(rule, attemptedSubmit ? 'submit' : 'draft'));
+        target?.addEventListener('change', () => validateField(rule, attemptedSubmit ? 'submit' : 'draft'));
     });
     workModel.addEventListener('change', syncWorkLocation);
 
@@ -211,7 +210,7 @@
             }
             input.addEventListener('input', () => {
                 formatCurrencyInput(input);
-                if (input.classList.contains('is-invalid')) validateNumbers();
+                validateNumbers(attemptedSubmit);
             });
         }
     });
@@ -266,6 +265,7 @@
     form.addEventListener('change', refreshChecklist);
 
     function validateAll(action) {
+        if (action === 'submit') attemptedSubmit = true;
         const fieldsOk = FIELD_RULES.filter(rule => !SALARY_IDS.has(rule.id))
             .map(rule => validateField(rule, action)).every(Boolean);
         const numbersOk = validateNumbers();

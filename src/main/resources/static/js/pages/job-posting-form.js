@@ -36,7 +36,6 @@
     };
     const today = form.dataset.today || isoDate(new Date());
     const isRemote = () => $('workModel').value === 'Remote';
-    const mapToggle = $('jpf-map-toggle');
 
     function renderFromMarkers() {
         form.querySelectorAll('[data-from]').forEach(marker => {
@@ -71,34 +70,9 @@
         $('workLocation').disabled = remote;
         if (remote) {
             $('workLocation').value = '';
-            mapToggle.open = false;
-            lastMapAddress = null;
-            $('jpf-map').replaceChildren();
             showError('workLocation', '');
         }
-        mapToggle.hidden = remote;
     }
-
-    const mapsLink = address => 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(address);
-    const mapsEmbed = address => 'https://www.google.com/maps?q=' + encodeURIComponent(address) + '&output=embed';
-    let mapTimer = null;
-    let lastMapAddress = null;
-    function renderMap() {
-        if (!mapToggle.open) return;
-        const address = isRemote() ? '' : $('workLocation').value.trim();
-        if (address === lastMapAddress) return;
-        lastMapAddress = address;
-        $('jpf-map').innerHTML = address
-            ? `<iframe title="Bản đồ ${escapeHtml(address)}" src="${mapsEmbed(address)}" loading="lazy"
-                referrerpolicy="no-referrer-when-downgrade"></iframe>
-                <a class="jpf-map-link" href="${mapsLink(address)}" target="_blank" rel="noopener">Mở Google Maps ↗</a>`
-            : '<p class="jpf-map-empty">Nhập địa chỉ để xem bản đồ</p>';
-    }
-    mapToggle.addEventListener('toggle', renderMap);
-    $('workLocation').addEventListener('input', () => {
-        clearTimeout(mapTimer);
-        mapTimer = setTimeout(renderMap, 800);
-    });
 
     /* ---------------------------------------------------------------------
      * 3. LƯƠNG VÀ SỐ LƯỢNG
@@ -138,7 +112,7 @@
         }
         const workingHours = $('workingHours').value.trim();
         // Mục "Địa điểm và thời gian" giống trang /jobs/{id}: chỉ hiện dòng nào HR đã nhập
-        const placeTime = (address ? `<h5>Địa điểm làm việc</h5><a href="${mapsLink(address)}" target="_blank" rel="noopener">${escapeHtml(address)} ↗</a>` : '')
+        const placeTime = (address ? `<h5>Địa điểm làm việc</h5><p>${escapeHtml(address)}</p>` : '')
             + (workingHours ? `<h5>Thời gian làm việc</h5><p>${escapeHtml(workingHours)}</p>` : '');
 
         $('jpf-preview').innerHTML = `

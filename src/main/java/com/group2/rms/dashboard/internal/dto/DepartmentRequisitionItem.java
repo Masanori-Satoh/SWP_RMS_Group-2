@@ -8,5 +8,7 @@ public record DepartmentRequisitionItem(
         String departmentName,
         long pending,
         long approved,
-        String chartTitle) {
+        String chartTitle,
+        String pendingHref,
+        String approvedHref) {
 }

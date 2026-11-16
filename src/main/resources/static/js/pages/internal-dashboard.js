@@ -94,6 +94,16 @@
         // Tooltip: tiêu đề "Kinh doanh · 9 yêu cầu" (data-title), từng dòng "Đã duyệt: 7"
         options.plugins.tooltip.callbacks.label = (item) => item.dataset.label + ': ' + item.raw;
         options.plugins.legend.reverse = true;
+        options.onClick = (_event, hits) => {
+            if (hits.length !== 1) return;
+            const hit = hits[0];
+            const point = points[hit.index];
+            const href = hit.datasetIndex === 0 ? point.approvedHref : point.pendingHref;
+            if (href) window.location.assign(href);
+        };
+        options.onHover = (_event, hits) => {
+            canvas.style.cursor = hits.length === 1 ? 'pointer' : 'default';
+        };
         return new Chart(canvas, {
             type: 'bar',
             data: {
