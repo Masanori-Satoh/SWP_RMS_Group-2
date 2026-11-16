@@ -14,6 +14,7 @@ public class RequisitionFormOptions {
 
     private final DepartmentRepository departments;
 
+    // Lấy phòng ban cho form yêu cầu.
     public List<Department> allDepartments() {
         return departments.findAll();
     }

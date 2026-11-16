@@ -6,13 +6,15 @@
         return;
     }
 
+    // Lấy ngày hiện tại theo định dạng của ô ngày.
     const today = () => {
         const now = new Date();
+        // Thêm số không cho ngày hoặc tháng một chữ số.
         const pad = number => String(number).padStart(2, '0');
         return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
     };
 
-    // Lỗi định dạng / nhỏ hơn min của ô số nguyên; '' nếu hợp lệ (không có giới hạn trên).
+    // Tạo thông báo lỗi cho số nguyên.
     function integerMessage(label, value, min) {
         const raw = String(value).trim();
         if (/^[-+]?\d+[.,]\d+$/.test(raw)) return `${label} phải là số nguyên.`;
@@ -58,10 +60,12 @@
 
     const workLocation = document.getElementById('workLocation');
     const workModel = document.getElementById('workModel');
+    // Kiểm tra mô hình làm việc từ xa.
     function isRemote() {
         return workModel.value === 'Remote';
     }
 
+    // Đồng bộ ô địa điểm với mô hình làm việc.
     function syncWorkLocation() {
         const remote = isRemote();
         workLocation.disabled = remote;
@@ -73,11 +77,13 @@
         refreshChecklist();
     }
 
+    // Đọc giá trị của một trường form.
     function readFieldValue(rule) {
         const input = document.getElementById(rule.id);
         return input ? input.value.trim() : '';
     }
 
+    // Hiển thị lỗi của trường form.
     function showError(fieldId, message) {
         const input = document.getElementById(fieldId);
         const errorEl = document.getElementById(fieldId + '-error');
@@ -90,6 +96,7 @@
         }
     }
 
+    // Kiểm tra một trường theo thao tác.
     function validateField(rule, action) {
         if (rule.id === 'workLocation' && isRemote()) {
             showError(rule.id, '');
@@ -121,6 +128,7 @@
         return !message;
     }
 
+    // Định dạng mức lương khi nhập.
     function formatCurrencyInput(input) {
         if (!input) return;
         const raw = input.value;
@@ -154,6 +162,7 @@
         input.setSelectionRange(newCursor, newCursor);
     }
 
+    // Chuyển mức lương nhập thành số.
     function parseSalary(text) {
         if (!text) return null;
         const cleaned = String(text).replace(/\./g, '').trim();
@@ -166,6 +175,7 @@
     const maxSalaryInput = document.getElementById('maxSalary');
     const SALARY_IDS = new Set(['minSalary', 'maxSalary']);
 
+    // Tạo thông báo lỗi cho mức lương.
     function salaryMessages(required = true) {
         const minRaw = minSalaryInput?.value.trim() || '';
         const maxRaw = maxSalaryInput?.value.trim() || '';
@@ -173,6 +183,7 @@
         const maxVal = parseSalary(maxSalaryInput?.value);
 
         const SALARY_MAX = 1000000000;
+        // Kiểm tra một giá trị lương.
         const salaryMessage = (raw, value, label) => !raw ? (required ? `Vui lòng nhập ${label}.` : '')
             : value === null ? 'Mức lương không hợp lệ.'
                 : value <= 0 ? 'Mức lương phải lớn hơn 0.'
@@ -185,6 +196,7 @@
         return { minSalary: minSalaryMessage, maxSalary: maxSalaryMessage };
     }
 
+    // Kiểm tra các trường số.
     function validateNumbers(required = true) {
         const messages = salaryMessages(required);
         showError('minSalary', messages.minSalary);
@@ -219,6 +231,7 @@
         const counter = document.getElementById(textarea.id + '-count');
         if (!counter) return;
         const max = textarea.getAttribute('maxlength') || '2000';
+        // Cập nhật bộ đếm ký tự.
         const updateCounter = () => {
             counter.textContent = `${textarea.value.length}/${max}`;
         };
@@ -229,8 +242,10 @@
         updateCounter();
     });
 
+    // Cập nhật danh sách mục cần hoàn thành.
     function refreshChecklist() {
         const salaryErrors = salaryMessages();
+        // Kiểm tra một mục đã hoàn thành.
         const isFieldDone = rule => {
             if (SALARY_IDS.has(rule.id)) return !salaryErrors[rule.id];
             const value = readFieldValue(rule);
@@ -264,6 +279,7 @@
     form.addEventListener('input', refreshChecklist);
     form.addEventListener('change', refreshChecklist);
 
+    // Kiểm tra toàn bộ form trước khi gửi.
     function validateAll(action) {
         if (action === 'submit') attemptedSubmit = true;
         const fieldsOk = FIELD_RULES.filter(rule => !SALARY_IDS.has(rule.id))
@@ -296,6 +312,12 @@
 
 
     let submitting = false;
+    form.addEventListener('keydown', event => {
+        if (event.key === 'Enter' && !event.isComposing && event.target instanceof HTMLInputElement
+            && event.target.type !== 'submit') {
+            event.preventDefault();
+        }
+    });
     form.addEventListener('submit', event => {
         if (submitting) {
             event.preventDefault();

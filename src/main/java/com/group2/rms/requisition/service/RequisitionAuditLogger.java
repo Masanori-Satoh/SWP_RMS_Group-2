@@ -28,7 +28,7 @@ public class RequisitionAuditLogger {
     private final AuditLogRepository audit;
 
 
-    // Records a requisition audit event.
+    // Ghi sự kiện vào lịch sử yêu cầu.
     public void log(JobRequisition jobRequisition, User currentUser, String action, String oldValue, String newValue) {
         audit.save(AuditLog.builder()
                 .user(currentUser)
@@ -41,7 +41,7 @@ public class RequisitionAuditLogger {
     }
 
 
-    // Records the changed requisition fields.
+    // Ghi các trường đã thay đổi.
     public void logChanges(JobRequisition jobRequisition, User currentUser, List<String> changedKeys,
             Map<String, String> before, Map<String, String> after) {
         log(jobRequisition, currentUser, ACTION_UPDATE,
@@ -50,13 +50,13 @@ public class RequisitionAuditLogger {
     }
 
 
-    // Returns the requisition audit history.
+    // Lấy lịch sử thao tác của yêu cầu.
     public List<AuditLog> history(Integer requisitionId) {
         return audit.findByEntityNameAndEntityIdOrderByTimestampDesc(ENTITY_NAME, requisitionId.toString());
     }
 
 
-    // Returns a snapshot of user-visible requisition fields.
+    // Lưu giá trị các trường để đối chiếu.
     public Map<String, String> snapshot(JobRequisition jobRequisition) {
         Map<String, String> snapshot = new LinkedHashMap<>();
         snapshot.put("Chức danh công việc", jobRequisition.getTitle());
@@ -79,7 +79,7 @@ public class RequisitionAuditLogger {
         return snapshot;
     }
 
-    // Formats a salary amount.
+    // Định dạng số tiền trong lịch sử.
     private String formatNumber(BigDecimal number) {
         if (number == null) {
             return null;

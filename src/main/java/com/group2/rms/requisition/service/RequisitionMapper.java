@@ -30,7 +30,7 @@ public class RequisitionMapper {
     private final RequisitionValidator validator;
     private final Clock clock;
 
-    // Maps a requisition to its edit form.
+    // Chuyển yêu cầu thành dữ liệu form sửa.
     public RequisitionRequest toEditForm(JobRequisition jobRequisition) {
         String originalTitle = null;
         if (jobRequisition.getOriginalRequisition() != null) {
@@ -59,7 +59,7 @@ public class RequisitionMapper {
     }
 
 
-    // Maps a requisition to a list row.
+    // Chuyển yêu cầu thành dòng danh sách.
     public RequisitionResponse toListRow(JobRequisition jobRequisition, User viewer,
             JobPosting latestPosting, boolean hasLaterRound) {
         String approvalStatus = jobRequisition.getApprovalStatus();
@@ -107,7 +107,7 @@ public class RequisitionMapper {
     }
 
 
-    // Maps a requisition to its detail response.
+    // Chuyển yêu cầu thành dữ liệu chi tiết.
     public RequisitionResponse toDetail(JobRequisition jobRequisition, User viewer, JobPosting latestPosting,
             boolean hasLaterRound, List<RequisitionApproval> approvalHistory, List<AuditLog> activityLogs) {
         String approvalStatus = jobRequisition.getApprovalStatus();
@@ -144,7 +144,7 @@ public class RequisitionMapper {
     }
 
 
-    // Checks whether the requisition is ready for submission.
+    // Kiểm tra yêu cầu đủ thông tin gửi duyệt.
     private boolean isReadyToSubmit(JobRequisition jobRequisition) {
         if (jobRequisition.getDepartment() == null) {
             return false;
@@ -159,7 +159,7 @@ public class RequisitionMapper {
         }
     }
 
-    // Maps approval history to response objects.
+    // Chuyển lịch sử phê duyệt để hiển thị.
     private List<ApprovalResponse> toApprovalResponses(List<RequisitionApproval> approvalHistory) {
         List<ApprovalResponse> responses = new ArrayList<>();
         for (RequisitionApproval approval : approvalHistory) {
@@ -173,7 +173,7 @@ public class RequisitionMapper {
         return responses;
     }
 
-    // Maps audit history to activity responses.
+    // Chuyển lịch sử thao tác để hiển thị.
     private List<ActivityLogResponse> toActivityResponses(List<AuditLog> activityLogs) {
         List<ActivityLogResponse> responses = new ArrayList<>();
         for (AuditLog log : activityLogs) {
@@ -188,8 +188,7 @@ public class RequisitionMapper {
         return responses;
     }
 
-    // Quyết định của Giám đốc được lưu là UPDATE (CHECK của AuditLog chỉ nhận CREATE/UPDATE/DELETE/LOGIN);
-    // nhận ra qua nội dung "Status: Pending_Director → Approved/Rejected" để lịch sử hiện Duyệt / Từ chối.
+    // Lấy tên thao tác trong lịch sử.
     static String displayAction(AuditLog log) {
         String change = log.getNewValue();
         String decided = "Status: " + RequisitionAccess.STATUS_PENDING_DIRECTOR + " → ";

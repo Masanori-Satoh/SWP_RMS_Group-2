@@ -9,9 +9,12 @@ import com.group2.rms.user.repository.UserRepository;
 import com.group2.rms.user.service.AccountManagementService;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,6 +37,11 @@ class AccountManagementDatabaseTests {
     @Autowired private PasswordEncoder passwordEncoder;
     @Autowired private EntityManager entityManager;
 
+    @AfterEach
+    void clearAuthentication() {
+        SecurityContextHolder.clearContext();
+    }
+
     @Test
     void candidateAccountAndProfilePersistWithContactDataOnUser() {
         Role candidateRole = roles.findAll().stream()
@@ -42,6 +50,13 @@ class AccountManagementDatabaseTests {
         String suffix = UUID.randomUUID().toString().replace("-", "").substring(0, 12);
         String username = "testcand" + suffix;
         String firstEmail = username + "@example.test";
+
+        String actorUsername = "testadmin" + suffix;
+        users.saveAndFlush(User.builder().username(actorUsername).passwordHash("test-hash")
+                .fullName("Integration Test Admin").email(actorUsername + "@example.test")
+                .accountStatus("Active").role(candidateRole).build());
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(actorUsername, null, java.util.List.of()));
 
         int userId = accounts.create(new AccountManagementService.CreateCommand(
                 "Candidate Integration Test", username, firstEmail, null,

@@ -19,24 +19,27 @@
     if (!form) {
         return;
     }
+    // Tìm ô trên form theo mã.
     const $ = id => document.getElementById(id);
 
-    /* ---------------------------------------------------------------------
-     * 1. TIỆN ÍCH
-     * --------------------------------------------------------------------- */
+    // Chuyển ký tự đặc biệt thành HTML an toàn.
     const escapeHtml = text => String(text ?? '').replace(/[&<>"]/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[char]));
+    // Thêm số không cho ngày hoặc tháng một chữ số.
     const pad = number => String(number).padStart(2, '0');
-    /** yyyy-MM-dd theo giờ máy người dùng (không dùng toISOString vì trả giờ UTC). */
+    // Định dạng ngày theo năm tháng ngày.
     const isoDate = date => `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
-    /** "2026-10-20" hoặc "2026-10-20T08:00" → "20/10/2026". */
+    // Định dạng ngày để hiển thị tiếng Việt.
     const viDate = value => value ? value.slice(0, 10).split('-').reverse().join('/') : '';
+    // Cộng ngày vào một mốc thời gian.
     const addDays = (isoValue, days) => {
         const [y, m, d] = isoValue.slice(0, 10).split('-').map(Number);
         return isoDate(new Date(y, m - 1, d + days));
     };
     const today = form.dataset.today || isoDate(new Date());
+    // Kiểm tra mô hình làm việc từ xa.
     const isRemote = () => $('workModel').value === 'Remote';
 
+    // Hiển thị nguồn gốc các trường nội dung.
     function renderFromMarkers() {
         form.querySelectorAll('[data-from]').forEach(marker => {
             const field = $(marker.dataset.from);
@@ -62,9 +65,7 @@
     document.querySelectorAll('[data-auto-submit]').forEach(select =>
         select.addEventListener('change', () => select.form.submit()));
 
-    /* ---------------------------------------------------------------------
-     * 2. ĐỊA ĐIỂM: làm việc từ xa thì khóa ô địa điểm
-     * --------------------------------------------------------------------- */
+    // Đồng bộ ô địa điểm với mô hình làm việc.
     function syncWorkLocation() {
         const remote = isRemote();
         $('workLocation').disabled = remote;
@@ -74,17 +75,13 @@
         }
     }
 
-    /* ---------------------------------------------------------------------
-     * 3. LƯƠNG VÀ SỐ LƯỢNG
-     * --------------------------------------------------------------------- */
+    // Đọc mức lương tự nhập.
     function salaryText() {
         return $('salaryCustom').value.trim();
     }
 
 
-    /* ---------------------------------------------------------------------
-     * 4. NGÀY ĐĂNG VÀ HẠN NỘP
-     * --------------------------------------------------------------------- */
+    // Lấy ngày đăng dự kiến.
     const postingDay = () => today;
 
     const deadline = $('applicationDeadline');
@@ -93,17 +90,16 @@
         deadline.dispatchEvent(new Event('input', { bubbles: true }));
     }));
 
-    /* ---------------------------------------------------------------------
-     * 5. XEM TRƯỚC "ỨNG VIÊN SẼ THẤY" + TAB TRÊN ĐIỆN THOẠI
-     * --------------------------------------------------------------------- */
+    // Tạo phần nội dung xem trước.
     function previewSection(title, text) {
         const value = text.trim();
         return `<section><h4>${title}</h4>${value ? `<p>${escapeHtml(value)}</p>` : '<p class="jpf-empty">Chưa có nội dung</p>'}</section>`;
     }
+    // Cập nhật bản xem trước của tin.
     function renderPreview() {
         const title = $('postingTitle').value.trim();
         const address = isRemote() ? '' : $('workLocation').value.trim();
-        // Nhãn đang chọn ở ô Hình thức / Mô hình (HR đổi được), cộng phòng ban của yêu cầu
+        // Lấy nhãn lựa chọn đang chọn.
         const selectedLabel = id => $(id).selectedOptions[0]?.textContent.trim();
         const tags = [selectedLabel('employmentType'), selectedLabel('workModel'), form.dataset.department].filter(Boolean);
         const facts = [['Mức lương', salaryText() || '—'], ['Hạn ứng tuyển', deadline.value ? viDate(deadline.value) : '—']];
@@ -136,9 +132,7 @@
         form.querySelectorAll('[data-tab]').forEach(other => other.setAttribute('aria-selected', String(other === tab)));
     }));
 
-    /* ---------------------------------------------------------------------
-     * 6. KIỂM TRA TRƯỚC KHI GỬI (giống JobPostingValidator#normalizeAndValidate) + KHÓA NÚT
-     * --------------------------------------------------------------------- */
+    // Hiển thị lỗi của trường form.
     function showError(field, message) {
         const slot = $(field + '-error');
         if (slot) slot.textContent = message;
@@ -153,7 +147,7 @@
     const CHECKED_FIELDS = ['postingTitle', 'jobDescription', 'jobRequirements', 'salaryCustom',
         'numberOfPositionsDisplay', 'applicationDeadline'];
 
-    /** Câu lỗi của một ô ('' = hợp lệ); publishing = kiểm tra theo luật "Đăng tin". */
+    // Kiểm tra một trường của tin.
     function checkField(field, publishing) {
         const empty = !$(field).value.trim();
         if (field === 'postingTitle') {
@@ -191,7 +185,7 @@
         return '';
     }
 
-    /** Kiểm tra cả form khi bấm nút lưu; trả về các ô lỗi theo thứ tự trên form. */
+    // Kiểm tra form trước khi lưu hoặc đăng.
     function validate(publishing) {
         const errors = {};
         CHECKED_FIELDS.forEach(field => {
@@ -209,7 +203,7 @@
         }
     });
 
-    // Ô đang báo lỗi thì kiểm tra lại khi người dùng sửa, đúng rồi thì dòng chữ đỏ tự mất
+    // Kiểm tra lại các trường đang báo lỗi.
     function recheckInvalidFields() {
         CHECKED_FIELDS.filter(field => $(field).classList.contains('is-invalid'))
             .forEach(field => showError(field, checkField(field, true)));
@@ -247,9 +241,7 @@
         form.querySelectorAll('button[type="submit"]').forEach(button => { button.disabled = false; });
     });
 
-    /* ---------------------------------------------------------------------
-     * Cập nhật mọi phần phụ thuộc khi người dùng gõ / chọn
-     * --------------------------------------------------------------------- */
+    // Cập nhật form và bản xem trước.
     function refresh() {
         syncWorkLocation();
         renderFromMarkers();

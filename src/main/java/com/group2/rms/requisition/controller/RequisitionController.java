@@ -56,6 +56,7 @@ public class RequisitionController {
     private final RequisitionFormOptions formOptions;
 
     @InitBinder("form")
+    // Chuẩn hóa dữ liệu form.
     void binder(WebDataBinder binder) {
         binder.setAllowedFields("action", "title", "departmentId", "originalTitle", "expectedStaffingDate", "numberOfPositions", "employmentType", "minSalary",
                 "maxSalary",
@@ -64,6 +65,7 @@ public class RequisitionController {
 
         PropertyEditorSupport salaryEditor = new PropertyEditorSupport() {
             @Override
+            // Chuyển mức lương nhập thành số.
             public void setAsText(String text) {
                 if (text == null || text.isBlank()) {
                     setValue(null);
@@ -81,6 +83,7 @@ public class RequisitionController {
             }
 
             @Override
+            // Định dạng mức lương để hiển thị.
             public String getAsText() {
                 BigDecimal value = (BigDecimal) getValue();
                 if (value == null) {
@@ -98,6 +101,7 @@ public class RequisitionController {
         // Nhập "1.5" / "abc" / "@#" vào ô số nguyên: báo câu lỗi riêng theo từng trường hợp
         binder.setBindingErrorProcessor(new DefaultBindingErrorProcessor() {
             @Override
+            // Báo lỗi nhập số lượng dễ hiểu.
             public void processPropertyAccessException(PropertyAccessException ex, BindingResult bindingResult) {
                 String field = ex.getPropertyName();
                 String label = "numberOfPositions".equals(field) ? RequisitionValidator.POSITIONS_LABEL : null;
@@ -112,6 +116,7 @@ public class RequisitionController {
     }
 
     @ModelAttribute
+    // Đưa thông tin người xem vào model.
     void viewer(Model model) {
         var actor = access.actor();
         model.addAttribute("viewerName", actor.getFullName());
@@ -120,6 +125,7 @@ public class RequisitionController {
     }
 
     @GetMapping
+    // Hiển thị danh sách yêu cầu.
     public String list(@ModelAttribute("searchRequest") RequisitionSearchRequest searchRequest,
             BindingResult invalidParams, HttpServletRequest request, Model model) {
         model.addAttribute("list", listService.getListPage(searchRequest,
@@ -133,6 +139,7 @@ public class RequisitionController {
     }
 
     @GetMapping("/create")
+    // Hiển thị form tạo yêu cầu.
     public String createForm(Model model) {
         var currentUser = access.actor();
         access.requireCreate(currentUser);
@@ -151,6 +158,7 @@ public class RequisitionController {
     }
 
     @GetMapping("/copy/{id}")
+    // Hiển thị form sao chép yêu cầu.
     public String copy(@PathVariable("id") String idParam, Model model, RedirectAttributes flash,
             HttpServletRequest request) {
         Integer id = parseId(idParam);
@@ -170,6 +178,7 @@ public class RequisitionController {
     }
 
     @GetMapping("/edit/{id}")
+    // Hiển thị form sửa yêu cầu.
     public String edit(@PathVariable("id") String idParam, Model model, RedirectAttributes flash,
             HttpServletRequest request) {
         Integer id = parseId(idParam);
@@ -187,6 +196,7 @@ public class RequisitionController {
     }
 
     @PostMapping("/create")
+    // Tạo yêu cầu tuyển dụng.
     public String create(@ModelAttribute("form") RequisitionRequest form, BindingResult errors, Model model,
             RedirectAttributes flash) {
         access.requireCreate(access.actor());
@@ -205,6 +215,7 @@ public class RequisitionController {
     }
 
     @PostMapping("/edit/{id}")
+    // Lưu thay đổi của yêu cầu.
     public String update(@PathVariable Integer id, @ModelAttribute("form") RequisitionRequest form,
             BindingResult errors, Model model, RedirectAttributes flash, HttpServletRequest request) {
         if (!errors.hasErrors()) {
@@ -224,6 +235,7 @@ public class RequisitionController {
     }
 
     @PostMapping("/delete/{id}")
+    // Xóa yêu cầu đủ điều kiện.
     public String delete(@PathVariable Integer id, RedirectAttributes flash, HttpServletRequest request) {
         try {
             service.deleteRequisition(id);
@@ -240,6 +252,7 @@ public class RequisitionController {
     }
 
     @PostMapping("/{id}/decision")
+    // Xử lý quyết định phê duyệt.
     public String decide(@PathVariable Integer id, @RequestParam(defaultValue = "") String decision,
             @RequestParam(defaultValue = "") String comment, RedirectAttributes flash, HttpServletRequest request) {
         boolean isApprove = DECISION_APPROVE.equals(decision);
@@ -266,6 +279,7 @@ public class RequisitionController {
     }
 
     @PostMapping("/{id}/close")
+    // Đóng yêu cầu tuyển dụng.
     public String close(@PathVariable Integer id, RedirectAttributes flash, HttpServletRequest request) {
         try {
             service.closeRequisition(id);
@@ -278,12 +292,14 @@ public class RequisitionController {
         return "redirect:/requisitions/" + id;
     }
 
+    // Ghi nhớ trang danh sách hiện tại.
     private void rememberPage(HttpServletRequest request, String path) {
         var session = request.getSession();
         session.setAttribute(LAST_PAGE_PATH, path);
         session.setAttribute(LAST_PAGE_USER, access.actor().getUserId());
     }
 
+    // Lấy trang danh sách đã ghi nhớ.
     private String rememberedPage(HttpServletRequest request) {
         var session = request.getSession(false);
         if (session == null || !access.actor().getUserId().equals(session.getAttribute(LAST_PAGE_USER))) {
@@ -296,10 +312,12 @@ public class RequisitionController {
         return null;
     }
 
+    // Kiểm tra đường dẫn trang danh sách.
     private boolean isListPage(String path) {
         return path.equals("/requisitions") || path.startsWith("/requisitions?");
     }
 
+    // Quay lại trang trước khi thao tác bị chặn.
     private String backToPreviousPage(Integer id, RequisitionStateException e, RedirectAttributes flash,
             HttpServletRequest request) {
         flash.addFlashAttribute("failureMessage", e.getMessage());
@@ -311,6 +329,7 @@ public class RequisitionController {
     }
 
     @ExceptionHandler(AccessDeniedException.class)
+    // Xử lý lỗi thiếu quyền truy cập.
     public String whenAccessDenied(AccessDeniedException e, RedirectAttributes flash, HttpServletRequest request) {
         if (isListPage(request.getRequestURI())) {
             flash.addFlashAttribute("failureMessage", e.getMessage());
@@ -319,6 +338,7 @@ public class RequisitionController {
         return backWhenNotFound(e.getMessage(), flash, request);
     }
 
+    // Quay lại danh sách khi không tìm thấy yêu cầu.
     private String backWhenNotFound(String message, RedirectAttributes flash, HttpServletRequest request) {
         flash.addFlashAttribute("failureMessage", message);
         String previous = rememberedPage(request);
@@ -328,6 +348,7 @@ public class RequisitionController {
         return "redirect:/requisitions";
     }
 
+    // Chuyển mã yêu cầu thành số.
     private static Integer parseId(String raw) {
         String digits = raw == null ? "" : raw.replaceAll("\\D", "");
         if (digits.isEmpty() || digits.length() > 9) {
@@ -337,6 +358,7 @@ public class RequisitionController {
     }
 
     @GetMapping("/{id}")
+    // Hiển thị chi tiết yêu cầu.
     public String detail(@PathVariable("id") String idParam, Model model, RedirectAttributes flash,
             HttpServletRequest request) {
         Integer id = parseId(idParam);
@@ -355,6 +377,7 @@ public class RequisitionController {
         return "requisitions/detail";
     }
 
+    // Tạo thông báo sau khi lưu.
     private String savedMessage(String action) {
         if (!RequisitionValidator.isSubmit(action)) {
             return "Đã lưu bản nháp thành công.";
@@ -364,6 +387,7 @@ public class RequisitionController {
                 : "Yêu cầu đã được gửi lên Giám đốc phê duyệt.";
     }
 
+    // Chuẩn bị và hiển thị form yêu cầu.
     private String renderForm(Model model, boolean edit, Integer id) {
         model.addAttribute("isEdit", edit);
         model.addAttribute("requisitionId", id);
@@ -375,6 +399,7 @@ public class RequisitionController {
         return "requisitions/form";
     }
 
+    // Thêm các lựa chọn cho form.
     private void addFormOptions(Model model) {
         var allDepartments = formOptions.allDepartments();
         var actor = access.actor();
@@ -388,6 +413,7 @@ public class RequisitionController {
         model.addAttribute("positionsMin", RequisitionValidator.POSITIONS_MIN);
     }
 
+    // Đưa lỗi kiểm tra vào form.
     private void addErrors(BindingResult errors, RequisitionValidationException e) {
         e.getErrors().forEach((field, message) -> errors.rejectValue(field, "invalid", message));
     }

@@ -50,15 +50,17 @@ public class RequisitionValidator {
 
     private final Clock clock;
 
-    /** Người dùng bấm "Gửi duyệt" */
+    // Kiểm tra thao tác gửi duyệt.
     public static boolean isSubmit(String action) {
         return ACTION_SUBMIT.equals(action);
     }
 
+    // Lấy ngày hiện tại theo đồng hồ hệ thống.
     public LocalDate today() {
         return LocalDate.now(clock);
     }
 
+    // Kiểm tra dữ liệu theo thao tác được chọn.
     public void validate(RequisitionRequest requisitionRequest) {
         Map<String, String> errors = new LinkedHashMap<>();
         String action = requisitionRequest.getAction();
@@ -143,7 +145,7 @@ public class RequisitionValidator {
         }
     }
 
-    /** Câu lỗi khi ô số nguyên nhận giá trị không parse được: số thập phân hay chữ/ký tự đặc biệt. */
+    // Tạo thông báo lỗi cho số lượng không hợp lệ.
     public static String integerFormatMessage(String label, Object rawValue) {
         String raw = rawValue == null ? "" : String.valueOf(rawValue).trim();
         if (raw.matches("[-+]?\\d+[.,]\\d+")) {
@@ -153,15 +155,18 @@ public class RequisitionValidator {
         return raw.matches("[-+]?\\d+") ? label + " quá lớn." : label + " chỉ được chứa số nguyên.";
     }
 
+    // Chuẩn hóa chuỗi và bỏ giá trị trống.
     public static String cleanString(String textValue) {
         return (textValue == null || textValue.isBlank()) ? null : textValue.trim();
     }
 
+    // Chuẩn hóa văn bản nhiều dòng.
     public static String cleanMultiline(String textValue) {
         String cleaned = cleanString(textValue);
         return cleaned == null ? null : cleaned.replace("\r\n", "\n");
     }
 
+    // Kiểm tra độ dài và yêu cầu nhập văn bản.
     private void validateTextField(Map<String, String> errorsMap, String fieldKey, String textValue, int maxLength,
             boolean isRequired) {
         if (isRequired && textValue == null) {
@@ -177,6 +182,7 @@ public class RequisitionValidator {
         }
     }
 
+    // Kiểm tra lựa chọn hợp lệ.
     private void validateChoiceField(Map<String, String> errorsMap, String fieldKey, String selectedValue,
             List<String> allowedChoices, boolean isRequired) {
         if ((isRequired || selectedValue != null)
@@ -186,6 +192,7 @@ public class RequisitionValidator {
     }
 
 
+    // Kiểm tra định dạng và giới hạn mức lương.
     private void validateMoneyField(Map<String, String> errorsMap, String fieldKey, BigDecimal amount) {
         if (amount == null) {
             return;

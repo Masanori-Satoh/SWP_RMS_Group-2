@@ -101,7 +101,7 @@ public record InternalJobPostingDetailResponse(
     public record ApplicationStats(long total, long last7Days, long pending,
             long interviewing, long hired, List<RecentApplication> recent) {
 
-        /** Tin chưa lên trang tuyển dụng: chưa có số liệu. */
+        // Tạo số liệu rỗng cho tin chưa đăng.
         public static ApplicationStats empty() {
             return new ApplicationStats(0, 0, 0, 0, 0, List.of());
         }

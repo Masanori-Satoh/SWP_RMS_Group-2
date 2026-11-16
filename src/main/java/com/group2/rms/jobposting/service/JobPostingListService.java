@@ -62,12 +62,13 @@ public class JobPostingListService {
             "size", "số dòng mỗi trang");
 
     @Transactional(readOnly = true)
+    // Lấy trang danh sách theo bộ lọc.
     public JobPostingListResponse getListPage(JobPostingSearchRequest rawFilter, User viewer) {
         return getListPage(rawFilter, viewer, List.of());
     }
 
-    /** unparsableParams: tham số URL sai kiểu (departmentId=abc) do controller gom từ BindingResult. */
     @Transactional(readOnly = true)
+    // Lấy trang danh sách theo bộ lọc.
     public JobPostingListResponse getListPage(JobPostingSearchRequest rawFilter, User viewer,
             Collection<String> unparsableParams) {
         access.requireAccessPostings(viewer);
@@ -85,7 +86,7 @@ public class JobPostingListService {
         return new JobPostingListResponse(page, filter, options, chips, access.canManage(viewer), errors);
     }
 
-    /** Phạm vi theo vai trò, khớp JobPostingAccess#canView: HR mọi tin; HM tin phòng mình; HM, Director không thấy nháp. */
+    // Tạo phạm vi tin được xem.
     private Specification<JobPosting> scope(User viewer) {
         if (access.isHiringManager(viewer)) {
             return JobPostingSpecifications.inDepartmentOf(viewer).and(JobPostingSpecifications.notDraft());
@@ -96,7 +97,7 @@ public class JobPostingListService {
         return Specification.unrestricted();
     }
 
-    /** Bước 1: ô lọc theo vai trò (bảng trong plan_posting.md, Bước 2). Mọi vai trò có ô Trạng thái và Sắp xếp. */
+    // Tạo lựa chọn lọc theo quyền người xem.
     private JobPostingFilterOptions buildFilterOptions(User viewer) {
         String role = access.role(viewer);
         List<FilterOption> sorts = sortOptions();
@@ -120,7 +121,7 @@ public class JobPostingListService {
         throw new org.springframework.security.access.AccessDeniedException("Vai trò không có quyền xem tin tuyển dụng.");
     }
 
-    /** Bước 2: giá trị vai trò không được dùng, hoặc không có trong danh sách lựa chọn, thì báo lỗi; rỗng = không lọc. */
+    // Chuẩn hóa bộ lọc đầu vào.
     private JobPostingSearchRequest normalizeFilter(JobPostingSearchRequest raw, JobPostingFilterOptions options,
             List<String> errors) {
         String keyword = ListFilters.cleanKeyword(raw.q());
@@ -180,7 +181,7 @@ public class JobPostingListService {
                 postedFrom, postedTo, sort, page, size);
     }
 
-    /** Bước 3: ghép điều kiện WHERE, truy vấn một trang, rồi đếm hồ sơ cho cả trang bằng 1 câu. */
+    // Tìm tin theo bộ lọc đã chuẩn hóa.
     private Page<InternalJobPostingResponse> search(JobPostingSearchRequest filter, User viewer, LocalDateTime now,
             List<String> errors) {
         Specification<JobPosting> where = scope(viewer);
@@ -224,7 +225,7 @@ public class JobPostingListService {
         });
     }
 
-    /** Đếm hồ sơ của các tin trên trang: id tin → [tổng, mới]. Trang rỗng thì không chạy câu IN (). */
+    // Đếm hồ sơ của các tin trên trang.
     private Map<Integer, long[]> countApplications(List<JobPosting> pagePostings) {
         Map<Integer, long[]> counts = new HashMap<>();
         if (pagePostings.isEmpty()) {
@@ -245,7 +246,7 @@ public class JobPostingListService {
         return counts;
     }
 
-    /** Bước 4: mô tả các bộ lọc đang bật thành chip. */
+    // Tạo nhãn cho bộ lọc đang dùng.
     private List<FilterChip> describeActiveFilters(JobPostingSearchRequest filter, JobPostingFilterOptions options) {
         List<FilterChip> chips = new ArrayList<>();
         if (!filter.status().isEmpty()) {
@@ -277,6 +278,7 @@ public class JobPostingListService {
 
     // ----- Các hàm nhỏ -----
 
+    // Định dạng ngày trong bộ lọc.
     private static String formatDate(LocalDate date) {
         if (date == null) {
             return OPEN_END;
@@ -284,15 +286,18 @@ public class JobPostingListService {
         return date.format(DISPLAY_DATE);
     }
 
+    // Tạo lựa chọn lọc trạng thái.
     private List<FilterOption> statusOptions(List<String> statuses) {
         return statuses.stream().map(status -> new FilterOption(status, JobPostingLabels.statusLabel(status))).toList();
     }
 
+    // Tạo lựa chọn lọc hạn nộp.
     private List<FilterOption> deadlineOptions() {
         return JobPostingLabels.DEADLINE_FILTERS.stream()
                 .map(value -> new FilterOption(value, JobPostingLabels.deadlineFilterLabel(value))).toList();
     }
 
+    // Tạo lựa chọn sắp xếp.
     private List<FilterOption> sortOptions() {
         List<FilterOption> options = new ArrayList<>();
         for (JobPostingSort sort : JobPostingSort.values()) {
@@ -301,6 +306,7 @@ public class JobPostingListService {
         return options;
     }
 
+    // Tạo lựa chọn lọc phòng ban.
     private List<FilterOption> departmentOptions() {
         List<FilterOption> options = new ArrayList<>();
         for (Department department : departments.findAll(Sort.by("departmentName"))) {

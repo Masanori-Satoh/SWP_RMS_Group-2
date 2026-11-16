@@ -48,7 +48,7 @@ public class RequisitionServiceImpl implements RequisitionService {
 
     @Override
     @Transactional(readOnly = true)
-    // Returns requisition details by ID.
+    // Lấy chi tiết yêu cầu theo mã.
     public RequisitionResponse getById(Integer id) {
         User currentUser = access.actor();
         JobRequisition jobRequisition = findRequisitionById(id, false);
@@ -66,7 +66,7 @@ public class RequisitionServiceImpl implements RequisitionService {
 
     @Override
     @Transactional(readOnly = true)
-    // Prepares the requisition edit form.
+    // Chuẩn bị dữ liệu sửa yêu cầu.
     public RequisitionRequest prepareEditForm(Integer id) {
         User currentUser = access.actor();
         JobRequisition jobRequisition = findRequisitionById(id, false);
@@ -76,7 +76,7 @@ public class RequisitionServiceImpl implements RequisitionService {
 
     @Override
     @Transactional(readOnly = true)
-    // Prepares a copy of the source requisition.
+    // Chuẩn bị bản sao từ yêu cầu gốc.
     public RequisitionRequest copy(Integer id) {
         User currentUser = access.actor();
         access.requireCreate(currentUser);
@@ -92,7 +92,7 @@ public class RequisitionServiceImpl implements RequisitionService {
     }
 
     @Override
-    // Creates a requisition.
+    // Tạo và lưu yêu cầu tuyển dụng.
     public Integer createRequisition(RequisitionRequest request) {
         User currentUser = access.actor();
         access.requireCreate(currentUser);
@@ -144,7 +144,7 @@ public class RequisitionServiceImpl implements RequisitionService {
     }
 
     @Override
-    // Updates an existing requisition.
+    // Cập nhật yêu cầu tuyển dụng.
     public void updateRequisition(Integer id, RequisitionRequest request) {
         User currentUser = access.actor();
         JobRequisition jobRequisition = findRequisitionById(id, true);
@@ -182,7 +182,7 @@ public class RequisitionServiceImpl implements RequisitionService {
     }
 
     @Override
-    // Deletes an eligible requisition.
+    // Xóa yêu cầu đủ điều kiện.
     public void deleteRequisition(Integer id) {
         User currentUser = access.actor();
         JobRequisition jobRequisition = findRequisitionById(id, true);
@@ -209,7 +209,7 @@ public class RequisitionServiceImpl implements RequisitionService {
     }
 
     @Override
-    // Processes the approval decision.
+    // Lưu quyết định phê duyệt.
     public void decide(Integer id, boolean approved, String comment) {
         User currentUser = access.actor();
         JobRequisition jobRequisition = findRequisitionById(id, true);
@@ -255,6 +255,7 @@ public class RequisitionServiceImpl implements RequisitionService {
     }
 
     @Override
+    // Đóng yêu cầu đã hoàn tất.
     public void closeRequisition(Integer id) {
         User currentUser = access.actor();
         JobRequisition requisition = findRequisitionById(id, true);
@@ -281,14 +282,14 @@ public class RequisitionServiceImpl implements RequisitionService {
                 "Status: " + RequisitionAccess.STATUS_APPROVED + " → " + RequisitionAccess.STATUS_CLOSED);
     }
 
-    // Requires the source requisition to be copyable.
+    // Kiểm tra nguồn có thể sao chép.
     private void requireCopyableSource(JobRequisition source) {
         if (RequisitionAccess.STATUS_DRAFT.equals(source.getApprovalStatus())) {
             throw createValidationException("action", "Không thể sao chép yêu cầu đang là bản nháp.");
         }
     }
 
-    // Keeps the root requisition as copy provenance.
+    // Gắn nguồn gốc cho bản sao.
     private void assignCopySource(JobRequisition jobRequisition, RequisitionRequest request, User currentUser) {
         if (request.getOriginalRequisitionId() == null) {
             return;
@@ -301,7 +302,7 @@ public class RequisitionServiceImpl implements RequisitionService {
         jobRequisition.setOriginalRequisition(rootOf(source));
     }
 
-    // Returns the root requisition in the chain.
+    // Tìm yêu cầu gốc trong chuỗi sao chép.
     private JobRequisition rootOf(JobRequisition jobRequisition) {
         if (jobRequisition.getOriginalRequisition() != null) {
             return jobRequisition.getOriginalRequisition();
@@ -309,7 +310,7 @@ public class RequisitionServiceImpl implements RequisitionService {
         return jobRequisition;
     }
 
-    // Requires an active department the user may create for: Director any, HM own or managed departments.
+    // Kiểm tra phòng ban được phép tạo yêu cầu.
     private Integer requireDepartmentFor(User user, Integer departmentId) {
         Department department = null;
         if (departmentId != null) {
@@ -324,7 +325,7 @@ public class RequisitionServiceImpl implements RequisitionService {
         return department.getDepartmentId();
     }
 
-    // Applies the status selected by the form action.
+    // Cập nhật trạng thái theo thao tác lưu.
     private void applySavedStatus(JobRequisition jobRequisition, String action, User currentUser) {
         if (!RequisitionValidator.isSubmit(action)) {
             jobRequisition.setApprovalStatus(RequisitionAccess.STATUS_DRAFT);
@@ -338,7 +339,7 @@ public class RequisitionServiceImpl implements RequisitionService {
         }
     }
 
-    // Records direct approval when required.
+    // Ghi phê duyệt trực tiếp khi cần.
     private boolean recordDirectApprovalIfNeeded(JobRequisition jobRequisition, User currentUser) {
         boolean isApproved = RequisitionAccess.STATUS_APPROVED.equals(jobRequisition.getApprovalStatus());
         if (!isApproved || !access.isDirector(currentUser)) {
@@ -355,7 +356,7 @@ public class RequisitionServiceImpl implements RequisitionService {
         return true;
     }
 
-    // Copies request data to the requisition entity.
+    // Chép dữ liệu form vào yêu cầu.
     private void applyDataToEntity(JobRequisition jobRequisition, RequisitionRequest request) {
         jobRequisition.setTitle(request.getTitle());
         jobRequisition.setExpectedStaffingDate(request.getExpectedStaffingDate());
@@ -371,7 +372,7 @@ public class RequisitionServiceImpl implements RequisitionService {
         jobRequisition.setRequirementDetails(Objects.requireNonNullElse(request.getRequirementDetails(), ""));
     }
 
-    // Finds an active department by ID.
+    // Tìm phòng ban còn hoạt động.
     private Department findDepartment(Integer departmentId) {
         if (departmentId == null) {
             return null;
@@ -380,7 +381,7 @@ public class RequisitionServiceImpl implements RequisitionService {
                 .orElseThrow(() -> createValidationException("departmentId", "Phòng ban không tồn tại."));
     }
 
-    // Finds a requisition by ID with the requested lock.
+    // Tìm yêu cầu và khóa khi cần.
     private JobRequisition findRequisitionById(Integer id, boolean lockForUpdate) {
         if (lockForUpdate) {
             return requisitions.findForUpdate(id)
@@ -390,7 +391,7 @@ public class RequisitionServiceImpl implements RequisitionService {
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy yêu cầu tuyển dụng."));
     }
 
-    // Creates a validation exception for the field.
+    // Tạo lỗi kiểm tra cho một trường.
     private RequisitionValidationException createValidationException(String field, String message) {
         return new RequisitionValidationException(Map.of(field, message));
     }

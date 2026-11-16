@@ -22,7 +22,7 @@ public record RequisitionSearchRequest(
         Integer size,
         String employmentType) {
 
-    /** Đếm số bộ lọc đang bật để hiện con số trên nút "Bộ lọc" (không tính từ khóa và sắp xếp). */
+    // Đếm số bộ lọc đang bật.
     public int activeFilterCount() {
         int count = 0;
         if (status != null && !status.isEmpty()) {
@@ -46,7 +46,7 @@ public record RequisitionSearchRequest(
         return count;
     }
 
-    /** Trạng thái này có đang được chọn không (dùng trong template). */
+    // Kiểm tra trạng thái đang được chọn.
     public boolean hasStatus(String value) {
         return status != null && status.contains(value);
     }

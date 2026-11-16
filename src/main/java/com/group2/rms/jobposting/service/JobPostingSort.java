@@ -24,19 +24,22 @@ public enum JobPostingSort {
         this.sort = sort;
     }
 
+    // Lấy giá trị sắp xếp trên URL.
     public String param() {
         return param;
     }
 
+    // Lấy nhãn của cách sắp xếp.
     public String label() {
         return label;
     }
 
+    // Chuyển lựa chọn thành thứ tự truy vấn.
     public Sort toSort() {
         return sort;
     }
 
-    /** Đổi giá trị trên URL (?sort=...) sang enum; giá trị lạ hoặc trống thì dùng NEWEST. */
+    // Đọc cách sắp xếp từ URL.
     public static JobPostingSort fromParam(String value) {
         for (JobPostingSort option : values()) {
             if (option.param.equals(value)) {

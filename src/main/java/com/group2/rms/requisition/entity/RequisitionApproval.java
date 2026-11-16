@@ -45,6 +45,7 @@ public class RequisitionApproval {
     private LocalDateTime approvalDate;
 
     @PrePersist
+    // Gán ngày phê duyệt khi tạo bản ghi.
     protected void onPersist() {
         if (this.approvalDate == null) {
             this.approvalDate = LocalDateTime.now();

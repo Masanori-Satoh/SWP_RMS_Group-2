@@ -21,24 +21,24 @@ public enum RequisitionSort {
     }
 
 
-    // Returns the URL parameter for this sort option.
+    // Lấy giá trị sắp xếp trên URL.
     public String param() {
         return param;
     }
 
 
-    // Returns the display label for this sort option.
+    // Lấy nhãn của cách sắp xếp.
     public String label() {
         return label;
     }
 
-    // Returns the database sort for this option.
+    // Chuyển lựa chọn thành thứ tự truy vấn.
     public Sort toSort() {
         return sort;
     }
 
 
-    // Resolves a URL parameter to a sort option.
+    // Đọc cách sắp xếp từ URL.
     public static RequisitionSort fromParam(String value) {
         for (RequisitionSort option : values()) {
             if (option.param.equalsIgnoreCase(value)) {

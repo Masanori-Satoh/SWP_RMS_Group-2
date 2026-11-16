@@ -124,7 +124,7 @@ class PasswordRecoveryServiceTests {
         // Then: báo cooldown, không gửi email thứ hai.
         assertEquals("RESET_EMAIL_COOLDOWN", error.getErrorCode());
         assertEquals("email", error.getField());
-        assertEquals(1200L, error.getRetryAfterSeconds());
+        assertEquals(300L, error.getRetryAfterSeconds());
         verify(emailSender, times(1)).sendOtp(eq(EMAIL), anyString());
     }
 
@@ -405,26 +405,26 @@ class PasswordRecoveryServiceTests {
     }
 
     @Test
-    @DisplayName("AUTH-RECOVERY-21 | Còn 1199,5 giây cooldown: làm tròn lên 1200 giây để UI chưa cho gửi sớm")
+    @DisplayName("AUTH-RECOVERY-21 | Còn 299,5 giây cooldown: làm tròn lên 300 giây để UI chưa cho gửi sớm")
     void getResendRemainingSeconds_fractionalSecond_roundsUp() {
-        // Given: Còn 1199,5 giây cooldown.
+        // Given: Còn 299,5 giây cooldown.
         requestCode();
         when(clock.instant()).thenReturn(NOW.plusMillis(500));
 
         // When: Gọi service.getResendRemainingSeconds với dữ liệu đã chuẩn bị.
         long result = service.getResendRemainingSeconds(session);
 
-        // Then: làm tròn lên 1200 giây để UI chưa cho gửi sớm.
-        assertEquals(1200L, result);
+        // Then: làm tròn lên 300 giây để UI chưa cho gửi sớm.
+        assertEquals(300L, result);
         verify(emailSender, times(1)).sendOtp(eq(EMAIL), anyString());
     }
 
     @Test
-    @DisplayName("AUTH-RECOVERY-22 | Đúng hạn cooldown 20 phút: thời gian chờ bằng 0")
+    @DisplayName("AUTH-RECOVERY-22 | Đúng hạn cooldown 5 phút: thời gian chờ bằng 0")
     void getResendRemainingSeconds_atCooldownBoundary_returnsZero() {
-        // Given: Đúng hạn cooldown 20 phút.
+        // Given: Đúng hạn cooldown 5 phút.
         requestCode();
-        when(clock.instant()).thenReturn(NOW.plusSeconds(1200));
+        when(clock.instant()).thenReturn(NOW.plusSeconds(300));
 
         // When: Gọi service.getResendRemainingSeconds với dữ liệu đã chuẩn bị.
         long result = service.getResendRemainingSeconds(session);
@@ -435,11 +435,11 @@ class PasswordRecoveryServiceTests {
     }
 
     @Test
-    @DisplayName("AUTH-RECOVERY-23 | Gửi lại đúng phút 20: gửi email thứ hai và tạo OTP mới còn hạn")
+    @DisplayName("AUTH-RECOVERY-23 | Gửi lại đúng phút 5: gửi email thứ hai và tạo OTP mới còn hạn")
     void requestReset_atCooldownBoundary_sendsNewCode() {
-        // Given: Gửi lại đúng phút 20.
+        // Given: Gửi lại đúng phút 5.
         requestCode();
-        when(clock.instant()).thenReturn(NOW.plusSeconds(1200));
+        when(clock.instant()).thenReturn(NOW.plusSeconds(300));
         when(resetService.isCurrent(account)).thenReturn(true);
 
         // When: Gọi service.requestReset với dữ liệu đã chuẩn bị.
@@ -450,25 +450,22 @@ class PasswordRecoveryServiceTests {
         assertEquals(true, service.hasPendingReset(session));
         assertEquals(false, service.canResetPassword(session));
         assertEquals(EMAIL, service.getPendingResetEmail(session));
-        assertEquals(1200L, service.getResendRemainingSeconds(session));
+        assertEquals(300L, service.getResendRemainingSeconds(session));
     }
 
     @Test
-    @DisplayName("AUTH-RECOVERY-24 | Ghi nhận vấn đề: OTP hết hạn phút 15 nhưng vẫn phải chờ 300 giây để yêu cầu mã mới")
-    void requestReset_otpExpiredButCooldownActive_documentsFiveMinuteGap() {
-        // Given: Đây là test ghi nhận hành vi hiện tại để báo bug, không khẳng định hành vi đúng nghiệp vụ.
+    @DisplayName("AUTH-RECOVERY-24 | OTP hết hạn phút 15: có thể yêu cầu mã mới")
+    void requestReset_otpExpired_canRequestNewCode() {
         requestCode();
         when(clock.instant()).thenReturn(NOW.plusSeconds(900));
         assertEquals(false, service.hasPendingReset(session));
+        when(resetService.isCurrent(account)).thenReturn(true);
 
-        // When: Gọi service.requestReset với dữ liệu đã chuẩn bị.
-        PasswordRecoveryFlowException error = assertThrows(PasswordRecoveryFlowException.class,
-            () -> service.requestReset(EMAIL, session));
+        service.requestReset(EMAIL, session);
 
-        // Then: Mã cũ không còn dùng được, nhưng yêu cầu mới vẫn bị chặn thêm 5 phút.
-        assertEquals("RESET_EMAIL_COOLDOWN", error.getErrorCode());
-        assertEquals(300L, error.getRetryAfterSeconds());
-        verify(emailSender, times(1)).sendOtp(eq(EMAIL), anyString());
+        assertEquals(true, service.hasPendingReset(session));
+        assertEquals(300L, service.getResendRemainingSeconds(session));
+        verify(emailSender, times(2)).sendOtp(eq(EMAIL), anyString());
         verify(resetService, times(0)).changePassword(any(), anyString(), any());
     }
 
@@ -535,7 +532,7 @@ class PasswordRecoveryServiceTests {
     void requestReset_oneSecondBeforeCooldown_rejectsDuplicateSend() {
         // Given: Xin mã trước hạn cooldown 1 giây.
         requestCode();
-        when(clock.instant()).thenReturn(NOW.plusSeconds(1199));
+        when(clock.instant()).thenReturn(NOW.plusSeconds(299));
 
         // When: Gọi service.requestReset với dữ liệu đã chuẩn bị.
         PasswordRecoveryFlowException error = assertThrows(PasswordRecoveryFlowException.class,
@@ -551,20 +548,20 @@ class PasswordRecoveryServiceTests {
     }
 
     @Test
-    @DisplayName("AUTH-RECOVERY-29 | Xin mã sau cooldown 1 giây: tạo pending mới và bắt đầu lại 1200 giây chờ")
+    @DisplayName("AUTH-RECOVERY-29 | Xin mã sau cooldown 1 giây: tạo pending mới và bắt đầu lại 300 giây chờ")
     void requestReset_oneSecondAfterCooldown_createsNewPendingRequest() {
         // Given: Xin mã sau cooldown 1 giây.
         requestCode();
-        when(clock.instant()).thenReturn(NOW.plusSeconds(1201));
+        when(clock.instant()).thenReturn(NOW.plusSeconds(301));
         when(resetService.isCurrent(account)).thenReturn(true);
 
         // When: Gọi service.requestReset với dữ liệu đã chuẩn bị.
         service.requestReset(EMAIL, session);
 
-        // Then: tạo pending mới và bắt đầu lại 1200 giây chờ.
+        // Then: tạo pending mới và bắt đầu lại 300 giây chờ.
         assertEquals(true, service.hasPendingReset(session));
         assertEquals(false, service.canResetPassword(session));
-        assertEquals(1200L, service.getResendRemainingSeconds(session));
+        assertEquals(300L, service.getResendRemainingSeconds(session));
         verify(emailSender, times(2)).sendOtp(eq(EMAIL), anyString());
         verify(resetService, times(0)).changePassword(any(), anyString(), any());
     }
@@ -583,7 +580,7 @@ class PasswordRecoveryServiceTests {
 
         // Then: dùng chung cooldown, không tạo pending ở session thứ hai.
         assertEquals("RESET_EMAIL_COOLDOWN", error.getErrorCode());
-        assertEquals(1200L, error.getRetryAfterSeconds());
+        assertEquals(300L, error.getRetryAfterSeconds());
         assertEquals(true, service.hasPendingReset(session));
         assertEquals(false, service.hasPendingReset(anotherSession));
         assertEquals(null, anotherSession.getAttribute(RESET_STATE));

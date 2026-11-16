@@ -112,7 +112,7 @@ public class JobPosting extends BaseEntity {
     @JoinColumn(name = "CreatedBy", nullable = false, referencedColumnName = "UserId")
     private User createdBy;
 
-    /** Hình thức của tin; tin cũ chưa có thì lấy của yêu cầu. */
+    // Lấy hình thức làm việc của tin.
     public String effectiveEmploymentType() {
         if (employmentType != null || requisition == null) {
             return employmentType;
@@ -120,7 +120,7 @@ public class JobPosting extends BaseEntity {
         return requisition.getEmploymentType();
     }
 
-    /** Mô hình làm việc của tin; tin cũ chưa có thì lấy của yêu cầu. */
+    // Lấy mô hình làm việc của tin.
     public String effectiveWorkModel() {
         if (workModel != null || requisition == null) {
             return workModel;
@@ -128,11 +128,12 @@ public class JobPosting extends BaseEntity {
         return requisition.getWorkModel();
     }
 
+    // Lấy địa điểm làm việc của tin.
     public String effectiveWorkLocation() {
         return "Remote".equals(effectiveWorkModel()) ? null : workLocation;
     }
 
-    /** Ứng viên thấy tin khi đang đăng (Published) và đã tới giờ đăng. */
+    // Kiểm tra tin đã hiện cho ứng viên.
     public boolean isVisibleToCandidates(LocalDateTime now) {
         return STATUS_PUBLISHED.equals(postingStatus) && (postingDate == null || !postingDate.isAfter(now));
     }

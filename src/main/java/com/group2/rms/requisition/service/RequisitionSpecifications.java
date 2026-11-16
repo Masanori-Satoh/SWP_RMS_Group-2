@@ -15,11 +15,12 @@ import java.util.List;
 
 public final class RequisitionSpecifications {
 
+    // Ngăn tạo đối tượng chứa điều kiện lọc.
     private RequisitionSpecifications() {
     }
 
 
-    // Builds a title or department search condition.
+    // Lọc theo tên vị trí hoặc phòng ban.
     public static Specification<JobRequisition> titleOrDepartmentContains(String keyword) {
         String pattern = ListFilters.containsPattern(keyword);
         return (root, query, cb) -> cb.or(
@@ -28,43 +29,43 @@ public final class RequisitionSpecifications {
     }
 
 
-    // Builds a status filter condition.
+    // Lọc theo trạng thái yêu cầu.
     public static Specification<JobRequisition> statusIn(List<String> statuses) {
         return (root, query, cb) -> root.get("approvalStatus").in(statuses);
     }
 
 
-    // Builds a department filter condition.
+    // Lọc theo phòng ban.
     public static Specification<JobRequisition> departmentIs(Integer departmentId) {
         return (root, query, cb) -> cb.equal(root.get("department").get("departmentId"), departmentId);
     }
 
 
-    // Builds a creator filter condition.
+    // Lọc theo người tạo.
     public static Specification<JobRequisition> creatorIs(Integer userId) {
         return (root, query, cb) -> cb.equal(root.get("hiringManager").get("userId"), userId);
     }
 
 
-    // Builds an employment type filter condition.
+    // Lọc theo hình thức làm việc.
     public static Specification<JobRequisition> employmentTypeIs(String employmentType) {
         return (root, query, cb) -> cb.equal(root.get("employmentType"), employmentType);
     }
 
 
-    // Builds a lower creation date condition.
+    // Lọc từ ngày tạo được chọn.
     public static Specification<JobRequisition> createdOnOrAfter(LocalDate from) {
         return (root, query, cb) -> cb.greaterThanOrEqualTo(root.get("createdAt"), from.atStartOfDay());
     }
 
 
-    // Builds an upper creation date condition.
+    // Lọc đến ngày tạo được chọn.
     public static Specification<JobRequisition> createdOnOrBefore(LocalDate to) {
         return (root, query, cb) -> cb.lessThan(root.get("createdAt"), to.plusDays(1).atStartOfDay());
     }
 
 
-    // Builds a condition for requisitions without postings.
+    // Lọc yêu cầu chưa có tin.
     public static Specification<JobRequisition> hasNoPosting() {
         return (root, query, cb) -> {
             Subquery<Integer> postingIds = query.subquery(Integer.class);
@@ -75,7 +76,7 @@ public final class RequisitionSpecifications {
     }
 
 
-    // Builds a latest posting status condition.
+    // Lọc theo trạng thái tin mới nhất.
     public static Specification<JobRequisition> latestPostingStatusIs(String postingStatus) {
         return (root, query, cb) -> {
             Subquery<Integer> latestId = query.subquery(Integer.class);
@@ -91,7 +92,7 @@ public final class RequisitionSpecifications {
         };
     }
 
-    // Orders pending-approval requisitions first, then newest. Only applies when the Pageable is unsorted.
+    // Ưu tiên yêu cầu chờ duyệt rồi đến yêu cầu mới.
     public static Specification<JobRequisition> pendingFirstThenNewest() {
         return (root, query, cb) -> {
             if (query != null && !Long.class.equals(query.getResultType())) {

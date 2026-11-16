@@ -58,22 +58,22 @@ public class JobPostingValidator {
     /** Đồng hồ dùng chung (core/config/ClockConfig); test truyền Clock.fixed để cố định "bây giờ". */
     private final Clock clock;
 
-    /** Người dùng bấm nút đăng ("Đăng tin", "Lưu và mở lại"). */
+    // Kiểm tra thao tác đăng tin.
     public static boolean isPublish(String action) {
         return ACTION_PUBLISH.equals(action);
     }
 
-    /** Hôm nay: ngày sớm nhất được chọn làm hạn nộp (thuộc tính min của ô ngày trên form). */
+    // Lấy ngày hiện tại theo đồng hồ hệ thống.
     public LocalDate today() {
         return LocalDate.now(clock);
     }
 
-    /** Hạn nộp điền sẵn khi mở form tạo tin. */
+    // Đề xuất hạn nộp mặc định.
     public LocalDate defaultDeadline() {
         return today().plusDays(DEFAULT_DEADLINE_DAYS);
     }
 
-    /** Gợi ý hạn nộp trước ngày cần nhân sự 30 ngày; không điền một ngày đã qua. */
+    // Đề xuất hạn nộp mặc định.
     public LocalDate defaultDeadline(LocalDate expectedStaffingDate) {
         if (expectedStaffingDate == null) {
             return defaultDeadline();
@@ -82,19 +82,21 @@ public class JobPostingValidator {
         return suggested.isBefore(today()) ? today() : suggested;
     }
 
+    // Yêu cầu phiếu nguồn đã được duyệt.
     public void requireApproved(JobRequisition requisition) {
         if (!RequisitionAccess.STATUS_APPROVED.equals(requisition.getApprovalStatus())) {
             throw new JobPostingValidationException("Chỉ có thể đăng tin từ yêu cầu đã được phê duyệt.");
         }
     }
 
+    // Kiểm tra tin còn được phép sửa.
     public void requireEditable(String postingStatus) {
         if (!JobPostingAccess.isEditableStatus(postingStatus)) {
             throw new JobPostingValidationException("Tin đã đóng không thể chỉnh sửa.");
         }
     }
 
-    /** Đăng tin nháp / mở lại tin tạm dừng từ nút trên trang chi tiết: tin phải đủ nội dung và còn hạn nộp. */
+    // Kiểm tra tin đủ nội dung để đăng.
     public void requirePublishableContent(JobPosting posting, LocalDateTime now) {
         if (isBlank(posting.getPostingTitle()) || isBlank(posting.getJobDescription())
                 || isBlank(posting.getJobRequirements())) {
@@ -108,7 +110,7 @@ public class JobPostingValidator {
         }
     }
 
-    /** Làm sạch rồi kiểm tra cả form, gom mọi lỗi ném một lần; publishing = bắt buộc hạn nộp. */
+    // Chuẩn hóa và kiểm tra form tin.
     public void normalizeAndValidate(JobPostingRequest request, boolean publishing) {
         LocalDateTime now = LocalDateTime.now(clock);
         normalize(request);
@@ -160,7 +162,7 @@ public class JobPostingValidator {
         }
     }
 
-    /** Hạn nộp lưu vào DB: cuối ngày đã chọn; null nếu chưa chọn. */
+    // Chuyển ngày hạn nộp thành cuối ngày.
     public LocalDateTime deadlineOf(JobPostingRequest request) {
         if (request.getApplicationDeadline() == null) {
             return null;
@@ -170,6 +172,7 @@ public class JobPostingValidator {
 
     // ----- Các hàm nhỏ -----
 
+    // Chuẩn hóa chuỗi nhập.
     private void normalize(JobPostingRequest request) {
         request.setPostingTitle(RequisitionValidator.cleanString(request.getPostingTitle()));
         request.setJobDescription(RequisitionValidator.cleanMultiline(request.getJobDescription()));
@@ -185,7 +188,7 @@ public class JobPostingValidator {
         request.setSalaryCustom(RequisitionValidator.cleanString(request.getSalaryCustom()));
     }
 
-    /** Rule (D6): đăng tin bắt buộc có hạn nộp; hạn nộp phải sau ngày đăng (CK_JobPosting_Deadline). */
+    // Kiểm tra hạn nộp của tin.
     private void validateDeadline(Map<String, String> errors, JobPostingRequest request, boolean publishing,
             LocalDateTime now) {
         LocalDateTime deadline = deadlineOf(request);
@@ -198,6 +201,7 @@ public class JobPostingValidator {
         }
     }
 
+    // Kiểm tra trường văn bản bắt buộc.
     private void requireText(Map<String, String> errors, String field, String value, int maxLength,
             String requiredMessage) {
         if (value == null) {
@@ -207,12 +211,14 @@ public class JobPostingValidator {
         }
     }
 
+    // Kiểm tra độ dài văn bản.
     private void maxLength(Map<String, String> errors, String field, String value, int maxLength) {
         if (value != null && value.length() > maxLength) {
             errors.put(field, "Nội dung quá " + maxLength + " ký tự");
         }
     }
 
+    // Kiểm tra văn bản còn trống.
     private static boolean isBlank(String value) {
         return value == null || value.isBlank();
     }

@@ -23,11 +23,12 @@ public final class JobPostingSpecifications {
     /** Id không tồn tại, dùng khi HM chưa được gán phòng ban. */
     private static final Integer NO_DEPARTMENT_ID = -1;
 
+    // Ngăn tạo đối tượng chứa điều kiện lọc.
     private JobPostingSpecifications() {
         // Chỉ chứa hàm static
     }
 
-    /** Tiêu đề tin HOẶC tên phòng ban có chứa từ khóa (không phân biệt hoa thường). */
+    // Lọc theo tiêu đề tin hoặc phòng ban.
     public static Specification<JobPosting> titleOrDepartmentContains(String keyword) {
         String pattern = ListFilters.containsPattern(keyword);
         return (root, query, cb) -> cb.or(
@@ -36,7 +37,7 @@ public final class JobPostingSpecifications {
                         .get("departmentName")), pattern, '\\'));
     }
 
-    /** Trạng thái tin nằm trong danh sách đã chọn. */
+    // Lọc theo trạng thái hiển thị.
     public static Specification<JobPosting> viewStatusIn(List<String> viewStatuses) {
         return (root, query, cb) -> {
             List<Predicate> anyOf = new ArrayList<>();
@@ -47,12 +48,12 @@ public final class JobPostingSpecifications {
         };
     }
 
-    /** Bỏ tin nháp (HM và Director không xem tin nháp). */
+    // Loại tin nháp khỏi kết quả.
     public static Specification<JobPosting> notDraft() {
         return (root, query, cb) -> cb.notEqual(root.get("postingStatus"), JobPostingAccess.STATUS_DRAFT);
     }
 
-    /** Tin thuộc phòng ban của HM: phòng ban HM đang làm, hoặc phòng ban HM là trưởng phòng. */
+    // Lọc theo phòng ban của người quản lý.
     public static Specification<JobPosting> inDepartmentOf(User hiringManager) {
         // HM chưa có phòng ban: không khớp phòng nào (id -1), chỉ còn điều kiện "là trưởng phòng"
         Integer departmentId = NO_DEPARTMENT_ID;
@@ -68,16 +69,18 @@ public final class JobPostingSpecifications {
         };
     }
 
+    // Lọc theo phòng ban.
     public static Specification<JobPosting> departmentIs(Integer departmentId) {
         return (root, query, cb) -> cb.equal(
                 root.join("requisition", JoinType.LEFT).join("department", JoinType.LEFT).get("departmentId"), departmentId);
     }
 
+    // Lọc theo người tạo.
     public static Specification<JobPosting> creatorIs(Integer userId) {
         return (root, query, cb) -> cb.equal(root.get("createdBy").get("userId"), userId);
     }
 
-    /** Nhóm hạn nộp: past = đã qua hạn; open = chưa qua hạn hoặc không có hạn. */
+    // Lọc theo nhóm hạn nộp.
     public static Specification<JobPosting> deadlineIn(String bucket, LocalDateTime now) {
         return (root, query, cb) -> {
             if (JobPostingLabels.DEADLINE_PAST.equals(bucket)) {
@@ -88,17 +91,17 @@ public final class JobPostingSpecifications {
         };
     }
 
-    /** Ngày đăng từ (tính cả ngày này). */
+    // Lọc từ ngày đăng được chọn.
     public static Specification<JobPosting> postedOnOrAfter(LocalDate from) {
         return (root, query, cb) -> cb.greaterThanOrEqualTo(root.get("postingDate"), from.atStartOfDay());
     }
 
-    /** Ngày đăng đến (tính cả ngày này: nhỏ hơn 0 giờ của ngày hôm sau). */
+    // Lọc đến ngày đăng được chọn.
     public static Specification<JobPosting> postedOnOrBefore(LocalDate to) {
         return (root, query, cb) -> cb.lessThan(root.get("postingDate"), to.plusDays(1).atStartOfDay());
     }
 
-    /** Sắp xếp "Nhiều hồ sơ nhất"; câu COUNT của Spring không được có ORDER BY nên bỏ qua khi đếm. */
+    // Sắp xếp theo số hồ sơ ứng tuyển.
     public static Specification<JobPosting> orderByApplicationCount() {
         return (root, query, cb) -> {
             Class<?> resultType = query.getResultType();

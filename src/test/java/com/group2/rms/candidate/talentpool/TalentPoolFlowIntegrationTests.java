@@ -128,9 +128,11 @@ class TalentPoolFlowIntegrationTests {
         assertEquals(sourceStatus,applications.findById(f.source().getApplicationId()).orElseThrow().getApplicationStatus());
         assertEquals(oldNotes,poolNotesCount(cid));
         mvc.perform(post("/talent-pool/recommendations/"+id+"/decision").with(user(f.hm().getUsername()).roles("HIRING_MANAGER"))
-                        .with(csrf()).param("decision","Pass")).andExpect(status().isNotFound());
+                        .with(csrf()).param("decision","Pass"))
+                .andExpect(status().is3xxRedirection()).andExpect(flash().attributeExists("errorMessage"));
         mvc.perform(get("/talent-pool/"+cid+"?recommendationId="+id).with(user(f.hm().getUsername()).roles("HIRING_MANAGER")))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isSeeOther()).andExpect(redirectedUrl("/talent-pool"))
+                .andExpect(flash().attributeExists("errorMessage"));
         int replacement=recommend(f); assertNotEquals(id,replacement);
         assertEquals(1,applications.countPendingHrRecommendation(replacement));
     }
@@ -219,7 +221,7 @@ class TalentPoolFlowIntegrationTests {
         assertTrue(candidates.findById(cid).orElseThrow().isPotential());
         assertFalse(poolApplications.findSuggestionsByJobPostingId(f.target().getJobPostingId()).stream().anyMatch(a->a.getApplicationId().equals(id)));
         mvc.perform(get("/talent-pool/"+cid+"?recommendationId="+id).with(user(f.hm().getUsername()).roles("HIRING_MANAGER")))
-                .andExpect(status().isOk()).andExpect(content().string(containsString("HM đã từ chối")))
+                .andExpect(status().isOk()).andExpect(content().string(containsString("Trưởng bộ phận đã từ chối")))
                 .andExpect(content().string(org.hamcrest.Matchers.not(containsString("data-pool-decision"))));
         mvc.perform(post("/talent-pool/recommendations/"+id+"/decision").with(user(f.hm().getUsername()).roles("HIRING_MANAGER"))
                         .with(csrf()).param("decision","Pass")).andExpect(flash().attributeExists("errorMessage"));
@@ -324,7 +326,7 @@ class TalentPoolFlowIntegrationTests {
         // A second upload cannot create another application or replace the confirmed CV.
         mvc.perform(multipart("/jobs/"+jobId+"/apply").file(file)
                         .with(user(f.source().getCandidate().getAccount().getUsername()).roles("CANDIDATE")).with(csrf()))
-                .andExpect(status().isOk()).andExpect(content().string(containsString("Bạn đã ứng tuyển vị trí này")));
+                .andExpect(status().isOk()).andExpect(content().string(containsString("Bạn đã ứng tuyển tin tuyển dụng này.")));
         assertEquals(appCount+1,applications.count());
         assertEquals(saved.getAppliedCvUrl(),applications.findById(id).orElseThrow().getAppliedCvUrl());
     }
