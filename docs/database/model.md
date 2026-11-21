@@ -39,12 +39,6 @@ OldValue;NULL;Old data, JSON format
 NewValue;NULL;New data, JSON format
 IpAddress;NULL;User's IP address
 Timestamp;NOT NULL, DEFAULT SYSDATETIME();Time the action occurred
-3.5 SystemConfig
-Column;Constraints;Notes
-ConfigKey;PRIMARY KEY;e.g. SMTP_HOST, SME_COMPANY_NAME
-ConfigValue;NOT NULL;Configuration value
-Description;NULL;Purpose of the configuration
-UpdatedAt;NOT NULL, DEFAULT SYSDATETIME();Last update time
 3.6 JobRequisition
 Column;Constraints;Notes
 RequisitionId;PRIMARY KEY, IDENTITY(1,1);Requisition identifier
