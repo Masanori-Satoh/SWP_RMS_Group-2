@@ -1,7 +1,8 @@
 package com.group2.rms.candidate.application.portal.repository;
 
-import com.group2.rms.candidate.domain.repository.ApplicationRepository;
-import com.group2.rms.candidate.domain.entity.Application;
+import com.group2.rms.candidate.repository.ApplicationRepository;
+import com.group2.rms.candidate.entity.Application;
+import com.group2.rms.candidate.repository.MyApplicationRepository;
 import jakarta.persistence.EntityManager;
 import org.hibernate.Hibernate;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,7 +25,8 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 class MyApplicationQueryTests {
 
     @Autowired ApplicationRepository applications;
-    @Autowired MyApplicationRepository myApplications;
+    @Autowired
+    MyApplicationRepository myApplications;
     @Autowired EntityManager entityManager;
 
     private Application early;

@@ -1,19 +1,20 @@
 package com.group2.rms.candidate.talentpool.service;
 
-import com.group2.rms.candidate.domain.rule.ApplicationAccess;
-import com.group2.rms.candidate.infra.cv.CvStorage;
-import com.group2.rms.candidate.domain.repository.ApplicationRepository;
-import com.group2.rms.candidate.domain.repository.CandidateRepository;
-import com.group2.rms.candidate.talentpool.dto.TalentPoolBookmarkRequest;
-import com.group2.rms.candidate.domain.entity.Application;
-import com.group2.rms.candidate.domain.entity.Candidate;
-import com.group2.rms.candidate.talentpool.entity.TalentPoolNote;
-import com.group2.rms.candidate.talentpool.exception.TalentPoolException;
-import com.group2.rms.candidate.talentpool.repository.TalentPoolAuditRepository;
-import com.group2.rms.candidate.talentpool.repository.TalentPoolNoteRepository;
+import com.group2.rms.candidate.validator.ApplicationAccess;
+import com.group2.rms.candidate.storage.CvStorage;
+import com.group2.rms.candidate.repository.ApplicationRepository;
+import com.group2.rms.candidate.repository.CandidateRepository;
+import com.group2.rms.talentpool.dto.TalentPoolBookmarkRequest;
+import com.group2.rms.candidate.entity.Application;
+import com.group2.rms.candidate.entity.Candidate;
+import com.group2.rms.talentpool.entity.TalentPoolNote;
+import com.group2.rms.talentpool.exception.TalentPoolException;
+import com.group2.rms.talentpool.repository.TalentPoolAuditRepository;
+import com.group2.rms.talentpool.repository.TalentPoolNoteRepository;
 import com.group2.rms.core.security.CurrentUserService;
 import com.group2.rms.jobposting.repository.JobPostingRepository;
 import com.group2.rms.requisition.service.RequisitionAccess;
+import com.group2.rms.talentpool.service.TalentPoolService;
 import com.group2.rms.user.entity.Role;
 import com.group2.rms.user.entity.User;
 import com.group2.rms.user.repository.UserRepository;
@@ -44,7 +45,8 @@ class TalentPoolBookmarkTests {
     @Mock ApplicationAccess access;
     @Mock UserRepository users;
     @Mock CvStorage storage;
-    @InjectMocks TalentPoolService pool;
+    @InjectMocks
+    TalentPoolService pool;
     User hm;
     Candidate candidate;
     Application application;

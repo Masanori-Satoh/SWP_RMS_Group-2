@@ -1,8 +1,8 @@
 package com.group2.rms.candidate.talentpool;
 
-import com.group2.rms.candidate.domain.repository.ApplicationRepository;
-import com.group2.rms.candidate.domain.repository.CandidateRepository;
-import com.group2.rms.candidate.domain.rule.ApplicationAccess;
+import com.group2.rms.candidate.repository.ApplicationRepository;
+import com.group2.rms.candidate.repository.CandidateRepository;
+import com.group2.rms.candidate.validator.ApplicationAccess;
 import com.group2.rms.interview.entity.InterviewFinalResult;
 import com.group2.rms.interview.repository.*;
 import com.group2.rms.user.entity.User;

@@ -1,8 +1,8 @@
 package com.group2.rms.jobposting.controller;
 
-import com.group2.rms.candidate.talentpool.exception.TalentPoolException;
-import com.group2.rms.candidate.talentpool.service.RecruitmentEmailService;
-import com.group2.rms.candidate.talentpool.service.TalentPoolService;
+import com.group2.rms.talentpool.exception.TalentPoolException;
+import com.group2.rms.talentpool.service.RecruitmentEmailService;
+import com.group2.rms.talentpool.service.TalentPoolService;
 import com.group2.rms.core.config.SecurityConfig;
 import com.group2.rms.core.dto.FilterOption;
 import com.group2.rms.core.exception.ResourceNotFoundException;
@@ -40,7 +40,6 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;

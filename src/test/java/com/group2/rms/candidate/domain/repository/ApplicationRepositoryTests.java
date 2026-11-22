@@ -1,7 +1,8 @@
 package com.group2.rms.candidate.domain.repository;
 
-import com.group2.rms.candidate.domain.entity.Application;
-import com.group2.rms.candidate.domain.entity.Candidate;
+import com.group2.rms.candidate.entity.Application;
+import com.group2.rms.candidate.entity.Candidate;
+import com.group2.rms.candidate.repository.ApplicationRepository;
 import com.group2.rms.jobposting.entity.JobPosting;
 import com.group2.rms.jobposting.service.JobPostingAccess;
 import com.group2.rms.requisition.entity.JobRequisition;

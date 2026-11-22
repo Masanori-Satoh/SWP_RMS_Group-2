@@ -1,0 +1,8 @@
+package com.group2.rms.talentpool.exception;
+import com.group2.rms.core.exception.BaseBusinessException;
+public class RecruitmentEmailException extends BaseBusinessException {
+    public RecruitmentEmailException() {
+        super("Đã lưu dữ liệu nhưng hệ thống gửi Email đang gián đoạn. Nhân sự có thể bấm Gửi lại Email.", "RECRUITMENT_EMAIL_FAILED");
+    }
+}
+

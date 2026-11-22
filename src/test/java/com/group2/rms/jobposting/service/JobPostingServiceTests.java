@@ -2,8 +2,8 @@ package com.group2.rms.jobposting.service;
 
 import com.group2.rms.admin.entity.AuditLog;
 import com.group2.rms.admin.repository.AuditLogRepository;
-import com.group2.rms.candidate.domain.repository.ApplicationRepository;
-import com.group2.rms.candidate.talentpool.service.TalentPoolService;
+import com.group2.rms.candidate.repository.ApplicationRepository;
+import com.group2.rms.talentpool.service.TalentPoolService;
 import com.group2.rms.core.dto.FilterOption;
 import com.group2.rms.core.exception.ResourceNotFoundException;
 import com.group2.rms.jobposting.dto.InternalJobPostingDetailResponse;
@@ -36,7 +36,6 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;

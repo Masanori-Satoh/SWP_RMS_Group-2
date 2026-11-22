@@ -1,7 +1,7 @@
 package com.group2.rms.jobposting.integration;
 
-import com.group2.rms.candidate.domain.entity.Application;
-import com.group2.rms.candidate.domain.entity.Candidate;
+import com.group2.rms.candidate.entity.Application;
+import com.group2.rms.candidate.entity.Candidate;
 import com.group2.rms.core.dto.FilterOption;
 import com.group2.rms.jobposting.dto.InternalJobPostingResponse;
 import com.group2.rms.jobposting.dto.JobPostingSearchRequest;
@@ -34,11 +34,9 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;

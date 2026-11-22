@@ -1,7 +1,7 @@
 package com.group2.rms.candidate.infra.cv;
 
-import com.group2.rms.candidate.infra.cv.LocalCvStorage;
-import com.group2.rms.candidate.infra.cv.StoredFile;
+import com.group2.rms.candidate.storage.LocalCvStorage;
+import com.group2.rms.candidate.storage.StoredFile;
 import com.group2.rms.core.exception.ResourceNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

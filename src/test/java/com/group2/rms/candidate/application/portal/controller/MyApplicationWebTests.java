@@ -1,11 +1,12 @@
 package com.group2.rms.candidate.application.portal.controller;
 
-import com.group2.rms.candidate.application.portal.dto.MyApplicationListResponse;
-import com.group2.rms.candidate.application.portal.dto.MyApplicationResponse;
-import com.group2.rms.candidate.application.portal.dto.MyApplicationStep;
-import com.group2.rms.candidate.application.portal.exception.ApplicationWithdrawalException;
-import com.group2.rms.candidate.application.portal.service.MyApplicationService;
-import com.group2.rms.candidate.infra.cv.ApplicationCv;
+import com.group2.rms.candidate.dto.MyApplicationListResponse;
+import com.group2.rms.candidate.dto.MyApplicationResponse;
+import com.group2.rms.candidate.dto.MyApplicationStep;
+import com.group2.rms.candidate.exception.ApplicationWithdrawalException;
+import com.group2.rms.candidate.service.MyApplicationService;
+import com.group2.rms.candidate.controller.MyApplicationController;
+import com.group2.rms.candidate.storage.ApplicationCv;
 import com.group2.rms.core.config.SecurityConfig;
 import com.group2.rms.core.exception.ResourceNotFoundException;
 import com.group2.rms.core.security.DatabaseUserDetailsService;

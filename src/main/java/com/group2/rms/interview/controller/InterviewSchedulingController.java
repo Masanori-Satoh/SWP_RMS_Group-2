@@ -1,8 +1,8 @@
 package com.group2.rms.interview.controller;
 
-import com.group2.rms.candidate.domain.entity.Application;
-import com.group2.rms.candidate.talentpool.service.RecruitmentEmailService;
-import com.group2.rms.candidate.domain.rule.ApplicationStatusException;
+import com.group2.rms.candidate.entity.Application;
+import com.group2.rms.talentpool.service.RecruitmentEmailService;
+import com.group2.rms.candidate.exception.ApplicationStatusException;
 import com.group2.rms.interview.dto.InterviewScheduleRequest;
 import com.group2.rms.interview.dto.InterviewScheduleResponse;
 import com.group2.rms.interview.dto.PanelMemberResponse;

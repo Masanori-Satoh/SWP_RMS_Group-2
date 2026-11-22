@@ -1,9 +1,10 @@
 package com.group2.rms.candidate.application.portal.service;
 
-import com.group2.rms.candidate.application.portal.dto.CandidateDetailsRequest;
-import com.group2.rms.candidate.domain.entity.Candidate;
-import com.group2.rms.candidate.application.portal.exception.CandidateProfileException;
-import com.group2.rms.candidate.domain.repository.CandidateRepository;
+import com.group2.rms.candidate.dto.UpdateCandidateProfileRequest;
+import com.group2.rms.candidate.entity.Candidate;
+import com.group2.rms.candidate.exception.CandidateProfileException;
+import com.group2.rms.candidate.repository.CandidateRepository;
+import com.group2.rms.candidate.service.CandidateProfileService;
 import com.group2.rms.core.exception.ResourceNotFoundException;
 import com.group2.rms.user.dto.UpdateProfileRequest;
 import com.group2.rms.user.dto.UserProfileResponse;
@@ -45,7 +46,7 @@ class CandidateProfileServiceTests {
         when(candidates.findByAccount_UsernameIgnoreCase("an.vo")).thenReturn(Optional.of(candidate));
         UpdateProfileRequest account = new UpdateProfileRequest("Võ Thành An", "0901234567");
 
-        service.update("an.vo", account, new CandidateDetailsRequest(
+        service.update("an.vo", account, new UpdateCandidateProfileRequest(
                 LocalDate.of(1999, 4, 12), "Nữ", "  Số 1 Lê Lợi  ", " https://linkedin.com/in/an ", "   ", " an@new.test "));
 
         verify(userProfiles).updateCandidateProfile("an.vo", account, "an@new.test");
@@ -62,7 +63,7 @@ class CandidateProfileServiceTests {
         when(candidates.findByAccount_UsernameIgnoreCase("an.vo")).thenReturn(Optional.of(candidate));
 
         service.update("an.vo", new UpdateProfileRequest("Võ Thành An", null),
-                new CandidateDetailsRequest(null, "", "", "", "", null));
+                new UpdateCandidateProfileRequest(null, "", "", "", "", null));
 
         assertEquals("TopCV", candidate.getCandidateSource());
         assertTrue(candidate.isPotential());
@@ -76,11 +77,11 @@ class CandidateProfileServiceTests {
         when(candidates.findByAccount_UsernameIgnoreCase("an.vo")).thenReturn(Optional.of(candidate));
         UpdateProfileRequest account = new UpdateProfileRequest("Võ Thành An", null);
 
-        service.update("an.vo", account, new CandidateDetailsRequest(null, "Male", null, null, null, null));
+        service.update("an.vo", account, new UpdateCandidateProfileRequest(null, "Male", null, null, null, null));
         assertEquals("Male", candidate.getGender());
 
         var error = assertThrows(CandidateProfileException.class, () -> service.update("an.vo", account,
-                new CandidateDetailsRequest(null, "X", null, null, null, null)));
+                new UpdateCandidateProfileRequest(null, "X", null, null, null, null)));
         assertEquals("gender", error.getField());
         assertEquals("Male", candidate.getGender());
         verify(userProfiles, times(1)).updateCandidateProfile("an.vo", account, null);
@@ -91,7 +92,7 @@ class CandidateProfileServiceTests {
         when(candidates.findByAccount_UsernameIgnoreCase("hr_lan")).thenReturn(Optional.empty());
         assertThrows(ResourceNotFoundException.class, () -> service.get("hr_lan"));
         assertThrows(ResourceNotFoundException.class, () -> service.update("hr_lan",
-                new UpdateProfileRequest("Lan", null), new CandidateDetailsRequest(null, null, null, null, null, null)));
+                new UpdateProfileRequest("Lan", null), new UpdateCandidateProfileRequest(null, null, null, null, null, null)));
         verifyNoInteractions(userProfiles);
     }
 }

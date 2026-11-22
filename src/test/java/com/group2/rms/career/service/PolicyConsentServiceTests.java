@@ -1,7 +1,7 @@
 package com.group2.rms.career.service;
 
-import com.group2.rms.candidate.domain.entity.Candidate;
-import com.group2.rms.candidate.domain.repository.CandidateRepository;
+import com.group2.rms.candidate.entity.Candidate;
+import com.group2.rms.candidate.repository.CandidateRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

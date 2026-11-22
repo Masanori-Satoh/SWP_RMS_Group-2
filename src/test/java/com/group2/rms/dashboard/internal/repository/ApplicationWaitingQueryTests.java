@@ -1,6 +1,6 @@
 package com.group2.rms.dashboard.internal.repository;
 
-import com.group2.rms.candidate.domain.repository.ApplicationRepository;
+import com.group2.rms.candidate.repository.ApplicationRepository;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

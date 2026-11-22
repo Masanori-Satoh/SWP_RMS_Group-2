@@ -34,9 +34,9 @@
 <!-- FILE_STATS_START -->
 | File | Thêm | Xóa | Nội dung |
 | --- | ---: | ---: | --- |
-| `src/main/java/com/group2/rms/candidate/talentpool/dto/TalentPoolRecommendationResponse.java` | +29 | −1 | Thêm liên hệ/stateKey và helper hiển thị, constructor tương thích. |
-| `src/main/java/com/group2/rms/candidate/talentpool/service/TalentPoolService.java` | +3 | −1 | Map email/điện thoại/trạng thái từ dữ liệu và review hiện hữu. |
-| `src/main/java/com/group2/rms/candidate/talentpool/controller/TalentPoolController.java` | +2 | −5 | Bỏ tìm kiếm keyword trên trang, giữ phân trang/tổng số. |
+| `../../../src/main/java/com/group2/rms` | +29 | −1 | Thêm liên hệ/stateKey và helper hiển thị, constructor tương thích. |
+| `../../../src/main/java/com/group2/rms` | +3 | −1 | Map email/điện thoại/trạng thái từ dữ liệu và review hiện hữu. |
+| `../../../src/main/java/com/group2/rms` | +2 | −5 | Bỏ tìm kiếm keyword trên trang, giữ phân trang/tổng số. |
 | `src/main/resources/templates/talent-pool/recommendations.html` | +40 | −23 | Bảng 7 cột, rỗng gọn, không search/filter; chuyển link HM lên đầu. |
 | `src/main/resources/static/css/pages/talent-pool-workspace.css` | +30 | −0 | Alias HR riêng cho cột, liên hệ, badge và nút theo quyền. |
 | `src/test/java/com/group2/rms/candidate/application/pipeline/controller/ApplicationPipelineWebTests.java` | +47 | −0 | Kiểm tra bảng/liên hệ/quyền/nút khóa/rỗng/không search và fixture. |

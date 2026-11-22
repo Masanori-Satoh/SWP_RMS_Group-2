@@ -1,7 +1,8 @@
 package com.group2.rms.candidate.talentpool.repository;
 
-import com.group2.rms.candidate.domain.entity.Application;
-import com.group2.rms.candidate.domain.repository.ApplicationRepository;
+import com.group2.rms.candidate.entity.Application;
+import com.group2.rms.candidate.repository.ApplicationRepository;
+import com.group2.rms.talentpool.repository.TalentPoolApplicationRepository;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +23,8 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 @Transactional
 class TalentPoolClosureQueryTests {
 
-    @Autowired TalentPoolApplicationRepository pool;
+    @Autowired
+    TalentPoolApplicationRepository pool;
     @Autowired ApplicationRepository applications;
     @Autowired EntityManager entityManager;
 

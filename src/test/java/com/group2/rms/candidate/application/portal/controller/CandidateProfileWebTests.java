@@ -1,9 +1,10 @@
 package com.group2.rms.candidate.application.portal.controller;
 
-import com.group2.rms.candidate.application.portal.dto.CandidateDetailsRequest;
-import com.group2.rms.candidate.application.portal.dto.CandidateProfileResponse;
-import com.group2.rms.candidate.application.portal.exception.CandidateProfileException;
-import com.group2.rms.candidate.application.portal.service.CandidateProfileService;
+import com.group2.rms.candidate.dto.UpdateCandidateProfileRequest;
+import com.group2.rms.candidate.dto.CandidateProfileResponse;
+import com.group2.rms.candidate.exception.CandidateProfileException;
+import com.group2.rms.candidate.service.CandidateProfileService;
+import com.group2.rms.candidate.controller.CandidateProfileController;
 import com.group2.rms.core.config.SecurityConfig;
 import com.group2.rms.core.security.DatabaseUserDetailsService;
 import com.group2.rms.user.dto.UpdateProfileRequest;
@@ -124,7 +125,7 @@ class CandidateProfileWebTests {
                 .andExpect(flash().attribute("successMessage", "Đã lưu hồ sơ."));
 
         ArgumentCaptor<UpdateProfileRequest> account = ArgumentCaptor.forClass(UpdateProfileRequest.class);
-        ArgumentCaptor<CandidateDetailsRequest> details = ArgumentCaptor.forClass(CandidateDetailsRequest.class);
+        ArgumentCaptor<UpdateCandidateProfileRequest> details = ArgumentCaptor.forClass(UpdateCandidateProfileRequest.class);
         verify(candidateProfiles).update(eq("an.vo"), account.capture(), details.capture());
         assertEquals("Võ Thành An", account.getValue().fullName());
         assertEquals("new@example.test", details.getValue().email());

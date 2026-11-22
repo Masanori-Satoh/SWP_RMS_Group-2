@@ -1,14 +1,15 @@
 package com.group2.rms.candidate.application.portal.service;
 
-import com.group2.rms.candidate.application.portal.dto.MyApplicationListResponse;
-import com.group2.rms.candidate.application.portal.dto.MyApplicationResponse;
-import com.group2.rms.candidate.application.portal.dto.MyApplicationStep;
-import com.group2.rms.candidate.domain.entity.Application;
-import com.group2.rms.candidate.application.portal.exception.ApplicationWithdrawalException;
-import com.group2.rms.candidate.domain.repository.ApplicationRepository;
-import com.group2.rms.candidate.application.portal.repository.MyApplicationRepository;
-import com.group2.rms.candidate.infra.cv.ApplicationCv;
-import com.group2.rms.candidate.infra.cv.CvStorage;
+import com.group2.rms.candidate.dto.MyApplicationListResponse;
+import com.group2.rms.candidate.dto.MyApplicationResponse;
+import com.group2.rms.candidate.dto.MyApplicationStep;
+import com.group2.rms.candidate.entity.Application;
+import com.group2.rms.candidate.exception.ApplicationWithdrawalException;
+import com.group2.rms.candidate.repository.ApplicationRepository;
+import com.group2.rms.candidate.repository.MyApplicationRepository;
+import com.group2.rms.candidate.service.MyApplicationService;
+import com.group2.rms.candidate.storage.ApplicationCv;
+import com.group2.rms.candidate.storage.CvStorage;
 import com.group2.rms.core.exception.ResourceNotFoundException;
 import com.group2.rms.core.security.CurrentUserService;
 import com.group2.rms.core.web.TimelineItem;

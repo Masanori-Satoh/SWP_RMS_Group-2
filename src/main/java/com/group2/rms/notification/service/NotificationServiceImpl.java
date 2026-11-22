@@ -1,7 +1,7 @@
 package com.group2.rms.notification.service;
 
-import com.group2.rms.candidate.domain.entity.Application;
-import com.group2.rms.candidate.domain.rule.ApplicationStatusLabels;
+import com.group2.rms.candidate.entity.Application;
+import com.group2.rms.candidate.dto.ApplicationStatusLabels;
 import com.group2.rms.core.exception.ResourceNotFoundException;
 import com.group2.rms.interview.entity.InterviewPanel;
 import com.group2.rms.interview.entity.InterviewSchedule;

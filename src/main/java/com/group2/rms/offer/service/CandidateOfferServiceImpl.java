@@ -1,6 +1,6 @@
 package com.group2.rms.offer.service;
 
-import com.group2.rms.candidate.domain.repository.ApplicationRepository;
+import com.group2.rms.candidate.repository.ApplicationRepository;
 import com.group2.rms.core.exception.ResourceNotFoundException;
 import com.group2.rms.core.security.CurrentUserService;
 import com.group2.rms.offer.dto.CandidateOfferDetailResponse;

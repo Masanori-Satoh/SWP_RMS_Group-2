@@ -1,6 +1,6 @@
 package com.group2.rms.requisition.integration;
 
-import com.group2.rms.candidate.talentpool.exception.TalentPoolException;
+import com.group2.rms.talentpool.exception.TalentPoolException;
 import com.group2.rms.core.exception.ResourceNotFoundException;
 import com.group2.rms.jobposting.dto.JobPostingRequest;
 import com.group2.rms.jobposting.entity.JobPosting;

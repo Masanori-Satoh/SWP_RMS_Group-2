@@ -1,12 +1,12 @@
 package com.group2.rms.candidate.talentpool;
 
-import com.group2.rms.candidate.talentpool.service.RecruitmentEmailService;
-import com.group2.rms.candidate.talentpool.controller.TalentPoolController;
-import com.group2.rms.candidate.talentpool.exception.TalentPoolException;
-import com.group2.rms.candidate.talentpool.service.TalentPoolService;
-import com.group2.rms.candidate.talentpool.dto.TalentPoolBookmarkRequest;
-import com.group2.rms.candidate.talentpool.dto.TalentPoolBookmarkResponse;
-import com.group2.rms.candidate.talentpool.dto.TalentPoolNoteResponse;
+import com.group2.rms.talentpool.service.RecruitmentEmailService;
+import com.group2.rms.talentpool.controller.TalentPoolController;
+import com.group2.rms.talentpool.exception.TalentPoolException;
+import com.group2.rms.talentpool.service.TalentPoolService;
+import com.group2.rms.talentpool.dto.TalentPoolBookmarkRequest;
+import com.group2.rms.talentpool.dto.TalentPoolBookmarkResponse;
+import com.group2.rms.talentpool.dto.TalentPoolNoteResponse;
 import com.group2.rms.core.config.SecurityConfig;
 import com.group2.rms.core.security.*;
 import com.group2.rms.interview.controller.InterviewResultController;

@@ -1,15 +1,15 @@
 package com.group2.rms.candidate.application.pipeline.repository;
 
-import com.group2.rms.candidate.application.pipeline.dto.ApplicationPipelineResponse;
-import com.group2.rms.candidate.application.pipeline.dto.ApplicationSearch;
-import com.group2.rms.candidate.application.pipeline.dto.JobPostingOption;
-import com.group2.rms.candidate.domain.entity.Application;
-import com.group2.rms.candidate.domain.repository.ApplicationRepository;
-import com.group2.rms.candidate.domain.repository.ApplicationReviewRepository;
-import com.group2.rms.candidate.domain.rule.ApplicationProgressFacts;
-import com.group2.rms.candidate.domain.rule.ApplicationProgressResolver;
-import com.group2.rms.candidate.domain.rule.ApplicationProgressStep;
-import com.group2.rms.candidate.domain.rule.ApplicationScope;
+import com.group2.rms.candidate.dto.ApplicationPipelineResponse;
+import com.group2.rms.candidate.dto.JobPostingOption;
+import com.group2.rms.candidate.entity.Application;
+import com.group2.rms.candidate.repository.ApplicationPipelineRepository;
+import com.group2.rms.candidate.repository.ApplicationRepository;
+import com.group2.rms.candidate.repository.ApplicationReviewRepository;
+import com.group2.rms.candidate.dto.ApplicationProgressFacts;
+import com.group2.rms.candidate.service.ApplicationProgressResolver;
+import com.group2.rms.candidate.entity.ApplicationProgressStep;
+import com.group2.rms.candidate.dto.ApplicationScope;
 import com.group2.rms.user.entity.User;
 import com.group2.rms.user.repository.UserRepository;
 import jakarta.persistence.EntityManager;
@@ -38,7 +38,8 @@ import static org.junit.jupiter.api.Assertions.*;
 class ApplicationPipelineQueryTests {
 
     @Autowired ApplicationRepository applications;
-    @Autowired ApplicationPipelineRepository pipelineQueries;
+    @Autowired
+    ApplicationPipelineRepository pipelineQueries;
     @Autowired ApplicationReviewRepository reviews;
     @Autowired UserRepository users;
     @Autowired EntityManager entityManager;

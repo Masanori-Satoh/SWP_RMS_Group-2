@@ -1,6 +1,7 @@
 package com.group2.rms.candidate.domain.rule;
 
-import com.group2.rms.candidate.domain.entity.Application;
+import com.group2.rms.candidate.entity.Application;
+import com.group2.rms.candidate.validator.ApplicationAccess;
 import com.group2.rms.jobposting.entity.JobPosting;
 import com.group2.rms.requisition.entity.JobRequisition;
 import com.group2.rms.requisition.service.RequisitionAccess;

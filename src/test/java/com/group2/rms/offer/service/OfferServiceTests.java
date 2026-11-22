@@ -1,7 +1,7 @@
 package com.group2.rms.offer.service;
 
-import com.group2.rms.candidate.domain.entity.Application;
-import com.group2.rms.candidate.domain.repository.ApplicationRepository;
+import com.group2.rms.candidate.entity.Application;
+import com.group2.rms.candidate.repository.ApplicationRepository;
 import com.group2.rms.offer.dto.CreateOfferRequest;
 import com.group2.rms.offer.dto.OfferResponse;
 import com.group2.rms.offer.dto.OfferResponse.EmailStatus;
@@ -18,7 +18,7 @@ import com.group2.rms.offer.repository.OfferProposalRepository;
 import com.group2.rms.interview.repository.InterviewFinalResultRepository;
 import com.group2.rms.interview.entity.InterviewFinalResult;
 import com.group2.rms.interview.entity.InterviewSchedule;
-import com.group2.rms.candidate.domain.entity.Candidate;
+import com.group2.rms.candidate.entity.Candidate;
 import com.group2.rms.jobposting.entity.JobPosting;
 import com.group2.rms.requisition.entity.JobRequisition;
 import com.group2.rms.user.entity.Department;

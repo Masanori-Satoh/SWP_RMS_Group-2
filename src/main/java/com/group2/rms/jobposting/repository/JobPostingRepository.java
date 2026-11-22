@@ -1,6 +1,6 @@
 package com.group2.rms.jobposting.repository;
 
-import com.group2.rms.candidate.domain.repository.ApplicationRepository;
+import com.group2.rms.candidate.repository.ApplicationRepository;
 import com.group2.rms.jobposting.entity.JobPosting;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;

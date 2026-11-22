@@ -1,5 +1,6 @@
 package com.group2.rms.candidate.talentpool.repository;
 
+import com.group2.rms.talentpool.repository.TalentPoolAuditRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;

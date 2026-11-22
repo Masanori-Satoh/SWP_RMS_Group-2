@@ -1,9 +1,10 @@
 package com.group2.rms.candidate.talentpool.service;
 
-import com.group2.rms.candidate.domain.rule.ApplicationStatusService;
-import com.group2.rms.candidate.talentpool.exception.TalentPoolException;
-import com.group2.rms.candidate.talentpool.repository.TalentPoolAuditRepository;
+import com.group2.rms.candidate.service.ApplicationStatusService;
+import com.group2.rms.talentpool.exception.TalentPoolException;
+import com.group2.rms.talentpool.repository.TalentPoolAuditRepository;
 import com.group2.rms.core.security.CurrentUserService;
+import com.group2.rms.talentpool.service.RecruitmentEmailService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.jdbc.core.JdbcTemplate;
