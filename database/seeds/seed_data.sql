@@ -207,11 +207,6 @@ INSERT INTO [User] (UserId, RoleId, Username, PasswordHash, Email, FullName, Pho
     (222, 6, N'quan.hoang', N'$2a$10$p.RWJeHxArmCbQBg3GNXEew66veoolEXULwkrjzeoof8Me1dAD8PO', N'quan.hoang@gmail.com', N'Hoàng Thành Quân', N'0915670826', NULL, NULL, N'Active', DATEADD(MINUTE, -930, @D0), NULL);
 SET IDENTITY_INSERT [User] OFF;
 
--- SystemConfig (2 dòng)
-INSERT INTO SystemConfig (ConfigKey, ConfigValue, [Description], UpdatedAt) VALUES
-    (N'SME_COMPANY_NAME', N'RMS Technology Solutions Vietnam', N'Tên doanh nghiệp triển khai hệ thống RMS', DATEADD(MINUTE, -172320, @D0)),
-    (N'SMTP_HOST', N'smtp.gmail.com', N'Máy chủ gửi email tự động cho ứng viên', DATEADD(MINUTE, -172320, @D0));
-
 -- JobRequisition (14 dòng)
 SET IDENTITY_INSERT JobRequisition ON;
 INSERT INTO JobRequisition (RequisitionId, Title, DepartmentId, HiringManagerId, CreatedBy, ExpectedStaffingDate, OriginalRequisitionId, NumberOfPositions, EmploymentType, MinSalary, MaxSalary, ReasonForHiring, JobDescription, RequirementDetails, WorkModel, WorkLocation, ApprovalStatus, SubmittedAt, ClosedAt, CreatedAt, UpdatedAt) VALUES
@@ -2044,7 +2039,7 @@ INSERT INTO [Notification] (RecipientId, ActorId, Title, Content, EventType, Ref
     (3, 216, N'Ứng viên đã chấp nhận thư mời', N'Nguyễn Văn Sơn đã phản hồi thư mời.', 'OFFER_ACCEPTED', NULL, '32', N'/offers/32', 0, NULL, 'OFFER_RESP_ACC_32', DATEADD(MINUTE, 1, @D0)),
     (11, 216, N'Ứng viên đã chấp nhận thư mời', N'Nguyễn Văn Sơn đã phản hồi thư mời.', 'OFFER_ACCEPTED', NULL, '32', N'/applications/119', 0, NULL, 'OFFER_RESP_HM_ACC_32', DATEADD(MINUTE, 1, @D0));
 
--- AuditLog (191 dòng)
+-- AuditLog (190 dòng)
 INSERT INTO AuditLog (UserId, [Action], EntityName, EntityId, OldValue, NewValue, IpAddress, [Timestamp]) VALUES
     (1, N'LOGIN', N'User', N'1', NULL, N'Đăng nhập thành công', N'192.168.1.20', DATEADD(MINUTE, -42714, @D0)),
     (1, N'LOGIN', N'User', N'1', NULL, N'Đăng nhập thành công', N'192.168.1.20', DATEADD(MINUTE, -9594, @D0)),
@@ -2075,7 +2070,6 @@ INSERT INTO AuditLog (UserId, [Action], EntityName, EntityId, OldValue, NewValue
     (1, N'UPDATE', N'Department', N'5', N'Active', N'Inactive', N'192.168.1.20', DATEADD(MINUTE, -35160, @D0)),
     (1, N'CREATE', N'User', N'11', NULL, N'Tạo tài khoản hm_minh (Hiring Manager)', N'192.168.1.20', DATEADD(MINUTE, -143460, @D0)),
     (1, N'UPDATE', N'User', N'12', N'Active', N'Inactive', N'192.168.1.20', DATEADD(MINUTE, -28200, @D0)),
-    (1, N'UPDATE', N'SystemConfig', N'SMTP_HOST', N'smtp.office365.com', N'smtp.gmail.com', N'192.168.1.20', DATEADD(MINUTE, -85500, @D0)),
     (1, N'UPDATE', N'PolicyDocument', N'privacy', NULL, N'Chính sách bảo mật: thay file privacy.pdf (120 KB)', N'192.168.1.20', DATEADD(MINUTE, -56940, @D0)),
     (5, N'CREATE', N'JobRequisition', N'1', NULL, N'Tạo yêu cầu: Senior Java Backend Engineer · Pending_Director', N'192.168.1.20', DATEADD(MINUTE, -107460, @D0)),
     (2, N'UPDATE', N'JobRequisition', N'1', N'Pending_Director', N'Approved', N'192.168.1.20', DATEADD(MINUTE, -103080, @D0)),
@@ -2095,9 +2089,9 @@ INSERT INTO AuditLog (UserId, [Action], EntityName, EntityId, OldValue, NewValue
     (11, N'CREATE', N'JobRequisition', N'9', NULL, N'Tạo yêu cầu: Data Analyst · Draft', N'192.168.1.20', DATEADD(MINUTE, -900, @D0)),
     (6, N'CREATE', N'JobRequisition', N'10', NULL, N'Tạo yêu cầu: Sales Admin bán thời gian · Pending_Director', N'192.168.1.20', DATEADD(MINUTE, -28260, @D0)),
     (2, N'UPDATE', N'JobRequisition', N'10', N'Pending_Director', N'Rejected', N'192.168.1.20', DATEADD(MINUTE, -25260, @D0)),
-    (5, N'CREATE', N'JobRequisition', N'11', NULL, N'Tạo yêu cầu: Mobile Developer (Flutter) · Draft', N'192.168.1.20', DATEADD(MINUTE, -42660, @D0));
+    (5, N'CREATE', N'JobRequisition', N'11', NULL, N'Tạo yêu cầu: Mobile Developer (Flutter) · Draft', N'192.168.1.20', DATEADD(MINUTE, -42660, @D0)),
+    (6, N'CREATE', N'JobRequisition', N'12', NULL, N'Tạo yêu cầu: Customer Support Executive · Pending_Director', N'192.168.1.20', DATEADD(MINUTE, -157860, @D0));
 INSERT INTO AuditLog (UserId, [Action], EntityName, EntityId, OldValue, NewValue, IpAddress, [Timestamp]) VALUES
-    (6, N'CREATE', N'JobRequisition', N'12', NULL, N'Tạo yêu cầu: Customer Support Executive · Pending_Director', N'192.168.1.20', DATEADD(MINUTE, -157860, @D0)),
     (2, N'UPDATE', N'JobRequisition', N'12', N'Pending_Director', N'Approved', N'192.168.1.20', DATEADD(MINUTE, -153480, @D0)),
     (3, N'UPDATE', N'JobRequisition', N'12', N'Approved', N'Closed', N'192.168.1.20', DATEADD(MINUTE, -16260, @D0)),
     (6, N'CREATE', N'JobRequisition', N'13', NULL, N'Tạo yêu cầu: Customer Support Executive · Pending_Director', N'192.168.1.20', DATEADD(MINUTE, -8100, @D0)),
@@ -2146,9 +2140,9 @@ INSERT INTO AuditLog (UserId, [Action], EntityName, EntityId, OldValue, NewValue
     (122, N'UPDATE', N'Application', N'19', N'Applied', N'Withdrawn', N'192.168.1.20', DATEADD(MINUTE, -114633, @D0)),
     (3, N'UPDATE', N'Application', N'20', N'Applied', N'PostingClosed', N'192.168.1.20', DATEADD(MINUTE, -70980, @D0)),
     (3, N'UPDATE', N'Application', N'20', NULL, N'MailSent:PostingClosed', N'192.168.1.20', DATEADD(MINUTE, -70975, @D0)),
-    (3, N'UPDATE', N'Application', N'21', N'HR_Passed', N'PostingClosed', N'192.168.1.20', DATEADD(MINUTE, -70980, @D0));
+    (3, N'UPDATE', N'Application', N'21', N'HR_Passed', N'PostingClosed', N'192.168.1.20', DATEADD(MINUTE, -70980, @D0)),
+    (3, N'UPDATE', N'Application', N'21', NULL, N'MailFailed:PostingClosed', N'192.168.1.20', DATEADD(MINUTE, -70975, @D0));
 INSERT INTO AuditLog (UserId, [Action], EntityName, EntityId, OldValue, NewValue, IpAddress, [Timestamp]) VALUES
-    (3, N'UPDATE', N'Application', N'21', NULL, N'MailFailed:PostingClosed', N'192.168.1.20', DATEADD(MINUTE, -70975, @D0)),
     (4, N'UPDATE', N'InterviewSchedule', N'9', NULL, N'MailSent:InterviewInvitation', N'192.168.1.20', DATEADD(MINUTE, -29038, @D0)),
     (3, N'UPDATE', N'InterviewSchedule', N'10', NULL, N'MailSent:InterviewInvitation', N'192.168.1.20', DATEADD(MINUTE, -11698, @D0)),
     (4, N'UPDATE', N'InterviewSchedule', N'11', NULL, N'MailSent:InterviewInvitation', N'192.168.1.20', DATEADD(MINUTE, -37738, @D0)),
@@ -2197,9 +2191,9 @@ INSERT INTO AuditLog (UserId, [Action], EntityName, EntityId, OldValue, NewValue
     (4, N'UPDATE', N'InterviewSchedule', N'49', NULL, N'MailSent:InterviewInvitation', N'192.168.1.20', DATEADD(MINUTE, -32286, @D0)),
     (3, N'UPDATE', N'InterviewSchedule', N'50', NULL, N'MailSent:InterviewInvitation', N'192.168.1.20', DATEADD(MINUTE, -19220, @D0)),
     (4, N'UPDATE', N'InterviewSchedule', N'51', NULL, N'MailSent:InterviewInvitation', N'192.168.1.20', DATEADD(MINUTE, -38072, @D0)),
-    (3, N'UPDATE', N'InterviewSchedule', N'52', NULL, N'MailSent:InterviewInvitation', N'192.168.1.20', DATEADD(MINUTE, -34074, @D0));
+    (3, N'UPDATE', N'InterviewSchedule', N'52', NULL, N'MailSent:InterviewInvitation', N'192.168.1.20', DATEADD(MINUTE, -34074, @D0)),
+    (4, N'UPDATE', N'InterviewSchedule', N'53', NULL, N'MailSent:InterviewInvitation', N'192.168.1.20', DATEADD(MINUTE, -43388, @D0));
 INSERT INTO AuditLog (UserId, [Action], EntityName, EntityId, OldValue, NewValue, IpAddress, [Timestamp]) VALUES
-    (4, N'UPDATE', N'InterviewSchedule', N'53', NULL, N'MailSent:InterviewInvitation', N'192.168.1.20', DATEADD(MINUTE, -43388, @D0)),
     (3, N'UPDATE', N'InterviewSchedule', N'54', NULL, N'MailSent:InterviewInvitation', N'192.168.1.20', DATEADD(MINUTE, -48341, @D0)),
     (4, N'UPDATE', N'InterviewSchedule', N'55', NULL, N'MailSent:InterviewInvitation', N'192.168.1.20', DATEADD(MINUTE, -31051, @D0)),
     (3, N'UPDATE', N'InterviewSchedule', N'56', NULL, N'MailSent:InterviewInvitation', N'192.168.1.20', DATEADD(MINUTE, -17600, @D0)),

@@ -33,27 +33,40 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.mockito.Mockito.doReturn;
 
-/** SELECT-only verification against the configured SQL Server; never updates schema or account data. */
+/**
+ * SELECT-only verification against the configured SQL Server; never updates
+ * schema or account data.
+ */
 @SpringBootTest(properties = "spring.jpa.hibernate.ddl-auto=none")
 @AutoConfigureMockMvc
 @Transactional(readOnly = true)
 class AdminDashboardIntegrationTests {
-    @Autowired com.group2.rms.admin.service.AuditLogService audit;
-    @Autowired com.group2.rms.admin.repository.AuditLogTargetRepository auditTargets;
-    @MockitoSpyBean AdminDashboardService dashboard;
-    @Autowired DashboardMetricsRepository metrics;
-    @Autowired UserRepository users;
-    @MockitoSpyBean AccountListService accounts;
-    @Autowired JdbcTemplate jdbc;
-    @Autowired MockMvc mvc;
+    @Autowired
+    com.group2.rms.admin.service.AuditLogService audit;
+    @Autowired
+    com.group2.rms.admin.repository.AuditLogTargetRepository auditTargets;
+    @MockitoSpyBean
+    AdminDashboardService dashboard;
+    @Autowired
+    DashboardMetricsRepository metrics;
+    @Autowired
+    UserRepository users;
+    @MockitoSpyBean
+    AccountListService accounts;
+    @Autowired
+    JdbcTemplate jdbc;
+    @Autowired
+    MockMvc mvc;
     private User admin;
 
-    @Test void auditLogQueriesMatchExistingDatabaseRowsWithoutWrites() {
+    @Test
+    void auditLogQueriesMatchExistingDatabaseRowsWithoutWrites() {
         var page = audit.search(null, null, null, "", "", "", 0);
         assertEquals(jdbc.queryForObject("SELECT COUNT_BIG(*) FROM AuditLog", Long.class), page.getTotalElements());
         var actors = audit.actors();
         assertEquals(jdbc.queryForObject("SELECT COUNT(DISTINCT UserId) FROM AuditLog", Integer.class), actors.size());
-        assertEquals(jdbc.queryForObject("SELECT COUNT(DISTINCT EntityName) FROM AuditLog", Integer.class), audit.entities().size());
+        assertEquals(jdbc.queryForObject("SELECT COUNT(DISTINCT EntityName) FROM AuditLog", Integer.class),
+                audit.entities().size());
         if (!actors.isEmpty()) {
             int actorId = actors.getFirst().getId();
             assertEquals(jdbc.queryForObject("SELECT COUNT_BIG(*) FROM AuditLog WHERE UserId=?", Long.class, actorId),
@@ -62,7 +75,8 @@ class AdminDashboardIntegrationTests {
         if (!page.isEmpty()) {
             var day = page.getContent().getFirst().timestamp().toLocalDate();
             assertEquals(jdbc.queryForObject("SELECT COUNT_BIG(*) FROM AuditLog WHERE [Timestamp]>=? AND [Timestamp]<?",
-                    Long.class, Timestamp.valueOf(day.atStartOfDay()), Timestamp.valueOf(day.plusDays(1).atStartOfDay())),
+                    Long.class, Timestamp.valueOf(day.atStartOfDay()),
+                    Timestamp.valueOf(day.plusDays(1).atStartOfDay())),
                     audit.search(day, day, null, "", "", "", 0).getTotalElements());
         }
     }
@@ -70,12 +84,12 @@ class AdminDashboardIntegrationTests {
     @Test void auditTargetNamesResolveAcrossExistingEntityTypesWithoutWrites() {
         var tables = java.util.Map.of("User", "UserId", "Department", "DepartmentId", "Candidate", "CandidateId",
                 "Application", "ApplicationId", "JobRequisition", "RequisitionId", "JobPosting", "JobPostingId",
-                "TalentPoolNote", "NoteId", "InterviewSchedule", "InterviewId", "SystemConfig", "ConfigKey");
+                "TalentPoolNote", "NoteId", "InterviewSchedule", "InterviewId");
         var fixtures = new java.util.ArrayList<com.group2.rms.admin.entity.AuditLog>();
         var existing = new java.util.HashSet<com.group2.rms.admin.repository.AuditLogTargetRepository.Target>();
         tables.forEach((table, column) -> {
             var ids = jdbc.queryForList("SELECT TOP 1 " + column + " FROM [" + table + "] ORDER BY " + column, String.class);
-            String id = ids.isEmpty() ? (table.equals("SystemConfig") ? "__missing__" : "2147483647") : ids.getFirst();
+            String id = ids.isEmpty() ? "2147483647" : ids.getFirst();
             fixtures.add(com.group2.rms.admin.entity.AuditLog.builder().entityName(table).entityId(id).build());
             if (!ids.isEmpty()) existing.add(new com.group2.rms.admin.repository.AuditLogTargetRepository.Target(table, id));
         });
@@ -94,7 +108,8 @@ class AdminDashboardIntegrationTests {
     void currentAdmin() {
         admin = users.findAllWithRoleAndDepartment().stream()
                 .filter(account -> "System Admin".equals(account.getRole().getRoleName())
-                        && "Active".equals(account.getAccountStatus())).findFirst().orElse(null);
+                        && "Active".equals(account.getAccountStatus()))
+                .findFirst().orElse(null);
         assumeTrue(admin != null, "Configured database needs an active System Admin for integration verification");
     }
 
@@ -116,7 +131,8 @@ class AdminDashboardIntegrationTests {
             assertEquals(summary.total(), summary.active() + summary.inactive());
         }
         for (var role : response.roleCounts()) {
-            long sqlCount = jdbc.queryForObject("SELECT COUNT_BIG(*) FROM [User] WHERE RoleId=?", Long.class, role.roleId());
+            long sqlCount = jdbc.queryForObject("SELECT COUNT_BIG(*) FROM [User] WHERE RoleId=?", Long.class,
+                    role.roleId());
             assertEquals(sqlCount, role.count());
             assertEquals(sqlCount, accounts.findAccounts("", role.roleId(), null, "", "name", 0).getTotalElements());
         }
@@ -132,9 +148,11 @@ class AdminDashboardIntegrationTests {
                 + "LEFT JOIN Application a ON a.CandidateId=c.CandidateId", Long.class), summary.total());
         assertEquals(Duration.ofDays(30), Duration.between(summary.from(), summary.to()));
         assertEquals(jdbc.queryForObject("SELECT COUNT_BIG(*) FROM Candidate WHERE CreatedAt >= ? AND CreatedAt <= ?",
-                Long.class, Timestamp.valueOf(summary.from()), Timestamp.valueOf(summary.to())), summary.newLast30Days());
+                Long.class, Timestamp.valueOf(summary.from()), Timestamp.valueOf(summary.to())),
+                summary.newLast30Days());
         int jvmOffsetMinutes = summary.to().atZone(ZoneId.of(summary.timeZone())).getOffset().getTotalSeconds() / 60;
-        assertEquals(jdbc.queryForObject("SELECT DATEPART(TZOFFSET, SYSDATETIMEOFFSET())", Integer.class), jvmOffsetMinutes,
+        assertEquals(jdbc.queryForObject("SELECT DATEPART(TZOFFSET, SYSDATETIMEOFFSET())", Integer.class),
+                jvmOffsetMinutes,
                 "Candidate DATETIME2 assumes the existing JVM and SQL Server local time conventions agree");
 
         Timestamp first = jdbc.queryForObject("SELECT MIN(CreatedAt) FROM Candidate", Timestamp.class);
@@ -150,7 +168,7 @@ class AdminDashboardIntegrationTests {
     @Test
     void renderedDashboardLinksUseStoredIdsAndEveryStatusHasCorrectDestination() throws Exception {
         String html = mvc.perform(get("/dashboard/admin").with(user(admin.getUsername())
-                        .authorities(new SimpleGrantedAuthority(RoleAuthorities.SYSTEM_ADMIN))))
+                .authorities(new SimpleGrantedAuthority(RoleAuthorities.SYSTEM_ADMIN))))
                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
         for (String status : List.of("Active", "Inactive")) {
             assertTrue(html.contains("/admin/accounts?status=" + status + "&amp;page=0"));
@@ -168,11 +186,12 @@ class AdminDashboardIntegrationTests {
     void hrAndHiringManagerRenderTheirOwnDashboardsWithoutAdminSummary() throws Exception {
         for (String roleName : List.of("HR", "Hiring Manager")) {
             var actor = users.findAllWithRoleAndDepartment().stream()
-                    .filter(user -> roleName.equals(user.getRole().getRoleName()) && "Active".equals(user.getAccountStatus()))
+                    .filter(user -> roleName.equals(user.getRole().getRoleName())
+                            && "Active".equals(user.getAccountStatus()))
                     .findFirst().orElseThrow();
             String authority = roleName.equals("HR") ? "ROLE_HR" : "ROLE_HIRING_MANAGER";
             String html = mvc.perform(get("/dashboard/internal").with(user(actor.getUsername())
-                            .authorities(new SimpleGrantedAuthority(authority))))
+                    .authorities(new SimpleGrantedAuthority(authority))))
                     .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
             assertFalse(html.contains("data-summary="));
             assertFalse(html.contains("/js/pages/admin-dashboard.js"));
@@ -191,7 +210,7 @@ class AdminDashboardIntegrationTests {
                     org.springframework.data.domain.PageRequest.of(0, 10), 1))
                     .when(accounts).findAccounts("", null, null, "", "name", 0);
             var result = mvc.perform(get("/admin/accounts").with(user(admin.getUsername())
-                            .authorities(new SimpleGrantedAuthority(RoleAuthorities.SYSTEM_ADMIN))))
+                    .authorities(new SimpleGrantedAuthority(RoleAuthorities.SYSTEM_ADMIN))))
                     .andExpect(status().isOk()).andReturn();
             String html = result.getResponse().getContentAsString(StandardCharsets.UTF_8);
             String body = html.substring(html.indexOf("<tbody>"), html.indexOf("</tbody>"));
@@ -219,25 +238,30 @@ class AdminDashboardIntegrationTests {
     void destinationsSelectFiltersAndPaginationKeepsThem() throws Exception {
         for (String status : List.of("Active", "Inactive")) {
             mvc.perform(get("/admin/accounts").param("status", status)
-                    .with(user(admin.getUsername()).authorities(new SimpleGrantedAuthority(RoleAuthorities.SYSTEM_ADMIN))))
+                    .with(user(admin.getUsername())
+                            .authorities(new SimpleGrantedAuthority(RoleAuthorities.SYSTEM_ADMIN))))
                     .andExpect(status().isOk()).andExpect(model().attribute("selectedStatus", status));
             mvc.perform(get("/admin/candidate-accounts").param("status", status)
-                    .with(user(admin.getUsername()).authorities(new SimpleGrantedAuthority(RoleAuthorities.SYSTEM_ADMIN))))
+                    .with(user(admin.getUsername())
+                            .authorities(new SimpleGrantedAuthority(RoleAuthorities.SYSTEM_ADMIN))))
                     .andExpect(status().isOk()).andExpect(model().attribute("selectedStatus", status));
         }
         for (var role : metrics.internalAccountsByRole()) {
             mvc.perform(get("/admin/accounts").param("roleId", role.roleId().toString())
-                    .with(user(admin.getUsername()).authorities(new SimpleGrantedAuthority(RoleAuthorities.SYSTEM_ADMIN))))
+                    .with(user(admin.getUsername())
+                            .authorities(new SimpleGrantedAuthority(RoleAuthorities.SYSTEM_ADMIN))))
                     .andExpect(status().isOk()).andExpect(model().attribute("selectedRoleId", role.roleId()));
         }
         for (String route : List.of("/admin/accounts", "/admin/candidate-accounts")) {
             String html = mvc.perform(get(route).queryParam("status", "Active").queryParam("sort", "newest")
-                    .with(user(admin.getUsername()).authorities(new SimpleGrantedAuthority(RoleAuthorities.SYSTEM_ADMIN))))
+                    .with(user(admin.getUsername())
+                            .authorities(new SimpleGrantedAuthority(RoleAuthorities.SYSTEM_ADMIN))))
                     .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
             long total = route.endsWith("candidate-accounts")
                     ? accounts.findCandidateAccounts("", "Active", "newest", 0).getTotalElements()
                     : accounts.findAccounts("", null, null, "Active", "newest", 0).getTotalElements();
-            if (total > 10) assertTrue(html.contains("status=Active&amp;sort=newest&amp;page=1"));
+            if (total > 10)
+                assertTrue(html.contains("status=Active&amp;sort=newest&amp;page=1"));
         }
     }
 
@@ -249,19 +273,21 @@ class AdminDashboardIntegrationTests {
                         row.title(), row.url(), 0, 0, 0)).toList(),
                 actual.departments(), actual.breakdowns(), actual.shortcuts(),
                 actual.roleCounts().stream().map(row -> new DashboardMetricsRepository.RoleCount(
-                        row.roleId(), row.roleName(), 0)).toList(), List.of(),
+                        row.roleId(), row.roleName(), 0)).toList(),
+                List.of(),
                 new AdminDashboardResponse.CandidateSummary(0, 0, actual.candidates().from(),
                         actual.candidates().to(), actual.candidates().timeZone()));
         doReturn(empty).when(dashboard).forUsername(admin.getUsername());
         String html = mvc.perform(get("/dashboard/admin").with(user(admin.getUsername())
-                        .authorities(new SimpleGrantedAuthority(RoleAuthorities.SYSTEM_ADMIN))))
+                .authorities(new SimpleGrantedAuthority(RoleAuthorities.SYSTEM_ADMIN))))
                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
         for (var role : actual.roleCounts()) {
             assertTrue(html.contains("/admin/accounts?roleId=" + role.roleId() + "&amp;page=0"));
         }
         assertTrue(html.contains("data-count=\"0\""));
         assertTrue(html.contains("Nhóm này chưa có tài khoản"));
-        // Rendered test fixture only: never served by the application or written to SQL Server.
+        // Rendered test fixture only: never served by the application or written to SQL
+        // Server.
         Files.writeString(Path.of("target/admin-analytics-empty.html"), html, StandardCharsets.UTF_8);
     }
 }

@@ -105,17 +105,6 @@ CREATE TABLE AuditLog (
 GO
 
 -- =============================================================================
--- 3.5 SYSTEM CONFIG (Cấu hình tham số hệ thống)
--- =============================================================================
-CREATE TABLE SystemConfig (
-    ConfigKey NVARCHAR(100) PRIMARY KEY,
-    ConfigValue NVARCHAR(MAX) NOT NULL,
-    [Description] NVARCHAR(255) NULL,
-    UpdatedAt DATETIME2 NOT NULL CONSTRAINT DF_SystemConfig_UpdatedAt DEFAULT SYSDATETIME()
-);
-GO
-
--- =============================================================================
 -- 3.6 JOB REQUISITION (Phiếu yêu cầu tuyển dụng)
 -- =============================================================================
 

@@ -102,11 +102,6 @@ for uid, role, uname, email, name, phone, dept, st, cday in INTERNAL:
                    "AccountStatus": st, "CreatedAt": T(at(cday, 8)),
                    "UpdatedAt": T(at(-20, 10)) if st == "Inactive" else None})
 
-add("SystemConfig", {"ConfigKey": "SME_COMPANY_NAME", "ConfigValue": "RMS Technology Solutions Vietnam",
-                     "[Description]": "Tên doanh nghiệp triển khai hệ thống RMS", "UpdatedAt": T(at(-120, 8))})
-add("SystemConfig", {"ConfigKey": "SMTP_HOST", "ConfigValue": "smtp.gmail.com",
-                     "[Description]": "Máy chủ gửi email tự động cho ứng viên", "UpdatedAt": T(at(-120, 8))})
-
 # =============================================================================
 # 2. AUDIT & NOTIFICATION HELPERS
 # =============================================================================
@@ -138,7 +133,6 @@ audit(ADMIN, "CREATE", "Department", 5, None, "Tạo phòng ban: Sản phẩm & 
 audit(ADMIN, "UPDATE", "Department", 5, "Active", "Inactive", at(-25, 14))
 audit(ADMIN, "CREATE", "User", HM_MINH, None, "Tạo tài khoản hm_minh (Hiring Manager)", at(-100, 9))
 audit(ADMIN, "UPDATE", "User", HR_NGOC, "Active", "Inactive", at(-20, 10))
-audit(ADMIN, "UPDATE", "SystemConfig", "SMTP_HOST", "smtp.office365.com", "smtp.gmail.com", at(-60, 15))
 audit(ADMIN, "UPDATE", "PolicyDocument", "privacy", None, "Chính sách bảo mật: thay file privacy.pdf (120 KB)", at(-40, 11))
 
 # =============================================================================
@@ -808,7 +802,7 @@ for (kind, pid), (cid, src) in zip(TP_PLAN, pool_sources):
 # =============================================================================
 # 7. XUẤT SQL
 # =============================================================================
-ORDER = ["[Role]", "Department", "[User]", "SystemConfig", "JobRequisition", "RequisitionApproval", "JobPosting",
+ORDER = ["[Role]", "Department", "[User]", "JobRequisition", "RequisitionApproval", "JobPosting",
          "Candidate", "TalentPoolNote", "Application", "ApplicationReview", "InterviewSchedule", "InterviewPanel",
          "InterviewEvaluation", "InterviewFinalResult", "OfferProposal", "OfferApproval", "[Notification]", "AuditLog"]
 IDENTITY = {"[Role]": "RoleId", "Department": "DepartmentId", "[User]": "UserId", "JobRequisition": "RequisitionId",
