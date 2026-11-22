@@ -1,5 +1,6 @@
 package com.group2.rms.candidate.domain.rule;
 
+import com.group2.rms.candidate.dto.ApplicationStatusLabels;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;

@@ -1,15 +1,16 @@
-package com.group2.rms.candidate.application.pipeline.service;
+package com.group2.rms.candidate.service;
 
-import com.group2.rms.candidate.domain.rule.ApplicationProgressResponse;
-import com.group2.rms.candidate.domain.rule.ApplicationProgressStep;
-import com.group2.rms.candidate.domain.rule.ApplicationStage;
+import com.group2.rms.candidate.dto.ApplicationProgressResponse;
+import com.group2.rms.candidate.entity.ApplicationProgressStep;
+import com.group2.rms.candidate.entity.ApplicationStage;
+import com.group2.rms.candidate.service.ApplicationStepper;
 import com.group2.rms.core.web.StageItem;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.List;
 
-import static com.group2.rms.candidate.domain.rule.ApplicationProgressStep.*;
+import static com.group2.rms.candidate.entity.ApplicationProgressStep.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;

@@ -1,8 +1,14 @@
 package com.group2.rms.offer.repository;
 
+import com.group2.rms.candidate.dto.ApplicationProgressFacts;
+import com.group2.rms.candidate.service.ApplicationProgressResolver;
+import com.group2.rms.candidate.entity.ApplicationProgressStep;
+import com.group2.rms.candidate.repository.ApplicationRepository;
+import com.group2.rms.candidate.repository.MyApplicationRepository;
+import com.group2.rms.candidate.service.MyApplicationJourney;
 import com.group2.rms.user.entity.Department;
-import com.group2.rms.candidate.domain.entity.Application;
-import com.group2.rms.candidate.domain.entity.Candidate;
+import com.group2.rms.candidate.entity.Application;
+import com.group2.rms.candidate.entity.Candidate;
 import com.group2.rms.core.config.ClockConfig;
 import com.group2.rms.core.config.SchemaNamingConfig;
 import com.group2.rms.jobposting.entity.JobPosting;
@@ -73,10 +79,11 @@ class OfferPersistenceRegressionTests {
     @Autowired com.group2.rms.offer.service.OfferExpirationJob expirationJob;
     @Autowired com.group2.rms.offer.service.CandidateOfferService candidateService;
     @org.springframework.test.context.bean.override.mockito.MockitoSpyBean
-    com.group2.rms.candidate.domain.repository.ApplicationRepository applications;
+    ApplicationRepository applications;
     @Autowired com.group2.rms.offer.service.OfferExportService exportService;
     @Autowired PlatformTransactionManager transactionManager;
-    @Autowired com.group2.rms.candidate.application.portal.repository.MyApplicationRepository myApplications;
+    @Autowired
+    MyApplicationRepository myApplications;
     @Autowired com.group2.rms.notification.repository.NotificationRepository notifications;
     @MockitoBean OfferMailSender mailSender;
     @MockitoBean com.group2.rms.notification.service.NotificationService notificationService;
@@ -242,12 +249,12 @@ class OfferPersistenceRegressionTests {
         assertEquals("Offered", entityManager.find(Application.class, applicationId).getApplicationStatus());
         assertEquals(0, proposalRepository.expireDue(now, now.toLocalDate()));
 
-        var progress = com.group2.rms.candidate.domain.rule.ApplicationProgressResolver.resolve(
-                new com.group2.rms.candidate.domain.rule.ApplicationProgressFacts(
+        var progress = ApplicationProgressResolver.resolve(
+                new ApplicationProgressFacts(
                         applicationId, "Offered", null, null, null, 0, 0, null,
                         expired ? "Expired" : "Sent_Candidate"), now);
-        assertEquals(expired ? com.group2.rms.candidate.domain.rule.ApplicationProgressStep.OFFER_EXPIRED
-                : com.group2.rms.candidate.domain.rule.ApplicationProgressStep.OFFER_SENT, progress.step());
+        assertEquals(expired ? ApplicationProgressStep.OFFER_EXPIRED
+                : ApplicationProgressStep.OFFER_SENT, progress.step());
     }
 
     private void assertApplicationJourney(Integer id, Integer owner, java.time.LocalDateTime now,
@@ -255,11 +262,11 @@ class OfferPersistenceRegressionTests {
         var row = myApplications.findMyVisibleOffers(owner).stream()
                 .filter(item -> id.equals(item.getOfferId())).findFirst().orElseThrow();
         assertEquals(storedStatus, row.getStatus());
-        var visibleOffer = new com.group2.rms.candidate.application.portal.service.MyApplicationJourney.Offer(
+        var visibleOffer = new MyApplicationJourney.Offer(
                 row.getOfferId(), row.getStatus(), row.getResponseDeadline(), row.getAt(), row.getExpectedStartDate());
-        var facts = new com.group2.rms.candidate.application.portal.service.MyApplicationJourney.Facts(
+        var facts = new MyApplicationJourney.Facts(
                 "Offered", now.minusDays(3), java.util.List.of(), visibleOffer, java.util.List.of());
-        var view = com.group2.rms.candidate.application.portal.service.MyApplicationJourney.resolve(facts, now);
+        var view = MyApplicationJourney.resolve(facts, now);
         assertEquals(expired ? "Xem thư mời" : "Trả lời thư mời", view.actionLabel());
         assertEquals("/portal/offers/" + id, view.actionHref());
         assertTrue(!view.ended() && !view.stopped());

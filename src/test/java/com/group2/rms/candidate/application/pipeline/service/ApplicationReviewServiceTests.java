@@ -1,12 +1,13 @@
-package com.group2.rms.candidate.application.pipeline.service;
+package com.group2.rms.candidate.service;
 
-import com.group2.rms.candidate.domain.rule.ApplicationAccess;
-import com.group2.rms.candidate.application.pipeline.dto.ApplicationReviewRequest;
-import com.group2.rms.candidate.domain.entity.Application;
-import com.group2.rms.candidate.domain.entity.ApplicationReview;
-import com.group2.rms.candidate.application.pipeline.exception.ApplicationReviewException;
-import com.group2.rms.candidate.domain.repository.ApplicationRepository;
-import com.group2.rms.candidate.domain.repository.ApplicationReviewRepository;
+import com.group2.rms.candidate.service.ApplicationReviewService;
+import com.group2.rms.candidate.validator.ApplicationAccess;
+import com.group2.rms.candidate.dto.ApplicationReviewRequest;
+import com.group2.rms.candidate.entity.Application;
+import com.group2.rms.candidate.entity.ApplicationReview;
+import com.group2.rms.candidate.exception.ApplicationReviewException;
+import com.group2.rms.candidate.repository.ApplicationRepository;
+import com.group2.rms.candidate.repository.ApplicationReviewRepository;
 import com.group2.rms.core.exception.ResourceNotFoundException;
 import com.group2.rms.notification.service.NotificationService;
 import com.group2.rms.user.entity.User;

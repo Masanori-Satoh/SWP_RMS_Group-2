@@ -1,0 +1,74 @@
+package com.group2.rms.candidate.entity;
+
+import com.group2.rms.candidate.service.ApplicationProgressResolver;
+
+import static com.group2.rms.candidate.entity.ApplicationStage.*;
+
+/**
+ * Trạng thái chi tiết của hồ sơ: hồ sơ đang nằm trên bàn ai. Mỗi hằng là một
+ * dòng của bảng trạng thái
+ * (spec luồng trạng thái hồ sơ, mục 2.3); {@link ApplicationProgressResolver}
+ * chọn hằng từ dữ kiện.
+ * Nhãn có {@code %s}/{@code %d} được điền ở
+ * {@link ApplicationProgressResolver}.
+ *
+ * @see ApplicationStage
+ */
+public enum ApplicationProgressStep {
+    // Giai đoạn APPLIED: thẻ "Hồ sơ chờ sàng lọc" của HrDashboardService đếm theo giai đoạn này
+    AWAITING_HR_REVIEW(APPLIED, "Chờ HR duyệt CV", "HR", "warning"),
+    AWAITING_HM_REVIEW(SCREENING, "Chờ trưởng bộ phận duyệt CV", "Trưởng bộ phận", "warning"),
+    HM_SUGGESTED(SCREENING, "HM đề xuất — chờ HR liên hệ", "HR", "warning"),
+    AWAITING_SCHEDULE(INTERVIEW, "Chờ xếp lịch phỏng vấn", "HR", "warning"),
+    INTERVIEW_SCHEDULED(INTERVIEW, "Đã xếp lịch, phỏng vấn ngày %s", "Hội đồng", "brand"),
+    AWAITING_EVALUATIONS(INTERVIEW, "Chờ chấm điểm (%d/%d)", "Người phỏng vấn", "warning"),
+    AWAITING_DECISION(INTERVIEW, "Chờ chốt kết quả phỏng vấn", "Trưởng bộ phận", "warning"),
+    PASSED_AWAITING_OFFER(OFFER, "Đạt phỏng vấn, chờ lập thư mời", "HR", "warning"),
+    OFFER_DRAFT(OFFER, "Thư mời đang soạn", "HR", "warning"),
+    OFFER_AWAITING_DIRECTOR(OFFER, "Chờ giám đốc duyệt thư mời", "Giám đốc", "warning"),
+    OFFER_RETURNED(OFFER, "Giám đốc trả thư mời, HR sửa lại", "HR", "danger"),
+    OFFER_AWAITING_SEND(OFFER, "Chờ HR gửi thư mời", "HR", "warning"),
+    OFFER_SENT(OFFER, "Đã gửi thư mời, chờ ứng viên trả lời", "Ứng viên", "brand"),
+    // Offer quá hạn: đơn vẫn Offered, không còn chờ ứng viên, HR xử lý tiếp
+    OFFER_EXPIRED(OFFER, "Thư mời đã quá hạn phản hồi", "HR", "neutral"),
+    HIRED_DONE(HIRED, "Đã nhận việc", null, "success"),
+    WITHDRAWN(CLOSED, "Ứng viên đã rút hồ sơ", null, "neutral"),
+    OFFER_DECLINED(CLOSED, "Ứng viên từ chối thư mời", null, "neutral"),
+    INTERVIEW_FAILED(CLOSED, "Không đạt phỏng vấn", null, "danger"),
+    CV_REJECTED(CLOSED, "Không qua vòng CV", null, "danger"),
+    POSTING_CLOSED(CLOSED, "Dừng do đợt tuyển đóng", null, "neutral");
+
+    private final ApplicationStage stage;
+    private final String label;
+    private final String owner;
+    private final String tone;
+
+    ApplicationProgressStep(ApplicationStage stage, String label, String owner, String tone) {
+        this.stage = stage;
+        this.label = label;
+        this.owner = owner;
+        this.tone = tone;
+    }
+
+    public ApplicationStage stage() {
+        return stage;
+    }
+
+    /** Nhãn hiển thị; có thể chứa chỗ trống {@code %s}/{@code %d}. */
+    public String label() {
+        return label;
+    }
+
+    /** Ai cầm bóng; {@code null} khi hồ sơ đã kết thúc. */
+    public String owner() {
+        return owner;
+    }
+
+    /**
+     * Màu: {@code neutral}, {@code brand}, {@code success}, {@code warning},
+     * {@code danger} (cùng bộ với timeline).
+     */
+    public String tone() {
+        return tone;
+    }
+}

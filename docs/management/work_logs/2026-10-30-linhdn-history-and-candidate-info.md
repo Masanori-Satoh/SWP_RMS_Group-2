@@ -44,17 +44,17 @@ Ngày trong tên báo cáo là ngày công việc được tài liệu ghi nhậ
 
 | File | Nội dung |
 | --- | --- |
-| `src/main/java/com/group2/rms/candidate/talentpool/dto/TalentPoolDetailResponse.java` | Thêm sáu trường hồ sơ chỉ đọc vào DTO chi tiết. |
-| `src/main/java/com/group2/rms/candidate/talentpool/service/TalentPoolService.java` | Map các trường Candidate trong `detail` và `recommendationDetail`. |
+| `../../../src/main/java/com/group2/rms` | Thêm sáu trường hồ sơ chỉ đọc vào DTO chi tiết. |
+| `../../../src/main/java/com/group2/rms` | Map các trường Candidate trong `detail` và `recommendationDetail`. |
 | `src/main/resources/templates/talent-pool/list.html` | Header bảng tích hợp tìm kiếm/bộ lọc phễu, đếm tổng ứng viên theo bộ lọc và kiểu danh sách theo mockup. |
 | `src/main/resources/templates/talent-pool/detail.html` | Thêm section thông tin, xử lý thiếu dữ liệu và liên kết ngoài. |
 | `src/main/resources/static/css/pages/talent-pool-workspace.css` | Class `tpw-info-*`, bố cục responsive và trạng thái focus của liên kết. |
 | `src/test/java/com/group2/rms/candidate/talentpool/service/TalentPoolReadUnitTests.java` | Kiểm tra mapping các trường hồ sơ thật từ Candidate. |
 | `src/test/java/com/group2/rms/candidate/application/pipeline/controller/ApplicationPipelineWebTests.java` | Cập nhật fixture, kiểm tra render hồ sơ, dữ liệu thiếu, escape và URL không an toàn. |
-| `src/main/java/com/group2/rms/candidate/talentpool/controller/TalentPoolController.java` | Endpoint POST sửa/xóa ghi chú, giữ ngữ cảnh quay lại và phân trang CV. |
-| `src/main/java/com/group2/rms/candidate/talentpool/dto/TalentPoolCvResponse.java` | Trạng thái/nhãn/tone CV; giữ constructor cũ tương thích. |
-| `src/main/java/com/group2/rms/candidate/talentpool/dto/TalentPoolNoteResponse.java` | Role người viết và cờ sở hữu theo tài khoản đăng nhập. |
-| `src/main/java/com/group2/rms/candidate/talentpool/repository/TalentPoolNoteRepository.java` | Nạp author.role cho danh sách ghi chú. |
+| `../../../src/main/java/com/group2/rms` | Endpoint POST sửa/xóa ghi chú, giữ ngữ cảnh quay lại và phân trang CV. |
+| `../../../src/main/java/com/group2/rms` | Trạng thái/nhãn/tone CV; giữ constructor cũ tương thích. |
+| `../../../src/main/java/com/group2/rms` | Role người viết và cờ sở hữu theo tài khoản đăng nhập. |
+| `../../../src/main/java/com/group2/rms` | Nạp author.role cho danh sách ghi chú. |
 | `src/main/resources/static/js/pages/talent-pool-detail.js` | Menu sửa, hủy, xác nhận xóa, chống gửi lặp và đếm ký tự. |
 | `docs/management/WORK_LOG.md` | Thêm dòng tổng hợp và liên kết báo cáo này. |
 | `docs/management/work_logs/2026-10-30-linhdn-history-and-candidate-info.md` | Tổng hợp quá trình, thay đổi hiện tại, kiểm tra và giới hạn. |

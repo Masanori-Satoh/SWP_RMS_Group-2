@@ -13,8 +13,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.group2.rms.candidate.domain.repository.ApplicationRepository.FORMAL_FILTER;
-
 /*
  * REPOSITORY: các danh sách ngắn trên dashboard nội bộ (chỉ đọc). Hàm đếm nằm ở InternalMetricsRepository.
  * Mỗi danh sách là 1 câu truy vấn (hoặc 1 câu + 1 câu IN cho cả danh sách), không tra từng dòng (§15.3).

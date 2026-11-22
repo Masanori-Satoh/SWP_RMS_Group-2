@@ -3,7 +3,7 @@ import jakarta.persistence.EntityManager;
 import org.springframework.stereotype.Repository;
 
 import com.group2.rms.core.security.RoleAuthorities;
-import static com.group2.rms.candidate.domain.repository.ApplicationRepository.FORMAL_FILTER;
+import static com.group2.rms.candidate.repository.ApplicationRepository.FORMAL_FILTER;
 
 import java.time.LocalDateTime;
 import java.util.List;

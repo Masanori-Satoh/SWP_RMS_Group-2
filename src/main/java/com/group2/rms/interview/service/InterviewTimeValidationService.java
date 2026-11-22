@@ -1,6 +1,6 @@
 package com.group2.rms.interview.service;
 
-import com.group2.rms.candidate.domain.entity.Application;
+import com.group2.rms.candidate.entity.Application;
 import com.group2.rms.interview.dto.InterviewScheduleRequest;
 import com.group2.rms.interview.entity.InterviewSchedule;
 import com.group2.rms.interview.entity.InterviewStatus;

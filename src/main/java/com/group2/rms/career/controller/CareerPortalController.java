@@ -1,8 +1,8 @@
 package com.group2.rms.career.controller;
 
-import com.group2.rms.candidate.application.submission.dto.ApplyJobRequest;
-import com.group2.rms.candidate.application.submission.exception.ApplicationSubmissionException;
-import com.group2.rms.candidate.application.submission.service.ApplicationSubmissionService;
+import com.group2.rms.candidate.dto.ApplicationSubmissionRequest;
+import com.group2.rms.candidate.exception.ApplicationSubmissionException;
+import com.group2.rms.candidate.service.ApplicationSubmissionService;
 import com.group2.rms.career.dto.PublicJobDetailResponse;
 import com.group2.rms.career.dto.PublicJobListResponse;
 import com.group2.rms.career.dto.ViewerProfileResponse;
@@ -98,7 +98,7 @@ public class CareerPortalController {
         String username = authentication != null ? authentication.getName() : null;
         PublicJobDetailResponse jobDetail = careerPortalService.getPublishedJobDetail(id, username);
         model.addAttribute("job", jobDetail);
-        model.addAttribute("applyForm", new ApplyJobRequest(null));
+        model.addAttribute("applyForm", new ApplicationSubmissionRequest(null));
         model.addAttribute(PUBLIC_NAV, NAV_JOB_DETAIL);
         return "candidate/job-detail";
     }
@@ -121,8 +121,8 @@ public class CareerPortalController {
 
     @PostMapping("/jobs/{id}/apply")
     public String submitApplication(@PathVariable("id") Integer id,
-            @ModelAttribute("applyForm") ApplyJobRequest form, BindingResult errors,
-            Authentication authentication, Model model, RedirectAttributes redirectAttributes) {
+                                    @ModelAttribute("applyForm") ApplicationSubmissionRequest form, BindingResult errors,
+                                    Authentication authentication, Model model, RedirectAttributes redirectAttributes) {
         try {
             Integer applicationId = applicationSubmissionService.apply(authentication.getName(), id, form.cvFile());
             redirectAttributes.addFlashAttribute("applySuccess", true);

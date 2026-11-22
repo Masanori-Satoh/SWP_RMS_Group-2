@@ -1,6 +1,6 @@
 package com.group2.rms.dashboard.internal.repository;
 
-import com.group2.rms.candidate.domain.rule.ApplicationStatusService;
+import com.group2.rms.candidate.service.ApplicationStatusService;
 import com.group2.rms.jobposting.entity.JobPosting;
 import com.group2.rms.requisition.entity.JobRequisition;
 import jakarta.persistence.EntityManager;
@@ -11,7 +11,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.group2.rms.candidate.domain.repository.ApplicationRepository.FORMAL_FILTER;
+import static com.group2.rms.candidate.repository.ApplicationRepository.FORMAL_FILTER;
 
 /*
  * REPOSITORY: số đếm cho dashboard nội bộ (HR, Hiring Manager, Director, Interviewer). Chỉ đọc.

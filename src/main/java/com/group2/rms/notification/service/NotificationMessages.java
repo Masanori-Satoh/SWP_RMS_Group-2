@@ -1,6 +1,6 @@
 package com.group2.rms.notification.service;
 
-import com.group2.rms.candidate.domain.entity.Application;
+import com.group2.rms.candidate.entity.Application;
 import com.group2.rms.interview.entity.InterviewSchedule;
 import com.group2.rms.jobposting.entity.JobPosting;
 import com.group2.rms.offer.entity.OfferProposal;

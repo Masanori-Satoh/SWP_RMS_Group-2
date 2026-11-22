@@ -1,6 +1,12 @@
 package com.group2.rms.candidate.domain.rule;
 
-import com.group2.rms.candidate.domain.entity.Application;
+import com.group2.rms.candidate.dto.ApplicationProgressFacts;
+import com.group2.rms.candidate.service.ApplicationProgressResolver;
+import com.group2.rms.candidate.dto.ApplicationProgressResponse;
+import com.group2.rms.candidate.dto.ApplicationScope;
+import com.group2.rms.candidate.entity.Application;
+import com.group2.rms.candidate.entity.ApplicationProgressStep;
+import com.group2.rms.candidate.validator.ApplicationAccess;
 import com.group2.rms.jobposting.entity.JobPosting;
 import com.group2.rms.requisition.entity.JobRequisition;
 import com.group2.rms.requisition.service.RequisitionAccess;

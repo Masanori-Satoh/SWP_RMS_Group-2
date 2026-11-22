@@ -1,9 +1,9 @@
 package com.group2.rms.dashboard.internal.service;
 
-import com.group2.rms.candidate.application.pipeline.dto.ApplicationPipelineResponse;
-import com.group2.rms.candidate.application.pipeline.dto.OwnerWorkloadResponse;
-import com.group2.rms.candidate.application.pipeline.service.ApplicationPipelineService;
-import com.group2.rms.candidate.domain.rule.ApplicationStage;
+import com.group2.rms.candidate.dto.ApplicationPipelineResponse;
+import com.group2.rms.candidate.dto.OwnerWorkloadResponse;
+import com.group2.rms.candidate.service.ApplicationPipelineService;
+import com.group2.rms.candidate.entity.ApplicationStage;
 import com.group2.rms.dashboard.internal.dto.WeeklyApplicationItem;
 import com.group2.rms.dashboard.internal.dto.DashboardMetricResponse;
 import com.group2.rms.dashboard.internal.dto.DashboardWorkItem;

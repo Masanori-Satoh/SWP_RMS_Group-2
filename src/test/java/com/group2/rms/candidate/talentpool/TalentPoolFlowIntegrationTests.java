@@ -1,16 +1,15 @@
 package com.group2.rms.candidate.talentpool;
 
-import com.group2.rms.candidate.domain.rule.ApplicationStatusException;
-import com.group2.rms.candidate.domain.rule.ApplicationStatusService;
-import com.group2.rms.candidate.infra.cv.CvStorage;
-import com.group2.rms.candidate.domain.repository.ApplicationRepository;
-import com.group2.rms.candidate.application.portal.repository.MyApplicationRepository;
-import com.group2.rms.candidate.application.pipeline.repository.ApplicationPipelineRepository;
-import com.group2.rms.candidate.talentpool.repository.TalentPoolApplicationRepository;
-import com.group2.rms.candidate.domain.repository.CandidateRepository;
-import com.group2.rms.candidate.domain.entity.Application;
-import com.group2.rms.candidate.talentpool.service.TalentPoolService;
-import com.group2.rms.candidate.talentpool.exception.TalentPoolException;
+import com.group2.rms.candidate.exception.ApplicationStatusException;
+import com.group2.rms.candidate.service.ApplicationStatusService;
+import com.group2.rms.candidate.storage.CvStorage;
+import com.group2.rms.candidate.repository.ApplicationRepository;
+import com.group2.rms.candidate.repository.MyApplicationRepository;
+import com.group2.rms.candidate.repository.ApplicationPipelineRepository;
+import com.group2.rms.talentpool.repository.TalentPoolApplicationRepository;
+import com.group2.rms.candidate.repository.CandidateRepository;
+import com.group2.rms.candidate.entity.Application;
+import com.group2.rms.talentpool.service.TalentPoolService;
 import com.group2.rms.dashboard.shared.DashboardMetricsRepository;
 import com.group2.rms.jobposting.entity.JobPosting;
 import com.group2.rms.jobposting.repository.JobPostingRepository;

@@ -71,7 +71,7 @@ Xuất phát từ buổi rà soát luồng phỏng vấn (notification, business
 - `src/main/java/com/group2/rms/interview/controller/InterviewResultController.java`
 - `src/main/java/com/group2/rms/notification/service/NotificationMessages.java`
 - `src/main/java/com/group2/rms/notification/service/NotificationServiceImpl.java`
-- `src/main/java/com/group2/rms/candidate/talentpool/service/RecruitmentEmailService.java`
+- `../../../src/main/java/com/group2/rms`
 - `src/main/resources/templates/interview/form.html`, `interview/result.html`, `interview/list.html`, `interview/candidate-list.html`
 
 ### 3.3. Test chỉnh sửa / bổ sung

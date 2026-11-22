@@ -20,7 +20,7 @@
 
 ## File liên quan
 
-- `src/main/java/com/group2/rms/candidate/talentpool/repository/TalentPoolAuditRepository.java`.
+- `../../../src/main/java/com/group2/rms`.
 - `src/test/java/com/group2/rms/candidate/talentpool/repository/TalentPoolOpenOffersQueryTests.java`.
 - [Work log chi tiết](../../management/work_logs/2026-11-05-talent-pool-expired-offer-fix.md).
 

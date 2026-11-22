@@ -1,7 +1,7 @@
 package com.group2.rms.offer.service;
 
-import com.group2.rms.candidate.domain.entity.Application;
-import com.group2.rms.candidate.domain.entity.Candidate;
+import com.group2.rms.candidate.entity.Application;
+import com.group2.rms.candidate.entity.Candidate;
 import com.group2.rms.core.exception.BaseBusinessException;
 import com.group2.rms.offer.dto.OfferExportFilterRequest;
 import com.group2.rms.offer.dto.OfferExportRequest;
@@ -9,7 +9,6 @@ import com.group2.rms.offer.dto.OfferExportScope;
 import com.group2.rms.offer.entity.OfferProposal;
 import com.group2.rms.offer.repository.OfferApprovalRepository;
 import com.group2.rms.offer.repository.OfferProposalRepository;
-import com.group2.rms.offer.service.OfferExportServiceImpl;
 import com.group2.rms.jobposting.entity.JobPosting;
 import com.group2.rms.requisition.entity.JobRequisition;
 import com.group2.rms.user.entity.Department;

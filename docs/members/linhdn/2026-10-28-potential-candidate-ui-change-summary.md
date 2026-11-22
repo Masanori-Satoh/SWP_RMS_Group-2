@@ -67,7 +67,7 @@ Commit `ddd73d6` có tổng cộng **11 file**; 9 file ở mục 2 thuộc đợ
 
 | File | Git ghi nhận trong commit | Phân loại |
 | --- | --- | --- |
-| `src/main/java/com/group2/rms/candidate/talentpool/service/TalentPoolService.java` | Thêm 18, xóa 17 dòng | Thay đổi có sẵn trong workspace; tác vụ đồng bộ UI không sửa file này. |
+| `../../../src/main/java/com/group2/rms` | Thêm 18, xóa 17 dòng | Thay đổi có sẵn trong workspace; tác vụ đồng bộ UI không sửa file này. |
 | `docs/members/linhdn/~$Professional_Bug_Tracker_Template.xlsx` | Thêm file nhị phân | File khóa Excel có sẵn; không phải asset hay dữ liệu mẫu được tạo cho UI. |
 
 Bằng chứng của đợt UI ghi nhận SHA-256 Service trước/sau không đổi: `4ae3ded63ad1ad6c64dd2d97b9cd3b18a797fee23b32b3cd15d136a652eed8ed`. Việc hai file cùng xuất hiện trong commit không đồng nghĩa chúng thuộc phạm vi tác vụ UI. Báo cáo này không xóa hoặc sửa chúng.

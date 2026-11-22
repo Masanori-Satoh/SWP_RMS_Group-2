@@ -1,11 +1,16 @@
 package com.group2.rms.candidate.domain.rule;
 
+import com.group2.rms.candidate.dto.ApplicationProgressFacts;
+import com.group2.rms.candidate.service.ApplicationProgressResolver;
+import com.group2.rms.candidate.dto.ApplicationProgressResponse;
+import com.group2.rms.candidate.entity.ApplicationProgressStep;
+import com.group2.rms.candidate.entity.ApplicationStage;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
 
-import static com.group2.rms.candidate.domain.rule.ApplicationProgressStep.*;
+import static com.group2.rms.candidate.entity.ApplicationProgressStep.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
