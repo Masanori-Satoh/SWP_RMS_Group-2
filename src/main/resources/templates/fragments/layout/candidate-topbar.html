@@ -30,6 +30,18 @@
       </div>
 
       <div class="public-actions-cluster">
+        <!-- Đảo 2: Nút Đơn ứng tuyển của ứng viên (ẩn khi đang ở danh sách hoặc chi tiết đơn ứng tuyển) -->
+        <a th:if="${activeMenu != 'applications'}"
+           th:href="@{/portal/applications}"
+           class="public-dashboard-island"
+           title="Mở danh sách đơn ứng tuyển của tôi">
+          <span>Đơn ứng tuyển</span>
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <polyline points="12 5 19 12 12 19"></polyline>
+          </svg>
+        </a>
+
         <div class="public-user-island">
           <div
             th:replace="~{fragments/layout/topbar-user :: actions(${viewer.fullName}, ${viewer.email}, ${viewer.roleName}, ${viewer.avatarUrl}, 'workspace')}">
