@@ -1,21 +1,29 @@
 package com.group2.rms.candidate.service;
 
-import com.group2.rms.candidate.dto.*;
+import com.group2.rms.candidate.storage.ApplicationCv;
+import com.group2.rms.candidate.dto.ApplicationDetailResponse;
+import com.group2.rms.candidate.dto.ApplicationListResponse;
+import com.group2.rms.candidate.dto.ApplicationPipelineResponse;
+import com.group2.rms.candidate.dto.ApplicationProgressFacts;
+import com.group2.rms.candidate.dto.ApplicationProgressResponse;
+import com.group2.rms.candidate.dto.ApplicationScope;
+import com.group2.rms.candidate.dto.ApplicationSearch;
+import com.group2.rms.candidate.dto.ApplicationStatusLabels;
+import com.group2.rms.candidate.dto.OwnerWorkloadResponse;
+import com.group2.rms.candidate.entity.Application;
 import com.group2.rms.candidate.entity.ApplicationReview;
 import com.group2.rms.candidate.entity.ApplicationStage;
-import com.group2.rms.candidate.storage.ApplicationCv;
-import com.group2.rms.candidate.storage.CvStorage;
-import com.group2.rms.candidate.entity.Application;
 import com.group2.rms.candidate.entity.Candidate;
-import com.group2.rms.candidate.repository.ApplicationRepository;
 import com.group2.rms.candidate.repository.ApplicationPipelineRepository;
+import com.group2.rms.candidate.repository.ApplicationRepository;
 import com.group2.rms.candidate.repository.ApplicationReviewRepository;
+import com.group2.rms.candidate.storage.CvStorage;
 import com.group2.rms.candidate.validator.ApplicationAccess;
 import com.group2.rms.core.exception.ResourceNotFoundException;
 import com.group2.rms.core.web.TimelineItem;
 import com.group2.rms.jobposting.entity.JobPosting;
-import com.group2.rms.requisition.entity.JobRequisition;
 import com.group2.rms.jobposting.repository.JobPostingRepository;
+import com.group2.rms.requisition.entity.JobRequisition;
 import com.group2.rms.user.entity.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageImpl;
@@ -33,9 +41,11 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 
 /**
- * Đọc dữ liệu cho danh sách hồ sơ (5.1.22) và chi tiết hồ sơ (5.1.23), trong phạm vi người xem được phép.
+ * Service xử lý nghiệp vụ danh sách và chi tiết hồ sơ ứng tuyển cho người tuyển dụng.
  */
 @Service
 @RequiredArgsConstructor
@@ -51,13 +61,7 @@ public class ApplicationPipelineService {
     private final JobPostingRepository jobPostingRepository;
 
     /**
-     * Một trang danh sách kèm số hồ sơ mỗi giai đoạn. Xếp theo ngày nộp, mới trước; sort trong
-     * {@code pageable} bị bỏ qua.
-     * <p>
-     * Giai đoạn tính bằng {@link ApplicationProgressResolver} (cùng chỗ tính nhãn), không viết lại bằng SQL, để số
-     * đếm và nhãn không bao giờ lệch nhau. Vì vậy mỗi lần mở trang phải đọc dữ kiện của <b>mọi</b> đơn trong phạm vi
-     * và bộ lọc rồi mới đếm, lọc giai đoạn và cắt trang trong Java: ổn với vài nghìn đơn; lớn hơn nhiều thì cần
-     * xem lại (ví dụ lưu sẵn giai đoạn).
+     * Lấy danh sách hồ sơ ứng tuyển kèm phân trang và số lượng hồ sơ theo từng giai đoạn.
      */
     @Transactional(readOnly = true)
     public ApplicationListResponse list(ApplicationSearch search, Pageable pageable) {
@@ -71,25 +75,33 @@ public class ApplicationPipelineService {
         ApplicationStage stage = filter.stageFilter();
         List<Integer> matching = progress.entrySet().stream()
                 .filter(entry -> stage == null || entry.getValue().stage() == stage)
-                .map(entry -> entry.getKey()).toList();
+                .map(Map.Entry::getKey)
+                .toList();
         Pageable pageRequest = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize());
         List<Integer> pageIds = matching.stream()
-                .skip(pageRequest.getOffset()).limit(pageRequest.getPageSize()).toList();
+                .skip(pageRequest.getOffset())
+                .limit(pageRequest.getPageSize())
+                .toList();
         List<ApplicationPipelineResponse> rows = rowsWithProgress(pageIds, progress, actor);
 
-        // Lấy thẳng từ bảng tin: tin chưa có hồ sơ nào (mở từ trang tin) không nằm trong danh sách lựa chọn.
         String postingTitle = filter.jobPostingId() == null ? null
-                : jobPostingRepository.findById(filter.jobPostingId()).map(jp -> jp.getPostingTitle()).orElse(null);
-        return new ApplicationListResponse(new PageImpl<>(rows, pageRequest, matching.size()), stageCounts,
-                pipelineRepository.findPostingOptions(scope.allDepartments(), scope.managerUserId(), scope.departmentId()),
-                filter, postingTitle, applicationAccess.canOpenJobPosting(actor), !scope.allDepartments(),
+                : jobPostingRepository.findById(filter.jobPostingId())
+                        .map(JobPosting::getPostingTitle)
+                        .orElse(null);
+        return new ApplicationListResponse(
+                new PageImpl<>(rows, pageRequest, matching.size()),
+                stageCounts,
+                pipelineRepository.findPostingOptions(
+                        scope.allDepartments(), scope.managerUserId(), scope.departmentId()),
+                filter,
+                postingTitle,
+                applicationAccess.canOpenJobPosting(actor),
+                !scope.allDepartments(),
                 actor.getRole() == null ? null : actor.getRole().getRoleName());
     }
 
     /**
-     * Cho dashboard: số hồ sơ mỗi giai đoạn và các dòng do {@code ownerLabel} cầm bóng ở {@code stages}, không lọc.
-     * Cùng cách tính giai đoạn với {@link #list} nên số khớp các tab, nhưng chỉ đọc dữ kiện một lần và chỉ dựng dòng
-     * cần hiện thay vì dựng mọi dòng của từng giai đoạn.
+     * Thống kê khối lượng công việc và số lượng hồ sơ theo từng giai đoạn cho dashboard.
      */
     @Transactional(readOnly = true)
     public OwnerWorkloadResponse ownerWorkload(String ownerLabel, Collection<ApplicationStage> stages) {
@@ -100,8 +112,9 @@ public class ApplicationPipelineService {
         Map<Integer, ApplicationProgressResponse> progress = progressInScope(scope, filter);
         List<Integer> ownedIds = progress.entrySet().stream()
                 .filter(entry -> stages.contains(entry.getValue().stage())
-                        && java.util.Objects.equals(ownerLabel, entry.getValue().ownerLabel()))
-                .map(entry -> entry.getKey()).toList();
+                        && Objects.equals(ownerLabel, entry.getValue().ownerLabel()))
+                .map(Map.Entry::getKey)
+                .toList();
 
         Map<ApplicationStage, List<ApplicationPipelineResponse>> ownedRows = new EnumMap<>(ApplicationStage.class);
         for (ApplicationStage stage : stages) {
@@ -113,6 +126,9 @@ public class ApplicationPipelineService {
         return new OwnerWorkloadResponse(stageCounts(progress), ownedRows);
     }
 
+    /**
+     * Lấy thông tin chi tiết hồ sơ ứng tuyển, timeline và các quyền thao tác.
+     */
     @Transactional(readOnly = true)
     public ApplicationDetailResponse detail(Integer applicationId) {
         User actor = applicationAccess.actor();
@@ -131,15 +147,24 @@ public class ApplicationPipelineService {
 
         return new ApplicationDetailResponse(
                 application.getApplicationId(),
-                candidate.getCandidateId(), candidate.isPotential(),
-                account.getFullName(), account.getEmail(), account.getPhoneNumber(),
-                candidate.getLinkedInUrl(), candidate.getPortfolioUrl(),
-                candidate.getDateOfBirth(), candidate.getGender(), candidate.getAddress(),
+                candidate.getCandidateId(),
+                candidate.isPotential(),
+                account.getFullName(),
+                account.getEmail(),
+                account.getPhoneNumber(),
+                candidate.getLinkedInUrl(),
+                candidate.getPortfolioUrl(),
+                candidate.getDateOfBirth(),
+                candidate.getGender(),
+                candidate.getAddress(),
                 requisition.getRequisitionId(),
-                job.getJobPostingId(), job.getPostingTitle(),
+                job.getJobPostingId(),
+                job.getPostingTitle(),
                 requisition.getDepartment() == null ? null : requisition.getDepartment().getDepartmentName(),
                 application.getSubmissionDate(),
-                status, cancelledProposal ? "Đề xuất đã kết thúc" : progress.detailLabel(), cancelledProposal ? "badge--neutral" : progress.badge(),
+                status,
+                cancelledProposal ? "Đề xuất đã kết thúc" : progress.detailLabel(),
+                cancelledProposal ? "badge--neutral" : progress.badge(),
                 timeline(application, account),
                 ApplicationStepper.items(progress),
                 facts.interviewId(),
@@ -152,6 +177,9 @@ public class ApplicationPipelineService {
                 "HM_Suggested".equals(status) || cancelledProposal);
     }
 
+    /**
+     * Kiểm tra đơn ứng tuyển có bị dừng do tin tuyển dụng bị đóng hay không.
+     */
     @Transactional(readOnly = true)
     public boolean closedByPosting(Integer id) {
         Application application = applicationRepository.findDetailById(id)
@@ -160,7 +188,9 @@ public class ApplicationPipelineService {
         return ApplicationStatusService.CANCELLED.equals(application.getApplicationStatus());
     }
 
-    /** CV của đơn, cùng quyền với trang chi tiết. Dạng {@code AppliedCvUrl}: {@link ApplicationCv#of}. */
+    /**
+     * Lấy thông tin và tài nguyên CV đính kèm của hồ sơ ứng tuyển.
+     */
     @Transactional(readOnly = true)
     public ApplicationCv cv(Integer applicationId) {
         User actor = applicationAccess.actor();
@@ -172,55 +202,53 @@ public class ApplicationPipelineService {
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy CV của hồ sơ này."));
     }
 
-    /**
-     * Dữ kiện trạng thái chi tiết theo id đơn, mỗi lô {@value #FACTS_BATCH} id một câu query (giới hạn ~2100 tham số
-     * của SQL Server). Đơn vừa bị xóa giữa hai câu query thì không có trong kết quả.
-     */
     private Map<Integer, ApplicationProgressFacts> progressFacts(List<Integer> applicationIds) {
         Map<Integer, ApplicationProgressFacts> facts = new HashMap<>();
         for (int from = 0; from < applicationIds.size(); from += FACTS_BATCH) {
-            applicationRepository.findProgressFacts(applicationIds.subList(from,
-                            Math.min(from + FACTS_BATCH, applicationIds.size()))).stream()
-                    .map(row -> ApplicationProgressFacts.from(row))
+            List<Integer> batch = applicationIds.subList(from, Math.min(from + FACTS_BATCH, applicationIds.size()));
+            applicationRepository.findProgressFacts(batch).stream()
+                    .map(ApplicationProgressFacts::from)
                     .forEach(row -> facts.put(row.applicationId(), row));
         }
         return facts;
     }
 
-    /** Giai đoạn của mọi đơn trong phạm vi và bộ lọc, giữ thứ tự ngày nộp, mới trước. */
-    private Map<Integer, ApplicationProgressResponse> progressInScope(ApplicationScope scope, ApplicationSearch filter) {
+    private Map<Integer, ApplicationProgressResponse> progressInScope(
+            ApplicationScope scope, ApplicationSearch filter) {
         List<Integer> ids = pipelineRepository.findPipelineIds(
                 scope.allDepartments(), scope.managerUserId(), scope.departmentId(),
                 filter.jobPostingId(), filter.status(), filter.keyword());
         Map<Integer, ApplicationProgressFacts> facts = progressFacts(ids);
         LocalDateTime now = LocalDateTime.now();
         Map<Integer, ApplicationProgressResponse> progress = new LinkedHashMap<>();
-        ids.stream().filter(id -> facts.containsKey(id))
+        ids.stream()
+                .filter(facts::containsKey)
                 .forEach(id -> progress.put(id, ApplicationProgressResolver.resolve(facts.get(id), now)));
         return progress;
     }
 
-    /** Số đơn mỗi giai đoạn; giai đoạn không có đơn nào vẫn có mặt với giá trị 0. */
     private static Map<ApplicationStage, Long> stageCounts(Map<Integer, ApplicationProgressResponse> progress) {
         Map<ApplicationStage, Long> stageCounts = new EnumMap<>(ApplicationStage.class);
         for (ApplicationStage stage : ApplicationStage.values()) {
             stageCounts.put(stage, 0L);
         }
-        progress.values().forEach(p -> stageCounts.merge(p.stage(), 1L, (a, b) -> a + b));
+        progress.values().forEach(p -> stageCounts.merge(p.stage(), 1L, Long::sum));
         return stageCounts;
     }
 
-    /** Dòng của {@code ids} kèm nhãn giai đoạn và quyền thao tác của người xem. */
-    private List<ApplicationPipelineResponse> rowsWithProgress(List<Integer> ids,
-            Map<Integer, ApplicationProgressResponse> progress, User actor) {
-        return pageRows(ids).stream().map(row -> {
-            ApplicationProgressResponse rowProgress = progress.get(row.applicationId());
-            return row.withProgress(rowProgress,
-                    applicationAccess.canScheduleInterview(actor, rowProgress), applicationAccess.canCreateOffer(actor, rowProgress));
-        }).toList();
+    private List<ApplicationPipelineResponse> rowsWithProgress(
+            List<Integer> ids, Map<Integer, ApplicationProgressResponse> progress, User actor) {
+        return pageRows(ids).stream()
+                .map(row -> {
+                    ApplicationProgressResponse rowProgress = progress.get(row.applicationId());
+                    return row.withProgress(
+                            rowProgress,
+                            applicationAccess.canScheduleInterview(actor, rowProgress),
+                            applicationAccess.canCreateOffer(actor, rowProgress));
+                })
+                .toList();
     }
 
-    /** Các dòng của một trang, đúng thứ tự của {@code pageIds}; chia lô như {@link #progressFacts}. */
     private List<ApplicationPipelineResponse> pageRows(List<Integer> pageIds) {
         if (pageIds.isEmpty()) {
             return List.of();
@@ -230,26 +258,30 @@ public class ApplicationPipelineService {
             pipelineRepository.findPipelineRows(pageIds.subList(from, Math.min(from + FACTS_BATCH, pageIds.size())))
                     .forEach(row -> byId.put(row.applicationId(), row));
         }
-        return pageIds.stream().map(id -> byId.get(id)).filter(row -> row != null).toList();
+        return pageIds.stream()
+                .map(byId::get)
+                .filter(Objects::nonNull)
+                .toList();
     }
 
-    /** Thiếu dữ kiện (không xảy ra với đơn vừa đọc) thì tính theo riêng trạng thái đơn, coi như chưa có lịch, offer. */
-    private static ApplicationProgressFacts knownFacts(Integer applicationId, String status,
-                                                       Map<Integer, ApplicationProgressFacts> facts) {
+    private static ApplicationProgressFacts knownFacts(
+            Integer applicationId, String status, Map<Integer, ApplicationProgressFacts> facts) {
         return facts.getOrDefault(applicationId,
                 new ApplicationProgressFacts(applicationId, status, null, null, null, 0, 0, null, null));
     }
 
-    /** Hành trình của đơn, mới nhất trước: nộp, các lượt duyệt, lịch và kết quả phỏng vấn, thư mời. */
     private List<TimelineItem> timeline(Application application, User account) {
         Integer id = application.getApplicationId();
         List<TimelineItem> items = new ArrayList<>();
         var poolEvents = pipelineRepository.findTalentPoolEvents(id);
-        boolean hrRecommendation = poolEvents.stream().anyMatch(event -> "TalentPoolHrRecommended".equals(event.getKind()));
+        boolean hrRecommendation = poolEvents.stream()
+                .anyMatch(event -> "TalentPoolHrRecommended".equals(event.getKind()));
         for (var event : poolEvents) {
             String title = switch (event.getKind()) {
                 case "TalentPoolHrRecommended" -> "HR gửi gợi ý cho HM";
-                case "TalentPoolSuggested" -> hrRecommendation ? "HM chấp nhận gợi ý — chờ HR liên hệ" : "HM đề xuất";
+                case "TalentPoolSuggested" -> hrRecommendation
+                        ? "HM chấp nhận gợi ý — chờ HR liên hệ"
+                        : "HM đề xuất";
                 case "TalentPoolActivated" -> "HR xác nhận ứng viên đồng ý dùng CV cũ";
                 case "TalentPoolCandidateSubmitted" -> "Ứng viên nộp CV mới";
                 default -> "Kết thúc đề xuất";
@@ -257,38 +289,62 @@ public class ApplicationPipelineService {
             items.add(new TimelineItem(event.getAt(), title, event.getActor(), null, "neutral"));
         }
         if (poolEvents.isEmpty() && "HM_Suggested".equals(application.getApplicationStatus())) {
-            items.add(new TimelineItem(application.getSubmissionDate(), "HM đề xuất", null,
-                    "Chờ HR liên hệ và xác nhận ứng viên đồng ý ứng tuyển.", "neutral"));
-        } else if (poolEvents.isEmpty()) {
-            items.add(new TimelineItem(application.getSubmissionDate(), "Nộp hồ sơ", account.getFullName(), null,
+            items.add(new TimelineItem(
+                    application.getSubmissionDate(),
+                    "HM đề xuất",
+                    null,
+                    "Chờ HR liên hệ và xác nhận ứng viên đồng ý ứng tuyển.",
                     "neutral"));
+        } else if (poolEvents.isEmpty()) {
+            items.add(new TimelineItem(
+                    application.getSubmissionDate(), "Nộp hồ sơ", account.getFullName(), null, "neutral"));
         }
         var reviewHistory = reviewRepository.findWithReviewerByApplicationId(id);
         Integer originReviewId = hrRecommendation ? reviewHistory.stream()
                 .filter(r -> "HR".equals(r.getReviewerRole()) && "Hold".equals(r.getDecision()))
-                .map(r -> r.getReviewId()).min((a, b) -> a.compareTo(b)).orElse(null) : null;
+                .map(ApplicationReview::getReviewId)
+                .min(Integer::compareTo)
+                .orElse(null) : null;
         Integer hmRecommendationDecisionId = hrRecommendation ? reviewHistory.stream()
-                .filter(r -> "HiringManager".equals(r.getReviewerRole()) && java.util.Set.of("Pass", "Fail").contains(r.getDecision()))
-                .map(r -> r.getReviewId()).min((a, b) -> a.compareTo(b)).orElse(null) : null;
-        reviewHistory.stream().filter(review -> (originReviewId == null || !originReviewId.equals(review.getReviewId()))
-                && (hmRecommendationDecisionId == null || !hmRecommendationDecisionId.equals(review.getReviewId()))).forEach(review -> items.add(new TimelineItem(
-                review.getReviewedAt(),
-                ApplicationStatusLabels.reviewerRoleLabel(review.getReviewerRole()) + ": "
-                        + ApplicationStatusLabels.decisionLabel(review.getDecision()),
-                review.getReviewer().getFullName(), review.getComments(),
-                ApplicationStatusLabels.decisionTone(review.getDecision()))));
+                .filter(r -> "HiringManager".equals(r.getReviewerRole())
+                        && Set.of("Pass", "Fail").contains(r.getDecision()))
+                .map(ApplicationReview::getReviewId)
+                .min(Integer::compareTo)
+                .orElse(null) : null;
+        reviewHistory.stream()
+                .filter(review -> (originReviewId == null || !originReviewId.equals(review.getReviewId()))
+                        && (hmRecommendationDecisionId == null
+                                || !hmRecommendationDecisionId.equals(review.getReviewId())))
+                .forEach(review -> items.add(new TimelineItem(
+                        review.getReviewedAt(),
+                        ApplicationStatusLabels.reviewerRoleLabel(review.getReviewerRole()) + ": "
+                                + ApplicationStatusLabels.decisionLabel(review.getDecision()),
+                        review.getReviewer().getFullName(),
+                        review.getComments(),
+                        ApplicationStatusLabels.decisionTone(review.getDecision()))));
         pipelineRepository.findInterviewEvents(id).forEach(event -> items.add(new TimelineItem(
                 event.getAt(), "Lịch phỏng vấn: " + event.getStatus(), null, null, "neutral")));
         pipelineRepository.findInterviewResultEvents(id).forEach(event -> items.add(new TimelineItem(
-                event.getAt(), "Kết quả phỏng vấn: " + ApplicationStatusLabels.interviewResultLabel(event.getStatus()),
-                null, null, ApplicationStatusLabels.interviewResultTone(event.getStatus()))));
+                event.getAt(),
+                "Kết quả phỏng vấn: " + ApplicationStatusLabels.interviewResultLabel(event.getStatus()),
+                null,
+                null,
+                ApplicationStatusLabels.interviewResultTone(event.getStatus()))));
         pipelineRepository.findOfferEvents(id).forEach(event -> items.add(new TimelineItem(
-                event.getAt(), "Thư mời: " + ApplicationStatusLabels.offerLabel(event.getStatus()), null, null, "success")));
+                event.getAt(),
+                "Thư mời: " + ApplicationStatusLabels.offerLabel(event.getStatus()),
+                null,
+                null,
+                "success")));
         if (ApplicationStatusService.CANCELLED.equals(application.getApplicationStatus())) {
-            items.add(new TimelineItem(application.getUpdatedAt(), "Đóng đợt tuyển dụng", "Hệ thống",
-                    "Đợt tuyển dụng đã kết thúc, hồ sơ dừng xử lý", "neutral"));
+            items.add(new TimelineItem(
+                    application.getUpdatedAt(),
+                    "Đóng đợt tuyển dụng",
+                    "Hệ thống",
+                    "Đợt tuyển dụng đã kết thúc, hồ sơ dừng xử lý",
+                    "neutral"));
         }
-        items.sort(Comparator.comparing(item -> item.at(), Comparator.nullsLast(Comparator.reverseOrder())));
+        items.sort(Comparator.comparing(TimelineItem::at, Comparator.nullsLast(Comparator.reverseOrder())));
         return items;
     }
 }

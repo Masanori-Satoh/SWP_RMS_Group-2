@@ -7,17 +7,29 @@ import com.group2.rms.candidate.entity.ApplicationProgressStep;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-import static com.group2.rms.candidate.entity.ApplicationProgressStep.*;
+import static com.group2.rms.candidate.entity.ApplicationProgressStep.AWAITING_DECISION;
+import static com.group2.rms.candidate.entity.ApplicationProgressStep.AWAITING_EVALUATIONS;
+import static com.group2.rms.candidate.entity.ApplicationProgressStep.AWAITING_HM_REVIEW;
+import static com.group2.rms.candidate.entity.ApplicationProgressStep.AWAITING_HR_REVIEW;
+import static com.group2.rms.candidate.entity.ApplicationProgressStep.AWAITING_SCHEDULE;
+import static com.group2.rms.candidate.entity.ApplicationProgressStep.CV_REJECTED;
+import static com.group2.rms.candidate.entity.ApplicationProgressStep.HIRED_DONE;
+import static com.group2.rms.candidate.entity.ApplicationProgressStep.HM_SUGGESTED;
+import static com.group2.rms.candidate.entity.ApplicationProgressStep.INTERVIEW_FAILED;
+import static com.group2.rms.candidate.entity.ApplicationProgressStep.INTERVIEW_SCHEDULED;
+import static com.group2.rms.candidate.entity.ApplicationProgressStep.OFFER_AWAITING_DIRECTOR;
+import static com.group2.rms.candidate.entity.ApplicationProgressStep.OFFER_AWAITING_SEND;
+import static com.group2.rms.candidate.entity.ApplicationProgressStep.OFFER_DECLINED;
+import static com.group2.rms.candidate.entity.ApplicationProgressStep.OFFER_DRAFT;
+import static com.group2.rms.candidate.entity.ApplicationProgressStep.OFFER_EXPIRED;
+import static com.group2.rms.candidate.entity.ApplicationProgressStep.OFFER_RETURNED;
+import static com.group2.rms.candidate.entity.ApplicationProgressStep.OFFER_SENT;
+import static com.group2.rms.candidate.entity.ApplicationProgressStep.PASSED_AWAITING_OFFER;
+import static com.group2.rms.candidate.entity.ApplicationProgressStep.POSTING_CLOSED;
+import static com.group2.rms.candidate.entity.ApplicationProgressStep.WITHDRAWN;
 
 /**
- * Tính trạng thái chi tiết của hồ sơ từ dữ kiện (hàm thuần, không đọc DB).
- * <p>
- * Đơn đang trong vòng phỏng vấn/offer ({@code HM_Passed}, {@code Interviewing},
- * {@code Offered}) được xét theo
- * việc thật đã xảy ra (offer, lịch, kết quả), không theo con dấu trạng thái: dữ
- * liệu cũ có thể chưa đổi trạng thái
- * (ví dụ đơn {@code HM_Passed} đã có lịch, đã chốt Không đạt). Offer đứng sau
- * phỏng vấn trong luồng nên xét trước.
+ * Resolver tính toán trạng thái chi tiết của hồ sơ ứng tuyển từ các dữ kiện tiến trình.
  */
 public final class ApplicationProgressResolver {
 
@@ -26,6 +38,9 @@ public final class ApplicationProgressResolver {
     private ApplicationProgressResolver() {
     }
 
+    /**
+     * Xác định trạng thái tiến trình chi tiết của hồ sơ dựa vào dữ kiện thực tế.
+     */
     public static ApplicationProgressResponse resolve(ApplicationProgressFacts facts, LocalDateTime now) {
         return switch (facts.applicationStatus()) {
             case "Applied" -> of(AWAITING_HR_REVIEW);
@@ -39,17 +54,14 @@ public final class ApplicationProgressResolver {
         };
     }
 
-    /** Đơn {@code Rejected} (công ty loại): dừng sau phỏng vấn hay sau vòng CV. */
     private static ApplicationProgressStep rejectedStep(ApplicationProgressFacts facts) {
         return "Failed".equals(facts.finalDecision()) ? INTERVIEW_FAILED : CV_REJECTED;
     }
 
-    /** Đơn {@code Withdrawn} (ứng viên tự dừng): từ chối offer, hay rút đơn từ sớm. */
     private static ApplicationProgressStep withdrawnStep(ApplicationProgressFacts facts) {
         return "Declined".equals(facts.offerStatus()) ? OFFER_DECLINED : WITHDRAWN;
     }
 
-    /** Đơn {@code HM_Passed}, {@code Interviewing}, {@code Offered}. */
     private static ApplicationProgressResponse inProgress(ApplicationProgressFacts facts, LocalDateTime now) {
         ApplicationProgressStep offerStep = offerStep(facts.offerStatus());
         if (offerStep != null) {
@@ -67,13 +79,13 @@ public final class ApplicationProgressResolver {
         if ("Passed".equals(facts.finalDecision())) {
             return of(PASSED_AWAITING_OFFER);
         }
-        // HM đang cân nhắc: ứng viên chỉ thấy "chờ chốt kết quả", không lộ quyết định nội bộ (GBR-02)
         if ("Considering".equals(facts.finalDecision())) {
             return of(AWAITING_DECISION);
         }
         boolean upcoming = ("Scheduled".equals(facts.interviewStatus())
                 || "Rescheduled".equals(facts.interviewStatus()))
-                && facts.interviewStart() != null && facts.interviewStart().isAfter(now);
+                && facts.interviewStart() != null
+                && facts.interviewStart().isAfter(now);
         if (upcoming) {
             return of(INTERVIEW_SCHEDULED, facts.interviewStart().format(DAY_MONTH));
         }
@@ -83,10 +95,6 @@ public final class ApplicationProgressResolver {
         return of(AWAITING_DECISION);
     }
 
-    /**
-     * {@code null} khi chưa có offer (hoặc trạng thái lạ ngoài
-     * {@code CK_OfferProposal_Status}).
-     */
     private static ApplicationProgressStep offerStep(String offerStatus) {
         if (offerStatus == null) {
             return null;

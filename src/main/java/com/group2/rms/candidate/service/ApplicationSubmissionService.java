@@ -1,13 +1,13 @@
 package com.group2.rms.candidate.service;
 
-import com.group2.rms.candidate.exception.ApplicationSubmissionException;
-import com.group2.rms.candidate.validator.CvFileValidator;
 import com.group2.rms.candidate.entity.Application;
 import com.group2.rms.candidate.entity.Candidate;
+import com.group2.rms.candidate.exception.ApplicationSubmissionException;
 import com.group2.rms.candidate.repository.ApplicationRepository;
 import com.group2.rms.candidate.repository.CandidateRepository;
 import com.group2.rms.candidate.storage.CvStorage;
 import com.group2.rms.candidate.storage.StoredFile;
+import com.group2.rms.candidate.validator.CvFileValidator;
 import com.group2.rms.core.exception.ResourceNotFoundException;
 import com.group2.rms.jobposting.entity.JobPosting;
 import com.group2.rms.jobposting.repository.JobPostingRepository;
@@ -21,16 +21,14 @@ import org.springframework.web.multipart.MultipartFile;
 import java.time.LocalDateTime;
 
 /**
- * Ứng viên nộp đơn cho một tin tuyển dụng (5.1.36).
- * Mọi kiểm tra chạy trước khi lưu file; file đã lưu sẽ bị xóa nếu transaction không commit.
+ * Service tiếp nhận hồ sơ ứng tuyển của ứng viên cho tin tuyển dụng.
  */
 @Service
 @RequiredArgsConstructor
 public class ApplicationSubmissionService {
 
     public static final String INITIAL_STATUS = "Applied";
-    public static final String ALREADY_APPLIED_MESSAGE =
-            "Bạn đã ứng tuyển tin tuyển dụng này.";
+    public static final String ALREADY_APPLIED_MESSAGE = "Bạn đã ứng tuyển tin tuyển dụng này.";
 
     private final CandidateRepository candidateRepository;
     private final ApplicationRepository applicationRepository;
@@ -38,6 +36,9 @@ public class ApplicationSubmissionService {
     private final CvFileValidator cvFileValidator;
     private final CvStorage cvStorage;
 
+    /**
+     * Xử lý nộp hồ sơ ứng tuyển và lưu trữ file CV.
+     */
     @Transactional
     public Integer apply(String username, Integer jobPostingId, MultipartFile cvFile) {
         Candidate candidate = candidateRepository.findByAccount_UsernameIgnoreCase(username)
@@ -51,7 +52,6 @@ public class ApplicationSubmissionService {
         if (job.getApplicationDeadline() != null && job.getApplicationDeadline().isBefore(LocalDateTime.now())) {
             throw new ApplicationSubmissionException(null, "Tin tuyển dụng đã hết hạn nhận hồ sơ.");
         }
-        // Mỗi lần đăng tin có JobPostingId riêng; ứng viên được nộp lại ở lần đăng mới.
         if (applicationRepository.existsActiveByCandidateAndJobPosting(
                 candidate.getCandidateId(), job.getJobPostingId())) {
             throw new ApplicationSubmissionException(null, ALREADY_APPLIED_MESSAGE);
@@ -61,24 +61,33 @@ public class ApplicationSubmissionService {
         StoredFile stored = cvStorage.store(cvFile, candidate.getCandidateId());
         deleteFileUnlessCommitted(stored);
 
-        Application draft = applicationRepository.findFirstByCandidate_CandidateIdAndJobPosting_JobPostingIdAndApplicationStatus(
-                candidate.getCandidateId(), jobPostingId, "HM_Suggested").orElse(null);
-        // A candidate-submitted CV always enters ordinary screening, including an HM-approved proposal.
-        // HR confirmation of consent to use the old CV remains a separate operation.
+        Application draft = applicationRepository
+                .findFirstByCandidate_CandidateIdAndJobPosting_JobPostingIdAndApplicationStatus(
+                        candidate.getCandidateId(), jobPostingId, "HM_Suggested")
+                .orElse(null);
         Application saved;
         if (draft != null) {
-            if (applicationRepository.submitSuggestionWithNewCv(draft.getApplicationId(), stored.url(), INITIAL_STATUS) != 1)
+            if (applicationRepository.submitSuggestionWithNewCv(
+                    draft.getApplicationId(), stored.url(), INITIAL_STATUS) != 1) {
                 throw new ApplicationSubmissionException(null, "Đề xuất vừa được xử lý. Vui lòng tải lại trang.");
-            applicationRepository.recordSuggestionSubmitted(candidate.getAccount().getUserId(), draft.getApplicationId());
+            }
+            applicationRepository.recordSuggestionSubmitted(
+                    candidate.getAccount().getUserId(), draft.getApplicationId());
             saved = draft;
         } else {
-            saved = applicationRepository.save(Application.builder().candidate(candidate).jobPosting(job)
-                    .appliedCvUrl(stored.url()).applicationStatus(INITIAL_STATUS).build());
+            saved = applicationRepository.save(Application.builder()
+                    .candidate(candidate)
+                    .jobPosting(job)
+                    .appliedCvUrl(stored.url())
+                    .applicationStatus(INITIAL_STATUS)
+                    .build());
         }
         return saved.getApplicationId();
     }
 
-    /** Chưa đăng nhập hoặc không phải ứng viên thì coi như chưa nộp ở tin này. */
+    /**
+     * Kiểm tra ứng viên đã nộp hồ sơ cho tin tuyển dụng hay chưa.
+     */
     @Transactional(readOnly = true)
     public boolean hasApplied(String username, Integer jobPostingId) {
         if (username == null) {
@@ -90,7 +99,6 @@ public class ApplicationSubmissionService {
                 .orElse(false);
     }
 
-    /** File nằm ngoài DB nên rollback không xóa được: tự xóa khi transaction kết thúc mà không commit. */
     private void deleteFileUnlessCommitted(StoredFile stored) {
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override

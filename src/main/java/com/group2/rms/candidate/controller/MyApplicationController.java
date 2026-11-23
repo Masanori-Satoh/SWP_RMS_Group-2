@@ -16,11 +16,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 /**
- * "Đơn của tôi" của ứng viên: danh sách (3 tab), chi tiết một đơn, xem lại CV
- * đã nộp (L8) và rút đơn (UC 39).
- * {@code SecurityConfig} giới hạn {@code /portal/applications/**} cho
- * ROLE_CANDIDATE; ứng viên chỉ thấy đơn của mình
- * (đơn người khác: 404 từ Service).
+ * Controller quản lý đơn ứng tuyển cá nhân từ phía ứng viên.
  */
 @Controller
 @RequestMapping("/portal/applications")
@@ -30,8 +26,7 @@ public class MyApplicationController {
     private final MyApplicationService myApplicationService;
 
     /**
-     * Danh sách đơn; {@code tab} = {@code active} | {@code ended}, giá trị khác (gõ
-     * tay trên URL) thì xem tất cả.
+     * Hiển thị danh sách các đơn ứng tuyển của ứng viên theo tab.
      */
     @GetMapping
     public String list(@RequestParam(required = false) String tab, Model model) {
@@ -47,10 +42,7 @@ public class MyApplicationController {
     }
 
     /**
-     * Chi tiết một đơn: chỗ duy nhất để rút đơn. Tên biến không phải
-     * {@code application}: Thymeleaf dành tên đó cho
-     * thuộc tính của ServletContext ({@code ${application.x}}), nên đặt vậy thì
-     * trang đọc nhầm ra {@code null}.
+     * Hiển thị tiến trình chi tiết của một đơn ứng tuyển.
      */
     @GetMapping("/{id}")
     public String detail(@PathVariable Integer id, Model model) {
@@ -60,8 +52,7 @@ public class MyApplicationController {
     }
 
     /**
-     * CV đã nộp, hiện trong popup của danh sách / trang chi tiết (khung cùng nguồn:
-     * {@code SecurityConfig.CV_PATHS}).
+     * Tải lại file CV đã nộp của đơn ứng tuyển.
      */
     @GetMapping("/{id}/cv")
     public ResponseEntity<Resource> cv(@PathVariable Integer id) {
@@ -69,7 +60,7 @@ public class MyApplicationController {
     }
 
     /**
-     * Rút đơn; thành công về danh sách, bị từ chối thì về trang chi tiết kèm lý do.
+     * Xử lý rút đơn ứng tuyển của ứng viên.
      */
     @PostMapping("/{id}/withdraw")
     public String withdraw(@PathVariable Integer id, RedirectAttributes redirect) {

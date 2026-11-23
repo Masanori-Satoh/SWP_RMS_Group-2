@@ -14,30 +14,17 @@ import java.util.List;
  * DTO yêu cầu cập nhật thông tin hồ sơ của ứng viên.
  */
 public record UpdateCandidateProfileRequest(
-        @Past
-        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-        LocalDate dateOfBirth,
+        @Past @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateOfBirth,
 
-        @Size(max = 20)
-        String gender,
+        @Size(max = 20) String gender,
 
-        @Size(max = 255)
-        String address,
+        @Size(max = 255) String address,
 
-        @Size(max = 500)
-        @Pattern(regexp = "^$|^https?://[^\\s<>\"]+$",
-                message = "Link LinkedIn phải bắt đầu bằng http:// hoặc https://.")
-        String linkedInUrl,
+        @Size(max = 500) @Pattern(regexp = "^$|^https?://[^\\s<>\"]+$", message = "Link LinkedIn phải bắt đầu bằng http:// hoặc https://.") String linkedInUrl,
 
-        @Size(max = 500)
-        @Pattern(regexp = "^$|^https?://[^\\s<>\"]+$",
-                message = "Link Portfolio phải bắt đầu bằng http:// hoặc https://.")
-        String portfolioUrl,
+        @Size(max = 500) @Pattern(regexp = "^$|^https?://[^\\s<>\"]+$", message = "Link Portfolio phải bắt đầu bằng http:// hoặc https://.") String portfolioUrl,
 
-        @Email(message = "Vui lòng nhập email hợp lệ.")
-        @Size(max = 150, message = "Email không được quá 150 ký tự.")
-        @Pattern(regexp = ".+", message = "Vui lòng nhập email.")
-        String email) {
+        @Email(message = "Vui lòng nhập email hợp lệ.") @Size(max = 150, message = "Email không được quá 150 ký tự.") @Pattern(regexp = ".+", message = "Vui lòng nhập email.") String email) {
 
     public UpdateCandidateProfileRequest {
         email = (email == null) ? null : email.strip();

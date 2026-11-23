@@ -1,13 +1,13 @@
 package com.group2.rms.candidate.service;
 
 import com.group2.rms.candidate.dto.ApplicationReviewRequest;
+import com.group2.rms.candidate.dto.ApplicationStatusLabels;
 import com.group2.rms.candidate.entity.Application;
 import com.group2.rms.candidate.entity.ApplicationReview;
 import com.group2.rms.candidate.exception.ApplicationReviewException;
 import com.group2.rms.candidate.repository.ApplicationRepository;
 import com.group2.rms.candidate.repository.ApplicationReviewRepository;
 import com.group2.rms.candidate.validator.ApplicationAccess;
-import com.group2.rms.candidate.dto.ApplicationStatusLabels;
 import com.group2.rms.core.exception.ResourceNotFoundException;
 import com.group2.rms.notification.service.NotificationService;
 import com.group2.rms.user.entity.User;
@@ -19,14 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Set;
 
 /**
- * HR và trưởng bộ phận duyệt hồ sơ (SRS UC 42, 46). HM vắng thì Director duyệt thay ở bước HM
- * (Q2.3); lượt duyệt ghi vai trò {@code Director} để lịch sử hiện "Giám đốc".
- * Mỗi lượt duyệt = 1 dòng {@code ApplicationReview} + (nếu Đạt / Không đạt) đổi trạng thái, trong cùng một transaction.
- * Trạng thái chỉ đi tiến (SRS GBR-01):
- * <pre>
- *   Applied --HR Đạt--> HR_Passed --HM (hoặc Director) Đạt--> HM_Passed
- *   bất kỳ bước nào ở trên --Không đạt--> Rejected;  Tạm giữ: giữ nguyên
- * </pre>
+ * Service xử lý thẩm định hồ sơ ứng tuyển từ HR, Hiring Manager hoặc Director duyệt thay.
  */
 @Service
 @RequiredArgsConstructor
@@ -37,7 +30,9 @@ public class ApplicationReviewService {
     private final ApplicationAccess applicationAccess;
     private final NotificationService notificationService;
 
-    /** @return thông báo thành công để hiện trên trang chi tiết */
+    /**
+     * Thẩm định hồ sơ ứng tuyển, lưu đánh giá, chuyển trạng thái và gửi thông báo.
+     */
     @Transactional
     public String review(Integer applicationId, ApplicationReviewRequest request) {
         User actor = applicationAccess.actor();
@@ -60,7 +55,9 @@ public class ApplicationReviewService {
                 .reviewer(actor)
                 .reviewerRole(hrStep ? "HR" : onBehalf ? "Director" : "HiringManager")
                 .decision(decision)
-                .comments(request.comments() == null || request.comments().isBlank() ? null : request.comments().strip())
+                .comments(request.comments() == null || request.comments().isBlank()
+                        ? null
+                        : request.comments().strip())
                 .build());
 
         String target = switch (decision) {
@@ -69,13 +66,14 @@ public class ApplicationReviewService {
             default -> null;
         };
         if (target != null) {
-            Set<String> from = hrStep ? ApplicationAccess.HR_REVIEW_STATUSES : Set.of(ApplicationAccess.HM_REVIEW_STATUS);
+            Set<String> from = hrStep
+                    ? ApplicationAccess.HR_REVIEW_STATUSES
+                    : Set.of(ApplicationAccess.HM_REVIEW_STATUS);
             if (applicationRepository.transition(applicationId, from, target) == 0) {
                 throw new ApplicationReviewException(null,
                         "Hồ sơ vừa được người khác xử lý. Vui lòng tải lại trang.");
             }
         }
-        // hoangnh bổ sung: Đạt thì báo người làm bước tiếp theo
         if ("Pass".equals(decision)) {
             if (hrStep) {
                 notificationService.notifyApplicationAwaitingHiringManager(application, actor);

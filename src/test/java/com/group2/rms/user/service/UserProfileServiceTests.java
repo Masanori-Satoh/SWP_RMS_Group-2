@@ -36,8 +36,9 @@ class UserProfileServiceTests {
     private final UserRepository userRepository = mock(UserRepository.class);
     private final PasswordEncoder encoder = mock(PasswordEncoder.class);
     private static final String SEED_AVATAR = "https://ui-avatars.com/api/?name=Employee&background=random";
-    static final byte[] PNG = {(byte) 0x89, 'P', 'N', 'G', '\r', '\n', 0x1A, '\n', 0, 0, 0, 0x0D};
-    static final byte[] JPEG = {(byte) 0xFF, (byte) 0xD8, (byte) 0xFF, (byte) 0xE0, 0, 0x10, 'J', 'F', 'I', 'F', 0, 1};
+    static final byte[] PNG = { (byte) 0x89, 'P', 'N', 'G', '\r', '\n', 0x1A, '\n', 0, 0, 0, 0x0D };
+    static final byte[] JPEG = { (byte) 0xFF, (byte) 0xD8, (byte) 0xFF, (byte) 0xE0, 0, 0x10, 'J', 'F', 'I', 'F', 0,
+            1 };
 
     @TempDir
     Path uploads;
@@ -115,7 +116,7 @@ class UserProfileServiceTests {
     }
 
     @ParameterizedTest
-    @ValueSource(booleans = {true, false})
+    @ValueSource(booleans = { true, false })
     void candidateCannotUseAnotherAccountsLoginIdentifier(boolean emailCollision) {
         user.setRole(Role.builder().roleName("Candidate").build());
         String taken = "taken@example.test";

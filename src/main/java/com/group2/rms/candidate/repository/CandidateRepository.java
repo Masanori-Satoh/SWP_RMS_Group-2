@@ -11,6 +11,7 @@ import java.util.Optional;
 
 @Repository
 public interface CandidateRepository extends JpaRepository<Candidate, Integer>, JpaSpecificationExecutor<Candidate> {
+
     Optional<Candidate> findByAccountUserId(Integer userId);
 
     Optional<Candidate> findByAccount_UsernameIgnoreCase(String username);

@@ -32,20 +32,14 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * Đơn của chính ứng viên đang đăng nhập ("Đơn của tôi": danh sách, chi tiết,
- * xem lại CV) và rút đơn (UC 39).
- * Rút đơn: đơn chuyển {@code Withdrawn}, kèm một dòng {@code AuditLog} ghi đơn
- * đang ở trạng thái nào và lúc nào
- * (nhật ký, không phải nơi suy ra trạng thái).
+ * Service quản lý danh sách, chi tiết đơn ứng tuyển và thao tác rút đơn của ứng viên.
  */
 @Service
 @RequiredArgsConstructor
 public class MyApplicationService {
 
-    /** Chỉ rút được khi đơn còn chờ sàng lọc, HR chưa duyệt (BR-CAN-03). */
     public static final Set<String> WITHDRAWABLE_STATUSES = Set.of("Applied");
 
-    /** Tab của danh sách; giá trị khác (gõ tay trên URL) là "Tất cả". */
     public static final String TAB_ALL = "all";
     public static final String TAB_ACTIVE = "active";
     public static final String TAB_ENDED = "ended";
@@ -56,26 +50,17 @@ public class MyApplicationService {
     private final CvStorage cvStorage;
 
     /**
-     * Thứ tự danh sách (dunglt 27/10): nhóm 1 (có phỏng vấn / thư mời sắp tới, sự
-     * kiện gần nhất trước, thư mời không hạn
-     * sau cùng nhóm) → nhóm 2 (đang xử lý) → nhóm 3 (đã kết thúc, luôn cuối). Trong
-     * nhóm: mới có chuyển biến trước, rồi
-     * đơn nộp sau, rồi id lớn hơn (thứ tự ổn định cho phân trang sau này).
+     * Thứ tự hiển thị ưu tiên danh sách đơn ứng tuyển.
      */
     static final Comparator<MyApplicationResponse> DISPLAY_ORDER = Comparator
-            .comparingInt((MyApplicationResponse app) -> app.priority())
-            .thenComparing(app -> app.upcomingAt(), Comparator.nullsLast(Comparator.naturalOrder()))
-            .thenComparing(app -> app.lastActivityAt(), Comparator.nullsLast(Comparator.reverseOrder()))
-            .thenComparing(app -> app.submissionDate(), Comparator.nullsLast(Comparator.reverseOrder()))
-            .thenComparing(app -> app.applicationId(), Comparator.reverseOrder());
+            .comparingInt(MyApplicationResponse::priority)
+            .thenComparing(MyApplicationResponse::upcomingAt, Comparator.nullsLast(Comparator.naturalOrder()))
+            .thenComparing(MyApplicationResponse::lastActivityAt, Comparator.nullsLast(Comparator.reverseOrder()))
+            .thenComparing(MyApplicationResponse::submissionDate, Comparator.nullsLast(Comparator.reverseOrder()))
+            .thenComparing(MyApplicationResponse::applicationId, Comparator.reverseOrder());
 
     /**
-     * Danh sách đơn của ứng viên đang đăng nhập: thẻ của tab {@code tab} (lọc phía
-     * server để sau này thêm phân trang
-     * vẫn đúng), số đơn mỗi tab, và mọi đơn gấp cho banner (hạn gần nhất trước).
-     *
-     * @param tab {@value #TAB_ACTIVE}, {@value #TAB_ENDED}; giá trị khác hoặc
-     *            {@code null} là tất cả
+     * Lấy danh sách đơn ứng tuyển của ứng viên theo từng tab kèm số lượng và đơn cần chú ý.
      */
     @Transactional(readOnly = true)
     public MyApplicationListResponse list(String tab) {
@@ -99,7 +84,7 @@ public class MyApplicationService {
             }
         }
 
-        urgent.sort(Comparator.comparing(card -> card.urgentUntil()));
+        urgent.sort(Comparator.comparing(MyApplicationResponse::urgentUntil));
 
         String selected = TAB_ACTIVE.equals(tab) || TAB_ENDED.equals(tab) ? tab : TAB_ALL;
         List<MyApplicationResponse> shown = switch (selected) {
@@ -113,9 +98,7 @@ public class MyApplicationService {
     }
 
     /**
-     * Trang chi tiết một đơn của chính mình (L8). Đi cùng đường với danh sách để
-     * chữ, bước, việc gấp chỉ tính ở một
-     * chỗ; ứng viên thường chỉ có vài đơn nên đọc cả bộ không đáng kể.
+     * Lấy thông tin chi tiết một đơn ứng tuyển của ứng viên.
      */
     @Transactional(readOnly = true)
     public MyApplicationResponse detail(Integer applicationId) {
@@ -126,8 +109,7 @@ public class MyApplicationService {
     }
 
     /**
-     * CV đã nộp của một đơn của chính mình; đơn người khác hoặc không có CV thì
-     * 404.
+     * Lấy tài nguyên CV đã nộp của đơn ứng tuyển.
      */
     @Transactional(readOnly = true)
     public ApplicationCv cv(Integer applicationId) {
@@ -138,38 +120,47 @@ public class MyApplicationService {
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy CV của hồ sơ này."));
     }
 
-    /**
-     * Mọi thẻ đơn của ứng viên {@code userId}, theo {@link #DISPLAY_ORDER}. Dữ kiện
-     * lịch, offer, dấu dừng đọc theo
-     * {@code userId} (mỗi loại một câu cho cả trang, không một câu cho từng đơn),
-     * gom theo id đơn rồi quy đổi bằng
-     * {@link MyApplicationJourney}.
-     */
     private List<MyApplicationResponse> cards(Integer userId) {
         List<Application> owned = myApplicationRepository.findOwnedByUserId(userId);
         if (owned.isEmpty()) {
             return List.of();
         }
         Map<Integer, List<Interview>> interviews = myApplicationRepository.findMyInterviews(userId).stream()
-                .collect(Collectors.groupingBy(row -> row.getApplicationId(), Collectors.mapping(
-                        row -> new Interview(row.getStartTime(), row.getFormat(), row.getStatus(),
-                                row.getScheduledAt()),
-                        Collectors.toList())));
+                .collect(Collectors.groupingBy(
+                        MyInterviewRow::getApplicationId,
+                        Collectors.mapping(
+                                row -> new Interview(
+                                        row.getStartTime(),
+                                        row.getFormat(),
+                                        row.getStatus(),
+                                        row.getScheduledAt()),
+                                Collectors.toList())));
         Map<Integer, Offer> offers = myApplicationRepository.findMyVisibleOffers(userId).stream()
-                .collect(Collectors.toMap(row -> row.getApplicationId(),
-                        row -> new Offer(row.getOfferId(), row.getStatus(), row.getResponseDeadline(), row.getAt(),
+                .collect(Collectors.toMap(
+                        MyOfferRow::getApplicationId,
+                        row -> new Offer(
+                                row.getOfferId(),
+                                row.getStatus(),
+                                row.getResponseDeadline(),
+                                row.getAt(),
                                 row.getExpectedStartDate()),
                         (first, second) -> first));
         Map<Integer, List<Mark>> marks = myApplicationRepository.findMyApplicationMarks(userId).stream()
-                .collect(Collectors.groupingBy(row -> row.getApplicationId(), Collectors.mapping(
-                        row -> new Mark(row.getKind(), row.getOldStatus(), row.getAt()),
-                        Collectors.toList())));
+                .collect(Collectors.groupingBy(
+                        MyApplicationMarkRow::getApplicationId,
+                        Collectors.mapping(
+                                row -> new Mark(row.getKind(), row.getOldStatus(), row.getAt()),
+                                Collectors.toList())));
         LocalDateTime now = LocalDateTime.now();
         return owned.stream()
                 .map(application -> {
                     Integer id = application.getApplicationId();
-                    Facts facts = new Facts(application.getApplicationStatus(), application.getSubmissionDate(),
-                            interviews.getOrDefault(id, List.of()), offers.get(id), marks.getOrDefault(id, List.of()));
+                    Facts facts = new Facts(
+                            application.getApplicationStatus(),
+                            application.getSubmissionDate(),
+                            interviews.getOrDefault(id, List.of()),
+                            offers.get(id),
+                            marks.getOrDefault(id, List.of()));
                     return toResponse(application, MyApplicationJourney.resolve(facts, now), now);
                 })
                 .sorted(DISPLAY_ORDER)
@@ -177,9 +168,7 @@ public class MyApplicationService {
     }
 
     /**
-     * Rút một đơn của chính mình.
-     *
-     * @return tên vị trí, cho thông báo thành công
+     * Thực hiện rút đơn ứng tuyển khi hồ sơ còn ở trạng thái cho phép.
      */
     @Transactional
     public String withdraw(Integer applicationId) {
@@ -192,16 +181,16 @@ public class MyApplicationService {
             throw new ApplicationWithdrawalException(
                     "Hồ sơ đã qua vòng sơ tuyển nên không thể rút. Vui lòng liên hệ bộ phận tuyển dụng.");
         }
-        if (applicationRepository.transition(applicationId, WITHDRAWABLE_STATUSES,
-                ApplicationStatusService.WITHDRAWN) == 0) {
+        if (applicationRepository.transition(
+                applicationId, WITHDRAWABLE_STATUSES, ApplicationStatusService.WITHDRAWN) == 0) {
             throw new ApplicationWithdrawalException("Hồ sơ vừa được cập nhật. Vui lòng tải lại trang.");
         }
         applicationRepository.recordWithdrawal(user.getUserId(), applicationId, status);
         return application.getJobPosting().getPostingTitle();
     }
 
-    private static MyApplicationResponse toResponse(Application application, MyApplicationJourney.View view,
-            LocalDateTime now) {
+    private static MyApplicationResponse toResponse(
+            Application application, MyApplicationJourney.View view, LocalDateTime now) {
         JobPosting job = application.getJobPosting();
         String department = job.getRequisition() == null || job.getRequisition().getDepartment() == null
                 ? null
