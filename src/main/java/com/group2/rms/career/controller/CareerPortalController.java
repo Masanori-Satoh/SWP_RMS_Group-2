@@ -18,39 +18,63 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+/**
+ * Controller phục vụ cổng tuyển dụng công khai cho ứng viên: tra cứu tin tuyển dụng và nộp hồ sơ.
+ */
 @Controller
 @RequiredArgsConstructor
 public class CareerPortalController {
 
     private static final int FEATURED_JOB_COUNT = 3;
     private static final int JOBS_PER_PAGE = 6;
-    /** Mục đang sáng trên topbar công khai (layout/public.html); thiếu thì mặc định "Vị trí đang tuyển". */
     private static final String PUBLIC_NAV = "publicNav";
     private static final String NAV_JOB_DETAIL = "job-detail";
+
     private final CareerPortalService careerPortalService;
     private final ApplicationSubmissionService applicationSubmissionService;
 
+    /**
+     * Cung cấp thông tin tài khoản người xem đang đăng nhập vào model.
+     */
     @ModelAttribute("currentUser")
     public ViewerProfileResponse currentUser(Authentication authentication) {
-        if (authentication == null || !authentication.isAuthenticated() || authentication instanceof AnonymousAuthenticationToken) {
+        if (authentication == null || !authentication.isAuthenticated()
+                || authentication instanceof AnonymousAuthenticationToken) {
             return null;
         }
         return careerPortalService.getViewerProfile(authentication.getName()).orElse(null);
     }
 
-    /** Landing page: giới thiệu Mộc + 3 vị trí mới nhất (theo ngày đăng, lấy tại thời điểm truy cập). */
+    /**
+     * Hiển thị landing page giới thiệu công ty và danh sách việc làm nổi bật mới nhất.
+     */
     @GetMapping("/")
     public String viewLandingPage(Model model) {
         model.addAttribute("featuredJobs", careerPortalService.getLatestJobs(FEATURED_JOB_COUNT));
         return "candidate/landing";
     }
 
-    /** Jobs board: tìm kiếm, lọc và phân trang toàn bộ tin tuyển dụng công khai. */
+    /**
+     * Hiển thị bảng tin tuyển dụng công khai, hỗ trợ tìm kiếm và lọc phân trang.
+     */
     @GetMapping("/jobs")
-    public String viewPublicJobList(@RequestParam(required = false) String keyword, @RequestParam(required = false) Integer departmentId, @RequestParam(required = false) String employmentType, @RequestParam(required = false) String workModel, @RequestParam(required = false) String salaryRange, @PageableDefault(size = JOBS_PER_PAGE, sort = "postingDate", direction = Sort.Direction.DESC) Pageable pageable, Model model) {
+    public String viewPublicJobList(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) Integer departmentId,
+            @RequestParam(required = false) String employmentType,
+            @RequestParam(required = false) String workModel,
+            @RequestParam(required = false) String salaryRange,
+            @PageableDefault(size = JOBS_PER_PAGE, sort = "postingDate", direction = Sort.Direction.DESC)
+            Pageable pageable,
+            Model model) {
 
         if (keyword != null) {
             keyword = keyword.trim();
@@ -95,6 +119,9 @@ public class CareerPortalController {
         return "candidate/job-board";
     }
 
+    /**
+     * Hiển thị chi tiết một vị trí tuyển dụng đang mở cho ứng viên.
+     */
     @GetMapping("/jobs/{id}")
     public String viewJobDetail(@PathVariable("id") Integer id, Model model, Authentication authentication) {
         String username = authentication != null ? authentication.getName() : null;
@@ -106,11 +133,12 @@ public class CareerPortalController {
     }
 
     /**
-     * Điểm vào sau đăng nhập: khách bấm "Ứng tuyển" → /login → quay lại đây → về trang tin với hộp thoại mở sẵn.
+     * Điều hướng ứng viên sau khi đăng nhập về form ứng tuyển công việc.
      */
     @GetMapping("/jobs/{id}/apply")
     public String applyForJob(@PathVariable("id") Integer id, Authentication authentication) {
-        if (authentication == null || !authentication.isAuthenticated() || authentication instanceof AnonymousAuthenticationToken) {
+        if (authentication == null || !authentication.isAuthenticated()
+                || authentication instanceof AnonymousAuthenticationToken) {
             return "redirect:/login";
         }
 
@@ -120,12 +148,20 @@ public class CareerPortalController {
         return "redirect:/jobs/" + id + "#apply";
     }
 
+    /**
+     * Tiếp nhận hồ sơ ứng tuyển, upload CV và thông báo kết quả.
+     */
     @PostMapping("/jobs/{id}/apply")
-    public String submitApplication(@PathVariable("id") Integer id, @ModelAttribute("applyForm") ApplicationSubmissionRequest form, BindingResult errors, Authentication authentication, Model model, RedirectAttributes redirectAttributes) {
+    public String submitApplication(
+            @PathVariable("id") Integer id,
+            @ModelAttribute("applyForm") ApplicationSubmissionRequest form,
+            BindingResult errors,
+            Authentication authentication,
+            Model model,
+            RedirectAttributes redirectAttributes) {
         try {
             Integer applicationId = applicationSubmissionService.apply(authentication.getName(), id, form.cvFile());
             redirectAttributes.addFlashAttribute("applySuccess", true);
-            // Alert sau khi nộp có link "Xem đơn đã nộp →" tới chi tiết đơn (ux.md mục 0)
             redirectAttributes.addFlashAttribute("appliedApplicationId", applicationId);
             return "redirect:/jobs/" + id;
         } catch (ApplicationSubmissionException e) {
@@ -142,7 +178,9 @@ public class CareerPortalController {
         return "candidate/job-detail";
     }
 
-    /** Tin đã tạm dừng / đóng / không tồn tại: về /jobs kèm thông báo thay vì trang 404. */
+    /**
+     * Xử lý ngoại lệ khi tin tuyển dụng không tìm thấy hoặc đã đóng.
+     */
     @ExceptionHandler(ResourceNotFoundException.class)
     public String whenJobUnavailable(ResourceNotFoundException e, RedirectAttributes flash) {
         flash.addFlashAttribute("errorMessage", e.getMessage());

@@ -29,7 +29,8 @@ import static com.group2.rms.candidate.entity.ApplicationProgressStep.POSTING_CL
 import static com.group2.rms.candidate.entity.ApplicationProgressStep.WITHDRAWN;
 
 /**
- * Resolver tính toán trạng thái chi tiết của hồ sơ ứng tuyển từ các dữ kiện tiến trình.
+ * Resolver tính toán trạng thái chi tiết của hồ sơ ứng tuyển từ các dữ kiện
+ * tiến trình.
  */
 public final class ApplicationProgressResolver {
 

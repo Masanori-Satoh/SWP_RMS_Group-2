@@ -9,7 +9,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Tiện ích xây dựng các bước của thanh tiến độ ứng tuyển từ trạng thái hiện tại.
+ * Tiện ích xây dựng các bước của thanh tiến độ ứng tuyển từ trạng thái hiện
+ * tại.
  */
 public final class ApplicationStepper {
 

@@ -8,9 +8,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-/*
- * Nút "Tôi đồng ý" trong popup Điều khoản & Chính sách bảo mật (chỉ Candidate, SecurityConfig).
- * Đủ 2 ô → lưu rồi quay về đúng trang đang xem; thiếu ô → quay về, popup hiện lại kèm lỗi.
+/**
+ * Controller xử lý xác nhận đồng ý Điều khoản sử dụng và Chính sách bảo mật của ứng viên.
  */
 @Controller
 @RequiredArgsConstructor
@@ -21,12 +20,16 @@ public class PolicyConsentController {
 
     private final PolicyConsentService policyConsentService;
 
+    /**
+     * Ghi nhận ứng viên đã đọc và đồng ý với điều khoản sử dụng và chính sách bảo mật.
+     */
     @PostMapping("/policy-consents")
-    public String agree(@RequestParam(defaultValue = "false") boolean agreeTerms,
-                        @RequestParam(defaultValue = "false") boolean agreePrivacy,
-                        @RequestParam(required = false) String returnUrl,
-                        Authentication authentication, RedirectAttributes flash) {
-        // Rule: phải tick đủ cả 2 tài liệu, kể cả khi form bị gửi tay bỏ qua nút đã khóa
+    public String agree(
+            @RequestParam(defaultValue = "false") boolean agreeTerms,
+            @RequestParam(defaultValue = "false") boolean agreePrivacy,
+            @RequestParam(required = false) String returnUrl,
+            Authentication authentication,
+            RedirectAttributes flash) {
         if (!agreeTerms || !agreePrivacy) {
             flash.addFlashAttribute("policyConsentError", MISSING_AGREEMENT);
         } else {
@@ -35,7 +38,9 @@ public class PolicyConsentController {
         return "redirect:" + safeReturnUrl(returnUrl);
     }
 
-    /** Security: chỉ quay về đường dẫn nội bộ ("/jobs/5#apply"), chặn "//evil.com", "https://..." (open redirect). */
+    /**
+     * Kiểm tra và chuẩn hóa đường dẫn chuyển hướng an toàn, ngăn chặn open redirect.
+     */
     static String safeReturnUrl(String returnUrl) {
         if (returnUrl == null || !returnUrl.startsWith("/")) {
             return FALLBACK_URL;

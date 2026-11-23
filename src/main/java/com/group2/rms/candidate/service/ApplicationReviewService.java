@@ -19,7 +19,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Set;
 
 /**
- * Service xử lý thẩm định hồ sơ ứng tuyển từ HR, Hiring Manager hoặc Director duyệt thay.
+ * Service xử lý thẩm định hồ sơ ứng tuyển từ HR, Hiring Manager hoặc Director
+ * duyệt thay.
  */
 @Service
 @RequiredArgsConstructor
@@ -86,7 +87,7 @@ public class ApplicationReviewService {
         return switch (decision) {
             case "Pass" -> hrStep ? "Đã chuyển hồ sơ cho trưởng bộ phận."
                     : onBehalf ? "Đã duyệt thay trưởng bộ phận. HR có thể lên lịch phỏng vấn."
-                    : "Đã duyệt hồ sơ. HR có thể lên lịch phỏng vấn.";
+                            : "Đã duyệt hồ sơ. HR có thể lên lịch phỏng vấn.";
             case "Fail" -> "Đã đánh dấu hồ sơ không đạt.";
             default -> "Đã tạm giữ hồ sơ.";
         };

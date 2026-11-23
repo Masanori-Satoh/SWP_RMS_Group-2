@@ -11,13 +11,13 @@ import java.util.List;
 @Repository
 public interface ApplicationReviewRepository extends JpaRepository<ApplicationReview, Integer> {
 
-    boolean existsByApplication_ApplicationIdAndReviewerRoleAndDecision(
-            Integer applicationId, String reviewerRole, String decision);
+        boolean existsByApplication_ApplicationIdAndReviewerRoleAndDecision(
+                        Integer applicationId, String reviewerRole, String decision);
 
-    @Query("""
-            SELECT rv FROM ApplicationReview rv
-            JOIN FETCH rv.reviewer
-            WHERE rv.application.applicationId = :id
-            """)
-    List<ApplicationReview> findWithReviewerByApplicationId(@Param("id") Integer applicationId);
+        @Query("""
+                        SELECT rv FROM ApplicationReview rv
+                        JOIN FETCH rv.reviewer
+                        WHERE rv.application.applicationId = :id
+                        """)
+        List<ApplicationReview> findWithReviewerByApplicationId(@Param("id") Integer applicationId);
 }

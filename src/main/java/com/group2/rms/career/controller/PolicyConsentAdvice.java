@@ -9,10 +9,8 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ModelAttribute;
 
-/*
- * Cấp cờ policyConsentRequired cho mọi view; public-footer dựa vào cờ này để chèn popup đồng ý.
- * Khách và vai trò nội bộ: false ngay, không truy vấn DB.
- * PolicyConsentService lấy qua ObjectProvider: advice được nạp vào mọi @WebMvcTest, phần lớn không có bean đó.
+/**
+ * Controller advice cung cấp thuộc tính kiểm tra yêu cầu đồng ý chính sách cho ứng viên.
  */
 @ControllerAdvice
 @RequiredArgsConstructor
@@ -22,6 +20,9 @@ public class PolicyConsentAdvice {
 
     private final ObjectProvider<PolicyConsentService> policyConsent;
 
+    /**
+     * Xác định ứng viên có cần xác nhận chính sách trước khi tiếp tục hay không.
+     */
     @ModelAttribute("policyConsentRequired")
     public boolean policyConsentRequired(Authentication authentication) {
         if (!isCandidate(authentication)) {

@@ -10,9 +10,8 @@ import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
-/*
- * Ứng viên đồng ý Điều khoản sử dụng + Chính sách bảo mật (một lần, lưu Candidate.PolicyAgreedAt).
- * Popup đọc needsConsent; nút "Tôi đồng ý" gọi recordConsent. Không chặn nghiệp vụ nào khác.
+/**
+ * Service quản lý trạng thái đồng ý Điều khoản sử dụng và Chính sách bảo mật của ứng viên.
  */
 @Service
 @RequiredArgsConstructor
@@ -21,14 +20,18 @@ public class PolicyConsentService {
     private final CandidateRepository candidateRepository;
     private final Clock clock;
 
-    /** true khi tài khoản có hồ sơ ứng viên và chưa đồng ý lần nào. */
+    /**
+     * Kiểm tra ứng viên có cần xác nhận đồng ý chính sách hay không.
+     */
     @Transactional(readOnly = true)
     public boolean needsConsent(String username) {
         Optional<Candidate> candidate = candidateRepository.findByAccount_UsernameIgnoreCase(username);
         return candidate.isPresent() && candidate.get().getPolicyAgreedAt() == null;
     }
 
-    /** Lưu lúc đồng ý; đã đồng ý rồi thì giữ nguyên thời điểm lần đầu (bấm 2 lần / mở 2 tab). */
+    /**
+     * Ghi nhận thời điểm ứng viên đồng ý chính sách vào hệ thống.
+     */
     @Transactional
     public void recordConsent(String username) {
         Optional<Candidate> candidate = candidateRepository.findByAccount_UsernameIgnoreCase(username);

@@ -17,7 +17,8 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Service cập nhật trạng thái hồ sơ ứng tuyển theo sự kiện phỏng vấn và thư mời làm việc.
+ * Service cập nhật trạng thái hồ sơ ứng tuyển theo sự kiện phỏng vấn và thư mời
+ * làm việc.
  */
 @Service
 @Transactional

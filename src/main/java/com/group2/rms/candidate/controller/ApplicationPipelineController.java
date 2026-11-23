@@ -34,7 +34,8 @@ import java.util.Optional;
 import java.util.Set;
 
 /**
- * Controller quản lý hồ sơ ứng tuyển tuyển dụng: danh sách, chi tiết, CV và duyệt hồ sơ.
+ * Controller quản lý hồ sơ ứng tuyển tuyển dụng: danh sách, chi tiết, CV và
+ * duyệt hồ sơ.
  */
 @Controller
 @RequestMapping("/applications")
