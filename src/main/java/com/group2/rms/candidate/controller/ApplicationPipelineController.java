@@ -116,7 +116,9 @@ public class ApplicationPipelineController {
                 if (e.getField() != null) {
                     errors.rejectValue(e.getField(), "review.invalid", e.getMessage());
                 } else {
-                    errors.reject("review.invalid", e.getMessage());
+                    // RMS-041: lỗi chung (sai bước, người khác vừa xử lý) hiện ở header trang. Khi đơn không còn ở
+                    // bước của người duyệt, form và section duyệt không render nên global error cũ bị mất.
+                    model.addAttribute("errorMessage", e.getMessage());
                 }
             }
         }

@@ -229,10 +229,8 @@
                     <form th:if="${detail.actions.review}"
                         th:action="@{/applications/{id}/review(id=${detail.applicationId})}" th:object="${reviewForm}"
                         method="post" class="app-review" id="app-review-form" novalidate>
-                        <div th:if="${#fields.hasGlobalErrors() or #fields.hasErrors('decision')}"
-                            class="alert alert--danger" role="alert">
-                            <span th:each="message : ${#fields.globalErrors()}" th:text="${message}">Hồ sơ vừa được
-                                người khác xử lý.</span>
+                        <!-- Lỗi chung (sai bước, người khác vừa xử lý) hiện ở header trang qua errorMessage (RMS-041) -->
+                        <div th:if="${#fields.hasErrors('decision')}" class="alert alert--danger" role="alert">
                             <span th:each="message : ${#fields.errors('decision')}" th:text="${message}">Quyết định
                                 không hợp lệ.</span>
                         </div>
