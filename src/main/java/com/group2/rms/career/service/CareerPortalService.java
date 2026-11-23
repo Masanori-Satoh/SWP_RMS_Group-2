@@ -42,16 +42,21 @@ public class CareerPortalService {
     private final ApplicationSubmissionService applicationSubmissionService;
 
     /**
-     * Tin đang mở, lọc theo phòng ban / hình thức và từ khóa ({@link PublicJobSearch}: một từ khớp là lấy, xếp theo
+     * Tin đang mở, lọc theo phòng ban / hình thức / mô hình / mức lương và từ khóa ({@link PublicJobSearch}: một từ khớp là lấy, xếp theo
      * điểm khớp). Không có từ khóa thì giữ thứ tự của {@code pageable} (mặc định mới đăng trước).
      */
     public Page<PublicJobListResponse> getPublishedJobs(String keyword, Integer departmentId, String employmentType,
             Pageable pageable) {
+        return getPublishedJobs(keyword, departmentId, employmentType, null, null, pageable);
+    }
+
+    public Page<PublicJobListResponse> getPublishedJobs(String keyword, Integer departmentId, String employmentType,
+            String workModel, String salaryRange, Pageable pageable) {
         List<String> terms = PublicJobSearch.terms(keyword);
         // Có từ khóa: bỏ sort của pageable để thứ tự theo điểm khớp (đặt trong Specification) không bị đè.
         Pageable page = terms.isEmpty() ? pageable : PageRequest.of(pageable.getPageNumber(), pageable.getPageSize());
         Page<JobPosting> jobs = jobPostingRepository.findAll(
-                PublicJobSearch.openJobs(terms, departmentId, employmentType), page);
+                PublicJobSearch.openJobs(terms, departmentId, employmentType, workModel, salaryRange), page);
         return jobs.map(job -> new PublicJobListResponse(
                 job.getJobPostingId(),
                 job.getPostingTitle(),
@@ -86,7 +91,7 @@ public class CareerPortalService {
     private List<String> formatListText(String value) {
         if (value == null || value.isBlank())
             return List.of();
-        return value.replace("\\n", "\n").lines().map(String::trim).filter(s -> !s.isEmpty()).toList();
+        return value.replace("\\n", "\n").lines().map(s -> s.trim()).filter(s -> !s.isEmpty()).toList();
     }
 
     public PublicJobDetailResponse getPublishedJobDetail(Integer id, String username) {
@@ -137,17 +142,13 @@ public class CareerPortalService {
     }
 
     public List<DepartmentFilterResponse> getSmartSortedDepartments() {
-        List<JobPosting> openJobs = jobPostingRepository.findOpenPostings(LocalDateTime.now());
-        Set<Integer> activeDeptIds = openJobs.stream()
-                .filter(j -> j.getRequisition() != null && j.getRequisition().getDepartment() != null)
-                .map(j -> j.getRequisition().getDepartment().getDepartmentId())
-                .collect(Collectors.toSet());
+        Set<Integer> activeDeptIds = jobPostingRepository.findActiveDepartmentIds(LocalDateTime.now());
 
         return departmentRepository.findAll().stream()
                 .map(d -> new DepartmentFilterResponse(d.getDepartmentId(), d.getDepartmentName()))
                 .sorted(Comparator
                         .comparing((DepartmentFilterResponse dept) -> !activeDeptIds.contains(dept.departmentId()))
-                        .thenComparing(DepartmentFilterResponse::departmentName))
+                        .thenComparing(dept -> dept.departmentName()))
                 .toList();
     }
 

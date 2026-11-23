@@ -2,6 +2,7 @@ package com.group2.rms.career.repository;
 
 import com.group2.rms.core.util.ListFilters;
 import com.group2.rms.jobposting.entity.JobPosting;
+import com.group2.rms.jobposting.service.JobPostingLabels;
 
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Join;
@@ -10,6 +11,7 @@ import jakarta.persistence.criteria.Predicate;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.springframework.data.jpa.domain.Specification;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -64,11 +66,16 @@ public final class PublicJobSearch {
     }
 
     /**
-     * Tin đang mở cho ứng viên (đã đăng, tới ngày đăng, chưa quá hạn nộp), lọc phòng ban / hình thức nếu có, và khớp từ
-     * khóa nếu có. Có từ khóa thì tự đặt thứ tự theo điểm khớp: khi đó gọi với {@code Pageable} <b>không sort</b>, vì sort
-     * của {@code Pageable} sẽ đè thứ tự này.
+     * Tin đang mở cho ứng viên (đã đăng, tới ngày đăng, chưa quá hạn nộp), lọc phòng ban / hình thức / mô hình / mức lương nếu có,
+     * và khớp từ khóa nếu có. Có từ khóa thì tự đặt thứ tự theo điểm khớp: khi đó gọi với {@code Pageable} <b>không sort</b>,
+     * vì sort của {@code Pageable} sẽ đè thứ tự này.
      */
     public static Specification<JobPosting> openJobs(List<String> terms, Integer departmentId, String employmentType) {
+        return openJobs(terms, departmentId, employmentType, null, null);
+    }
+
+    public static Specification<JobPosting> openJobs(List<String> terms, Integer departmentId, String employmentType,
+            String workModel, String salaryRange) {
         return (root, query, cb) -> {
             Join<JobPosting, Object> requisition = root.join("requisition", JoinType.LEFT);
             Join<Object, Object> department = requisition.join("department", JoinType.LEFT);
@@ -84,10 +91,64 @@ public final class PublicJobSearch {
             if (departmentId != null) {
                 where.add(cb.equal(department.get("departmentId"), departmentId));
             }
-            if (employmentType != null) {
+            if (employmentType != null && !employmentType.isBlank()) {
                 // Hình thức của tin; tin cũ chưa có thì lấy của yêu cầu (JobPosting#effectiveEmploymentType)
                 where.add(cb.equal(cb.coalesce(root.<String>get("employmentType"),
-                        requisition.<String>get("employmentType")), employmentType));
+                        requisition.<String>get("employmentType")), employmentType.trim()));
+            }
+            if (workModel != null && !workModel.isBlank()) {
+                // Chế độ làm việc của tin; chưa có thì lấy của yêu cầu (JobPosting#effectiveWorkModel)
+                where.add(cb.equal(cb.coalesce(root.<String>get("workModel"),
+                        requisition.<String>get("workModel")), workModel.trim()));
+            }
+
+            if (salaryRange != null && !salaryRange.isBlank()) {
+                String range = salaryRange.trim();
+                Expression<BigDecimal> minSalary = requisition.get("minSalary");
+                Expression<BigDecimal> maxSalary = requisition.get("maxSalary");
+                Expression<BigDecimal> effMin = cb.coalesce(minSalary, maxSalary);
+                Expression<BigDecimal> effMax = cb.coalesce(maxSalary, minSalary);
+
+                Predicate isNegoDisplay = cb.or(
+                        cb.equal(root.get("salaryDisplay"), JobPostingLabels.SALARY_NEGOTIABLE),
+                        cb.equal(root.get("salaryDisplay"), JobPostingLabels.SALARY_NEGOTIABLE_OLD_SPELLING));
+                Predicate isBothNull = cb.and(cb.isNull(minSalary), cb.isNull(maxSalary));
+
+                if ("negotiable".equalsIgnoreCase(range)) {
+                    // Thỏa thuận: salaryDisplay là Thỏa thuận HOẶC cả 2 trường lương đều NULL
+                    where.add(cb.or(isNegoDisplay, isBothNull));
+                } else {
+                    // Các khoảng tiền: BẮT BUỘC salaryDisplay không phải là Thỏa thuận
+                    where.add(cb.or(
+                            cb.isNull(root.get("salaryDisplay")),
+                            cb.and(
+                                    cb.notEqual(root.get("salaryDisplay"), JobPostingLabels.SALARY_NEGOTIABLE),
+                                    cb.notEqual(root.get("salaryDisplay"), JobPostingLabels.SALARY_NEGOTIABLE_OLD_SPELLING))));
+
+                    BigDecimal val15 = new BigDecimal("15000000");
+                    BigDecimal val25 = new BigDecimal("25000000");
+                    BigDecimal val40 = new BigDecimal("40000000");
+
+                    switch (range) {
+                        case "under-15" -> where.add(cb.and(
+                                cb.isNotNull(effMin),
+                                cb.lessThan(effMin, val15)));
+                        case "15-25" -> where.add(cb.and(
+                                cb.isNotNull(effMin),
+                                cb.greaterThanOrEqualTo(effMax, val15),
+                                cb.lessThanOrEqualTo(effMin, val25)));
+                        case "25-40" -> where.add(cb.and(
+                                cb.isNotNull(effMin),
+                                cb.greaterThanOrEqualTo(effMax, val25),
+                                cb.lessThanOrEqualTo(effMin, val40)));
+                        case "above-40" -> where.add(cb.and(
+                                cb.isNotNull(effMax),
+                                cb.greaterThan(effMax, val40)));
+                        default -> {
+                            // Không khớp mốc nào thì bỏ qua
+                        }
+                    }
+                }
             }
 
             if (!terms.isEmpty()) {

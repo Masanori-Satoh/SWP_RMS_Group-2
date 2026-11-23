@@ -161,6 +161,12 @@ public interface JobPostingRepository extends JpaRepository<JobPosting, Integer>
     // Tìm tin còn nhận hồ sơ.
     List<JobPosting> findOpenPostings(@Param("now") LocalDateTime now);
 
+    @Query("SELECT DISTINCT j.requisition.department.departmentId FROM JobPosting j "
+         + "WHERE j.postingStatus = 'Published' "
+         + "AND (j.postingDate IS NULL OR j.postingDate <= :now) "
+         + "AND (j.applicationDeadline IS NULL OR j.applicationDeadline >= :now)")
+    Set<Integer> findActiveDepartmentIds(@Param("now") LocalDateTime now);
+
 //     @Query("""
 //         SELECT DISTINCT j.jobPostingId, j.postingTitle 
 //         FROM JobPosting j 

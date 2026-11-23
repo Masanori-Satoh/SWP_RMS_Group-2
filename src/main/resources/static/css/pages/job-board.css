@@ -83,14 +83,13 @@
   border-radius: var(--radius-full);
 }
 
-/* ---- Thanh tìm kiếm: một khối bo tròn, từ khóa rộng gấp đôi, nút thẳng hàng đáy ---- */
+/* ---- Thanh tìm kiếm & bộ lọc đa chiều phẳng (Faceted Chip Filter) ---- */
 .jb-search {
-  display: grid;
-  grid-template-columns: 2fr 1fr 1fr auto;
-  gap: var(--s4);
-  align-items: end;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s5);
   margin-bottom: var(--s8);
-  padding: var(--s5) var(--s6);
+  padding: var(--s6);
   border: 1px solid color-mix(in srgb, var(--brand) 26%, var(--line));
   border-top: 4px solid var(--brand);
   border-radius: var(--jb-radius);
@@ -102,59 +101,163 @@
   margin-bottom: var(--s4);
 }
 
-.jb-search .form-group {
-  margin-bottom: 0;
+.jb-search__main {
+  display: flex;
+  gap: var(--s3);
+  align-items: center;
 }
 
-.jb-search .form-label {
-  display: block;
-  margin-bottom: var(--s2);
-  color: var(--brand-dark);
-  font-size: var(--font-sm);
-  font-weight: 700;
+.jb-search__input-wrap {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
 }
 
-.jb-search .form-input,
-.jb-search .form-select {
+.jb-search__icon {
+  position: absolute;
+  left: var(--s4);
+  color: var(--muted);
+  pointer-events: none;
+}
+
+.jb-search__input {
   width: 100%;
-  height: var(--input-h);
-  box-sizing: border-box;
-  border-radius: var(--radius-md);
-  background: var(--surface-subtle);
+  height: 48px;
+  padding-left: 2.75rem;
+  padding-right: var(--s4);
   font-family: var(--jb-font);
+  font-size: var(--font-base);
+  border-radius: var(--radius-full);
+  border: 1.5px solid var(--line);
+  background: var(--surface-subtle);
   transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
 }
 
-.jb-search .form-input:hover,
-.jb-search .form-select:hover {
+.jb-search__input:hover {
   border-color: var(--brand);
 }
 
-.jb-search .form-input:focus,
-.jb-search .form-select:focus {
+.jb-search__input:focus {
   border-color: var(--brand);
-  outline: 2px solid var(--brand);
-  outline-offset: -1px;
+  outline: none;
   box-shadow: var(--jb-ring);
   background: var(--surface);
 }
 
-.jb-search__submit .btn {
-  height: var(--input-h);
+.jb-search__btn {
+  height: 48px;
   padding-inline: var(--s8);
   border-radius: var(--radius-full);
   background: var(--pine);
   box-shadow: var(--job-shadow-btn);
   font-family: var(--jb-font);
   font-weight: 700;
+  font-size: var(--font-base);
   white-space: nowrap;
   transition: transform 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
 }
 
-.jb-search__submit .btn:hover {
+.jb-search__btn:hover {
   background: var(--pine-hover);
   transform: translateY(-2px);
   box-shadow: var(--job-shadow-btn-hover);
+}
+
+/* Các hàng bộ lọc Chips */
+.jb-filters {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+  padding-top: var(--s4);
+  border-top: 1px dashed var(--line);
+}
+
+.jb-filter-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s3);
+}
+
+.jb-filter-row__label {
+  min-width: 96px;
+  padding-top: 6px;
+  color: var(--brand-dark);
+  font-size: var(--font-xs);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  flex-shrink: 0;
+}
+
+.jb-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s2);
+  flex: 1;
+}
+
+/* Ẩn hoàn toàn input radio mặc định để chỉ hiển thị Chip Label */
+.jb-chip input[type="radio"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Viên thuốc Chip */
+.jb-chip__pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.35rem 0.85rem;
+  border-radius: var(--radius-full);
+  font-family: var(--jb-font);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  cursor: pointer;
+  user-select: none;
+  transition: all 160ms ease;
+}
+
+.jb-chip:hover .jb-chip__pill {
+  border-color: var(--brand);
+  color: var(--brand);
+  background: var(--brand-soft);
+}
+
+/* Trạng thái được chọn (:checked) */
+.jb-chip input[type="radio"]:checked + .jb-chip__pill {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: var(--on-brand);
+  font-weight: 700;
+  box-shadow: 0 2px 6px rgba(27, 67, 50, 0.28);
+}
+
+.jb-chip input[type="radio"]:focus-visible + .jb-chip__pill {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+/* Chân bộ lọc */
+.jb-filters__footer {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  padding-top: var(--s2);
+}
+
+.jb-filters__footer .btn {
+  border-radius: var(--radius-full);
 }
 
 /* ---- Lưới thẻ việc làm ---- */
@@ -273,15 +376,23 @@
   border-radius: var(--jb-radius);
   box-shadow: var(--jb-shadow);
   text-align: center;
+  font-family: var(--jb-font);
 }
 
 .jb-empty__title {
   margin: 0;
-  font-size: var(--font-lg);
+  font-family: var(--jb-font);
+  font-size: clamp(22px, 2.5vw, 28px);
+  font-weight: 800;
+  color: var(--brand-dark);
+  letter-spacing: -0.02em;
 }
 
 .jb-empty__desc {
   margin: 0 0 var(--s2);
+  font-family: var(--jb-font);
+  color: var(--muted);
+  font-size: var(--font-base);
 }
 
 /* ---- Phân trang ---- */
@@ -296,25 +407,28 @@
   box-shadow: var(--jb-shadow);
 }
 
-@media (max-width: 992px) {
-  .jb-search {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .jb-search__keyword,
-  .jb-search__submit {
-    grid-column: 1 / -1;
-  }
-
-  .jb-search__submit .btn {
-    width: 100%;
-  }
-}
-
 @media (max-width: 768px) {
   .jb-search {
-    grid-template-columns: 1fr;
     padding: var(--s4);
+  }
+
+  .jb-search__main {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .jb-search__btn {
+    width: 100%;
+  }
+
+  .jb-filter-row {
+    flex-direction: column;
+    gap: var(--s2);
+  }
+
+  .jb-filter-row__label {
+    min-width: auto;
+    padding-top: 0;
   }
 
   .jb-header {

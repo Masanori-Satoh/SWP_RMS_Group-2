@@ -30,12 +30,10 @@
         <div class="page-header jb-header">
             <div>
                 <h1 class="page-title jb-title">Vị trí đang tuyển</h1>
-                <p class="page-subtitle jb-subtitle">Tìm vị trí phù hợp theo từ khóa, phòng ban và hình thức làm việc.</p>
+                <p class="page-subtitle jb-subtitle">Tìm vị trí phù hợp theo từ khóa, mức lương, hình thức và phòng ban.</p>
             </div>
             <div class="jb-results">
                 <p class="jb-results__count"><strong th:text="${jobsPage.totalElements}">0</strong> vị trí đang tuyển</p>
-                <a th:if="${selectedKeyword != null or selectedDept != null or selectedType != null}"
-                   th:href="@{/jobs}" class="btn btn--secondary btn--sm">Xóa bộ lọc</a>
             </div>
         </div>
 
@@ -44,41 +42,133 @@
             Tin tuyển dụng này không còn khả dụng.
         </div>
 
-        <!-- Tìm kiếm & lọc -->
+        <!-- Tìm kiếm & bộ lọc đa chiều phẳng (Pure HTML Radio + CSS :checked) -->
         <form th:action="@{/jobs}" method="get" class="card jb-search adw-surface" role="search" aria-label="Tìm kiếm vị trí tuyển dụng">
-            <div class="form-group jb-search__keyword">
-                <label class="form-label" for="jb-keyword">Từ khóa</label>
-                <input id="jb-keyword" type="search" name="keyword" class="form-input" th:value="${selectedKeyword}"
-                       placeholder="Chức danh, kỹ năng, địa điểm (gõ không dấu cũng được)" autocomplete="off">
+            <!-- Hàng 1: Ô nhập từ khóa + Nút submit -->
+            <div class="jb-search__main">
+                <div class="jb-search__input-wrap">
+                    <svg class="jb-search__icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <input id="jb-keyword" type="search" name="keyword" class="form-input jb-search__input" th:value="${selectedKeyword}"
+                           placeholder="Chức danh, kỹ năng, địa điểm (gõ không dấu cũng được)..." autocomplete="off">
+                </div>
+                <button type="submit" class="btn btn--primary jb-search__btn">Tìm kiếm</button>
             </div>
-            <div class="form-group">
-                <label class="form-label" for="jb-department">Phòng ban</label>
-                <select id="jb-department" name="departmentId" class="form-select">
-                    <option value="">Tất cả phòng ban</option>
-                    <option th:each="dept : ${departments}" th:value="${dept.departmentId}"
-                            th:text="${dept.departmentName}"
-                            th:selected="${selectedDept == dept.departmentId}">Kỹ thuật</option>
-                </select>
+
+            <!-- Hàng 2: Bộ lọc đa chiều dạng Chip/Tag phẳng -->
+            <div class="jb-filters">
+                <!-- 1. Mức lương -->
+                <div class="jb-filter-row">
+                    <span class="jb-filter-row__label">Mức lương:</span>
+                    <div class="jb-chips">
+                        <label class="jb-chip">
+                            <input type="radio" name="salaryRange" value="" th:checked="${selectedSalary == null or selectedSalary == ''}">
+                            <span class="jb-chip__pill">Tất cả</span>
+                        </label>
+                        <label class="jb-chip">
+                            <input type="radio" name="salaryRange" value="under-15" th:checked="${selectedSalary == 'under-15'}">
+                            <span class="jb-chip__pill">&lt; 15 triệu</span>
+                        </label>
+                        <label class="jb-chip">
+                            <input type="radio" name="salaryRange" value="15-25" th:checked="${selectedSalary == '15-25'}">
+                            <span class="jb-chip__pill">15 – 25 triệu</span>
+                        </label>
+                        <label class="jb-chip">
+                            <input type="radio" name="salaryRange" value="25-40" th:checked="${selectedSalary == '25-40'}">
+                            <span class="jb-chip__pill">25 – 40 triệu</span>
+                        </label>
+                        <label class="jb-chip">
+                            <input type="radio" name="salaryRange" value="above-40" th:checked="${selectedSalary == 'above-40'}">
+                            <span class="jb-chip__pill">&gt; 40 triệu</span>
+                        </label>
+                        <label class="jb-chip">
+                            <input type="radio" name="salaryRange" value="negotiable" th:checked="${selectedSalary == 'negotiable'}">
+                            <span class="jb-chip__pill">Thỏa thuận</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- 2. Hình thức làm việc -->
+                <div class="jb-filter-row">
+                    <span class="jb-filter-row__label">Hình thức:</span>
+                    <div class="jb-chips">
+                        <label class="jb-chip">
+                            <input type="radio" name="employmentType" value="" th:checked="${selectedType == null or selectedType == ''}">
+                            <span class="jb-chip__pill">Tất cả</span>
+                        </label>
+                        <label class="jb-chip">
+                            <input type="radio" name="employmentType" value="Full-time" th:checked="${selectedType == 'Full-time'}">
+                            <span class="jb-chip__pill">Toàn thời gian (Full-time)</span>
+                        </label>
+                        <label class="jb-chip">
+                            <input type="radio" name="employmentType" value="Part-time" th:checked="${selectedType == 'Part-time'}">
+                            <span class="jb-chip__pill">Bán thời gian (Part-time)</span>
+                        </label>
+                        <label class="jb-chip">
+                            <input type="radio" name="employmentType" value="Internship" th:checked="${selectedType == 'Internship'}">
+                            <span class="jb-chip__pill">Thực tập (Internship)</span>
+                        </label>
+                        <label class="jb-chip">
+                            <input type="radio" name="employmentType" value="Freelance" th:checked="${selectedType == 'Freelance'}">
+                            <span class="jb-chip__pill">Freelance</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- 3. Chế độ làm việc -->
+                <div class="jb-filter-row">
+                    <span class="jb-filter-row__label">Chế độ:</span>
+                    <div class="jb-chips">
+                        <label class="jb-chip">
+                            <input type="radio" name="workModel" value="" th:checked="${selectedWorkModel == null or selectedWorkModel == ''}">
+                            <span class="jb-chip__pill">Tất cả</span>
+                        </label>
+                        <label class="jb-chip">
+                            <input type="radio" name="workModel" value="On-site" th:checked="${selectedWorkModel == 'On-site'}">
+                            <span class="jb-chip__pill">Tại văn phòng (On-site)</span>
+                        </label>
+                        <label class="jb-chip">
+                            <input type="radio" name="workModel" value="Hybrid" th:checked="${selectedWorkModel == 'Hybrid'}">
+                            <span class="jb-chip__pill">Kết hợp (Hybrid)</span>
+                        </label>
+                        <label class="jb-chip">
+                            <input type="radio" name="workModel" value="Remote" th:checked="${selectedWorkModel == 'Remote'}">
+                            <span class="jb-chip__pill">Từ xa (Remote)</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- 4. Phòng ban -->
+                <div class="jb-filter-row">
+                    <span class="jb-filter-row__label">Phòng ban:</span>
+                    <div class="jb-chips">
+                        <label class="jb-chip">
+                            <input type="radio" name="departmentId" value="" th:checked="${selectedDept == null}">
+                            <span class="jb-chip__pill">Tất cả</span>
+                        </label>
+                        <label th:each="dept : ${departments}" class="jb-chip">
+                            <input type="radio" name="departmentId" th:value="${dept.departmentId}"
+                                   th:checked="${selectedDept == dept.departmentId}">
+                            <span class="jb-chip__pill" th:text="${dept.departmentName}">Kỹ thuật</span>
+                        </label>
+                    </div>
+                </div>
             </div>
-            <div class="form-group">
-                <label class="form-label" for="jb-type">Hình thức</label>
-                <select id="jb-type" name="employmentType" class="form-select">
-                    <option value="">Tất cả hình thức</option>
-                    <option value="Full-time" th:selected="${selectedType == 'Full-time'}">Toàn thời gian (Full-time)</option>
-                    <option value="Part-time" th:selected="${selectedType == 'Part-time'}">Bán thời gian (Part-time)</option>
-                    <option value="Internship" th:selected="${selectedType == 'Internship'}">Thực tập (Internship)</option>
-                    <option value="Freelance" th:selected="${selectedType == 'Freelance'}">Freelance</option>
-                </select>
-            </div>
-            <div class="jb-search__submit">
-                <button type="submit" class="btn btn--primary">Tìm kiếm</button>
+
+            <!-- Chân bộ lọc: nút Áp dụng & Xóa bộ lọc -->
+            <div class="jb-filters__footer">
+                <button type="submit" class="btn btn--primary btn--sm">Áp dụng bộ lọc</button>
+                <a th:if="${(selectedKeyword != null and !selectedKeyword.isEmpty()) or selectedDept != null or (selectedType != null and !selectedType.isEmpty()) or (selectedWorkModel != null and !selectedWorkModel.isEmpty()) or (selectedSalary != null and !selectedSalary.isEmpty())}"
+                   th:href="@{/jobs}" class="btn btn--outline btn--sm">Xóa bộ lọc</a>
             </div>
         </form>
 
         <!-- Không có kết quả -->
         <div th:if="${jobsPage.isEmpty()}" class="card jb-empty adw-surface">
             <h2 class="jb-empty__title">Không tìm thấy vị trí phù hợp</h2>
-            <p class="jb-empty__desc text-muted">Hãy thử từ khóa ngắn hơn hoặc chọn phòng ban, hình thức khác.</p>
+            <p class="jb-empty__desc text-muted">Hãy thử từ khóa ngắn hơn hoặc chọn lại tiêu chí lọc.</p>
             <a th:href="@{/jobs}" class="btn btn--outline">Xem tất cả vị trí</a>
         </div>
 
