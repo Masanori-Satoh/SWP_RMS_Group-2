@@ -35,20 +35,20 @@ class PolicyConsentServiceTests {
     private static final String USERNAME = "an.nguyen";
 
     @Mock
-    private CandidateRepository candidates;
+    private CandidateRepository candidateRepository;
 
     private PolicyConsentService service;
 
     @BeforeEach
     void setUp() {
-        service = new PolicyConsentService(candidates, CLOCK);
+        service = new PolicyConsentService(candidateRepository, CLOCK);
     }
 
     @Test
     @DisplayName("Ứng viên chưa đồng ý -> Cần hiện popup")
     void needsConsent_shouldBeTrue_whenCandidateHasNotAgreed() {
         // Arrange
-        when(candidates.findByAccount_UsernameIgnoreCase(USERNAME)).thenReturn(Optional.of(new Candidate()));
+        when(candidateRepository.findByAccount_UsernameIgnoreCase(USERNAME)).thenReturn(Optional.of(new Candidate()));
 
         // Act + Assert
         assertTrue(service.needsConsent(USERNAME));
@@ -60,7 +60,7 @@ class PolicyConsentServiceTests {
         // Arrange
         Candidate candidate = new Candidate();
         candidate.setPolicyAgreedAt(NOW.minusDays(3));
-        when(candidates.findByAccount_UsernameIgnoreCase(USERNAME)).thenReturn(Optional.of(candidate));
+        when(candidateRepository.findByAccount_UsernameIgnoreCase(USERNAME)).thenReturn(Optional.of(candidate));
 
         // Act + Assert
         assertFalse(service.needsConsent(USERNAME));
@@ -70,7 +70,7 @@ class PolicyConsentServiceTests {
     @DisplayName("Tài khoản không có hồ sơ ứng viên -> Không hiện popup")
     void needsConsent_shouldBeFalse_whenNoCandidateProfile() {
         // Arrange
-        when(candidates.findByAccount_UsernameIgnoreCase(USERNAME)).thenReturn(Optional.empty());
+        when(candidateRepository.findByAccount_UsernameIgnoreCase(USERNAME)).thenReturn(Optional.empty());
 
         // Act + Assert
         assertFalse(service.needsConsent(USERNAME));
@@ -81,14 +81,14 @@ class PolicyConsentServiceTests {
     void recordConsent_shouldSaveNow_whenCandidateHasNotAgreed() {
         // Arrange
         Candidate candidate = new Candidate();
-        when(candidates.findByAccount_UsernameIgnoreCase(USERNAME)).thenReturn(Optional.of(candidate));
+        when(candidateRepository.findByAccount_UsernameIgnoreCase(USERNAME)).thenReturn(Optional.of(candidate));
 
         // Act
         service.recordConsent(USERNAME);
 
         // Assert
         assertEquals(NOW, candidate.getPolicyAgreedAt());
-        verify(candidates).save(candidate);
+        verify(candidateRepository).save(candidate);
     }
 
     @Test
@@ -98,26 +98,26 @@ class PolicyConsentServiceTests {
         LocalDateTime firstTime = NOW.minusDays(1);
         Candidate candidate = new Candidate();
         candidate.setPolicyAgreedAt(firstTime);
-        when(candidates.findByAccount_UsernameIgnoreCase(USERNAME)).thenReturn(Optional.of(candidate));
+        when(candidateRepository.findByAccount_UsernameIgnoreCase(USERNAME)).thenReturn(Optional.of(candidate));
 
         // Act
         service.recordConsent(USERNAME);
 
         // Assert
         assertEquals(firstTime, candidate.getPolicyAgreedAt());
-        verify(candidates, never()).save(any());
+        verify(candidateRepository, never()).save(any());
     }
 
     @Test
     @DisplayName("Tài khoản không có hồ sơ ứng viên bấm đồng ý -> Không lưu gì")
     void recordConsent_shouldDoNothing_whenNoCandidateProfile() {
         // Arrange
-        when(candidates.findByAccount_UsernameIgnoreCase(USERNAME)).thenReturn(Optional.empty());
+        when(candidateRepository.findByAccount_UsernameIgnoreCase(USERNAME)).thenReturn(Optional.empty());
 
         // Act
         service.recordConsent(USERNAME);
 
         // Assert
-        verify(candidates, never()).save(any());
+        verify(candidateRepository, never()).save(any());
     }
 }

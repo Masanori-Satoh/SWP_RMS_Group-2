@@ -33,7 +33,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * Đọc dữ liệu cho danh sách hồ sơ (5.1.22) và chi tiết hồ sơ (5.1.23), trong phạm vi người xem được phép.
@@ -44,12 +43,12 @@ public class ApplicationPipelineService {
 
     private static final int FACTS_BATCH = 2000;
 
-    private final ApplicationRepository applications;
-    private final ApplicationPipelineRepository pipelineQueries;
-    private final ApplicationReviewRepository reviews;
-    private final ApplicationAccess access;
+    private final ApplicationRepository applicationRepository;
+    private final ApplicationPipelineRepository pipelineRepository;
+    private final ApplicationReviewRepository reviewRepository;
+    private final ApplicationAccess applicationAccess;
     private final CvStorage cvStorage;
-    private final JobPostingRepository jobPostings;
+    private final JobPostingRepository jobPostingRepository;
 
     /**
      * Một trang danh sách kèm số hồ sơ mỗi giai đoạn. Xếp theo ngày nộp, mới trước; sort trong
@@ -62,8 +61,8 @@ public class ApplicationPipelineService {
      */
     @Transactional(readOnly = true)
     public ApplicationListResponse list(ApplicationSearch search, Pageable pageable) {
-        User actor = access.actor();
-        ApplicationScope scope = access.scopeOf(actor);
+        User actor = applicationAccess.actor();
+        ApplicationScope scope = applicationAccess.scopeOf(actor);
         ApplicationSearch filter = search.normalized();
 
         Map<Integer, ApplicationProgressResponse> progress = progressInScope(scope, filter);
@@ -72,7 +71,7 @@ public class ApplicationPipelineService {
         ApplicationStage stage = filter.stageFilter();
         List<Integer> matching = progress.entrySet().stream()
                 .filter(entry -> stage == null || entry.getValue().stage() == stage)
-                .map(Map.Entry::getKey).toList();
+                .map(entry -> entry.getKey()).toList();
         Pageable pageRequest = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize());
         List<Integer> pageIds = matching.stream()
                 .skip(pageRequest.getOffset()).limit(pageRequest.getPageSize()).toList();
@@ -80,10 +79,10 @@ public class ApplicationPipelineService {
 
         // Lấy thẳng từ bảng tin: tin chưa có hồ sơ nào (mở từ trang tin) không nằm trong danh sách lựa chọn.
         String postingTitle = filter.jobPostingId() == null ? null
-                : jobPostings.findById(filter.jobPostingId()).map(JobPosting::getPostingTitle).orElse(null);
+                : jobPostingRepository.findById(filter.jobPostingId()).map(jp -> jp.getPostingTitle()).orElse(null);
         return new ApplicationListResponse(new PageImpl<>(rows, pageRequest, matching.size()), stageCounts,
-                pipelineQueries.findPostingOptions(scope.allDepartments(), scope.managerUserId(), scope.departmentId()),
-                filter, postingTitle, access.canOpenJobPosting(actor), !scope.allDepartments(),
+                pipelineRepository.findPostingOptions(scope.allDepartments(), scope.managerUserId(), scope.departmentId()),
+                filter, postingTitle, applicationAccess.canOpenJobPosting(actor), !scope.allDepartments(),
                 actor.getRole() == null ? null : actor.getRole().getRoleName());
     }
 
@@ -94,15 +93,15 @@ public class ApplicationPipelineService {
      */
     @Transactional(readOnly = true)
     public OwnerWorkloadResponse ownerWorkload(String ownerLabel, Collection<ApplicationStage> stages) {
-        User actor = access.actor();
-        ApplicationScope scope = access.scopeOf(actor);
+        User actor = applicationAccess.actor();
+        ApplicationScope scope = applicationAccess.scopeOf(actor);
         ApplicationSearch filter = new ApplicationSearch(null, null, null, null).normalized();
 
         Map<Integer, ApplicationProgressResponse> progress = progressInScope(scope, filter);
         List<Integer> ownedIds = progress.entrySet().stream()
                 .filter(entry -> stages.contains(entry.getValue().stage())
-                        && Objects.equals(ownerLabel, entry.getValue().ownerLabel()))
-                .map(Map.Entry::getKey).toList();
+                        && java.util.Objects.equals(ownerLabel, entry.getValue().ownerLabel()))
+                .map(entry -> entry.getKey()).toList();
 
         Map<ApplicationStage, List<ApplicationPipelineResponse>> ownedRows = new EnumMap<>(ApplicationStage.class);
         for (ApplicationStage stage : stages) {
@@ -116,10 +115,10 @@ public class ApplicationPipelineService {
 
     @Transactional(readOnly = true)
     public ApplicationDetailResponse detail(Integer applicationId) {
-        User actor = access.actor();
-        Application application = applications.findDetailById(applicationId)
+        User actor = applicationAccess.actor();
+        Application application = applicationRepository.findDetailById(applicationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hồ sơ ứng tuyển."));
-        access.requireView(actor, application);
+        applicationAccess.requireView(actor, application);
 
         Candidate candidate = application.getCandidate();
         User account = candidate.getAccount();
@@ -128,7 +127,7 @@ public class ApplicationPipelineService {
         String status = application.getApplicationStatus();
         ApplicationProgressFacts facts = knownFacts(applicationId, status, progressFacts(List.of(applicationId)));
         ApplicationProgressResponse progress = ApplicationProgressResolver.resolve(facts, LocalDateTime.now());
-        boolean cancelledProposal = pipelineQueries.countTalentPoolCancellation(applicationId) > 0;
+        boolean cancelledProposal = pipelineRepository.countTalentPoolCancellation(applicationId) > 0;
 
         return new ApplicationDetailResponse(
                 application.getApplicationId(),
@@ -145,29 +144,29 @@ public class ApplicationPipelineService {
                 ApplicationStepper.items(progress),
                 facts.interviewId(),
                 new ApplicationDetailResponse.Actions(
-                        access.canReview(actor, application),
-                        access.canScheduleInterview(actor, progress),
-                        access.canCreateOffer(actor, progress),
-                        access.canOpenJobPosting(actor)),
+                        applicationAccess.canReview(actor, application),
+                        applicationAccess.canScheduleInterview(actor, progress),
+                        applicationAccess.canCreateOffer(actor, progress),
+                        applicationAccess.canOpenJobPosting(actor)),
                 actor.getRole() == null ? null : actor.getRole().getRoleName(),
                 "HM_Suggested".equals(status) || cancelledProposal);
     }
 
     @Transactional(readOnly = true)
     public boolean closedByPosting(Integer id) {
-        Application application = applications.findDetailById(id)
+        Application application = applicationRepository.findDetailById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hồ sơ."));
-        access.requireView(access.actor(), application);
+        applicationAccess.requireView(applicationAccess.actor(), application);
         return ApplicationStatusService.CANCELLED.equals(application.getApplicationStatus());
     }
 
     /** CV của đơn, cùng quyền với trang chi tiết. Dạng {@code AppliedCvUrl}: {@link ApplicationCv#of}. */
     @Transactional(readOnly = true)
     public ApplicationCv cv(Integer applicationId) {
-        User actor = access.actor();
-        Application application = applications.findDetailById(applicationId)
+        User actor = applicationAccess.actor();
+        Application application = applicationRepository.findDetailById(applicationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hồ sơ ứng tuyển."));
-        access.requireView(actor, application);
+        applicationAccess.requireView(actor, application);
 
         return ApplicationCv.of(application.getAppliedCvUrl(), cvStorage)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy CV của hồ sơ này."));
@@ -180,9 +179,9 @@ public class ApplicationPipelineService {
     private Map<Integer, ApplicationProgressFacts> progressFacts(List<Integer> applicationIds) {
         Map<Integer, ApplicationProgressFacts> facts = new HashMap<>();
         for (int from = 0; from < applicationIds.size(); from += FACTS_BATCH) {
-            applications.findProgressFacts(applicationIds.subList(from,
+            applicationRepository.findProgressFacts(applicationIds.subList(from,
                             Math.min(from + FACTS_BATCH, applicationIds.size()))).stream()
-                    .map(ApplicationProgressFacts::from)
+                    .map(row -> ApplicationProgressFacts.from(row))
                     .forEach(row -> facts.put(row.applicationId(), row));
         }
         return facts;
@@ -190,13 +189,13 @@ public class ApplicationPipelineService {
 
     /** Giai đoạn của mọi đơn trong phạm vi và bộ lọc, giữ thứ tự ngày nộp, mới trước. */
     private Map<Integer, ApplicationProgressResponse> progressInScope(ApplicationScope scope, ApplicationSearch filter) {
-        List<Integer> ids = pipelineQueries.findPipelineIds(
+        List<Integer> ids = pipelineRepository.findPipelineIds(
                 scope.allDepartments(), scope.managerUserId(), scope.departmentId(),
                 filter.jobPostingId(), filter.status(), filter.keyword());
         Map<Integer, ApplicationProgressFacts> facts = progressFacts(ids);
         LocalDateTime now = LocalDateTime.now();
         Map<Integer, ApplicationProgressResponse> progress = new LinkedHashMap<>();
-        ids.stream().filter(facts::containsKey)
+        ids.stream().filter(id -> facts.containsKey(id))
                 .forEach(id -> progress.put(id, ApplicationProgressResolver.resolve(facts.get(id), now)));
         return progress;
     }
@@ -207,7 +206,7 @@ public class ApplicationPipelineService {
         for (ApplicationStage stage : ApplicationStage.values()) {
             stageCounts.put(stage, 0L);
         }
-        progress.values().forEach(p -> stageCounts.merge(p.stage(), 1L, Long::sum));
+        progress.values().forEach(p -> stageCounts.merge(p.stage(), 1L, (a, b) -> a + b));
         return stageCounts;
     }
 
@@ -217,7 +216,7 @@ public class ApplicationPipelineService {
         return pageRows(ids).stream().map(row -> {
             ApplicationProgressResponse rowProgress = progress.get(row.applicationId());
             return row.withProgress(rowProgress,
-                    access.canScheduleInterview(actor, rowProgress), access.canCreateOffer(actor, rowProgress));
+                    applicationAccess.canScheduleInterview(actor, rowProgress), applicationAccess.canCreateOffer(actor, rowProgress));
         }).toList();
     }
 
@@ -228,10 +227,10 @@ public class ApplicationPipelineService {
         }
         Map<Integer, ApplicationPipelineResponse> byId = new HashMap<>();
         for (int from = 0; from < pageIds.size(); from += FACTS_BATCH) {
-            pipelineQueries.findPipelineRows(pageIds.subList(from, Math.min(from + FACTS_BATCH, pageIds.size())))
+            pipelineRepository.findPipelineRows(pageIds.subList(from, Math.min(from + FACTS_BATCH, pageIds.size())))
                     .forEach(row -> byId.put(row.applicationId(), row));
         }
-        return pageIds.stream().map(byId::get).filter(Objects::nonNull).toList();
+        return pageIds.stream().map(id -> byId.get(id)).filter(row -> row != null).toList();
     }
 
     /** Thiếu dữ kiện (không xảy ra với đơn vừa đọc) thì tính theo riêng trạng thái đơn, coi như chưa có lịch, offer. */
@@ -245,7 +244,7 @@ public class ApplicationPipelineService {
     private List<TimelineItem> timeline(Application application, User account) {
         Integer id = application.getApplicationId();
         List<TimelineItem> items = new ArrayList<>();
-        var poolEvents = pipelineQueries.findTalentPoolEvents(id);
+        var poolEvents = pipelineRepository.findTalentPoolEvents(id);
         boolean hrRecommendation = poolEvents.stream().anyMatch(event -> "TalentPoolHrRecommended".equals(event.getKind()));
         for (var event : poolEvents) {
             String title = switch (event.getKind()) {
@@ -264,13 +263,13 @@ public class ApplicationPipelineService {
             items.add(new TimelineItem(application.getSubmissionDate(), "Nộp hồ sơ", account.getFullName(), null,
                     "neutral"));
         }
-        var reviewHistory = reviews.findWithReviewerByApplicationId(id);
+        var reviewHistory = reviewRepository.findWithReviewerByApplicationId(id);
         Integer originReviewId = hrRecommendation ? reviewHistory.stream()
                 .filter(r -> "HR".equals(r.getReviewerRole()) && "Hold".equals(r.getDecision()))
-                .map(ApplicationReview::getReviewId).min(Integer::compareTo).orElse(null) : null;
+                .map(r -> r.getReviewId()).min((a, b) -> a.compareTo(b)).orElse(null) : null;
         Integer hmRecommendationDecisionId = hrRecommendation ? reviewHistory.stream()
                 .filter(r -> "HiringManager".equals(r.getReviewerRole()) && java.util.Set.of("Pass", "Fail").contains(r.getDecision()))
-                .map(ApplicationReview::getReviewId).min(Integer::compareTo).orElse(null) : null;
+                .map(r -> r.getReviewId()).min((a, b) -> a.compareTo(b)).orElse(null) : null;
         reviewHistory.stream().filter(review -> (originReviewId == null || !originReviewId.equals(review.getReviewId()))
                 && (hmRecommendationDecisionId == null || !hmRecommendationDecisionId.equals(review.getReviewId()))).forEach(review -> items.add(new TimelineItem(
                 review.getReviewedAt(),
@@ -278,18 +277,18 @@ public class ApplicationPipelineService {
                         + ApplicationStatusLabels.decisionLabel(review.getDecision()),
                 review.getReviewer().getFullName(), review.getComments(),
                 ApplicationStatusLabels.decisionTone(review.getDecision()))));
-        pipelineQueries.findInterviewEvents(id).forEach(event -> items.add(new TimelineItem(
+        pipelineRepository.findInterviewEvents(id).forEach(event -> items.add(new TimelineItem(
                 event.getAt(), "Lịch phỏng vấn: " + event.getStatus(), null, null, "neutral")));
-        pipelineQueries.findInterviewResultEvents(id).forEach(event -> items.add(new TimelineItem(
+        pipelineRepository.findInterviewResultEvents(id).forEach(event -> items.add(new TimelineItem(
                 event.getAt(), "Kết quả phỏng vấn: " + ApplicationStatusLabels.interviewResultLabel(event.getStatus()),
                 null, null, ApplicationStatusLabels.interviewResultTone(event.getStatus()))));
-        pipelineQueries.findOfferEvents(id).forEach(event -> items.add(new TimelineItem(
+        pipelineRepository.findOfferEvents(id).forEach(event -> items.add(new TimelineItem(
                 event.getAt(), "Thư mời: " + ApplicationStatusLabels.offerLabel(event.getStatus()), null, null, "success")));
         if (ApplicationStatusService.CANCELLED.equals(application.getApplicationStatus())) {
             items.add(new TimelineItem(application.getUpdatedAt(), "Đóng đợt tuyển dụng", "Hệ thống",
                     "Đợt tuyển dụng đã kết thúc, hồ sơ dừng xử lý", "neutral"));
         }
-        items.sort(Comparator.comparing(TimelineItem::at, Comparator.nullsLast(Comparator.reverseOrder())));
+        items.sort(Comparator.comparing(item -> item.at(), Comparator.nullsLast(Comparator.reverseOrder())));
         return items;
     }
 }

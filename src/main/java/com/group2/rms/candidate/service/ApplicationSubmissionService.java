@@ -28,23 +28,23 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 public class ApplicationSubmissionService {
 
-    static final String INITIAL_STATUS = "Applied";
-    static final String ALREADY_APPLIED_MESSAGE =
+    public static final String INITIAL_STATUS = "Applied";
+    public static final String ALREADY_APPLIED_MESSAGE =
             "Bạn đã ứng tuyển tin tuyển dụng này.";
 
-    private final CandidateRepository candidates;
-    private final ApplicationRepository applications;
-    private final JobPostingRepository jobPostings;
+    private final CandidateRepository candidateRepository;
+    private final ApplicationRepository applicationRepository;
+    private final JobPostingRepository jobPostingRepository;
     private final CvFileValidator cvFileValidator;
     private final CvStorage cvStorage;
 
     @Transactional
     public Integer apply(String username, Integer jobPostingId, MultipartFile cvFile) {
-        Candidate candidate = candidates.findByAccount_UsernameIgnoreCase(username)
+        Candidate candidate = candidateRepository.findByAccount_UsernameIgnoreCase(username)
                 .orElseThrow(() -> new ApplicationSubmissionException(null,
                         "Tài khoản chưa có hồ sơ ứng viên. Vui lòng liên hệ quản trị viên."));
 
-        JobPosting job = jobPostings.findForUpdate(jobPostingId)
+        JobPosting job = jobPostingRepository.findForUpdate(jobPostingId)
                 .filter(j -> j.isVisibleToCandidates(LocalDateTime.now()))
                 .orElseThrow(() -> new ResourceNotFoundException("Tin tuyển dụng này không còn khả dụng."));
 
@@ -52,7 +52,7 @@ public class ApplicationSubmissionService {
             throw new ApplicationSubmissionException(null, "Tin tuyển dụng đã hết hạn nhận hồ sơ.");
         }
         // Mỗi lần đăng tin có JobPostingId riêng; ứng viên được nộp lại ở lần đăng mới.
-        if (applications.existsActiveByCandidateAndJobPosting(
+        if (applicationRepository.existsActiveByCandidateAndJobPosting(
                 candidate.getCandidateId(), job.getJobPostingId())) {
             throw new ApplicationSubmissionException(null, ALREADY_APPLIED_MESSAGE);
         }
@@ -61,18 +61,18 @@ public class ApplicationSubmissionService {
         StoredFile stored = cvStorage.store(cvFile, candidate.getCandidateId());
         deleteFileUnlessCommitted(stored);
 
-        Application draft = applications.findFirstByCandidate_CandidateIdAndJobPosting_JobPostingIdAndApplicationStatus(
+        Application draft = applicationRepository.findFirstByCandidate_CandidateIdAndJobPosting_JobPostingIdAndApplicationStatus(
                 candidate.getCandidateId(), jobPostingId, "HM_Suggested").orElse(null);
         // A candidate-submitted CV always enters ordinary screening, including an HM-approved proposal.
         // HR confirmation of consent to use the old CV remains a separate operation.
         Application saved;
         if (draft != null) {
-            if (applications.submitSuggestionWithNewCv(draft.getApplicationId(), stored.url(), INITIAL_STATUS) != 1)
+            if (applicationRepository.submitSuggestionWithNewCv(draft.getApplicationId(), stored.url(), INITIAL_STATUS) != 1)
                 throw new ApplicationSubmissionException(null, "Đề xuất vừa được xử lý. Vui lòng tải lại trang.");
-            applications.recordSuggestionSubmitted(candidate.getAccount().getUserId(), draft.getApplicationId());
+            applicationRepository.recordSuggestionSubmitted(candidate.getAccount().getUserId(), draft.getApplicationId());
             saved = draft;
         } else {
-            saved = applications.save(Application.builder().candidate(candidate).jobPosting(job)
+            saved = applicationRepository.save(Application.builder().candidate(candidate).jobPosting(job)
                     .appliedCvUrl(stored.url()).applicationStatus(INITIAL_STATUS).build());
         }
         return saved.getApplicationId();
@@ -84,8 +84,8 @@ public class ApplicationSubmissionService {
         if (username == null) {
             return false;
         }
-        return candidates.findByAccount_UsernameIgnoreCase(username)
-                .map(c -> applications.existsActiveByCandidateAndJobPosting(
+        return candidateRepository.findByAccount_UsernameIgnoreCase(username)
+                .map(c -> applicationRepository.existsActiveByCandidateAndJobPosting(
                         c.getCandidateId(), jobPostingId))
                 .orElse(false);
     }

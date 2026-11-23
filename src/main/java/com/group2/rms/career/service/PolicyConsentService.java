@@ -18,24 +18,24 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class PolicyConsentService {
 
-    private final CandidateRepository candidates;
+    private final CandidateRepository candidateRepository;
     private final Clock clock;
 
     /** true khi tài khoản có hồ sơ ứng viên và chưa đồng ý lần nào. */
     @Transactional(readOnly = true)
     public boolean needsConsent(String username) {
-        Optional<Candidate> candidate = candidates.findByAccount_UsernameIgnoreCase(username);
+        Optional<Candidate> candidate = candidateRepository.findByAccount_UsernameIgnoreCase(username);
         return candidate.isPresent() && candidate.get().getPolicyAgreedAt() == null;
     }
 
     /** Lưu lúc đồng ý; đã đồng ý rồi thì giữ nguyên thời điểm lần đầu (bấm 2 lần / mở 2 tab). */
     @Transactional
     public void recordConsent(String username) {
-        Optional<Candidate> candidate = candidates.findByAccount_UsernameIgnoreCase(username);
+        Optional<Candidate> candidate = candidateRepository.findByAccount_UsernameIgnoreCase(username);
         if (candidate.isEmpty() || candidate.get().getPolicyAgreedAt() != null) {
             return;
         }
         candidate.get().setPolicyAgreedAt(LocalDateTime.now(clock));
-        candidates.save(candidate.get());
+        candidateRepository.save(candidate.get());
     }
 }

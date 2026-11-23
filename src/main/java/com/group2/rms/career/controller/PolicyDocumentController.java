@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 @RequiredArgsConstructor
 public class PolicyDocumentController {
 
-    private final PolicyDocumentStorage storage;
+    private final PolicyDocumentStorage policyDocumentStorage;
 
     @GetMapping("/terms")
     public ResponseEntity<Resource> terms() {
@@ -32,7 +32,7 @@ public class PolicyDocumentController {
     }
 
     private ResponseEntity<Resource> pdf(PolicyDocument document) {
-        Resource file = storage.read(document);
+        Resource file = policyDocumentStorage.read(document);
         if (!file.exists()) {
             return ResponseEntity.notFound().build();
         }

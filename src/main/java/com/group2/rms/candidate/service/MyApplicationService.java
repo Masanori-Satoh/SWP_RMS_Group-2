@@ -24,6 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -31,8 +32,10 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * Đơn của chính ứng viên đang đăng nhập ("Đơn của tôi": danh sách, chi tiết, xem lại CV) và rút đơn (UC 39).
- * Rút đơn: đơn chuyển {@code Withdrawn}, kèm một dòng {@code AuditLog} ghi đơn đang ở trạng thái nào và lúc nào
+ * Đơn của chính ứng viên đang đăng nhập ("Đơn của tôi": danh sách, chi tiết,
+ * xem lại CV) và rút đơn (UC 39).
+ * Rút đơn: đơn chuyển {@code Withdrawn}, kèm một dòng {@code AuditLog} ghi đơn
+ * đang ở trạng thái nào và lúc nào
  * (nhật ký, không phải nơi suy ra trạng thái).
  */
 @Service
@@ -40,55 +43,78 @@ import java.util.stream.Collectors;
 public class MyApplicationService {
 
     /** Chỉ rút được khi đơn còn chờ sàng lọc, HR chưa duyệt (BR-CAN-03). */
-    static final Set<String> WITHDRAWABLE_STATUSES = Set.of("Applied");
+    public static final Set<String> WITHDRAWABLE_STATUSES = Set.of("Applied");
 
     /** Tab của danh sách; giá trị khác (gõ tay trên URL) là "Tất cả". */
     public static final String TAB_ALL = "all";
     public static final String TAB_ACTIVE = "active";
     public static final String TAB_ENDED = "ended";
 
-    private final ApplicationRepository applications;
-    private final MyApplicationRepository myApplications;
+    private final ApplicationRepository applicationRepository;
+    private final MyApplicationRepository myApplicationRepository;
     private final CurrentUserService currentUserService;
     private final CvStorage cvStorage;
 
     /**
-     * Thứ tự danh sách (dunglt 27/10): nhóm 1 (có phỏng vấn / thư mời sắp tới, sự kiện gần nhất trước, thư mời không hạn
-     * sau cùng nhóm) → nhóm 2 (đang xử lý) → nhóm 3 (đã kết thúc, luôn cuối). Trong nhóm: mới có chuyển biến trước, rồi
+     * Thứ tự danh sách (dunglt 27/10): nhóm 1 (có phỏng vấn / thư mời sắp tới, sự
+     * kiện gần nhất trước, thư mời không hạn
+     * sau cùng nhóm) → nhóm 2 (đang xử lý) → nhóm 3 (đã kết thúc, luôn cuối). Trong
+     * nhóm: mới có chuyển biến trước, rồi
      * đơn nộp sau, rồi id lớn hơn (thứ tự ổn định cho phân trang sau này).
      */
-    static final Comparator<MyApplicationResponse> DISPLAY_ORDER =
-            Comparator.comparingInt(MyApplicationResponse::priority)
-                    .thenComparing(MyApplicationResponse::upcomingAt, Comparator.nullsLast(Comparator.naturalOrder()))
-                    .thenComparing(MyApplicationResponse::lastActivityAt, Comparator.nullsLast(Comparator.reverseOrder()))
-                    .thenComparing(MyApplicationResponse::submissionDate, Comparator.nullsLast(Comparator.reverseOrder()))
-                    .thenComparing(MyApplicationResponse::applicationId, Comparator.reverseOrder());
+    static final Comparator<MyApplicationResponse> DISPLAY_ORDER = Comparator
+            .comparingInt((MyApplicationResponse app) -> app.priority())
+            .thenComparing(app -> app.upcomingAt(), Comparator.nullsLast(Comparator.naturalOrder()))
+            .thenComparing(app -> app.lastActivityAt(), Comparator.nullsLast(Comparator.reverseOrder()))
+            .thenComparing(app -> app.submissionDate(), Comparator.nullsLast(Comparator.reverseOrder()))
+            .thenComparing(app -> app.applicationId(), Comparator.reverseOrder());
 
     /**
-     * Danh sách đơn của ứng viên đang đăng nhập: thẻ của tab {@code tab} (lọc phía server để sau này thêm phân trang
+     * Danh sách đơn của ứng viên đang đăng nhập: thẻ của tab {@code tab} (lọc phía
+     * server để sau này thêm phân trang
      * vẫn đúng), số đơn mỗi tab, và mọi đơn gấp cho banner (hạn gần nhất trước).
      *
-     * @param tab {@value #TAB_ACTIVE}, {@value #TAB_ENDED}; giá trị khác hoặc {@code null} là tất cả
+     * @param tab {@value #TAB_ACTIVE}, {@value #TAB_ENDED}; giá trị khác hoặc
+     *            {@code null} là tất cả
      */
     @Transactional(readOnly = true)
     public MyApplicationListResponse list(String tab) {
         List<MyApplicationResponse> all = cards(currentUserService.requireUser().getUserId());
+
+        int allCount = all.size();
+        int endedCount = 0;
+        List<MyApplicationResponse> active = new ArrayList<>();
+        List<MyApplicationResponse> ended = new ArrayList<>();
+        List<MyApplicationResponse> urgent = new ArrayList<>();
+
+        for (MyApplicationResponse card : all) {
+            if (card.ended()) {
+                endedCount++;
+                ended.add(card);
+            } else {
+                active.add(card);
+            }
+            if (card.urgent()) {
+                urgent.add(card);
+            }
+        }
+
+        urgent.sort(Comparator.comparing(card -> card.urgentUntil()));
+
         String selected = TAB_ACTIVE.equals(tab) || TAB_ENDED.equals(tab) ? tab : TAB_ALL;
         List<MyApplicationResponse> shown = switch (selected) {
-            case TAB_ACTIVE -> all.stream().filter(card -> !card.ended()).toList();
-            case TAB_ENDED -> all.stream().filter(MyApplicationResponse::ended).toList();
+            case TAB_ACTIVE -> active;
+            case TAB_ENDED -> ended;
             default -> all;
         };
-        int ended = (int) all.stream().filter(MyApplicationResponse::ended).count();
-        List<MyApplicationResponse> urgent = all.stream()
-                .filter(MyApplicationResponse::urgent)
-                .sorted(Comparator.comparing(MyApplicationResponse::urgentUntil))
-                .toList();
-        return new MyApplicationListResponse(shown, selected, all.size(), all.size() - ended, ended, urgent);
+
+        int activeCount = allCount - endedCount;
+        return new MyApplicationListResponse(shown, selected, allCount, activeCount, endedCount, urgent);
     }
 
     /**
-     * Trang chi tiết một đơn của chính mình (L8). Đi cùng đường với danh sách để chữ, bước, việc gấp chỉ tính ở một
+     * Trang chi tiết một đơn của chính mình (L8). Đi cùng đường với danh sách để
+     * chữ, bước, việc gấp chỉ tính ở một
      * chỗ; ứng viên thường chỉ có vài đơn nên đọc cả bộ không đáng kể.
      */
     @Transactional(readOnly = true)
@@ -99,36 +125,43 @@ public class MyApplicationService {
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hồ sơ ứng tuyển."));
     }
 
-    /** CV đã nộp của một đơn của chính mình; đơn người khác hoặc không có CV thì 404. */
+    /**
+     * CV đã nộp của một đơn của chính mình; đơn người khác hoặc không có CV thì
+     * 404.
+     */
     @Transactional(readOnly = true)
     public ApplicationCv cv(Integer applicationId) {
-        Application application = myApplications.findOwnedById(applicationId, currentUserService.requireUser().getUserId())
+        Application application = myApplicationRepository
+                .findOwnedById(applicationId, currentUserService.requireUser().getUserId())
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hồ sơ ứng tuyển."));
         return ApplicationCv.of(application.getAppliedCvUrl(), cvStorage)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy CV của hồ sơ này."));
     }
 
     /**
-     * Mọi thẻ đơn của ứng viên {@code userId}, theo {@link #DISPLAY_ORDER}. Dữ kiện lịch, offer, dấu dừng đọc theo
-     * {@code userId} (mỗi loại một câu cho cả trang, không một câu cho từng đơn), gom theo id đơn rồi quy đổi bằng
+     * Mọi thẻ đơn của ứng viên {@code userId}, theo {@link #DISPLAY_ORDER}. Dữ kiện
+     * lịch, offer, dấu dừng đọc theo
+     * {@code userId} (mỗi loại một câu cho cả trang, không một câu cho từng đơn),
+     * gom theo id đơn rồi quy đổi bằng
      * {@link MyApplicationJourney}.
      */
     private List<MyApplicationResponse> cards(Integer userId) {
-        List<Application> owned = myApplications.findOwnedByUserId(userId);
+        List<Application> owned = myApplicationRepository.findOwnedByUserId(userId);
         if (owned.isEmpty()) {
             return List.of();
         }
-        Map<Integer, List<Interview>> interviews = myApplications.findMyInterviews(userId).stream()
-                .collect(Collectors.groupingBy(MyInterviewRow::getApplicationId, Collectors.mapping(
-                        row -> new Interview(row.getStartTime(), row.getFormat(), row.getStatus(), row.getScheduledAt()),
+        Map<Integer, List<Interview>> interviews = myApplicationRepository.findMyInterviews(userId).stream()
+                .collect(Collectors.groupingBy(row -> row.getApplicationId(), Collectors.mapping(
+                        row -> new Interview(row.getStartTime(), row.getFormat(), row.getStatus(),
+                                row.getScheduledAt()),
                         Collectors.toList())));
-        Map<Integer, Offer> offers = myApplications.findMyVisibleOffers(userId).stream()
-                .collect(Collectors.toMap(MyOfferRow::getApplicationId,
+        Map<Integer, Offer> offers = myApplicationRepository.findMyVisibleOffers(userId).stream()
+                .collect(Collectors.toMap(row -> row.getApplicationId(),
                         row -> new Offer(row.getOfferId(), row.getStatus(), row.getResponseDeadline(), row.getAt(),
                                 row.getExpectedStartDate()),
                         (first, second) -> first));
-        Map<Integer, List<Mark>> marks = myApplications.findMyApplicationMarks(userId).stream()
-                .collect(Collectors.groupingBy(MyApplicationMarkRow::getApplicationId, Collectors.mapping(
+        Map<Integer, List<Mark>> marks = myApplicationRepository.findMyApplicationMarks(userId).stream()
+                .collect(Collectors.groupingBy(row -> row.getApplicationId(), Collectors.mapping(
                         row -> new Mark(row.getKind(), row.getOldStatus(), row.getAt()),
                         Collectors.toList())));
         LocalDateTime now = LocalDateTime.now();
@@ -151,7 +184,7 @@ public class MyApplicationService {
     @Transactional
     public String withdraw(Integer applicationId) {
         User user = currentUserService.requireUser();
-        Application application = myApplications.findOwnedById(applicationId, user.getUserId())
+        Application application = myApplicationRepository.findOwnedById(applicationId, user.getUserId())
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hồ sơ ứng tuyển."));
 
         String status = application.getApplicationStatus();
@@ -159,30 +192,29 @@ public class MyApplicationService {
             throw new ApplicationWithdrawalException(
                     "Hồ sơ đã qua vòng sơ tuyển nên không thể rút. Vui lòng liên hệ bộ phận tuyển dụng.");
         }
-        if (applications.transition(applicationId, WITHDRAWABLE_STATUSES, ApplicationStatusService.WITHDRAWN) == 0) {
+        if (applicationRepository.transition(applicationId, WITHDRAWABLE_STATUSES,
+                ApplicationStatusService.WITHDRAWN) == 0) {
             throw new ApplicationWithdrawalException("Hồ sơ vừa được cập nhật. Vui lòng tải lại trang.");
         }
-        applications.recordWithdrawal(user.getUserId(), applicationId, status);
+        applicationRepository.recordWithdrawal(user.getUserId(), applicationId, status);
         return application.getJobPosting().getPostingTitle();
     }
 
-    /** Mã đơn hiển thị trên thẻ: {@code #CAN-} + id đệm 4 số. Chỉ để ứng viên nhắc khi liên hệ, không lưu DB. */
-    static String applicationCode(Integer applicationId) {
-        return String.format("#CAN-%04d", applicationId);
-    }
-
     private static MyApplicationResponse toResponse(Application application, MyApplicationJourney.View view,
-                                                    LocalDateTime now) {
+            LocalDateTime now) {
         JobPosting job = application.getJobPosting();
         String department = job.getRequisition() == null || job.getRequisition().getDepartment() == null
-                ? null : job.getRequisition().getDepartment().getDepartmentName();
+                ? null
+                : job.getRequisition().getDepartment().getDepartmentName();
         String cvUrl = application.getAppliedCvUrl();
+        String applicationCode = String.format("#CAN-%04d", application.getApplicationId());
+
         return new MyApplicationResponse(
                 application.getApplicationId(),
                 job.getJobPostingId(),
                 job.getPostingTitle(),
                 department,
-                applicationCode(application.getApplicationId()),
+                applicationCode,
                 application.getSubmissionDate(),
                 view.lastActivityAt(),
                 view.steps(),

@@ -32,30 +32,30 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class ApplicationReviewService {
 
-    private final ApplicationRepository applications;
-    private final ApplicationReviewRepository reviews;
-    private final ApplicationAccess access;
+    private final ApplicationRepository applicationRepository;
+    private final ApplicationReviewRepository reviewRepository;
+    private final ApplicationAccess applicationAccess;
     private final NotificationService notificationService;
 
     /** @return thông báo thành công để hiện trên trang chi tiết */
     @Transactional
     public String review(Integer applicationId, ApplicationReviewRequest request) {
-        User actor = access.actor();
+        User actor = applicationAccess.actor();
         Application application = load(applicationId);
-        access.requireView(actor, application);
-        if (!access.isReviewer(actor)) {
+        applicationAccess.requireView(actor, application);
+        if (!applicationAccess.isReviewer(actor)) {
             throw new AccessDeniedException("Chỉ HR, trưởng bộ phận hoặc Giám đốc (duyệt thay) được duyệt hồ sơ.");
         }
-        if (!access.canReview(actor, application)) {
+        if (!applicationAccess.canReview(actor, application)) {
             throw new ApplicationReviewException(null, "Hồ sơ đang ở bước \""
                     + ApplicationStatusLabels.label(application.getApplicationStatus())
                     + "\", không phải bước bạn duyệt. Vui lòng tải lại trang.");
         }
 
         boolean hrStep = ApplicationAccess.HR_REVIEW_STATUSES.contains(application.getApplicationStatus());
-        boolean onBehalf = !hrStep && access.isDirector(actor);
+        boolean onBehalf = !hrStep && applicationAccess.isDirector(actor);
         String decision = request.decision();
-        reviews.save(ApplicationReview.builder()
+        reviewRepository.save(ApplicationReview.builder()
                 .application(application)
                 .reviewer(actor)
                 .reviewerRole(hrStep ? "HR" : onBehalf ? "Director" : "HiringManager")
@@ -70,7 +70,7 @@ public class ApplicationReviewService {
         };
         if (target != null) {
             Set<String> from = hrStep ? ApplicationAccess.HR_REVIEW_STATUSES : Set.of(ApplicationAccess.HM_REVIEW_STATUS);
-            if (applications.transition(applicationId, from, target) == 0) {
+            if (applicationRepository.transition(applicationId, from, target) == 0) {
                 throw new ApplicationReviewException(null,
                         "Hồ sơ vừa được người khác xử lý. Vui lòng tải lại trang.");
             }
@@ -95,7 +95,7 @@ public class ApplicationReviewService {
     }
 
     private Application load(Integer applicationId) {
-        return applications.findDetailById(applicationId)
+        return applicationRepository.findDetailById(applicationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hồ sơ ứng tuyển."));
     }
 }

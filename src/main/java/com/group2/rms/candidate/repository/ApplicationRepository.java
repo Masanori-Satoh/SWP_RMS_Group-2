@@ -16,17 +16,17 @@ import java.util.Optional;
 public interface ApplicationRepository extends JpaRepository<Application, Integer> {
         // check hr recommend
         String HR_RECOMMENDATION = """
-                exists (select l.auditLogId from AuditLog l where l.entityName = 'Application'
-                    and l.entityId = cast(a.applicationId as string) and l.newValue = 'TalentPoolHrRecommended')
-                """;
-        //check if review from HR with hold and HM not review before
+                        exists (select l.auditLogId from AuditLog l where l.entityName = 'Application'
+                            and l.entityId = cast(a.applicationId as string) and l.newValue = 'TalentPoolHrRecommended')
+                        """;
+        // check if review from HR with hold and HM not review before
         String PENDING_HR_RECOMMENDATION = HR_RECOMMENDATION + """
-                and exists (select rv.reviewId from ApplicationReview rv where rv.application = a
-                    and rv.reviewerRole = 'HR' and rv.decision = 'Hold')
-                and not exists (select rv.reviewId from ApplicationReview rv where rv.application = a
-                    and rv.reviewerRole = 'HiringManager' and rv.decision in ('Pass','Fail'))
-                """;
-        //check if not HM_suggest and not talent pool cancelled
+                        and exists (select rv.reviewId from ApplicationReview rv where rv.application = a
+                            and rv.reviewerRole = 'HR' and rv.decision = 'Hold')
+                        and not exists (select rv.reviewId from ApplicationReview rv where rv.application = a
+                            and rv.reviewerRole = 'HiringManager' and rv.decision in ('Pass','Fail'))
+                        """;
+        // check if not HM_suggest and not talent pool cancelled
         String FORMAL_FILTER = """
                         a.applicationStatus <> 'HM_Suggested'
                         and not exists (select l.auditLogId from AuditLog l
@@ -89,7 +89,8 @@ public interface ApplicationRepository extends JpaRepository<Application, Intege
                         @Param("to") String to);
 
         /**
-         * Đơn kèm mọi thứ trang chi tiết và kiểm quyền cần (ứng viên, tin, requisition, phòng ban, trưởng phòng).
+         * Đơn kèm mọi thứ trang chi tiết và kiểm quyền cần (ứng viên, tin, requisition,
+         * phòng ban, trưởng phòng).
          */
         @Query("""
                         select a from Application a
@@ -104,8 +105,10 @@ public interface ApplicationRepository extends JpaRepository<Application, Intege
         Optional<Application> findDetailById(@Param("id") Integer applicationId);
 
         /**
-         * Ghi nhật ký ứng viên tự rút đơn ({@code OldValue} là trạng thái ngay trước khi rút, dùng để biết đơn dừng
-         * ở bước nào). Trạng thái đơn nằm ở {@code Application.ApplicationStatus = Withdrawn}. SQL thuần vì
+         * Ghi nhật ký ứng viên tự rút đơn ({@code OldValue} là trạng thái ngay trước
+         * khi rút, dùng để biết đơn dừng
+         * ở bước nào). Trạng thái đơn nằm ở
+         * {@code Application.ApplicationStatus = Withdrawn}. SQL thuần vì
          * module admin (chủ bảng AuditLog)
          * phụ thuộc user, user phụ thuộc candidate: import entity của admin vào đây sẽ
          * thành vòng phụ thuộc.
@@ -116,36 +119,40 @@ public interface ApplicationRepository extends JpaRepository<Application, Intege
         void recordWithdrawal(@Param("userId") Integer userId, @Param("id") Integer applicationId,
                         @Param("oldStatus") String oldStatus);
 
-    /**
-     * Dữ kiện tính trạng thái chi tiết cho nhiều đơn trong một câu (cả trang danh sách), xem
-     * {@code ApplicationProgressFacts}. Lịch mới nhất: {@code StartTime} lớn nhất, bỏ lịch đã hủy.
-     * SQL thuần, cùng lý do với {@code ApplicationPipelineRepository.findInterviewEvents}. {@code ids} không được rỗng, tối đa ~2000
-     * (giới hạn tham số của SQL Server): danh sách dài hơn thì gọi theo lô.
-     */
-    @Query(value = """
-            SELECT a.ApplicationId AS applicationId,
-                   a.ApplicationStatus AS applicationStatus,
-                   s.InterviewId AS interviewId,
-                   s.InterviewStatus AS interviewStatus,
-                   s.StartTime AS interviewStart,
-                   (SELECT COUNT(*) FROM InterviewPanel p WHERE p.InterviewId = s.InterviewId) AS panelCount,
-                   (SELECT COUNT(DISTINCT e.InterviewerId) FROM InterviewEvaluation e
-                    WHERE e.InterviewId = s.InterviewId) AS evaluationCount,
-                   r.FinalDecision AS finalDecision,
-                   o.OfferStatus AS offerStatus
-            FROM Application a
-            OUTER APPLY (SELECT TOP 1 s1.InterviewId, s1.InterviewStatus, s1.StartTime
-                         FROM InterviewSchedule s1
-                         WHERE s1.ApplicationId = a.ApplicationId AND s1.InterviewStatus <> 'Cancelled'
-                         ORDER BY s1.StartTime DESC, s1.InterviewId DESC) s
-            LEFT JOIN InterviewFinalResult r ON r.InterviewId = s.InterviewId
-            OUTER APPLY (SELECT TOP 1 o1.OfferStatus
-                         FROM OfferProposal o1
-                         WHERE o1.ApplicationId = a.ApplicationId
-                         ORDER BY o1.OfferId DESC) o
-            WHERE a.ApplicationId IN (:ids)
-            """, nativeQuery = true)
-    List<ProgressFactsRow> findProgressFacts(@Param("ids") Collection<Integer> applicationIds);
+        /**
+         * Dữ kiện tính trạng thái chi tiết cho nhiều đơn trong một câu (cả trang danh
+         * sách), xem
+         * {@code ApplicationProgressFacts}. Lịch mới nhất: {@code StartTime} lớn nhất,
+         * bỏ lịch đã hủy.
+         * SQL thuần, cùng lý do với
+         * {@code ApplicationPipelineRepository.findInterviewEvents}. {@code ids} không
+         * được rỗng, tối đa ~2000
+         * (giới hạn tham số của SQL Server): danh sách dài hơn thì gọi theo lô.
+         */
+        @Query(value = """
+                        SELECT a.ApplicationId AS applicationId,
+                               a.ApplicationStatus AS applicationStatus,
+                               s.InterviewId AS interviewId,
+                               s.InterviewStatus AS interviewStatus,
+                               s.StartTime AS interviewStart,
+                               (SELECT COUNT(*) FROM InterviewPanel p WHERE p.InterviewId = s.InterviewId) AS panelCount,
+                               (SELECT COUNT(DISTINCT e.InterviewerId) FROM InterviewEvaluation e
+                                WHERE e.InterviewId = s.InterviewId) AS evaluationCount,
+                               r.FinalDecision AS finalDecision,
+                               o.OfferStatus AS offerStatus
+                        FROM Application a
+                        OUTER APPLY (SELECT TOP 1 s1.InterviewId, s1.InterviewStatus, s1.StartTime
+                                     FROM InterviewSchedule s1
+                                     WHERE s1.ApplicationId = a.ApplicationId AND s1.InterviewStatus <> 'Cancelled'
+                                     ORDER BY s1.StartTime DESC, s1.InterviewId DESC) s
+                        LEFT JOIN InterviewFinalResult r ON r.InterviewId = s.InterviewId
+                        OUTER APPLY (SELECT TOP 1 o1.OfferStatus
+                                     FROM OfferProposal o1
+                                     WHERE o1.ApplicationId = a.ApplicationId
+                                     ORDER BY o1.OfferId DESC) o
+                        WHERE a.ApplicationId IN (:ids)
+                        """, nativeQuery = true)
+        List<ProgressFactsRow> findProgressFacts(@Param("ids") Collection<Integer> applicationIds);
 
         // new query
         // update condition duplicate application with HM SUGGEST
@@ -158,7 +165,8 @@ public interface ApplicationRepository extends JpaRepository<Application, Intege
         boolean existsActiveByCandidateAndJobPosting(@Param("candidateId") Integer candidateId,
                         @Param("jobPostingId") Integer jobPostingId);
 
-        @Query("select count(a) from Application a where a.applicationId = :id and a.applicationStatus = 'HM_Suggested' and " + PENDING_HR_RECOMMENDATION)
+        @Query("select count(a) from Application a where a.applicationId = :id and a.applicationStatus = 'HM_Suggested' and "
+                        + PENDING_HR_RECOMMENDATION)
         long countPendingHrRecommendation(@Param("id") Integer applicationId);
 
         // Update status to HM PASSED
@@ -173,7 +181,8 @@ public interface ApplicationRepository extends JpaRepository<Application, Intege
                         """)
         int promoteSuggestionToHmPassed(@Param("id") Integer applicationId);
 
-        // Candidate uploads a new CV: every proposal enters ordinary application screening.
+        // Candidate uploads a new CV: every proposal enters ordinary application
+        // screening.
         // Only the separate HR old-CV confirmation may promote a proposal to HM_Passed.
         @Modifying
         @Query("""

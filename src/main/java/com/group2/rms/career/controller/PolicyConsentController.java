@@ -19,7 +19,7 @@ public class PolicyConsentController {
     public static final String MISSING_AGREEMENT = "Vui lòng tick đồng ý cả Điều khoản sử dụng và Chính sách bảo mật.";
     private static final String FALLBACK_URL = "/jobs";
 
-    private final PolicyConsentService policyConsent;
+    private final PolicyConsentService policyConsentService;
 
     @PostMapping("/policy-consents")
     public String agree(@RequestParam(defaultValue = "false") boolean agreeTerms,
@@ -30,7 +30,7 @@ public class PolicyConsentController {
         if (!agreeTerms || !agreePrivacy) {
             flash.addFlashAttribute("policyConsentError", MISSING_AGREEMENT);
         } else {
-            policyConsent.recordConsent(authentication.getName());
+            policyConsentService.recordConsent(authentication.getName());
         }
         return "redirect:" + safeReturnUrl(returnUrl);
     }

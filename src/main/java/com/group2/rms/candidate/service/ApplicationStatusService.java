@@ -52,20 +52,20 @@ public class ApplicationStatusService {
     /** Một nguồn cho "đơn đã kết thúc": mọi danh sách {@code NOT IN} trạng thái kết thúc dùng hằng này. */
     public static final Set<String> TERMINAL = Set.of(HIRED, REJECTED, WITHDRAWN, CANCELLED);
 
-    private final ApplicationRepository applications;
-    private final JobPostingRepository jobs;
+    private final ApplicationRepository applicationRepository;
+    private final JobPostingRepository jobPostingRepository;
     private final NotificationService notificationService;
 
     public void requireScheduleable(Integer id) {
         // check if application is exist
-        var app = applications.findDetailById(id)
+        var app = applicationRepository.findDetailById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hồ sơ."));
         // check if job posting is exist
-        var job = jobs.findForUpdate(app.getJobPosting().getJobPostingId()).orElseThrow();
+        var job = jobPostingRepository.findForUpdate(app.getJobPosting().getJobPostingId()).orElseThrow();
         // check if job posting is not published and application status is not valid
         if (!"Published".equals(job.getPostingStatus()) || !IN_INTERVIEW.contains(app.getApplicationStatus()))
             throw new ApplicationStatusException("Hồ sơ chưa đủ điều kiện hoặc đợt tuyển đã đóng.");
-        var rows = applications.findProgressFacts(List.of(id));
+        var rows = applicationRepository.findProgressFacts(List.of(id));
         //check if cv is not empty  and stage of CV is Interview
         if (!rows.isEmpty() && ApplicationProgressResolver.resolve(ApplicationProgressFacts.from(rows.getFirst()),LocalDateTime.now()).stage() != ApplicationStage.INTERVIEW)
             throw new ApplicationStatusException("Hồ sơ đã chuyển sang vòng Thư mời hoặc đã kết thúc.");
@@ -86,7 +86,7 @@ public class ApplicationStatusService {
         if (passed) {
             move(applicationId, BEFORE_INTERVIEW, "Interviewing");
         } else if (move(applicationId, IN_INTERVIEW, REJECTED)) {
-            applications.findDetailById(applicationId).ifPresent(notificationService::notifyApplicationRejected);
+            applicationRepository.findDetailById(applicationId).ifPresent(notificationService::notifyApplicationRejected);
         }
     }
 
@@ -97,7 +97,7 @@ public class ApplicationStatusService {
 
     /** @return {@code true} nếu trạng thái đã đổi */
     private boolean move(Integer applicationId, Set<String> from, String to) {
-        if (applications.transition(applicationId, from, to) == 0) {
+        if (applicationRepository.transition(applicationId, from, to) == 0) {
             log.debug("Đơn #{} không ở {} nên giữ nguyên trạng thái (không chuyển sang {}).", applicationId, from, to);
             return false;
         }

@@ -47,9 +47,9 @@ class PolicyConsentControllerTests {
     private MockMvc mvc;
 
     @MockitoBean
-    private PolicyConsentService policyConsent;
+    private PolicyConsentService policyConsentService;
     @MockitoBean
-    private UserRepository users;
+    private UserRepository userRepository;
 
     @Test
     @DisplayName("Tick đủ 2 ô -> Lưu đồng ý, quay về đúng trang đang xem (giữ #apply)")
@@ -59,7 +59,7 @@ class PolicyConsentControllerTests {
                         .param("returnUrl", "/jobs/5#apply"))
                 .andExpect(redirectedUrl("/jobs/5#apply"));
 
-        verify(policyConsent).recordConsent(USERNAME);
+        verify(policyConsentService).recordConsent(USERNAME);
     }
 
     @Test
@@ -70,7 +70,7 @@ class PolicyConsentControllerTests {
                 .andExpect(redirectedUrl("/jobs"))
                 .andExpect(flash().attribute("policyConsentError", PolicyConsentController.MISSING_AGREEMENT));
 
-        verify(policyConsent, never()).recordConsent(any());
+        verify(policyConsentService, never()).recordConsent(any());
     }
 
     @Test
@@ -87,13 +87,13 @@ class PolicyConsentControllerTests {
     void agree_shouldBeForbidden_whenNotCandidate() throws Exception {
         User hr = User.builder().userId(2).username("hr").accountStatus("Active")
                 .role(Role.builder().roleName("HR").build()).build();
-        when(users.findByUsernameIgnoreCase("hr")).thenReturn(Optional.of(hr));
+        when(userRepository.findByUsernameIgnoreCase("hr")).thenReturn(Optional.of(hr));
 
         mvc.perform(post("/policy-consents").with(user("hr").authorities(() -> "ROLE_HR")).with(csrf())
                         .param("agreeTerms", "true").param("agreePrivacy", "true"))
                 .andExpect(status().isForbidden());
 
-        verifyNoInteractions(policyConsent);
+        verifyNoInteractions(policyConsentService);
     }
 
     @Test
@@ -103,7 +103,7 @@ class PolicyConsentControllerTests {
                         .param("agreeTerms", "true").param("agreePrivacy", "true"))
                 .andExpect(status().isForbidden());
 
-        verifyNoInteractions(policyConsent);
+        verifyNoInteractions(policyConsentService);
     }
 
     @ParameterizedTest(name = "returnUrl = \"{0}\" -> /jobs")
@@ -124,7 +124,7 @@ class PolicyConsentControllerTests {
     private RequestPostProcessor candidate() {
         User account = User.builder().userId(9).username(USERNAME).accountStatus("Active")
                 .role(Role.builder().roleName("Candidate").build()).build();
-        when(users.findByUsernameIgnoreCase(USERNAME)).thenReturn(Optional.of(account));
+        when(userRepository.findByUsernameIgnoreCase(USERNAME)).thenReturn(Optional.of(account));
         return user(USERNAME).authorities(() -> "ROLE_CANDIDATE");
     }
 }

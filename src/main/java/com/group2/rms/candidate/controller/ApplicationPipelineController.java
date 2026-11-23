@@ -7,6 +7,7 @@ import com.group2.rms.candidate.dto.ApplicationSearch;
 import com.group2.rms.candidate.exception.ApplicationReviewException;
 import com.group2.rms.candidate.service.ApplicationPipelineService;
 import com.group2.rms.candidate.service.ApplicationReviewService;
+import com.group2.rms.candidate.service.ApplicationStatusService;
 import com.group2.rms.talentpool.service.TalentPoolService;
 import com.group2.rms.candidate.entity.ApplicationStage;
 import com.group2.rms.core.web.StageItem;
@@ -44,14 +45,14 @@ public class ApplicationPipelineController {
 
     static final int PAGE_SIZE = 20;
 
-    private final ApplicationPipelineService pipeline;
+    private final ApplicationPipelineService pipelineService;
     private final ApplicationReviewService reviewService;
-    private final TalentPoolService talentPool;
+    private final TalentPoolService talentPoolService;
 
     @GetMapping
     public String list(@ModelAttribute ApplicationSearch search,
             @PageableDefault(size = PAGE_SIZE) Pageable pageable, Model model) {
-        ApplicationListResponse result = pipeline.list(search, pageable);
+        ApplicationListResponse result = pipelineService.list(search, pageable);
         model.addAttribute("result", result);
         model.addAttribute("stageItems", stageItems(result));
         model.addAttribute("activeMenu", "applications");
@@ -83,14 +84,14 @@ public class ApplicationPipelineController {
                 .queryParamIfPresent("jobPostingId", Optional.ofNullable(search.jobPostingId()))
                 .queryParamIfPresent("keyword", Optional.ofNullable(search.keyword()))
                 .queryParamIfPresent("status", Optional.ofNullable(search.status()))
-                .queryParamIfPresent("stage", Optional.ofNullable(stage).map(Enum::name))
+                .queryParamIfPresent("stage", Optional.ofNullable(stage).map(s -> s.name()))
                 .encode()
                 .toUriString();
     }
 
     @GetMapping("/{id}")
     public String detail(@PathVariable Integer id, Model model) {
-        String recommendationUrl = talentPool.pendingRecommendationUrl(id);
+        String recommendationUrl = talentPoolService.pendingRecommendationUrl(id);
         if (recommendationUrl != null)
             return "redirect:" + recommendationUrl;
         if (!model.containsAttribute("reviewForm")) {
@@ -123,14 +124,14 @@ public class ApplicationPipelineController {
     }
 
     private String renderDetail(Integer id, Model model) {
-        ApplicationDetailResponse detail = pipeline.detail(id);
+        ApplicationDetailResponse detail = pipelineService.detail(id);
         model.addAttribute("detail", detail);
         // Keep shared note history available to authorized reviewers after removing a
         // bookmark.
         model.addAttribute("talentNotes", Set.of("HR", "Hiring Manager").contains(detail.viewerRole())
-                ? talentPool.notesFor(detail.candidateId())
+                ? talentPoolService.notesFor(detail.candidateId())
                 : List.of());
-        model.addAttribute("closedByPosting", pipeline.closedByPosting(id));
+        model.addAttribute("closedByPosting", ApplicationStatusService.CANCELLED.equals(detail.applicationStatus()));
         model.addAttribute("activeMenu", "applications");
         model.addAttribute("viewerRole", detail.viewerRole());
         return "candidate/application-detail";
@@ -144,6 +145,6 @@ public class ApplicationPipelineController {
      */
     @GetMapping("/{id}/cv")
     public ResponseEntity<Resource> cv(@PathVariable Integer id) {
-        return pipeline.cv(id).toResponse("CV-" + id + ".pdf");
+        return pipelineService.cv(id).toResponse("CV-" + id + ".pdf");
     }
 }
