@@ -22,7 +22,8 @@ class CandidateProfileServiceTests {
 
     private final CandidateRepository candidateRepository = mock(CandidateRepository.class);
     private final UserProfileService userProfileService = mock(UserProfileService.class);
-    private final CandidateProfileService candidateProfileService = new CandidateProfileService(candidateRepository, userProfileService);
+    private final CandidateProfileService candidateProfileService =
+            new CandidateProfileService(candidateRepository, userProfileService);
     private final Candidate candidate = Candidate.builder().candidateId(9).account(User.builder().userId(54).build())
             .dateOfBirth(LocalDate.of(1998, 1, 1)).gender("Nam").address("Cũ").linkedInUrl("https://old.test")
             .portfolioUrl("https://old-portfolio.test").candidateSource("TopCV").isPotential(true).build();
@@ -30,7 +31,8 @@ class CandidateProfileServiceTests {
     @Test
     void getCombinesAccountPartAndCandidateFields() {
         when(candidateRepository.findByAccount_UsernameIgnoreCase("an.vo")).thenReturn(Optional.of(candidate));
-        UserProfileResponse account = new UserProfileResponse(54, "an.vo", "a@x.test", "Võ Thành An", null, null, "Candidate", "Ứng viên", "Chưa thuộc phòng ban");
+        UserProfileResponse account = new UserProfileResponse(
+                54, "an.vo", "a@x.test", "Võ Thành An", null, null, "Candidate", "Ứng viên", "Chưa thuộc phòng ban");
         when(userProfileService.getProfile("an.vo")).thenReturn(account);
 
         var result = candidateProfileService.get("an.vo");
@@ -47,7 +49,8 @@ class CandidateProfileServiceTests {
         UpdateProfileRequest account = new UpdateProfileRequest("Võ Thành An", "0901234567");
 
         candidateProfileService.update("an.vo", account, new UpdateCandidateProfileRequest(
-                LocalDate.of(1999, 4, 12), "Nữ", "  Số 1 Lê Lợi  ", " https://linkedin.com/in/an ", "   ", " an@new.test "));
+                LocalDate.of(1999, 4, 12), "Nữ", "  Số 1 Lê Lợi  ", " https://linkedin.com/in/an ",
+                "   ", " an@new.test "));
 
         verify(userProfileService).updateCandidateProfile("an.vo", account, "an@new.test");
         assertEquals(LocalDate.of(1999, 4, 12), candidate.getDateOfBirth());
@@ -77,7 +80,8 @@ class CandidateProfileServiceTests {
         when(candidateRepository.findByAccount_UsernameIgnoreCase("an.vo")).thenReturn(Optional.of(candidate));
         UpdateProfileRequest account = new UpdateProfileRequest("Võ Thành An", null);
 
-        candidateProfileService.update("an.vo", account, new UpdateCandidateProfileRequest(null, "Male", null, null, null, null));
+        candidateProfileService.update("an.vo", account,
+                new UpdateCandidateProfileRequest(null, "Male", null, null, null, null));
         assertEquals("Male", candidate.getGender());
 
         var error = assertThrows(CandidateProfileException.class, () -> candidateProfileService.update("an.vo", account,
@@ -88,11 +92,50 @@ class CandidateProfileServiceTests {
     }
 
     @Test
+    void updateRejectsCandidateUnder18YearsOld() {
+        when(candidateRepository.findByAccount_UsernameIgnoreCase("an.vo")).thenReturn(Optional.of(candidate));
+        UpdateProfileRequest account = new UpdateProfileRequest("Võ Thành An", "0901234567");
+        LocalDate under18 = LocalDate.now().minusYears(18).plusDays(1);
+
+        var error = assertThrows(CandidateProfileException.class, () -> candidateProfileService.update("an.vo", account,
+                new UpdateCandidateProfileRequest(under18, "Nam", null, null, null, null)));
+        assertEquals("dateOfBirth", error.getField());
+        assertEquals("Ứng viên phải từ đủ 18 tuổi.", error.getMessage());
+        verify(candidateRepository, never()).save(any());
+    }
+
+    @Test
+    void updateRejectsCandidateOver100YearsOld() {
+        when(candidateRepository.findByAccount_UsernameIgnoreCase("an.vo")).thenReturn(Optional.of(candidate));
+        UpdateProfileRequest account = new UpdateProfileRequest("Võ Thành An", "0901234567");
+        LocalDate over100 = LocalDate.now().minusYears(100).minusDays(1);
+
+        var error = assertThrows(CandidateProfileException.class, () -> candidateProfileService.update("an.vo", account,
+                new UpdateCandidateProfileRequest(over100, "Nam", null, null, null, null)));
+        assertEquals("dateOfBirth", error.getField());
+        assertEquals("Ngày sinh không hợp lệ.", error.getMessage());
+        verify(candidateRepository, never()).save(any());
+    }
+
+    @Test
+    void updateAcceptsCandidateExactly18YearsOld() {
+        when(candidateRepository.findByAccount_UsernameIgnoreCase("an.vo")).thenReturn(Optional.of(candidate));
+        UpdateProfileRequest account = new UpdateProfileRequest("Võ Thành An", "0901234567");
+        LocalDate exactly18 = LocalDate.now().minusYears(18);
+
+        assertDoesNotThrow(() -> candidateProfileService.update("an.vo", account,
+                new UpdateCandidateProfileRequest(exactly18, "Nam", null, null, null, null)));
+        assertEquals(exactly18, candidate.getDateOfBirth());
+        verify(candidateRepository).save(candidate);
+    }
+
+    @Test
     void accountWithoutCandidateRowIsNotFound() {
         when(candidateRepository.findByAccount_UsernameIgnoreCase("hr_lan")).thenReturn(Optional.empty());
         assertThrows(ResourceNotFoundException.class, () -> candidateProfileService.get("hr_lan"));
         assertThrows(ResourceNotFoundException.class, () -> candidateProfileService.update("hr_lan",
-                new UpdateProfileRequest("Lan", null), new UpdateCandidateProfileRequest(null, null, null, null, null, null)));
+                new UpdateProfileRequest("Lan", null),
+                new UpdateCandidateProfileRequest(null, null, null, null, null, null)));
         verifyNoInteractions(userProfileService);
     }
 }

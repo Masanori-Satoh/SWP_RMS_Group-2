@@ -19,28 +19,27 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 import org.springframework.web.multipart.MultipartFile;
 
 /**
- * Self-service profile operations. Always operates on the authenticated account only.
- * Nguồn duy nhất cho phần chung (bảng {@code [User]}) của mọi vai trò; trang hồ sơ ứng viên gọi lại service này.
+ * Service quản lý thông tin tài khoản người dùng nội bộ và ứng viên.
  */
 @Service
 public class UserProfileService {
 
     static final String NO_DEPARTMENT = "Chưa thuộc phòng ban";
 
-    private final UserRepository users;
+    private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final LocalAvatarStorage avatarStorage;
     private final AvatarFileValidator avatarValidator;
-    private final UserAuditLogger audit;
+    private final UserAuditLogger userAuditLogger;
 
-    public UserProfileService(UserRepository users, PasswordEncoder passwordEncoder,
+    public UserProfileService(UserRepository userRepository, PasswordEncoder passwordEncoder,
                               LocalAvatarStorage avatarStorage, AvatarFileValidator avatarValidator,
-                              UserAuditLogger audit) {
-        this.users = users;
+                              UserAuditLogger userAuditLogger) {
+        this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.avatarStorage = avatarStorage;
         this.avatarValidator = avatarValidator;
-        this.audit = audit;
+        this.userAuditLogger = userAuditLogger;
     }
 
     @Transactional(readOnly = true)
@@ -75,7 +74,7 @@ public class UserProfileService {
     private void updateProfile(User user, UpdateProfileRequest request, String email) {
         boolean emailChanged = email != null && !email.equals(user.getEmail());
         if (emailChanged) {
-            AccountManagementService.checkEmailAvailable(users, email, user.getUserId());
+            AccountManagementService.checkEmailAvailable(userRepository, email, user.getUserId());
         }
         var before = UserAuditLogger.userSnapshot(user);
         user.setFullName(request.fullName().trim());
@@ -83,7 +82,7 @@ public class UserProfileService {
         if (emailChanged) {
             user.setEmail(email);
             try {
-                users.saveAndFlush(user);
+                userRepository.saveAndFlush(user);
             } catch (DataIntegrityViolationException e) {
                 if (e.getMostSpecificCause().getMessage() != null
                         && e.getMostSpecificCause().getMessage().contains("UQ_User_Email")) {
@@ -92,15 +91,11 @@ public class UserProfileService {
                 throw e;
             }
         } else {
-            users.save(user);
+            userRepository.save(user);
         }
-        audit.changes("User", user.getUserId(), before, UserAuditLogger.userSnapshot(user));
+        userAuditLogger.changes("User", user.getUserId(), before, UserAuditLogger.userSnapshot(user));
     }
 
-    /**
-     * Thay ảnh đại diện bằng file tải lên. Mỗi người một file: commit xong thì xóa file cũ;
-     * transaction không commit thì xóa file vừa lưu (file nằm ngoài DB nên rollback không xóa được).
-     */
     @Transactional
     public void changeAvatar(String username, MultipartFile file) {
         User user = findByUsername(username);
@@ -118,13 +113,9 @@ public class UserProfileService {
             }
         });
         user.setAvatarUrl(LocalAvatarStorage.URL_PREFIX + newKey);
-        users.save(user);
+        userRepository.save(user);
     }
 
-    /**
-     * Link xem ảnh của một người, có tham số {@code v} đổi theo file để trình duyệt tải lại khi đổi ảnh;
-     * {@code null} khi chưa có ảnh tải lên hoặc máy này không có file (giao diện hiện chữ cái đầu).
-     */
     public String avatarSrc(User user) {
         String key = LocalAvatarStorage.keyOf(user.getAvatarUrl());
         if (key == null || !avatarStorage.exists(key)) {
@@ -134,10 +125,9 @@ public class UserProfileService {
         return "/users/" + user.getUserId() + "/avatar?v=" + fileName.substring(0, fileName.lastIndexOf('.'));
     }
 
-    /** File ảnh của một người cho {@code /users/{id}/avatar}; không có ảnh thì ném {@code ResourceNotFoundException}. */
     @Transactional(readOnly = true)
     public UserAvatarResponse avatarFile(Integer userId) {
-        String key = users.findById(userId).map(u -> LocalAvatarStorage.keyOf(u.getAvatarUrl())).orElse(null);
+        String key = userRepository.findById(userId).map(u -> LocalAvatarStorage.keyOf(u.getAvatarUrl())).orElse(null);
         AvatarFileValidator.ImageType type = key == null ? null
                 : AvatarFileValidator.ImageType.fromExtension(key.substring(key.lastIndexOf('.') + 1));
         if (type == null) {
@@ -146,9 +136,6 @@ public class UserProfileService {
         return new UserAvatarResponse(avatarStorage.load(key), type.mediaType());
     }
 
-    /**
-     * @return {@code false} when the current password is incorrect (nothing is changed).
-     */
     @Transactional
     public boolean changePassword(String username, ChangePasswordRequest request) {
         User user = findByUsername(username);
@@ -156,20 +143,16 @@ public class UserProfileService {
             return false;
         }
         user.setPasswordHash(passwordEncoder.encode(request.newPassword()));
-        users.save(user);
-        audit.record(user, "UPDATE", "User", user.getUserId(), null, "Đổi mật khẩu thành công");
+        userRepository.save(user);
+        userAuditLogger.record(user, "UPDATE", "User", user.getUserId(), null, "Đổi mật khẩu thành công");
         return true;
     }
 
     private User findByUsername(String username) {
-        return users.findByUsernameIgnoreCase(username)
+        return userRepository.findByUsernameIgnoreCase(username)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tài khoản."));
     }
 
-    /**
-     * Tên vai trò tiếng Việt. Cùng bảng tên với {@code fragments/layout/topbar-user.html} (topbar tự dịch bằng th:with);
-     * đổi tên ở đây thì đổi cả ở đó.
-     */
     static String roleLabel(String roleName) {
         if (roleName == null) {
             return null;

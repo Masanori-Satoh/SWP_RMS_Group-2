@@ -1,7 +1,7 @@
 package com.group2.rms.candidate.service;
 
-import com.group2.rms.candidate.dto.UpdateCandidateProfileRequest;
 import com.group2.rms.candidate.dto.CandidateProfileResponse;
+import com.group2.rms.candidate.dto.UpdateCandidateProfileRequest;
 import com.group2.rms.candidate.entity.Candidate;
 import com.group2.rms.candidate.exception.CandidateProfileException;
 import com.group2.rms.candidate.repository.CandidateRepository;
@@ -12,9 +12,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+
 /**
- * Ứng viên tự xem, sửa hồ sơ của mình ({@code /portal/profile}). Thay đổi tài khoản đi qua
- * {@link UserProfileService}; các trường trên bảng {@code Candidate} được lưu trong cùng giao dịch.
+ * Service quản lý thông tin hồ sơ của ứng viên.
  */
 @Service
 @RequiredArgsConstructor
@@ -37,6 +38,14 @@ public class CandidateProfileService {
         String gender = blankToNull(details.gender());
         if (gender != null && !UpdateCandidateProfileRequest.genderOptions(candidate.getGender()).contains(gender)) {
             throw new CandidateProfileException("gender", "Giới tính không hợp lệ.");
+        }
+        if (details.dateOfBirth() != null) {
+            if (details.dateOfBirth().isAfter(LocalDate.now().minusYears(18))) {
+                throw new CandidateProfileException("dateOfBirth", "Ứng viên phải từ đủ 18 tuổi.");
+            }
+            if (details.dateOfBirth().isBefore(LocalDate.now().minusYears(100))) {
+                throw new CandidateProfileException("dateOfBirth", "Ngày sinh không hợp lệ.");
+            }
         }
         userProfileService.updateCandidateProfile(username, account, details.email());
         candidate.setDateOfBirth(details.dateOfBirth());

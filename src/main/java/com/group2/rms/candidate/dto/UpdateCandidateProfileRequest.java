@@ -11,11 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Các trường dành riêng cho form {@code /portal/profile}, gồm email tài khoản và thông tin ứng viên.
- * Không có {@code CandidateSource}, {@code IsPotential}: là thông tin nội bộ, ứng viên không thấy, không sửa.
- * Giới tính lưu đúng chữ như seed ({@code Nam}, {@code Nữ}) cộng thêm {@code Khác}; giá trị khác đang có sẵn trong DB
- * vẫn giữ được ({@link #genderOptions(String)}), kiểm ở {@code CandidateProfileService.update}.
- * Câu báo của {@code @Past}, {@code @Size} lấy từ {@code messages.properties} của nhóm (khóa {@code Past}, {@code Size}).
+ * DTO yêu cầu cập nhật thông tin hồ sơ của ứng viên.
  */
 public record UpdateCandidateProfileRequest(
         @Past
@@ -29,11 +25,13 @@ public record UpdateCandidateProfileRequest(
         String address,
 
         @Size(max = 500)
-        @Pattern(regexp = "^$|^https?://[^\\s<>\"]+$", message = "Link LinkedIn phải bắt đầu bằng http:// hoặc https://.")
+        @Pattern(regexp = "^$|^https?://[^\\s<>\"]+$",
+                message = "Link LinkedIn phải bắt đầu bằng http:// hoặc https://.")
         String linkedInUrl,
 
         @Size(max = 500)
-        @Pattern(regexp = "^$|^https?://[^\\s<>\"]+$", message = "Link Portfolio phải bắt đầu bằng http:// hoặc https://.")
+        @Pattern(regexp = "^$|^https?://[^\\s<>\"]+$",
+                message = "Link Portfolio phải bắt đầu bằng http:// hoặc https://.")
         String portfolioUrl,
 
         @Email(message = "Vui lòng nhập email hợp lệ.")
@@ -42,17 +40,14 @@ public record UpdateCandidateProfileRequest(
         String email) {
 
     public UpdateCandidateProfileRequest {
-        // Form cũ không gửi email. Chuỗi rỗng từ form mới vẫn phải qua validation.
-        email = email == null ? null : email.strip();
+        email = (email == null) ? null : email.strip();
+        address = (address == null || address.isBlank()) ? null : address.strip();
+        linkedInUrl = (linkedInUrl == null || linkedInUrl.isBlank()) ? null : linkedInUrl.strip();
+        portfolioUrl = (portfolioUrl == null || portfolioUrl.isBlank()) ? null : portfolioUrl.strip();
     }
 
-    /** Các lựa chọn giới tính trên form, đúng thứ tự hiển thị. */
     public static final List<String> GENDERS = List.of("Nam", "Nữ", "Khác");
 
-    /**
-     * Lựa chọn giới tính cho một hồ sơ: 3 giá trị chuẩn, cộng giá trị đang lưu nếu nằm ngoài danh sách
-     * (dữ liệu cũ), để mở form rồi lưu lại không làm mất giá trị đó.
-     */
     public static List<String> genderOptions(String current) {
         if (current == null || current.isBlank() || GENDERS.contains(current)) {
             return GENDERS;

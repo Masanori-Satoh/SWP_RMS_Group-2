@@ -13,13 +13,16 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 /**
- * Quản lý hồ sơ cá nhân và đổi mật khẩu của người dùng.
- * Hoạt động dựa trên tài khoản xác thực từ SecurityContext.
+ * Controller quản lý hồ sơ cá nhân và đổi mật khẩu cho người dùng.
  */
 @Controller
 @RequestMapping("/profile")
@@ -33,7 +36,6 @@ public class UserProfileController {
         this.profileService = profileService;
     }
 
-    /** Ứng viên có trang riêng /portal/profile: gõ /profile thì chuyển sang đó, không báo 403. */
     @GetMapping
     public String viewProfile(Authentication authentication, Model model) {
         if (authentication != null && authentication.getAuthorities().stream()
@@ -69,7 +71,6 @@ public class UserProfileController {
         return "redirect:/profile";
     }
 
-    /** Tải ảnh đại diện mới qua form multipart tiêu chuẩn. */
     @PostMapping("/avatar")
     public String changeAvatar(Authentication authentication,
                                @RequestParam(name = "avatarFile", required = false) MultipartFile avatarFile,
@@ -83,7 +84,6 @@ public class UserProfileController {
         return "redirect:/profile";
     }
 
-    /** Đổi mật khẩu qua form POST tiêu chuẩn; hỗ trợ cả người dùng nội bộ và ứng viên. */
     @PostMapping("/change-password")
     public String changePassword(
             Authentication authentication,
@@ -98,7 +98,8 @@ public class UserProfileController {
 
         if (request.newPassword() != null && request.confirmPassword() != null
                 && !request.newPassword().equals(request.confirmPassword())) {
-            bindingResult.addError(new FieldError("passwordRequest", "confirmPassword", "Mật khẩu nhập lại không khớp."));
+            bindingResult.addError(
+                    new FieldError("passwordRequest", "confirmPassword", "Mật khẩu nhập lại không khớp."));
         }
         if (!bindingResult.hasErrors()
                 && !profileService.changePassword(authentication.getName(), request)) {

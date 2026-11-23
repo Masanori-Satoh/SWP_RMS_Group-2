@@ -15,16 +15,18 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.LocalDate;
 
 /**
- * Hồ sơ cá nhân của ứng viên (Q7.1). {@code SecurityConfig} giới hạn {@code /portal/profile/**} cho ROLE_CANDIDATE;
- * ứng viên gõ {@code /profile} được chuyển sang đây. Một form lưu cả hai phần: {@code updateRequest} (bảng {@code User})
- * và {@code detailsRequest} (email và các trường ứng viên). Đổi mật khẩu dùng lại {@code POST /profile/change-password}.
+ * Controller xử lý hồ sơ cá nhân của ứng viên trên career portal.
  */
 @Controller
 @RequestMapping("/portal/profile")
@@ -45,8 +47,10 @@ public class CandidateProfileController {
                     new UpdateProfileRequest(profile.account().fullName(), profile.account().phoneNumber()));
         }
         if (!model.containsAttribute("detailsRequest")) {
-            model.addAttribute("detailsRequest", new UpdateCandidateProfileRequest(profile.dateOfBirth(), profile.gender(),
-                    profile.address(), profile.linkedInUrl(), profile.portfolioUrl(), profile.account().email()));
+            model.addAttribute("detailsRequest",
+                    new UpdateCandidateProfileRequest(profile.dateOfBirth(), profile.gender(),
+                            profile.address(), profile.linkedInUrl(), profile.portfolioUrl(),
+                            profile.account().email()));
         }
         if (!model.containsAttribute("passwordRequest")) {
             model.addAttribute("passwordRequest", new ChangePasswordRequest("", "", ""));
@@ -87,7 +91,6 @@ public class CandidateProfileController {
         return "redirect:/portal/profile";
     }
 
-    /** Tải ảnh đại diện mới; cùng nguồn với {@code /profile/avatar} ({@code UserProfileService.changeAvatar}). */
     @PostMapping("/avatar")
     public String changeAvatar(Authentication authentication,
                                @RequestParam(name = "avatarFile", required = false) MultipartFile avatarFile,
