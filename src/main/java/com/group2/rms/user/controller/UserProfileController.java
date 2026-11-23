@@ -1,13 +1,13 @@
 package com.group2.rms.user.controller;
 
+import com.group2.rms.core.security.AccountSessionGuardFilter;
 import com.group2.rms.user.dto.ChangePasswordRequest;
 import com.group2.rms.user.dto.UpdateProfileRequest;
 import com.group2.rms.user.dto.UserProfileResponse;
 import com.group2.rms.user.exception.AvatarUploadException;
 import com.group2.rms.user.service.UserProfileService;
+import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -17,12 +17,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.util.HashMap;
-import java.util.Map;
-
 /**
- * Self-service "My Profile" screen and password management.
- * Always securely operates on the authenticated user from the SecurityContext.
+ * Quản lý hồ sơ cá nhân và đổi mật khẩu của người dùng.
+ * Hoạt động dựa trên tài khoản xác thực từ SecurityContext.
  */
 @Controller
 @RequestMapping("/profile")
@@ -36,10 +33,11 @@ public class UserProfileController {
         this.profileService = profileService;
     }
 
-    /** Ứng viên có trang riêng {@code /portal/profile} (Q7.1-L1): gõ {@code /profile} thì chuyển sang đó, không báo 403. */
+    /** Ứng viên có trang riêng /portal/profile: gõ /profile thì chuyển sang đó, không báo 403. */
     @GetMapping
     public String viewProfile(Authentication authentication, Model model) {
-        if (authentication.getAuthorities().stream().anyMatch(a -> "ROLE_CANDIDATE".equals(a.getAuthority()))) {
+        if (authentication != null && authentication.getAuthorities().stream()
+                .anyMatch(a -> "ROLE_CANDIDATE".equals(a.getAuthority()))) {
             return "redirect:/portal/profile";
         }
         UserProfileResponse profile = profileService.getProfile(authentication.getName());
@@ -71,7 +69,7 @@ public class UserProfileController {
         return "redirect:/profile";
     }
 
-    /** Tải ảnh đại diện mới (form multipart thường); lỗi file hiện ngay dưới ô chọn ảnh. */
+    /** Tải ảnh đại diện mới qua form multipart tiêu chuẩn. */
     @PostMapping("/avatar")
     public String changeAvatar(Authentication authentication,
                                @RequestParam(name = "avatarFile", required = false) MultipartFile avatarFile,
@@ -85,59 +83,18 @@ public class UserProfileController {
         return "redirect:/profile";
     }
 
-    /**
-     * AJAX endpoint for changing password without page reload.
-     * Receives JSON payload with full UTF-8 support and returns status and inline field errors.
-     */
-    @PostMapping(value = "/change-password", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    @ResponseBody
-    public ResponseEntity<Map<String, Object>> changePasswordJson(
-            Authentication authentication,
-            @Valid @RequestBody ChangePasswordRequest request,
-            BindingResult bindingResult,
-            jakarta.servlet.http.HttpSession session) {
-
-        Map<String, Object> response = new HashMap<>();
-
-        if (request.newPassword() != null && request.confirmPassword() != null
-                && !request.newPassword().equals(request.confirmPassword())) {
-            bindingResult.addError(new FieldError("changePasswordRequest", "confirmPassword", "Mật khẩu nhập lại không khớp."));
-        }
-
-        if (!bindingResult.hasErrors()
-                && !profileService.changePassword(authentication.getName(), request)) {
-            bindingResult.addError(new FieldError("changePasswordRequest", "currentPassword",
-                    "Mật khẩu hiện tại không đúng."));
-        }
-
-        if (bindingResult.hasErrors()) {
-            response.put("success", false);
-            response.put("message", "Chưa đổi được mật khẩu. Vui lòng xem lỗi bên dưới.");
-            Map<String, String> fieldErrors = new HashMap<>();
-            for (FieldError error : bindingResult.getFieldErrors()) {
-                fieldErrors.putIfAbsent(error.getField(), error.getDefaultMessage());
-            }
-            response.put("errors", fieldErrors);
-            return ResponseEntity.badRequest().body(response);
-        }
-
-        // Keep this session signed in; the guard re-records the new hash on the next request.
-        session.removeAttribute(com.group2.rms.core.security.AccountSessionGuardFilter.PASSWORD_HASH);
-        response.put("success", true);
-        response.put("message", "Đã đổi mật khẩu.");
-        return ResponseEntity.ok(response);
-    }
-
-    /**
-     * Fallback standard form submission endpoint (in case JavaScript is disabled).
-     */
-    @PostMapping(value = "/change-password", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
-    public String changePasswordForm(
+    /** Đổi mật khẩu qua form POST tiêu chuẩn; hỗ trợ cả người dùng nội bộ và ứng viên. */
+    @PostMapping("/change-password")
+    public String changePassword(
             Authentication authentication,
             @Valid @ModelAttribute("passwordRequest") ChangePasswordRequest request,
             BindingResult bindingResult,
             RedirectAttributes redirectAttributes,
-            jakarta.servlet.http.HttpSession session) {
+            HttpSession session) {
+
+        boolean isCandidate = authentication != null && authentication.getAuthorities().stream()
+                .anyMatch(a -> "ROLE_CANDIDATE".equals(a.getAuthority()));
+        String redirectTarget = isCandidate ? "redirect:/portal/profile" : "redirect:/profile";
 
         if (request.newPassword() != null && request.confirmPassword() != null
                 && !request.newPassword().equals(request.confirmPassword())) {
@@ -151,11 +108,11 @@ public class UserProfileController {
         if (bindingResult.hasErrors()) {
             redirectAttributes.addFlashAttribute("openPasswordModal", true);
             redirectAttributes.addFlashAttribute(BINDING_PREFIX + "passwordRequest", bindingResult);
-            redirectAttributes.addFlashAttribute("passwordRequest", new ChangePasswordRequest("", "", ""));
-            return "redirect:/profile";
+            redirectAttributes.addFlashAttribute("passwordRequest", request);
+            return redirectTarget;
         }
-        session.removeAttribute(com.group2.rms.core.security.AccountSessionGuardFilter.PASSWORD_HASH);
+        session.removeAttribute(AccountSessionGuardFilter.PASSWORD_HASH);
         redirectAttributes.addFlashAttribute("successMessage", "Đã đổi mật khẩu.");
-        return "redirect:/profile";
+        return redirectTarget;
     }
 }
