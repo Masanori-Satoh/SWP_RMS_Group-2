@@ -103,6 +103,35 @@ class PublicJobSearchQueryTests {
         assertEquals(page.getContent().size(), Math.min(6, page.getTotalElements()), "đếm và trang khớp nhau");
     }
 
+    @Test
+    void workModelFilterMatchesOnlyTargetModel() {
+        Page<PublicJobListResponse> remoteJobs = careers.getPublishedJobs(null, null, null, "Remote", null, ALL);
+        assertNotNull(remoteJobs);
+        for (PublicJobListResponse job : remoteJobs.getContent()) {
+            assertEquals("Từ xa", job.workLocation());
+        }
+    }
+
+    @Test
+    void salaryRangeFilterMatchesExpectedPostingsAndExcludesNegotiableFromNumericRanges() {
+        Page<PublicJobListResponse> negoJobs = careers.getPublishedJobs(null, null, null, null, "negotiable", ALL);
+        assertNotNull(negoJobs);
+        for (PublicJobListResponse job : negoJobs.getContent()) {
+            if (job.salaryDisplay() != null) {
+                assertTrue(job.salaryDisplay().contains("Thỏa thuận") || job.salaryDisplay().contains("Thoả thuận"));
+            }
+        }
+
+        // Lọc theo mốc tiền: tin có salaryDisplay là Thỏa thuận tuyệt đối không xuất hiện
+        for (String range : List.of("under-15", "15-25", "25-40", "above-40")) {
+            Page<PublicJobListResponse> rangeJobs = careers.getPublishedJobs(null, null, null, null, range, ALL);
+            for (PublicJobListResponse job : rangeJobs.getContent()) {
+                assertNotEquals("Thỏa thuận", job.salaryDisplay());
+                assertNotEquals("Thoả thuận", job.salaryDisplay());
+            }
+        }
+    }
+
     private List<String> titles(String keyword, Pageable pageable) {
         return careers.getPublishedJobs(keyword, null, null, pageable).getContent().stream()
                 .map(PublicJobListResponse::postingTitle).toList();

@@ -1,4 +1,4 @@
-package com.group2.rms.candidate.controller;
+package com.group2.rms.candidate.application.pipeline.controller;
 
 import com.group2.rms.candidate.dto.ApplicationDetailResponse;
 import com.group2.rms.candidate.dto.ApplicationListResponse;
@@ -739,6 +739,25 @@ class ApplicationPipelineWebTests {
                 .andExpect(view().name("candidate/application-detail"))
                 .andExpect(content().string(containsString("Hồ sơ vừa được người khác xử lý.")))
                 .andExpect(content().string(containsString(">Thiếu kinh nghiệm</textarea>")));
+    }
+
+    /** RMS-041: đơn đã sang bước khác nên form duyệt không render; lỗi vẫn phải hiện (TC-REV-26, 29, 32, 33). */
+    @Test
+    void businessErrorShowsEvenWhenTheReviewFormIsNoLongerRendered() throws Exception {
+        String message = "Hồ sơ đang ở bước \"Chờ phỏng vấn\", không phải bước bạn duyệt. Vui lòng tải lại trang.";
+        when(reviewService.review(eq(298), any())).thenThrow(new ApplicationReviewException(null, message));
+        when(pipeline.detail(298)).thenReturn(detail(false, true, null, false, false));
+
+        MvcResult result = mvc.perform(post("/applications/298/review").with(as("hr_lan", "HR")).with(csrf())
+                        .param("decision", "Pass"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("candidate/application-detail"))
+                .andExpect(content().string(not(containsString("id=\"app-review-form\""))))
+                .andExpect(content().string(containsString("role=\"alert\"")))
+                .andReturn();
+        String html = result.getResponse().getContentAsString();
+        // đúng một lần: không lặp ở hai chỗ
+        assertEquals(1, html.split(java.util.regex.Pattern.quote("không phải bước bạn duyệt"), -1).length - 1);
     }
 
     @Test

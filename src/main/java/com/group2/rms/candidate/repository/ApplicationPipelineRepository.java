@@ -5,8 +5,8 @@ import com.group2.rms.candidate.dto.JobPostingOption;
 import com.group2.rms.candidate.entity.Application;
 import com.group2.rms.core.util.ListFilters;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
@@ -16,107 +16,112 @@ import static com.group2.rms.candidate.repository.ApplicationRepository.FORMAL_S
 import static com.group2.rms.candidate.repository.ApplicationRepository.PIPELINE_JOINS;
 
 /**
- * Câu đọc riêng của danh sách và trang chi tiết hồ sơ (5.1.22). Câu ghi và câu đọc dùng chung nằm ở
- * {@link ApplicationRepository}.
+ * Repository truy vấn danh sách và các sự kiện liên quan đến hồ sơ ứng tuyển.
  */
-@Repository
-public interface ApplicationPipelineRepository extends org.springframework.data.repository.Repository<Application, Integer> {
+@org.springframework.stereotype.Repository
+public interface ApplicationPipelineRepository extends Repository<Application, Integer> {
+
         String SEARCH_FILTER = """
-                          and (:jobPostingId is null or jp.jobPostingId = :jobPostingId)
-                          and (:status is null or a.applicationStatus = :status)
-                          and (:keywordPattern is null
-                               or collate(u.fullName as Latin1_General_100_CI_AI) like :keywordPattern escape '\\'
-                               or collate(u.email as Latin1_General_100_CI_AI) like :keywordPattern escape '\\')
+                        and (:jobPostingId is null or jp.jobPostingId = :jobPostingId)
+                        and (:status is null or a.applicationStatus = :status)
+                        and (:keywordPattern is null
+                             or collate(u.fullName as Latin1_General_100_CI_AI) like :keywordPattern escape '\\'
+                             or collate(u.email as Latin1_General_100_CI_AI) like :keywordPattern escape '\\')
                         """;
 
-    /**
-     * Id các đơn của danh sách hồ sơ (5.1.22) trong phạm vi người xem và bộ lọc, đúng thứ tự hiển thị:
-     * mới nộp trước.
-     * Chỉ lấy id: giai đoạn của đơn tính ở Service (xem {@link ApplicationRepository#findProgressFacts}), rồi mới lọc và cắt trang.
-     * <p>
-     * Từ khóa khớp <b>cả cụm</b> trong họ tên hoặc email, không phân biệt hoa thường và dấu ("nguyen" ra "Nguyễn");
-     * ký tự {@code % _ [} người dùng gõ được hiểu là chữ thường (gõ "%" không ra mọi đơn).
-     */
-    default List<Integer> findPipelineIds(boolean allDepartments, Integer managerUserId, Integer departmentId,
-                                          Integer jobPostingId, String status, String keyword) {
-        String pattern = keyword == null || keyword.isBlank() ? null : "%" + ListFilters.escapeLike(keyword.strip()) + "%";
-        return findPipelineIdsMatching(allDepartments, managerUserId, departmentId, jobPostingId, status, pattern);
-    }
+        /**
+         * Lấy danh sách ID các hồ sơ ứng tuyển phù hợp bộ lọc và phân quyền.
+         */
+        default List<Integer> findPipelineIds(
+                        boolean allDepartments, Integer managerUserId, Integer departmentId,
+                        Integer jobPostingId, String status, String keyword) {
+                String pattern = keyword == null || keyword.isBlank()
+                                ? null
+                                : "%" + ListFilters.escapeLike(keyword.strip()) + "%";
+                return findPipelineIdsMatching(allDepartments, managerUserId, departmentId, jobPostingId, status,
+                                pattern);
+        }
 
-    /** Câu SQL của {@link #findPipelineIds}; {@code keywordPattern} là mẫu LIKE đã thoát ký tự, hoặc {@code null}. */
-    @Query("select a.applicationId " + PIPELINE_JOINS + FORMAL_SCOPE_FILTER + SEARCH_FILTER + """
-            order by a.submissionDate desc, a.applicationId desc
-            """)
-    List<Integer> findPipelineIdsMatching(@Param("allDepartments") boolean allDepartments,
-                                          @Param("managerUserId") Integer managerUserId,
-                                          @Param("departmentId") Integer departmentId,
-                                          @Param("jobPostingId") Integer jobPostingId,
-                                          @Param("status") String status,
-                                          @Param("keywordPattern") String keywordPattern);
+        @Query("select a.applicationId " + PIPELINE_JOINS + FORMAL_SCOPE_FILTER + SEARCH_FILTER + """
+                        order by a.submissionDate desc, a.applicationId desc
+                        """)
+        List<Integer> findPipelineIdsMatching(
+                        @Param("allDepartments") boolean allDepartments,
+                        @Param("managerUserId") Integer managerUserId,
+                        @Param("departmentId") Integer departmentId,
+                        @Param("jobPostingId") Integer jobPostingId,
+                        @Param("status") String status,
+                        @Param("keywordPattern") String keywordPattern);
 
-    /**
-     * Các dòng của một trang danh sách; không theo thứ tự nào (Service xếp lại theo
-     * {@link #findPipelineIds}). {@code ids} là id của một trang, không được rỗng.
-     */
-    @Query("""
-            select new com.group2.rms.candidate.dto.ApplicationPipelineResponse(
-                a.applicationId, u.fullName, u.email, jp.postingTitle, a.submissionDate, a.applicationStatus,
-                c.isPotential)
-            """ + PIPELINE_JOINS + "where a.applicationId in :ids")
-    List<ApplicationPipelineResponse> findPipelineRows(@Param("ids") Collection<Integer> applicationIds);
+        @Query("""
+                        select new com.group2.rms.candidate.dto.ApplicationPipelineResponse(
+                            a.applicationId, u.fullName, u.email, jp.postingTitle, a.submissionDate, a.applicationStatus,
+                            c.isPotential)
+                        """
+                        + PIPELINE_JOINS + "where a.applicationId in :ids")
+        List<ApplicationPipelineResponse> findPipelineRows(@Param("ids") Collection<Integer> applicationIds);
 
-        /** Các tin có đơn trong phạm vi người xem, cho ô lọc "Vị trí". */
-        @Query("select distinct new com.group2.rms.candidate.dto.JobPostingOption(jp.jobPostingId, jp.postingTitle) "
-                        + PIPELINE_JOINS + FORMAL_SCOPE_FILTER + "order by jp.postingTitle")
-        List<JobPostingOption> findPostingOptions(@Param("allDepartments") boolean allDepartments,
+        @Query("""
+                        select distinct new com.group2.rms.candidate.dto.JobPostingOption(jp.jobPostingId, jp.postingTitle)
+                        """
+                        + PIPELINE_JOINS + FORMAL_SCOPE_FILTER + """
+                                        order by jp.postingTitle
+                                        """)
+        List<JobPostingOption> findPostingOptions(
+                        @Param("allDepartments") boolean allDepartments,
                         @Param("managerUserId") Integer managerUserId,
                         @Param("departmentId") Integer departmentId);
 
-        /**
-         * Lịch phỏng vấn của đơn, cho timeline. SQL thuần vì module interview đã phụ
-         * thuộc candidate:
-         * import entity của interview vào đây sẽ thành vòng phụ thuộc.
-         */
-        @Query(value = "SELECT s.StartTime AS at, s.InterviewStatus AS status FROM InterviewSchedule s "
-                        + "WHERE s.ApplicationId = :id", nativeQuery = true)
+        @Query(value = """
+                        SELECT s.StartTime AS at, s.InterviewStatus AS status
+                        FROM InterviewSchedule s
+                        WHERE s.ApplicationId = :id
+                        """, nativeQuery = true)
         List<TimelineEventRow> findInterviewEvents(@Param("id") Integer applicationId);
 
-        /**
-         * Kết quả chốt các buổi phỏng vấn của đơn ({@code Passed}/{@code Failed}), cho
-         * timeline. SQL thuần, cùng lý do.
-         */
-        @Query(value = "SELECT r.ApprovedAt AS at, r.FinalDecision AS status FROM InterviewFinalResult r "
-                        + "JOIN InterviewSchedule s ON s.InterviewId = r.InterviewId "
-                        + "WHERE s.ApplicationId = :id", nativeQuery = true)
+        @Query(value = """
+                        SELECT r.ApprovedAt AS at, r.FinalDecision AS status
+                        FROM InterviewFinalResult r
+                        JOIN InterviewSchedule s ON s.InterviewId = r.InterviewId
+                        WHERE s.ApplicationId = :id
+                        """, nativeQuery = true)
         List<TimelineEventRow> findInterviewResultEvents(@Param("id") Integer applicationId);
 
-        /**
-         * Offer của đơn, cho timeline. SQL thuần, cùng lý do với
-         * {@link #findInterviewEvents}.
-         */
-        @Query(value = "SELECT o.CreatedAt AS at, o.OfferStatus AS status FROM OfferProposal o "
-                        + "WHERE o.ApplicationId = :id", nativeQuery = true)
+        @Query(value = """
+                        SELECT o.CreatedAt AS at, o.OfferStatus AS status
+                        FROM OfferProposal o
+                        WHERE o.ApplicationId = :id
+                        """, nativeQuery = true)
         List<TimelineEventRow> findOfferEvents(@Param("id") Integer applicationId);
 
-        @Query(value = "select count(*) from AuditLog where EntityName = 'Application' and EntityId = cast(:id as nvarchar(50)) and NewValue = 'TalentPoolCancelled'", nativeQuery = true)
+        @Query(value = """
+                        SELECT COUNT(*) FROM AuditLog
+                        WHERE EntityName = 'Application'
+                          AND EntityId = CAST(:id AS NVARCHAR(50))
+                          AND NewValue = 'TalentPoolCancelled'
+                        """, nativeQuery = true)
         int countTalentPoolCancellation(@Param("id") Integer applicationId);
 
         @Query(value = """
-                select l.[Timestamp] as at, l.NewValue as kind, u.FullName as actor
-                from AuditLog l join [User] u on u.UserId = l.UserId
-                where l.EntityName = 'Application' and l.EntityId = cast(:id as nvarchar(50))
-                  and l.NewValue in ('TalentPoolSuggested','TalentPoolHrRecommended','TalentPoolActivated','TalentPoolCandidateSubmitted','TalentPoolCancelled')
-                order by l.[Timestamp] desc, l.AuditLogId desc
-                """, nativeQuery = true)
+                        SELECT l.[Timestamp] AS at, l.NewValue AS kind, u.FullName AS actor
+                        FROM AuditLog l
+                        JOIN [User] u ON u.UserId = l.UserId
+                        WHERE l.EntityName = 'Application'
+                          AND l.EntityId = CAST(:id AS NVARCHAR(50))
+                          AND l.NewValue IN ('TalentPoolSuggested', 'TalentPoolHrRecommended',
+                                             'TalentPoolActivated', 'TalentPoolCandidateSubmitted', 'TalentPoolCancelled')
+                        ORDER BY l.[Timestamp] DESC, l.AuditLogId DESC
+                        """, nativeQuery = true)
         List<TalentPoolEventRow> findTalentPoolEvents(@Param("id") Integer applicationId);
 
         interface TalentPoolEventRow {
                 LocalDateTime getAt();
+
                 String getKind();
+
                 String getActor();
         }
 
-        /** Một mốc đọc từ bảng của module khác: thời điểm + trạng thái gốc. */
         interface TimelineEventRow {
                 LocalDateTime getAt();
 

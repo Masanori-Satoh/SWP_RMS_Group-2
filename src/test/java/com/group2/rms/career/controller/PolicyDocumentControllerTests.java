@@ -36,14 +36,14 @@ class PolicyDocumentControllerTests {
     private MockMvc mvc;
 
     @MockitoBean
-    private PolicyDocumentStorage storage;
+    private PolicyDocumentStorage policyDocumentStorage;
     @MockitoBean
-    private UserRepository users;
+    private UserRepository userRepository;
 
     @Test
     @DisplayName("Khách chưa đăng nhập mở /terms -> 200, PDF hiển thị trong tab (inline), không về trang đăng nhập")
     void terms_shouldServePdfInline_whenAnonymous() throws Exception {
-        when(storage.read(PolicyDocument.TERMS)).thenReturn(new ByteArrayResource(PDF));
+        when(policyDocumentStorage.read(PolicyDocument.TERMS)).thenReturn(new ByteArrayResource(PDF));
 
         mvc.perform(get("/terms"))
                 .andExpect(status().isOk())
@@ -57,7 +57,7 @@ class PolicyDocumentControllerTests {
     @DisplayName("Khách mở /privacy-policy -> Trả đúng file Chính sách bảo mật")
     void privacyPolicy_shouldServePrivacyFile_whenAnonymous() throws Exception {
         byte[] privacy = "%PDF-1.4 privacy".getBytes(StandardCharsets.US_ASCII);
-        when(storage.read(PolicyDocument.PRIVACY)).thenReturn(new ByteArrayResource(privacy));
+        when(policyDocumentStorage.read(PolicyDocument.PRIVACY)).thenReturn(new ByteArrayResource(privacy));
 
         mvc.perform(get("/privacy-policy"))
                 .andExpect(status().isOk())

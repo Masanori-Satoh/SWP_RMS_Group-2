@@ -2,7 +2,7 @@ package com.group2.rms.career.repository;
 
 import com.group2.rms.core.util.ListFilters;
 import com.group2.rms.jobposting.entity.JobPosting;
-
+import com.group2.rms.jobposting.service.JobPostingLabels;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
@@ -10,6 +10,7 @@ import jakarta.persistence.criteria.Predicate;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.springframework.data.jpa.domain.Specification;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -18,19 +19,10 @@ import java.util.Locale;
 import java.util.Set;
 
 /**
- * Tìm tin tuyển dụng công khai ({@code /jobs}) theo từ khóa, chạy bằng {@code JobPostingRepository.findAll(spec, page)}.
- * <p>
- * Cách khớp (dunglt chốt 2026-10-20): tách từ khóa thành từng từ, tin nào khớp <b>ít nhất một từ</b> ở một trong 5 trường
- * (tên tin, phòng ban, địa điểm, mô tả, yêu cầu) là lấy. Tiếng Việt tách theo âm tiết ("kế toán" = "ke" + "toan") nên
- * "một từ là lấy" kéo theo nhiều tin; vì vậy kết quả <b>xếp theo điểm khớp</b>: mỗi từ khớp cộng điểm theo trường
- * (tên 5, phòng ban 3, địa điểm 2, yêu cầu/mô tả 1), tin khớp nhiều từ ở tên đứng đầu, cùng điểm thì mới đăng trước.
- * So sánh không phân biệt hoa thường và dấu ({@code Latin1_General_100_CI_AI}: "ke toan" khớp "Kế toán", "dien" khớp
- * "điện"); ký tự đại diện của LIKE trong từ khóa ({@code % _ [}) được thoát nên "%" không khớp mọi tin.
- * Xếp hạng nằm trong SQL nên phân trang vẫn đúng (trang 1 là các tin khớp nhất).
+ * Xây dựng JPA Specification tìm kiếm và xếp hạng tin tuyển dụng công khai theo từ khóa và tiêu chí lọc.
  */
 public final class PublicJobSearch {
 
-    /** Tối đa số từ lấy từ ô tìm kiếm (chặn chuỗi dài làm câu SQL phình). */
     static final int MAX_TERMS = 5;
     static final String ACCENT_INSENSITIVE = ListFilters.ACCENT_INSENSITIVE;
     static final char ESCAPE = '\\';
@@ -43,7 +35,9 @@ public final class PublicJobSearch {
     private PublicJobSearch() {
     }
 
-    /** Các từ của ô tìm kiếm: tách theo khoảng trắng, bỏ trùng (không phân biệt hoa thường), tối đa {@link #MAX_TERMS}. */
+    /**
+     * Tách chuỗi từ khóa thành danh sách các từ đơn không trùng lặp, tối đa theo giới hạn cấu hình.
+     */
     public static List<String> terms(String keyword) {
         if (keyword == null || keyword.isBlank()) {
             return List.of();
@@ -58,17 +52,29 @@ public final class PublicJobSearch {
         return terms;
     }
 
-    /** Mẫu LIKE "chứa từ này", đã thoát {@code \ % _ [} bằng {@link #ESCAPE}. */
+    /**
+     * Tạo biểu thức LIKE khớp chứa từ khóa đã thoát ký tự đặc biệt.
+     */
     static String containsPattern(String term) {
         return "%" + ListFilters.escapeLike(term) + "%";
     }
 
     /**
-     * Tin đang mở cho ứng viên (đã đăng, tới ngày đăng, chưa quá hạn nộp), lọc phòng ban / hình thức nếu có, và khớp từ
-     * khóa nếu có. Có từ khóa thì tự đặt thứ tự theo điểm khớp: khi đó gọi với {@code Pageable} <b>không sort</b>, vì sort
-     * của {@code Pageable} sẽ đè thứ tự này.
+     * Tạo Specification lọc tin tuyển dụng công khai theo từ khóa, phòng ban và hình thức làm việc.
      */
     public static Specification<JobPosting> openJobs(List<String> terms, Integer departmentId, String employmentType) {
+        return openJobs(terms, departmentId, employmentType, null, null);
+    }
+
+    /**
+     * Xây dựng câu truy vấn JPA Specification động để lọc tin tuyển dụng và chấm điểm tương đồng từ khóa.
+     */
+    public static Specification<JobPosting> openJobs(
+            List<String> terms,
+            Integer departmentId,
+            String employmentType,
+            String workModel,
+            String salaryRange) {
         return (root, query, cb) -> {
             Join<JobPosting, Object> requisition = root.join("requisition", JoinType.LEFT);
             Join<Object, Object> department = requisition.join("department", JoinType.LEFT);
@@ -76,18 +82,79 @@ public final class PublicJobSearch {
 
             List<Predicate> where = new ArrayList<>();
             where.add(cb.equal(root.get("postingStatus"), JobPosting.STATUS_PUBLISHED));
-            // Giữ tin cũ có PostingDate ở tương lai ngoài trang công khai cho tới khi dữ liệu được xử lý.
-            where.add(cb.or(cb.isNull(root.get("postingDate")),
+
+            where.add(cb.or(
+                    cb.isNull(root.get("postingDate")),
                     cb.lessThanOrEqualTo(root.<LocalDateTime>get("postingDate"), now)));
-            where.add(cb.or(cb.isNull(root.get("applicationDeadline")),
+
+            where.add(cb.or(
+                    cb.isNull(root.get("applicationDeadline")),
                     cb.greaterThanOrEqualTo(root.<LocalDateTime>get("applicationDeadline"), now)));
+
             if (departmentId != null) {
                 where.add(cb.equal(department.get("departmentId"), departmentId));
             }
-            if (employmentType != null) {
-                // Hình thức của tin; tin cũ chưa có thì lấy của yêu cầu (JobPosting#effectiveEmploymentType)
-                where.add(cb.equal(cb.coalesce(root.<String>get("employmentType"),
-                        requisition.<String>get("employmentType")), employmentType));
+
+            if (employmentType != null && !employmentType.isBlank()) {
+                where.add(cb.equal(
+                        cb.coalesce(root.<String>get("employmentType"), requisition.<String>get("employmentType")),
+                        employmentType.trim()));
+            }
+
+            if (workModel != null && !workModel.isBlank()) {
+                where.add(cb.equal(
+                        cb.coalesce(root.<String>get("workModel"), requisition.<String>get("workModel")),
+                        workModel.trim()));
+            }
+
+            if (salaryRange != null && !salaryRange.isBlank()) {
+                String range = salaryRange.trim();
+                Expression<BigDecimal> minSalary = requisition.get("minSalary");
+                Expression<BigDecimal> maxSalary = requisition.get("maxSalary");
+                Expression<BigDecimal> effMin = cb.coalesce(minSalary, maxSalary);
+                Expression<BigDecimal> effMax = cb.coalesce(maxSalary, minSalary);
+
+                Predicate isNegoDisplay = cb.or(
+                        cb.equal(root.get("salaryDisplay"), JobPostingLabels.SALARY_NEGOTIABLE),
+                        cb.equal(root.get("salaryDisplay"), JobPostingLabels.SALARY_NEGOTIABLE_OLD_SPELLING));
+                Predicate isBothNull = cb.and(
+                        cb.isNull(minSalary),
+                        cb.isNull(maxSalary));
+
+                if ("negotiable".equalsIgnoreCase(range)) {
+                    where.add(cb.or(isNegoDisplay, isBothNull));
+                } else {
+                    where.add(cb.or(
+                            cb.isNull(root.get("salaryDisplay")),
+                            cb.and(
+                                    cb.notEqual(root.get("salaryDisplay"), JobPostingLabels.SALARY_NEGOTIABLE),
+                                    cb.notEqual(
+                                            root.get("salaryDisplay"),
+                                            JobPostingLabels.SALARY_NEGOTIABLE_OLD_SPELLING))));
+
+                    BigDecimal val15 = new BigDecimal("15000000");
+                    BigDecimal val25 = new BigDecimal("25000000");
+                    BigDecimal val40 = new BigDecimal("40000000");
+
+                    switch (range) {
+                        case "under-15" -> where.add(cb.and(
+                                cb.isNotNull(effMin),
+                                cb.lessThan(effMin, val15)));
+                        case "15-25" -> where.add(cb.and(
+                                cb.isNotNull(effMin),
+                                cb.greaterThanOrEqualTo(effMax, val15),
+                                cb.lessThanOrEqualTo(effMin, val25)));
+                        case "25-40" -> where.add(cb.and(
+                                cb.isNotNull(effMin),
+                                cb.greaterThanOrEqualTo(effMax, val25),
+                                cb.lessThanOrEqualTo(effMin, val40)));
+                        case "above-40" -> where.add(cb.and(
+                                cb.isNotNull(effMax),
+                                cb.greaterThan(effMax, val40)));
+                        default -> {
+                        }
+                    }
+                }
             }
 
             if (!terms.isEmpty()) {
@@ -109,16 +176,20 @@ public final class PublicJobSearch {
                     }
                 }
                 where.add(cb.or(anyTerm.toArray(Predicate[]::new)));
-                // Câu đếm (count) của phân trang không được có ORDER BY.
                 if (query != null && !Long.class.equals(query.getResultType())) {
-                    query.orderBy(cb.desc(score), cb.desc(root.get("postingDate")), cb.desc(root.get("jobPostingId")));
+                    query.orderBy(
+                            cb.desc(score),
+                            cb.desc(root.get("postingDate")),
+                            cb.desc(root.get("jobPostingId")));
                 }
             }
             return cb.and(where.toArray(Predicate[]::new));
         };
     }
 
-    /** Một trường được dò và điểm cộng khi một từ khớp trường đó. */
+    /**
+     * Cấu hình trường tìm kiếm và trọng số điểm tương ứng.
+     */
     private record Field(Expression<String> value, int weight) {
     }
 }

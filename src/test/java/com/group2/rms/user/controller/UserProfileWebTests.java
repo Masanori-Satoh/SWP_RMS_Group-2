@@ -135,46 +135,47 @@ class UserProfileWebTests {
 
     @Test
     @WithMockUser(username = "testuser", authorities = "ROLE_HR")
-    void changePasswordJson_ValidRequest_ReturnsOk() throws Exception {
-        ChangePasswordRequest request = new ChangePasswordRequest("oldPass", "newPass123", "newPass123");
+    void changePassword_ValidRequest_RedirectsWithSuccess() throws Exception {
         when(profileService.changePassword(eq("testuser"), any(ChangePasswordRequest.class))).thenReturn(true);
 
         mvc.perform(post("/profile/change-password")
                 .with(csrf())
-                .content(objectMapper.writeValueAsString(request))
-                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success", is(true)))
-                .andExpect(jsonPath("$.message", is("Đã đổi mật khẩu.")));
+                .param("currentPassword", "oldPass")
+                .param("newPassword", "newPass123")
+                .param("confirmPassword", "newPass123"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/profile"))
+                .andExpect(flash().attribute("successMessage", "Đã đổi mật khẩu."));
     }
 
     @Test
     @WithMockUser(username = "testuser", authorities = "ROLE_HR")
-    void changePasswordJson_PasswordMismatch_ReturnsBadRequest() throws Exception {
-        ChangePasswordRequest request = new ChangePasswordRequest("oldPass", "newPass123", "differentPass");
-
+    void changePassword_PasswordMismatch_RedirectsWithErrorAndReopensModal() throws Exception {
         mvc.perform(post("/profile/change-password")
                 .with(csrf())
-                .content(objectMapper.writeValueAsString(request))
-                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.success", is(false)))
-                .andExpect(jsonPath("$.errors.confirmPassword", is("Mật khẩu nhập lại không khớp.")));
+                .param("currentPassword", "oldPass")
+                .param("newPassword", "newPass123")
+                .param("confirmPassword", "differentPass"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/profile"))
+                .andExpect(flash().attribute("openPasswordModal", true))
+                .andExpect(flash().attributeExists("org.springframework.validation.BindingResult.passwordRequest"));
     }
 
     @Test
     @WithMockUser(username = "testuser", authorities = "ROLE_HR")
-    void changePasswordJson_IncorrectOldPassword_ReturnsBadRequest() throws Exception {
-        ChangePasswordRequest request = new ChangePasswordRequest("wrongOldPass", "newPass123", "newPass123");
+    void changePassword_IncorrectOldPassword_RedirectsWithErrorAndReopensModal() throws Exception {
         when(profileService.changePassword(eq("testuser"), any(ChangePasswordRequest.class))).thenReturn(false);
 
         mvc.perform(post("/profile/change-password")
                 .with(csrf())
-                .content(objectMapper.writeValueAsString(request))
-                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.success", is(false)))
-                .andExpect(jsonPath("$.errors.currentPassword", is("Mật khẩu hiện tại không đúng.")));
+                .param("currentPassword", "wrongOldPass")
+                .param("newPassword", "newPass123")
+                .param("confirmPassword", "newPass123"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/profile"))
+                .andExpect(flash().attribute("openPasswordModal", true))
+                .andExpect(flash().attributeExists("org.springframework.validation.BindingResult.passwordRequest"));
     }
 
     @Test
@@ -230,18 +231,16 @@ class UserProfileWebTests {
 
     @Test
     @WithMockUser(username = "testuser", authorities = "ROLE_HR")
-    void changePasswordJson_BlankFields_ReturnVietnameseMessages() throws Exception {
-        ChangePasswordRequest request = new ChangePasswordRequest("", "short", "");
-
+    void changePassword_BlankFields_RedirectsWithErrorAndReopensModal() throws Exception {
         mvc.perform(post("/profile/change-password")
                 .with(csrf())
-                .content(objectMapper.writeValueAsString(request))
-                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message", is("Chưa đổi được mật khẩu. Vui lòng xem lỗi bên dưới.")))
-                .andExpect(jsonPath("$.errors.currentPassword", is("Vui lòng nhập mật khẩu hiện tại.")))
-                .andExpect(jsonPath("$.errors.newPassword", is("Mật khẩu mới dài 8–32 ký tự.")))
-                .andExpect(jsonPath("$.errors.confirmPassword", is("Vui lòng nhập lại mật khẩu mới.")));
+                .param("currentPassword", "")
+                .param("newPassword", "short")
+                .param("confirmPassword", ""))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/profile"))
+                .andExpect(flash().attribute("openPasswordModal", true))
+                .andExpect(flash().attributeExists("org.springframework.validation.BindingResult.passwordRequest"));
     }
 
     @Test

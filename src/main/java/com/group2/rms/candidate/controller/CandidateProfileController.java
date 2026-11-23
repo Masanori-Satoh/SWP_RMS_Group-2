@@ -1,9 +1,10 @@
 package com.group2.rms.candidate.controller;
 
-import com.group2.rms.candidate.dto.UpdateCandidateProfileRequest;
 import com.group2.rms.candidate.dto.CandidateProfileResponse;
+import com.group2.rms.candidate.dto.UpdateCandidateProfileRequest;
 import com.group2.rms.candidate.exception.CandidateProfileException;
 import com.group2.rms.candidate.service.CandidateProfileService;
+import com.group2.rms.user.dto.ChangePasswordRequest;
 import com.group2.rms.user.dto.UpdateProfileRequest;
 import com.group2.rms.user.exception.AccountFieldException;
 import com.group2.rms.user.exception.AvatarUploadException;
@@ -25,9 +26,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.time.LocalDate;
 
 /**
- * Hồ sơ cá nhân của ứng viên (Q7.1). {@code SecurityConfig} giới hạn {@code /portal/profile/**} cho ROLE_CANDIDATE;
- * ứng viên gõ {@code /profile} được chuyển sang đây. Một form lưu cả hai phần: {@code updateRequest} (bảng {@code User})
- * và {@code detailsRequest} (email và các trường ứng viên). Đổi mật khẩu dùng lại {@code POST /profile/change-password}.
+ * Controller xử lý hồ sơ cá nhân của ứng viên trên career portal.
  */
 @Controller
 @RequestMapping("/portal/profile")
@@ -36,24 +35,30 @@ public class CandidateProfileController {
 
     private static final String BINDING_PREFIX = "org.springframework.validation.BindingResult.";
 
-    private final CandidateProfileService candidateProfiles;
-    private final UserProfileService userProfiles;
+    private final CandidateProfileService candidateProfileService;
+    private final UserProfileService userProfileService;
 
     @GetMapping
     public String view(Authentication authentication, Model model) {
-        CandidateProfileResponse profile = candidateProfiles.get(authentication.getName());
+        CandidateProfileResponse profile = candidateProfileService.get(authentication.getName());
         model.addAttribute("profile", profile);
         if (!model.containsAttribute("updateRequest")) {
             model.addAttribute("updateRequest",
                     new UpdateProfileRequest(profile.account().fullName(), profile.account().phoneNumber()));
         }
         if (!model.containsAttribute("detailsRequest")) {
-            model.addAttribute("detailsRequest", new UpdateCandidateProfileRequest(profile.dateOfBirth(), profile.gender(),
-                    profile.address(), profile.linkedInUrl(), profile.portfolioUrl(), profile.account().email()));
+            model.addAttribute("detailsRequest",
+                    new UpdateCandidateProfileRequest(profile.dateOfBirth(), profile.gender(),
+                            profile.address(), profile.linkedInUrl(), profile.portfolioUrl(),
+                            profile.account().email()));
+        }
+        if (!model.containsAttribute("passwordRequest")) {
+            model.addAttribute("passwordRequest", new ChangePasswordRequest("", "", ""));
         }
         model.addAttribute("genders", UpdateCandidateProfileRequest.genderOptions(profile.gender()));
         model.addAttribute("maxBirthDate", LocalDate.now().minusDays(1));
         model.addAttribute("activeMenu", "profile");
+        model.addAttribute("vietnameseUi", true);
         return "candidate/my-profile";
     }
 
@@ -66,13 +71,17 @@ public class CandidateProfileController {
                          RedirectAttributes redirectAttributes) {
         if (!accountErrors.hasErrors() && !detailErrors.hasErrors()) {
             try {
-                candidateProfiles.update(authentication.getName(), account, details);
+                candidateProfileService.update(authentication.getName(), account, details);
                 redirectAttributes.addFlashAttribute("successMessage", "Đã lưu hồ sơ.");
                 return "redirect:/portal/profile";
             } catch (CandidateProfileException e) {
                 detailErrors.rejectValue(e.getField(), "invalid", e.getMessage());
             } catch (AccountFieldException e) {
-                detailErrors.rejectValue(e.getField(), "account.invalid", e.getMessage());
+                if ("fullName".equals(e.getField()) || "phoneNumber".equals(e.getField())) {
+                    accountErrors.rejectValue(e.getField(), "account.invalid", e.getMessage());
+                } else {
+                    detailErrors.rejectValue(e.getField(), "account.invalid", e.getMessage());
+                }
             }
         }
         redirectAttributes.addFlashAttribute(BINDING_PREFIX + "updateRequest", accountErrors);
@@ -82,13 +91,12 @@ public class CandidateProfileController {
         return "redirect:/portal/profile";
     }
 
-    /** Tải ảnh đại diện mới; cùng nguồn với {@code /profile/avatar} ({@code UserProfileService.changeAvatar}). */
     @PostMapping("/avatar")
     public String changeAvatar(Authentication authentication,
                                @RequestParam(name = "avatarFile", required = false) MultipartFile avatarFile,
                                RedirectAttributes redirectAttributes) {
         try {
-            userProfiles.changeAvatar(authentication.getName(), avatarFile);
+            userProfileService.changeAvatar(authentication.getName(), avatarFile);
             redirectAttributes.addFlashAttribute("successMessage", "Đã cập nhật ảnh đại diện.");
         } catch (AvatarUploadException e) {
             redirectAttributes.addFlashAttribute("avatarError", e.getMessage());

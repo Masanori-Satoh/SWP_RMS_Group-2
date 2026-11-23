@@ -4,12 +4,13 @@ import com.group2.rms.candidate.dto.ApplicationDetailResponse;
 import com.group2.rms.candidate.dto.ApplicationListResponse;
 import com.group2.rms.candidate.dto.ApplicationReviewRequest;
 import com.group2.rms.candidate.dto.ApplicationSearch;
+import com.group2.rms.candidate.entity.ApplicationStage;
 import com.group2.rms.candidate.exception.ApplicationReviewException;
 import com.group2.rms.candidate.service.ApplicationPipelineService;
 import com.group2.rms.candidate.service.ApplicationReviewService;
-import com.group2.rms.talentpool.service.TalentPoolService;
-import com.group2.rms.candidate.entity.ApplicationStage;
+import com.group2.rms.candidate.service.ApplicationStatusService;
 import com.group2.rms.core.web.StageItem;
+import com.group2.rms.talentpool.service.TalentPoolService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.Resource;
@@ -33,9 +34,8 @@ import java.util.Optional;
 import java.util.Set;
 
 /**
- * Hồ sơ ứng tuyển cho người tuyển dụng: danh sách (5.1.22), chi tiết, CV và duyệt
- * (5.1.23). Quyền theo vai trò ở {@code SecurityConfig},
- * phạm vi từng người (HM chỉ thấy phòng ban mình) ở {@code ApplicationAccess}.
+ * Controller quản lý hồ sơ ứng tuyển tuyển dụng: danh sách, chi tiết, CV và
+ * duyệt hồ sơ.
  */
 @Controller
 @RequestMapping("/applications")
@@ -44,14 +44,19 @@ public class ApplicationPipelineController {
 
     static final int PAGE_SIZE = 20;
 
-    private final ApplicationPipelineService pipeline;
+    private final ApplicationPipelineService pipelineService;
     private final ApplicationReviewService reviewService;
-    private final TalentPoolService talentPool;
+    private final TalentPoolService talentPoolService;
 
+    /**
+     * Hiển thị danh sách hồ sơ tuyển dụng kèm phân trang và số đếm từng giai đoạn.
+     */
     @GetMapping
-    public String list(@ModelAttribute ApplicationSearch search,
-            @PageableDefault(size = PAGE_SIZE) Pageable pageable, Model model) {
-        ApplicationListResponse result = pipeline.list(search, pageable);
+    public String list(
+            @ModelAttribute ApplicationSearch search,
+            @PageableDefault(size = PAGE_SIZE) Pageable pageable,
+            Model model) {
+        ApplicationListResponse result = pipelineService.list(search, pageable);
         model.addAttribute("result", result);
         model.addAttribute("stageItems", stageItems(result));
         model.addAttribute("activeMenu", "applications");
@@ -60,19 +65,28 @@ public class ApplicationPipelineController {
     }
 
     /**
-     * Các ô của thanh giai đoạn: "Tất cả", các giai đoạn trong luồng, "Đã dừng".
-     * Link giữ bộ lọc đang có, chỉ đổi
-     * giai đoạn và quay về trang đầu.
+     * Xây dựng danh sách các mốc giai đoạn ứng tuyển kèm số lượng hồ sơ.
      */
     static List<StageItem> stageItems(ApplicationListResponse result) {
         ApplicationSearch search = result.search();
         ApplicationStage selected = search.stageFilter();
         List<StageItem> items = new ArrayList<>();
-        items.add(new StageItem("ALL", "Tất cả", Math.toIntExact(result.totalCount()), stageHref(search, null),
-                selected == null ? "current" : "upcoming", null, true));
+        items.add(new StageItem(
+                "ALL",
+                "Tất cả",
+                Math.toIntExact(result.totalCount()),
+                stageHref(search, null),
+                selected == null ? "current" : "upcoming",
+                null,
+                true));
         for (ApplicationStage stage : ApplicationStage.values()) {
-            items.add(new StageItem(stage.name(), stage.label(), Math.toIntExact(result.stageCounts().get(stage)),
-                    stageHref(search, stage), stage == selected ? "current" : "upcoming", null,
+            items.add(new StageItem(
+                    stage.name(),
+                    stage.label(),
+                    Math.toIntExact(result.stageCounts().get(stage)),
+                    stageHref(search, stage),
+                    stage == selected ? "current" : "upcoming",
+                    null,
                     stage == ApplicationStage.CLOSED));
         }
         return items;
@@ -83,16 +97,20 @@ public class ApplicationPipelineController {
                 .queryParamIfPresent("jobPostingId", Optional.ofNullable(search.jobPostingId()))
                 .queryParamIfPresent("keyword", Optional.ofNullable(search.keyword()))
                 .queryParamIfPresent("status", Optional.ofNullable(search.status()))
-                .queryParamIfPresent("stage", Optional.ofNullable(stage).map(Enum::name))
+                .queryParamIfPresent("stage", Optional.ofNullable(stage).map(ApplicationStage::name))
                 .encode()
                 .toUriString();
     }
 
+    /**
+     * Hiển thị chi tiết hồ sơ ứng tuyển hoặc chuyển hướng tới đề xuất tương ứng.
+     */
     @GetMapping("/{id}")
     public String detail(@PathVariable Integer id, Model model) {
-        String recommendationUrl = talentPool.pendingRecommendationUrl(id);
-        if (recommendationUrl != null)
+        String recommendationUrl = talentPoolService.pendingRecommendationUrl(id);
+        if (recommendationUrl != null) {
             return "redirect:" + recommendationUrl;
+        }
         if (!model.containsAttribute("reviewForm")) {
             model.addAttribute("reviewForm", new ApplicationReviewRequest(null, null));
         }
@@ -100,13 +118,15 @@ public class ApplicationPipelineController {
     }
 
     /**
-     * Đạt / Tạm giữ / Không đạt (form truyền thống). Sai bước duyệt thì render lại
-     * trang kèm lỗi.
+     * Xử lý thẩm định hồ sơ ứng tuyển và ghi nhận xét.
      */
     @PostMapping("/{id}/review")
-    public String review(@PathVariable Integer id,
-            @Valid @ModelAttribute("reviewForm") ApplicationReviewRequest form, BindingResult errors,
-            Model model, RedirectAttributes redirect) {
+    public String review(
+            @PathVariable Integer id,
+            @Valid @ModelAttribute("reviewForm") ApplicationReviewRequest form,
+            BindingResult errors,
+            Model model,
+            RedirectAttributes redirect) {
         if (!errors.hasErrors()) {
             try {
                 redirect.addFlashAttribute("successMessage", reviewService.review(id, form));
@@ -115,7 +135,7 @@ public class ApplicationPipelineController {
                 if (e.getField() != null) {
                     errors.rejectValue(e.getField(), "review.invalid", e.getMessage());
                 } else {
-                    errors.reject("review.invalid", e.getMessage());
+                    model.addAttribute("errorMessage", e.getMessage());
                 }
             }
         }
@@ -123,27 +143,22 @@ public class ApplicationPipelineController {
     }
 
     private String renderDetail(Integer id, Model model) {
-        ApplicationDetailResponse detail = pipeline.detail(id);
+        ApplicationDetailResponse detail = pipelineService.detail(id);
         model.addAttribute("detail", detail);
-        // Keep shared note history available to authorized reviewers after removing a
-        // bookmark.
         model.addAttribute("talentNotes", Set.of("HR", "Hiring Manager").contains(detail.viewerRole())
-                ? talentPool.notesFor(detail.candidateId())
+                ? talentPoolService.notesFor(detail.candidateId())
                 : List.of());
-        model.addAttribute("closedByPosting", pipeline.closedByPosting(id));
+        model.addAttribute("closedByPosting", ApplicationStatusService.CANCELLED.equals(detail.applicationStatus()));
         model.addAttribute("activeMenu", "applications");
         model.addAttribute("viewerRole", detail.viewerRole());
         return "candidate/application-detail";
     }
 
     /**
-     * CV hiển thị trong khung của trang chi tiết (hoặc tab mới). File lưu nội bộ
-     * trả thẳng PDF {@code inline};
-     * CV mẫu / link ngoài thì chuyển hướng. Header cho phép nhúng khung cùng nguồn
-     * đặt ở {@code SecurityConfig}.
+     * Tải hoặc xem file CV của hồ sơ ứng tuyển.
      */
     @GetMapping("/{id}/cv")
     public ResponseEntity<Resource> cv(@PathVariable Integer id) {
-        return pipeline.cv(id).toResponse("CV-" + id + ".pdf");
+        return pipelineService.cv(id).toResponse("CV-" + id + ".pdf");
     }
 }

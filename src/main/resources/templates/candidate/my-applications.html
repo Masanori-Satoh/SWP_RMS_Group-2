@@ -17,6 +17,12 @@
 <head>
     <title>Đơn ứng tuyển của tôi</title>
     <th:block layout:fragment="styles">
+        <!-- Font Plus Jakarta Sans tải về máy chủ (css/fonts-modern.css); preload để chữ không nháy đổi kiểu lúc tải -->
+        <link rel="preload" as="font" type="font/woff2" crossorigin
+              th:href="@{/fonts/plus-jakarta-sans-normal-latin.woff2}">
+        <link rel="preload" as="font" type="font/woff2" crossorigin
+              th:href="@{/fonts/plus-jakarta-sans-normal-vietnamese.woff2}">
+        <link rel="stylesheet" th:href="@{/css/fonts-modern.css}">
         <link rel="stylesheet" th:href="@{/css/pages/my-applications.css}">
     </th:block>
 </head>
@@ -42,8 +48,12 @@
         </p>
     </div>
 
-    <div th:if="${successMessage}" class="alert alert--success" role="status" th:text="${successMessage}">Đã rút hồ sơ.</div>
-    <div th:if="${errorMessage}" class="alert alert--danger" role="alert" th:text="${errorMessage}">Không thể rút hồ sơ.</div>
+    <div th:if="${successMessage}" class="alert alert--success" role="status" th:text="${successMessage}">Đã rút hồ
+        sơ.
+    </div>
+    <div th:if="${errorMessage}" class="alert alert--danger" role="alert" th:text="${errorMessage}">Không thể rút hồ
+        sơ.
+    </div>
 
     <div th:if="${allCount == 0}" class="card myapp-empty">
         <h2 class="myapp-empty__title">Bạn chưa ứng tuyển vị trí nào</h2>
@@ -66,7 +76,8 @@
 
         <div th:if="${#lists.isEmpty(applications)}" class="card myapp-empty myapp-empty--filtered">
             <p class="myapp-empty__desc text-muted"
-               th:text="${tab == 'ended' ? 'Chưa có đơn nào kết thúc.' : 'Không có đơn đang xử lý.'}">Không có đơn đang xử lý.</p>
+               th:text="${tab == 'ended' ? 'Chưa có đơn nào kết thúc.' : 'Không có đơn đang xử lý.'}">Không có đơn đang
+                xử lý.</p>
         </div>
 
         <ul th:unless="${#lists.isEmpty(applications)}" class="myapp-list" aria-label="Các hồ sơ ứng tuyển của bạn">

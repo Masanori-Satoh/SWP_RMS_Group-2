@@ -11,32 +11,36 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 
-/*
- * Hai tài liệu chính sách công khai (khách cũng mở được): trả PDF để trình duyệt tự hiển thị.
- * Link trong popup đồng ý và ở footer đều trỏ về đây, nên luôn mở cùng một file.
+/**
+ * Controller hiển thị và tải các tài liệu điều khoản và chính sách bảo mật công khai.
  */
 @Controller
 @RequiredArgsConstructor
 public class PolicyDocumentController {
 
-    private final PolicyDocumentStorage storage;
+    private final PolicyDocumentStorage policyDocumentStorage;
 
+    /**
+     * Hiển thị nội dung văn bản Điều khoản sử dụng hệ thống.
+     */
     @GetMapping("/terms")
     public ResponseEntity<Resource> terms() {
         return pdf(PolicyDocument.TERMS);
     }
 
+    /**
+     * Hiển thị nội dung văn bản Chính sách bảo mật thông tin.
+     */
     @GetMapping("/privacy-policy")
     public ResponseEntity<Resource> privacyPolicy() {
         return pdf(PolicyDocument.PRIVACY);
     }
 
     private ResponseEntity<Resource> pdf(PolicyDocument document) {
-        Resource file = storage.read(document);
+        Resource file = policyDocumentStorage.read(document);
         if (!file.exists()) {
             return ResponseEntity.notFound().build();
         }
-        // inline: mở ngay trong tab, không bắt tải về
         ContentDisposition inline = ContentDisposition.inline().filename(document.fileName()).build();
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_PDF)

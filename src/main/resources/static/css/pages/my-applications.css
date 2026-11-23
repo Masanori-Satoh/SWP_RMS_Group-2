@@ -14,25 +14,38 @@
    Tiền tố class: myapp-
    ============================================================================= */
 
-/* Bộ màu của trang: bí danh của token chuẩn (tokens.css), không thêm mã màu mới. */
+/* Bộ màu và font chuẩn của trang: đồng bộ nhận diện Plus Jakarta Sans và kích thước chuẩn của ứng viên. */
 .myapp-page {
+  --myapp-font: 'Plus Jakarta Sans', var(--sans);
   --myapp-primary: var(--brand-dark);
   --myapp-primary-light: var(--brand-soft);
   --myapp-text-main: var(--ink);
   --myapp-text-muted: var(--muted);
+  font-family: var(--myapp-font);
+  font-size: var(--font-base);
+  max-width: 1200px;
+  margin-inline: auto;
+  padding-bottom: var(--s12);
+}
+
+.myapp-page .page-header {
+  margin-bottom: var(--s6);
 }
 
 .myapp-page .page-title {
-  font-family: var(--sans);
-  font-size: 24px;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-  color: var(--myapp-primary);
+  font-family: var(--myapp-font);
+  font-size: clamp(28px, 3.2vw, 38px);
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+  color: var(--brand-hover);
+  margin-bottom: var(--s2);
   overflow-wrap: anywhere;
 }
 
 .myapp-page .page-subtitle {
-  color: var(--myapp-primary);
+  color: var(--muted);
+  font-size: var(--font-md);
   font-weight: 500;
 }
 
@@ -43,8 +56,15 @@
 }
 
 /* ---- Banner đơn gấp (alert--warning của catalog + link) ---- */
+.myapp-urgent-banner {
+  padding: var(--s4) var(--s5);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--s5);
+}
+
 .myapp-urgent-banner__text {
   margin: 0;
+  font-size: 15px;
   line-height: 1.5;
 }
 
@@ -59,9 +79,9 @@
 /* ---- Tab: nút tròn kính mờ (cùng kiểu đảo kính của topbar), tab đang chọn có aria-current="page" ---- */
 .myapp-tabs {
   display: flex;
-  gap: var(--s2);
-  margin-bottom: var(--s5);
-  padding: 3px;
+  gap: var(--s3);
+  margin-bottom: var(--s6);
+  padding: 4px;
   overflow-x: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
@@ -76,15 +96,16 @@
   flex-shrink: 0;
   align-items: center;
   gap: var(--s2);
-  min-height: 42px;
-  padding: 0 var(--s2) 0 var(--s4);
+  min-height: 46px;
+  padding: 0 var(--s3) 0 var(--s5);
   border: 1px solid var(--line);
   border-radius: var(--radius-full);
-  background: color-mix(in srgb, var(--surface) 78%, transparent);
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
   backdrop-filter: blur(12px);
   box-shadow: var(--shadow-sm);
   color: var(--ink);
-  font-size: var(--font-sm);
+  font-family: var(--myapp-font);
+  font-size: 15px;
   font-weight: 600;
   text-decoration: none;
   white-space: nowrap;
@@ -92,8 +113,9 @@
 }
 
 .myapp-tab:hover {
-  background: color-mix(in srgb, var(--surface) 94%, transparent);
+  background: color-mix(in srgb, var(--surface) 96%, transparent);
   color: var(--brand-dark);
+  border-color: var(--brand);
 }
 
 .myapp-tab:focus-visible {
@@ -105,50 +127,52 @@
   border-color: var(--brand-dark);
   background: var(--brand-dark);
   color: var(--surface);
+  font-weight: 700;
 }
 
 .myapp-tab__count {
   display: inline-grid;
   place-items: center;
-  min-width: 24px;
-  height: 24px;
-  padding: 0 6px;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 8px;
   border-radius: var(--radius-full);
   background: var(--brand-soft);
   color: var(--brand-dark);
-  font-size: 12px;
-  font-weight: 700;
+  font-size: 13.5px;
+  font-weight: 800;
 }
 
 .myapp-tab[aria-current="page"] .myapp-tab__count {
-  background: color-mix(in srgb, var(--surface) 22%, transparent);
+  background: color-mix(in srgb, var(--surface) 24%, transparent);
   color: var(--surface);
 }
 
 /* ---- Danh sách + thẻ đơn 2 dòng ---- */
 .myapp-list {
   display: grid;
-  gap: var(--s3);
+  gap: var(--s4);
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-/* Thẻ đơn: nền trắng tinh, viền mảnh nhẹ nhàng 1px, bo góc 14px, không viền màu rực rỡ */
+/* Thẻ đơn: nền trắng tinh, viền mảnh bo góc 16px, kích thước thoáng đãng */
 .myapp-card.card {
   display: grid;
-  gap: var(--s5);
+  gap: var(--s6);
   padding: var(--s6) var(--s8);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
+  border: 1px solid color-mix(in srgb, var(--brand) 18%, var(--line));
+  border-radius: 16px;
   background-color: var(--surface);
-  box-shadow: var(--shadow-sm);
-  transition: transform 0.22s ease, box-shadow 0.22s ease;
+  box-shadow: 0 4px 14px rgba(16, 54, 37, 0.05);
+  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
 }
 
 .myapp-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+  transform: translateY(-3px);
+  box-shadow: 0 12px 28px -4px rgba(17, 45, 35, 0.12), 0 6px 12px -2px rgba(17, 45, 35, 0.06);
+  border-color: color-mix(in srgb, var(--brand) 38%, var(--line));
 }
 
 /* Dòng 1: định danh | Menu tùy chọn ba chấm ⋮ */
@@ -164,11 +188,12 @@
 }
 
 .myapp-card__title {
-  margin: 0 0 var(--s1);
-  font-family: var(--sans);
-  font-size: var(--font-lg);
-  font-weight: 700;
+  margin: 0 0 var(--s2);
+  font-family: var(--myapp-font);
+  font-size: 20px;
+  font-weight: 800;
   line-height: 1.35;
+  letter-spacing: -0.015em;
   color: var(--ink);
   overflow-wrap: anywhere;
 }
@@ -189,10 +214,11 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--s1) var(--s3);
+  gap: var(--s2) var(--s4);
   margin: 0;
   color: var(--muted);
-  font-size: 13px;
+  font-size: 14.5px;
+  font-weight: 500;
 }
 
 .myapp-card__meta > span {
@@ -202,7 +228,7 @@
 /* Mã đơn: thông tin phụ */
 .myapp-card__code {
   color: var(--control-line);
-  font-size: 12px;
+  font-size: 13.5px;
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.02em;
 }
@@ -217,7 +243,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
+  width: 36px;
   height: 32px;
   border-radius: var(--radius-md);
   color: var(--muted);
@@ -335,7 +361,7 @@
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   width: 100%;
-  max-width: 34rem;
+  max-width: 38rem;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -351,7 +377,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   min-width: 0;
   text-align: center;
 }
@@ -359,10 +385,10 @@
 .myapp-stepper__step:not(:first-child)::before {
   content: "";
   position: absolute;
-  top: 11px;
+  top: 14px;
   right: 50%;
   width: 100%;
-  height: 2px;
+  height: 3px;
   background-color: var(--myapp-step-color);
 }
 
@@ -376,17 +402,18 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
-  border: 2px solid var(--control-line);
+  width: 30px;
+  height: 30px;
+  border: 2.5px solid var(--control-line);
   border-radius: var(--radius-full);
   background-color: var(--surface);
   color: var(--on-brand);
+  transition: all 0.2s ease;
 }
 
 .myapp-stepper__dot .myapp-icon {
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   stroke-width: 3;
 }
 
@@ -402,8 +429,8 @@
 
 .myapp-stepper__step[data-state="current"] .myapp-stepper__dot::after {
   content: "";
-  width: 10px;
-  height: 10px;
+  width: 12px;
+  height: 12px;
   border-radius: var(--radius-full);
   background-color: var(--myapp-step-color);
 }
@@ -411,8 +438,9 @@
 .myapp-stepper__label {
   max-width: 100%;
   color: var(--myapp-text-main);
-  font-size: 12px;
-  font-weight: 600;
+  font-family: var(--myapp-font);
+  font-size: 13.5px;
+  font-weight: 700;
   line-height: 1.3;
 }
 
@@ -426,14 +454,15 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 6px;
+  gap: 8px;
 }
 
 .myapp-status__label {
   margin: 0;
   color: var(--ink);
-  font-size: var(--font-base);
-  font-weight: 700;
+  font-family: var(--myapp-font);
+  font-size: 17px;
+  font-weight: 800;
 }
 
 /* Tích cực hoặc cần ứng viên làm gì đó: màu thương hiệu; bị loại: đỏ; còn lại: chữ thường. */
@@ -450,17 +479,17 @@
 .myapp-status-pill {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 12px;
+  gap: 8px;
+  padding: 5px 14px;
   border-radius: var(--radius-full);
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 14.5px;
+  font-weight: 700;
   white-space: nowrap;
 }
 
 .myapp-status-pill .myapp-icon {
-  width: 15px;
-  height: 15px;
+  width: 16px;
+  height: 16px;
 }
 
 .myapp-status-pill--offer {
@@ -472,8 +501,8 @@
 .myapp-status__note {
   margin: 0;
   color: var(--muted);
-  font-size: 13px;
-  line-height: 1.4;
+  font-size: 14.5px;
+  line-height: 1.45;
 }
 
 .myapp-status__urgent {
@@ -481,47 +510,49 @@
   align-items: center;
   gap: 6px;
   margin: 2px 0 0;
-  padding: 3px 10px;
+  padding: 4px 12px;
   border-radius: var(--radius-full);
   background-color: var(--warning-soft);
   color: var(--warning);
   border: 1px solid rgba(160, 99, 37, 0.2);
-  font-size: 12px;
+  font-size: 13.5px;
   font-weight: 700;
   line-height: 1;
 }
 
 .myapp-status__urgent .myapp-icon {
-  width: 13px;
-  height: 13px;
+  width: 14px;
+  height: 14px;
 }
 
 /* Đơn dừng (rút, bị loại, tin đóng, từ chối thư mời): nhãn bo tròn xám nhạt (ghi đè cỡ của .badge trong catalog). */
 .myapp-badge-stopped.badge {
-  padding: 4px 12px;
+  padding: 6px 14px;
   border-color: transparent;
   border-radius: var(--radius-full);
   background-color: var(--neutral-soft);
   color: var(--myapp-text-muted);
-  font-size: 12px;
-  font-weight: 500;
+  font-size: 13.5px;
+  font-weight: 600;
 }
 
 /* ---- Nút ---- */
 .myapp-action,
 .myapp-withdraw-btn,
 .myapp-detail-link {
-  height: 40px;
-  padding: 0 16px;
-  border-radius: var(--radius-md);
-  font-size: var(--font-sm);
-  font-weight: 600;
+  height: 44px;
+  padding: 0 20px;
+  border-radius: var(--radius-full);
+  font-family: var(--myapp-font);
+  font-size: 14.5px;
+  font-weight: 700;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 8px;
   white-space: nowrap;
   text-decoration: none;
+  transition: all 0.2s ease;
 }
 
 .myapp-action.btn--primary {
@@ -559,7 +590,8 @@
   align-items: center;
   gap: 6px;
   color: var(--brand);
-  font-size: var(--font-sm);
+  font-family: var(--myapp-font);
+  font-size: 14.5px;
   font-weight: 600;
   text-decoration: none;
   white-space: nowrap;
@@ -639,22 +671,40 @@ dialog.myapp-cv-dialog {
 .myapp-back {
   display: inline-flex;
   align-items: center;
-  gap: var(--s1);
-  margin-bottom: var(--s3);
-  color: var(--brand);
-  font-size: var(--font-sm);
-  font-weight: 600;
+  gap: var(--s2);
+  margin-bottom: var(--s4);
+  padding: 8px 18px;
+  border-radius: var(--radius-full);
+  background-color: var(--surface);
+  border: 1.5px solid var(--line);
+  box-shadow: 0 2px 8px rgba(16, 54, 37, 0.08);
+  color: var(--brand-dark);
+  font-family: var(--myapp-font);
+  font-size: 14.5px;
+  font-weight: 700;
   text-decoration: none;
-}
-
-.myapp-back .myapp-icon {
-  width: 16px;
-  height: 16px;
+  transition: all 0.2s ease;
 }
 
 .myapp-back:hover,
 .myapp-back:focus-visible {
-  text-decoration: underline;
+  background-color: var(--brand-soft);
+  border-color: var(--brand);
+  color: var(--brand-hover);
+  box-shadow: 0 4px 14px rgba(16, 54, 37, 0.14);
+  transform: translateX(-3px);
+  text-decoration: none;
+}
+
+.myapp-back .myapp-icon {
+  width: 18px;
+  height: 18px;
+  stroke-width: 2.5;
+  transition: transform 0.2s ease;
+}
+
+.myapp-back:hover .myapp-icon {
+  transform: translateX(-3px);
 }
 
 .myapp-detail .page-header .myapp-card__meta {
@@ -748,21 +798,33 @@ dialog.myapp-cv-dialog {
 
 /* ---- Trạng thái rỗng ---- */
 .myapp-empty {
+  padding: var(--s12) var(--s6);
+  border-radius: 16px;
   text-align: center;
+  box-shadow: 0 4px 14px rgba(16, 54, 37, 0.05);
 }
 
 .myapp-empty__title {
   margin: 0 0 var(--s2);
-  font-family: var(--sans);
-  font-size: var(--font-lg);
-  font-weight: 700;
+  font-family: var(--myapp-font);
+  font-size: clamp(22px, 2.5vw, 28px);
+  font-weight: 800;
+  color: var(--brand-dark);
 }
 
 .myapp-empty__desc {
   margin: 0;
+  font-size: 15.5px;
+  color: var(--muted);
 }
 
 .myapp-empty__cta {
+  height: 48px;
+  padding: 0 24px;
+  border-radius: var(--radius-full);
+  font-family: var(--myapp-font);
+  font-size: 15.5px;
+  font-weight: 700;
   margin-top: var(--s4);
 }
 

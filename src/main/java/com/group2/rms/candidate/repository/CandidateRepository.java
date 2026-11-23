@@ -10,8 +10,8 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-//new interface cho dynacmic filter nha các bảo bối
 public interface CandidateRepository extends JpaRepository<Candidate, Integer>, JpaSpecificationExecutor<Candidate> {
+
     Optional<Candidate> findByAccountUserId(Integer userId);
 
     Optional<Candidate> findByAccount_UsernameIgnoreCase(String username);

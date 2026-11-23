@@ -49,9 +49,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class CandidateProfileWebTests {
 
     @Autowired MockMvc mvc;
-    @MockitoBean CandidateProfileService candidateProfiles;
-    @MockitoBean UserProfileService userProfiles;
-    @MockitoBean UserRepository users;
+    @MockitoBean CandidateProfileService candidateProfileService;
+    @MockitoBean UserProfileService userProfileService;
+    @MockitoBean UserRepository userRepository;
 
     @ParameterizedTest
     @ValueSource(strings = {"A", "A1", "Nguyễn 123"})
@@ -61,7 +61,7 @@ class CandidateProfileWebTests {
                         .param("fullName", fullName).param("phoneNumber", phone))
                 .andExpect(redirectedUrl("/portal/profile"))
                 .andExpect(flash().attribute("successMessage", "Đã lưu hồ sơ."));
-        verify(candidateProfiles).update(eq("an.vo"), eq(new UpdateProfileRequest(fullName, phone)), any());
+        verify(candidateProfileService).update(eq("an.vo"), eq(new UpdateProfileRequest(fullName, phone)), any());
     }
 
     @Test
@@ -76,13 +76,12 @@ class CandidateProfileWebTests {
         mvc.perform(get("/portal/profile").with(as("hr_lan", "HR"))).andExpect(status().isForbidden());
         mvc.perform(post("/portal/profile/update").with(as("hr_lan", "HR")).with(csrf()).param("fullName", "Lan"))
                 .andExpect(status().isForbidden());
-        verifyNoInteractions(candidateProfiles, userProfiles);
+        verifyNoInteractions(candidateProfileService, userProfileService);
     }
 
     @Test
     void candidateSeesOwnFieldsButNotInternalOnes() throws Exception {
-        when(candidateProfiles.get("an.vo")).thenReturn(profile());
-
+        when(candidateProfileService.get("an.vo")).thenReturn(profile());
         mvc.perform(get("/portal/profile").with(as("an.vo", "Candidate")))
                 .andExpect(status().isOk())
                 .andExpect(view().name("candidate/my-profile"))
@@ -104,7 +103,7 @@ class CandidateProfileWebTests {
     /** Khung ứng viên giữ nguyên, nội dung theo adw; không nền ảnh/sidebar (admin-workspace.js thoát ở khung ứng viên). */
     @Test
     void candidateProfileUsesAdwContentWithoutWorkspaceScene() throws Exception {
-        when(candidateProfiles.get("an.vo")).thenReturn(profile());
+        when(candidateProfileService.get("an.vo")).thenReturn(profile());
 
         mvc.perform(get("/portal/profile").with(as("an.vo", "Candidate")))
                 .andExpect(status().isOk())
@@ -126,7 +125,7 @@ class CandidateProfileWebTests {
 
         ArgumentCaptor<UpdateProfileRequest> account = ArgumentCaptor.forClass(UpdateProfileRequest.class);
         ArgumentCaptor<UpdateCandidateProfileRequest> details = ArgumentCaptor.forClass(UpdateCandidateProfileRequest.class);
-        verify(candidateProfiles).update(eq("an.vo"), account.capture(), details.capture());
+        verify(candidateProfileService).update(eq("an.vo"), account.capture(), details.capture());
         assertEquals("Võ Thành An", account.getValue().fullName());
         assertEquals("new@example.test", details.getValue().email());
         assertEquals(LocalDate.of(1999, 4, 12), details.getValue().dateOfBirth());
@@ -140,14 +139,14 @@ class CandidateProfileWebTests {
         mvc.perform(save().param("email", email))
                 .andExpect(redirectedUrl("/portal/profile"))
                 .andExpect(flash().attributeExists("org.springframework.validation.BindingResult.detailsRequest"));
-        verifyNoInteractions(candidateProfiles);
+        verifyNoInteractions(candidateProfileService);
     }
 
     @Test
     void duplicateEmailIsShownNextToField() throws Exception {
-        when(candidateProfiles.get("an.vo")).thenReturn(profile());
+        when(candidateProfileService.get("an.vo")).thenReturn(profile());
         doThrow(new AccountFieldException("email", "Email này đã được sử dụng."))
-                .when(candidateProfiles).update(eq("an.vo"), any(), any());
+                .when(candidateProfileService).update(eq("an.vo"), any(), any());
 
         var redirect = mvc.perform(save().param("email", "taken@example.test"))
                 .andExpect(redirectedUrl("/portal/profile")).andReturn();
@@ -165,7 +164,7 @@ class CandidateProfileWebTests {
                 .andExpect(redirectedUrl("/portal/profile"))
                 .andExpect(flash().attributeExists("org.springframework.validation.BindingResult.detailsRequest"))
                 .andExpect(flash().attributeExists("detailsRequest"));
-        verifyNoInteractions(candidateProfiles);
+        verifyNoInteractions(candidateProfileService);
     }
 
     @Test
@@ -174,12 +173,12 @@ class CandidateProfileWebTests {
                         .param("fullName", "").param("phoneNumber", ""))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(flash().attributeExists("org.springframework.validation.BindingResult.updateRequest"));
-        verifyNoInteractions(candidateProfiles);
+        verifyNoInteractions(candidateProfileService);
     }
 
     @Test
     void validationErrorsAreShownNextToFields() throws Exception {
-        when(candidateProfiles.get("an.vo")).thenReturn(profile());
+        when(candidateProfileService.get("an.vo")).thenReturn(profile());
         var redirect = mvc.perform(invalidSave(LocalDate.now().plusDays(1).toString())).andReturn();
 
         mvc.perform(get("/portal/profile").with(as("an.vo", "Candidate")).flashAttrs(redirect.getFlashMap()))
@@ -191,13 +190,13 @@ class CandidateProfileWebTests {
     @Test
     void legacyGenderIsOfferedAndSelectedAndServiceRejectionShowsAtGenderField() throws Exception {
         CandidateProfileResponse legacy = new CandidateProfileResponse(profile().account(), null, "Male", null, null, null);
-        when(candidateProfiles.get("an.vo")).thenReturn(legacy);
+        when(candidateProfileService.get("an.vo")).thenReturn(legacy);
         mvc.perform(get("/portal/profile").with(as("an.vo", "Candidate")))
                 .andExpect(content().string(containsString("<option value=\"Male\" selected=\"selected\">Male</option>")))
                 .andExpect(content().string(containsString("<option value=\"Khác\">Khác</option>")));
 
         doThrow(new CandidateProfileException("gender", "Giới tính không hợp lệ."))
-                .when(candidateProfiles).update(eq("an.vo"), any(), any());
+                .when(candidateProfileService).update(eq("an.vo"), any(), any());
         var redirect = mvc.perform(save().param("gender", "X"))
                 .andExpect(redirectedUrl("/portal/profile"))
                 .andExpect(flash().attributeExists("org.springframework.validation.BindingResult.detailsRequest"))
@@ -212,9 +211,9 @@ class CandidateProfileWebTests {
         mvc.perform(multipart("/portal/profile/avatar").file(ok).with(as("an.vo", "Candidate")).with(csrf()))
                 .andExpect(redirectedUrl("/portal/profile"))
                 .andExpect(flash().attribute("successMessage", "Đã cập nhật ảnh đại diện."));
-        verify(userProfiles).changeAvatar(eq("an.vo"), any());
+        verify(userProfileService).changeAvatar(eq("an.vo"), any());
 
-        doThrow(new AvatarUploadException("Ảnh tối đa 2 MB.")).when(userProfiles).changeAvatar(eq("an.vo"), any());
+        doThrow(new AvatarUploadException("Ảnh tối đa 2 MB.")).when(userProfileService).changeAvatar(eq("an.vo"), any());
         mvc.perform(multipart("/portal/profile/avatar").file(ok).with(as("an.vo", "Candidate")).with(csrf()))
                 .andExpect(redirectedUrl("/portal/profile"))
                 .andExpect(flash().attribute("avatarError", "Ảnh tối đa 2 MB."));
@@ -243,7 +242,7 @@ class CandidateProfileWebTests {
     private RequestPostProcessor as(String username, String roleName) {
         User account = User.builder().userId(1).username(username).fullName(username).accountStatus("Active")
                 .role(Role.builder().roleName(roleName).build()).build();
-        when(users.findByUsernameIgnoreCase(username)).thenReturn(Optional.of(account));
+        when(userRepository.findByUsernameIgnoreCase(username)).thenReturn(Optional.of(account));
         String authority = "HR".equals(roleName) ? "ROLE_HR" : "ROLE_CANDIDATE";
         return user(username).authorities(() -> authority);
     }
