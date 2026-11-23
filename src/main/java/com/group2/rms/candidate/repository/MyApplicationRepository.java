@@ -24,7 +24,7 @@ public interface MyApplicationRepository extends Repository<Application, Integer
                 JOIN FETCH j.requisition r
                 JOIN FETCH r.department
             WHERE a.candidate.account.userId = :userId
-              AND """ + FORMAL_FILTER + """
+              AND """ + " " + FORMAL_FILTER + """
             ORDER BY a.submissionDate DESC, a.applicationId DESC
             """)
     List<Application> findOwnedByUserId(@Param("userId") Integer userId);
@@ -36,7 +36,7 @@ public interface MyApplicationRepository extends Repository<Application, Integer
                 JOIN FETCH r.department
             WHERE a.applicationId = :id
               AND a.candidate.account.userId = :userId
-              AND """ + FORMAL_FILTER)
+              AND """ + " " + FORMAL_FILTER)
     Optional<Application> findOwnedById(@Param("id") Integer applicationId, @Param("userId") Integer userId);
 
     @Query(value = """

@@ -140,7 +140,7 @@ public interface ApplicationRepository extends JpaRepository<Application, Intege
                         FROM Application a
                         WHERE a.candidate.candidateId = :candidateId
                           AND a.jobPosting.jobPostingId = :jobPostingId
-                          AND """ + FORMAL_FILTER)
+                          AND """ + " " + FORMAL_FILTER)
         boolean existsActiveByCandidateAndJobPosting(
                         @Param("candidateId") Integer candidateId,
                         @Param("jobPostingId") Integer jobPostingId);
@@ -149,7 +149,7 @@ public interface ApplicationRepository extends JpaRepository<Application, Intege
                         SELECT COUNT(a) FROM Application a
                         WHERE a.applicationId = :id
                           AND a.applicationStatus = 'HM_Suggested'
-                          AND """ + PENDING_HR_RECOMMENDATION)
+                          AND """ + " " + PENDING_HR_RECOMMENDATION)
         long countPendingHrRecommendation(@Param("id") Integer applicationId);
 
         @Modifying
