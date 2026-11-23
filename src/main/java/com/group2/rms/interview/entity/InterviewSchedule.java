@@ -39,6 +39,7 @@ public class InterviewSchedule {
     @JoinColumn(name = "ApplicationId", nullable = false, referencedColumnName = "ApplicationId")
     private Application application;
 
+    /* DB lưu chuỗi đúng CHECK constraint; các accessor bên dưới chuyển sang enum cho tầng nghiệp vụ. */
     @Column(name = "InterviewFormat", nullable = false, length = 30)
     private String interviewFormat;
 
@@ -61,6 +62,7 @@ public class InterviewSchedule {
     @Column(name = "CreatedAt", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    /* Lịch sở hữu vòng đời hội đồng: bỏ phần tử khỏi collection sẽ xóa dòng liên kết khi flush. */
     @OneToMany(mappedBy = "interviewSchedule", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private Set<InterviewPanel> interviewPanels = new HashSet<>();
@@ -73,6 +75,7 @@ public class InterviewSchedule {
     }
 
     public InterviewFormat getInterviewFormat() {
+        /* Dữ liệu chuỗi không khớp enum trả null để tầng gọi xử lý thay vì làm hỏng quá trình dựng trang. */
         if (this.interviewFormat == null) {
             return null;
         }
@@ -92,6 +95,7 @@ public class InterviewSchedule {
     }
 
     public InterviewStatus getInterviewStatus() {
+        /* Chuỗi trạng thái cũ/không hợp lệ không được coi là một trạng thái nghiệp vụ hợp lệ. */
         if (this.interviewStatus == null) {
             return null;
         }
@@ -129,6 +133,7 @@ public class InterviewSchedule {
     }
 
     private void validateScheduleBusinessRules() {
+        /* Kiểm tra ở vòng đời JPA để cả những luồng lưu ngoài service vẫn giữ quy tắc EndTime > StartTime. */
         if (startTime != null && endTime != null && !endTime.isAfter(startTime)) {
             throw new IllegalStateException("Business Rule Violation: EndTime (" + endTime +
                     ") phải lớn hơn StartTime (" + startTime + ")");
@@ -154,6 +159,7 @@ public class InterviewSchedule {
      * Tiện ích thêm người phỏng vấn vào Hội đồng (đồng bộ quan hệ 2 chiều).
      */
     public void addPanelMember(User interviewer, RoleInPanel roleInPanel) {
+        /* Khóa ghép và @MapsId gắn mỗi tài khoản với lịch; gán cả chủ lịch và người phỏng vấn trên bản ghi nối. */
         if (interviewer == null || interviewer.getUserId() == null) {
             throw new IllegalArgumentException("Interviewer không được null và phải có UserId hợp lệ.");
         }
@@ -180,6 +186,7 @@ public class InterviewSchedule {
         }
     }
 
+    /* Builder nhận cả enum và chuỗi để các nơi khởi tạo dùng cùng cách lưu giá trị với setter của entity. */
     public static class InterviewScheduleBuilder {
         public InterviewScheduleBuilder interviewFormat(InterviewFormat interviewFormat) {
             this.interviewFormat = (interviewFormat != null) ? interviewFormat.name() : null;

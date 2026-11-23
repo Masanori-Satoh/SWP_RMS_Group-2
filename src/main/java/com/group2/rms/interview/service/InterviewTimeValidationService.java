@@ -56,7 +56,10 @@ public class InterviewTimeValidationService {
             throw new IllegalArgumentException("Thời gian bắt đầu phỏng vấn phải ở trong tương lai.");
         }
 
-        // Kiểm tra trùng lịch của ứng viên (theo người, gồm mọi hồ sơ khác của cùng ứng viên)
+        /*
+         * Kiểm tra theo ứng viên để chặn hai hồ sơ của cùng người bị xếp trùng giờ.
+         * Hai lịch tiếp giáp giờ kết thúc/bắt đầu vẫn được chấp nhận.
+         */
         if (application != null && application.getCandidate() != null) {
             long candidateConflicts = interviewScheduleRepository.countConflictingSchedulesForCandidate(
                     application.getCandidate().getCandidateId(), startTime, endTime, null);
@@ -66,7 +69,9 @@ public class InterviewTimeValidationService {
             }
         }
 
-        // Kiểm tra trùng lịch hội đồng phỏng vấn
+        /*
+         * Một thành viên xung đột giờ thì từ chối cả lịch, không tự gỡ người hoặc đổi giờ.
+         */
         Set<Integer> interviewerIds = request.getInterviewerIds();
         if (interviewerIds != null) {
             for (Integer interviewerId : interviewerIds) {
@@ -88,6 +93,9 @@ public class InterviewTimeValidationService {
      * Mọi lần sửa thành công đưa lịch về trạng thái "Đã đổi lịch", nên thời gian mới luôn phải ở tương lai.
      */
     public void validateForUpdate(Long interviewId, InterviewScheduleRequest request, InterviewSchedule existingSchedule) {
+        /*
+         * Kiểm tra cặp thời gian sau cập nhật; giá trị không đổi được lấy từ lịch hiện tại.
+         */
         if (request == null || existingSchedule == null) {
             throw new IllegalArgumentException("Dữ liệu cập nhật hoặc lịch phỏng vấn hiện tại không hợp lệ.");
         }
@@ -104,7 +112,9 @@ public class InterviewTimeValidationService {
             throw new IllegalArgumentException("Thời gian bắt đầu mới của lịch phỏng vấn phải ở trong tương lai.");
         }
 
-        // Kiểm tra trùng lịch của ứng viên (loại trừ chính lịch đang cập nhật)
+        /*
+         * Loại chính lịch đang sửa khỏi xung đột; vẫn xét mọi hồ sơ khác của cùng ứng viên.
+         */
         Application application = existingSchedule.getApplication();
         if (application != null && application.getCandidate() != null && startTime != null && endTime != null) {
             long candidateConflicts = interviewScheduleRepository.countConflictingSchedulesForCandidate(
@@ -115,7 +125,6 @@ public class InterviewTimeValidationService {
             }
         }
 
-        // Kiểm tra trùng lịch hội đồng phỏng vấn (loại trừ chính lịch đang cập nhật)
         Set<Integer> interviewerIds = request.getInterviewerIds();
         if (interviewerIds != null && startTime != null && endTime != null) {
             for (Integer interviewerId : interviewerIds) {
@@ -133,6 +142,7 @@ public class InterviewTimeValidationService {
 
     /** endTime phải sau startTime và buổi phỏng vấn dài 15 phút đến 4 giờ. */
     private static void validateDuration(LocalDateTime startTime, LocalDateTime endTime) {
+        /* Chấp nhận đúng biên 15 phút và 4 giờ; chỉ từ chối khoảng thời gian nằm ngoài giới hạn. */
         if (!endTime.isAfter(startTime)) {
             throw new IllegalArgumentException("Thời gian kết thúc phải sau thời gian bắt đầu.");
         }

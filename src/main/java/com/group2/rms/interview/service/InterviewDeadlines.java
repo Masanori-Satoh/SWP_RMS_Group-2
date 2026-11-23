@@ -41,22 +41,34 @@ public final class InterviewDeadlines {
     }
 
     public static LocalDateTime decisionDeadline(InterviewStatus status, LocalDateTime endTime) {
+        /*
+         * Hạn chốt nối tiếp hạn chấm: EndTime + 24h + 2 ngày, không phải EndTime + 2 ngày.
+         */
         LocalDateTime evaluationDeadline = evaluationDeadline(status, endTime);
         return evaluationDeadline != null ? evaluationDeadline.plus(DECISION_WINDOW) : null;
     }
 
     public static LocalDateTime considerDeadline(LocalDateTime consideredAt) {
+        /*
+         * Tính từ lần Considering đầu tiên; lưu lại quyết định không gia hạn thêm 7 ngày.
+         */
         return consideredAt != null ? consideredAt.plus(CONSIDER_WINDOW) : null;
     }
 
     /** Phiếu nộp sau hạn chấm điểm. */
     public static boolean isLate(InterviewSchedule schedule, LocalDateTime evaluatedAt) {
+        /*
+         * Nộp đúng deadline chưa bị gắn cờ trễ; chỉ thời điểm sau deadline mới tính trễ.
+         */
         LocalDateTime deadline = evaluationDeadline(schedule);
         return deadline != null && evaluatedAt != null && evaluatedAt.isAfter(deadline);
     }
 
     /** Còn trong 24h chấm điểm (HM phải chờ đủ phiếu). */
     public static boolean withinEvaluationWindow(InterviewSchedule schedule, LocalDateTime now) {
+        /*
+         * Đúng deadline đã hết cửa sổ bắt buộc chờ đủ phiếu, khác điều kiện đánh dấu một phiếu nộp trễ.
+         */
         LocalDateTime deadline = evaluationDeadline(schedule);
         return deadline != null && now.isBefore(deadline);
     }
@@ -68,6 +80,10 @@ public final class InterviewDeadlines {
 
     public static EvaluationProgress progress(InterviewStatus status, LocalDateTime startTime, LocalDateTime endTime,
                                               LocalDateTime submittedAt, LocalDateTime now) {
+        /*
+         * Phiếu đã nộp giữ nhãn thực tế dù lịch bị hủy sau đó;
+         * các trạng thái hủy/chưa tới giờ/quá hạn còn lại dành cho người chưa nộp.
+         */
         LocalDateTime deadline = evaluationDeadline(status, endTime);
         if (submittedAt != null) {
             return deadline != null && submittedAt.isAfter(deadline)
@@ -79,6 +95,7 @@ public final class InterviewDeadlines {
         if (startTime != null && now.isBefore(startTime)) {
             return EvaluationProgress.NOT_STARTED;
         }
+        /* Đúng mốc deadline đã hết thời gian chờ phiếu; nhãn này chỉ cảnh báo, không quyết định quyền nộp. */
         return deadline == null || now.isBefore(deadline) ? EvaluationProgress.PENDING : EvaluationProgress.OVERDUE;
     }
 

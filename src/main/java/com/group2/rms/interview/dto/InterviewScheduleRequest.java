@@ -58,6 +58,7 @@ public record InterviewScheduleRequest(
      * đồng thời gán giá trị mặc định cho interviewStatus.
      */
     public InterviewScheduleRequest {
+        /* Nhận cả form cũ gửi tập ID và request mới gửi thành viên có vai trò; bổ sung dạng còn thiếu. */
         if (panelMembers == null || panelMembers.isEmpty()) {
             if (interviewerIds != null && !interviewerIds.isEmpty()) {
                 panelMembers = interviewerIds.stream()
@@ -76,6 +77,7 @@ public record InterviewScheduleRequest(
                         .collect(Collectors.toSet());
             }
         }
+        /* Giá trị mặc định hỗ trợ binding; service vẫn tự suy trạng thái khi tạo hoặc sửa lịch. */
         if (interviewStatus == null) {
             interviewStatus = InterviewStatus.Scheduled;
         }
@@ -119,9 +121,7 @@ public record InterviewScheduleRequest(
         return trimmed.startsWith("http://") || trimmed.startsWith("https://");
     }
 
-    // ==========================================
-    // BACKWARD-COMPATIBLE GETTERS (Thymeleaf / Service)
-    // ==========================================
+    /* Các getter kiểu JavaBean giữ tương thích với Thymeleaf và service bên cạnh accessor của record. */
     public Integer getApplicationId() {
         return applicationId;
     }

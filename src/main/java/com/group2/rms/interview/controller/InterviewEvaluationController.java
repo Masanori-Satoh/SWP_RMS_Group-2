@@ -50,6 +50,9 @@ public class InterviewEvaluationController {
                     .body(new ApiResponse<>(false, "Vui lòng kiểm tra lại các ô được đánh dấu.", fieldErrors));
         }
 
+        /*
+         * Người nộp phải là thành viên hội đồng của lịch, không chỉ có vai trò Interviewer.
+         */
         Integer evaluatorId = currentUserService.requireUser().getUserId();
         try {
             interviewEvaluationService.submit(id, request, evaluatorId);

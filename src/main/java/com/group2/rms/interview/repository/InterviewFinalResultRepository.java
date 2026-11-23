@@ -9,6 +9,9 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Kết quả duy nhất theo lịch, không phải theo hồ sơ. Một hồ sơ có thể có lịch sử nhiều lịch phỏng vấn.
+ */
 @Repository
 public interface InterviewFinalResultRepository extends JpaRepository<InterviewFinalResult, Integer> {
 
@@ -16,12 +19,19 @@ public interface InterviewFinalResultRepository extends JpaRepository<InterviewF
 
     Optional<InterviewFinalResult> findByInterviewSchedule_InterviewId(Integer interviewId);
 
+    /*
+     * Sắp theo quyết định gần nhất; ApprovedAt có thể thay đổi khi chốt lại Considering.
+     */
     @Query("SELECT r FROM InterviewFinalResult r " +
            "JOIN r.interviewSchedule s " +
            "WHERE s.application.applicationId = :applicationId " +
            "ORDER BY r.approvedAt DESC")
     List<InterviewFinalResult> findByApplicationIdOrderByApprovedAtDesc(@Param("applicationId") Integer applicationId);
 
+    /*
+     * Nguồn ứng viên Passed cho luồng lập offer; Considering không được tính là đạt.
+     * Các điều kiện lập offer còn lại do module offer kiểm tra.
+     */
     @Query("SELECT r FROM InterviewFinalResult r " +
            "JOIN FETCH r.interviewSchedule s " +
            "JOIN FETCH s.application a " +

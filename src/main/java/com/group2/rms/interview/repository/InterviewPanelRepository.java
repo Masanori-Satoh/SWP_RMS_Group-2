@@ -11,6 +11,10 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+/**
+ * Luồng sửa lịch chính thay hội đồng qua orphanRemoval của InterviewSchedule,
+ * không dùng bulk delete bên dưới.
+ */
 @Repository
 public interface InterviewPanelRepository extends JpaRepository<InterviewPanel, InterviewPanelId> {
 
@@ -40,13 +44,15 @@ public interface InterviewPanelRepository extends JpaRepository<InterviewPanel, 
 
     /**
      * Xóa toàn bộ hội đồng phỏng vấn khi cần cấu hình lại danh sách người tham gia.
+     * Đây là bulk delete, cần transaction ghi và không đi qua callback từng entity.
+     * Collection hội đồng đã nạp trong persistence context không tự đồng bộ sau câu DELETE này.
      */
     @Modifying
     @Query("DELETE FROM InterviewPanel p WHERE p.id.interviewId = :interviewId")
     void deleteByInterviewId(@Param("interviewId") Long interviewId);
 
     /**
-     * Lọc danh sách thành viên hội đồng theo vai trò (HR hoặc HM).
+     * Lọc theo vai trò trong hội đồng (HR/HM/Interviewer/Director), không phải kiểm tra role bảo mật của người gọi.
      */
     List<InterviewPanel> findById_InterviewIdAndRoleInPanel(Long interviewId, RoleInPanel roleInPanel);
 }

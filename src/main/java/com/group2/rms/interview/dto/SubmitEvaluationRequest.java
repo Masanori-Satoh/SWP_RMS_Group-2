@@ -44,6 +44,7 @@ public record SubmitEvaluationRequest(
     /** Lỗi gắn với ô "anyScoreGiven" (giao diện hiện dưới nhóm điểm). */
     @AssertTrue(message = "Vui lòng chấm ít nhất một mục điểm.")
     public boolean isAnyScoreGiven() {
+        /* Không bắt chấm đủ ba mục chuyên môn, nhưng không cho phép một phiếu hoàn toàn không có điểm. */
         return technicalScore != null || softSkillScore != null || culturalFitScore != null;
     }
 }

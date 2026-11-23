@@ -35,10 +35,12 @@ public record InterviewScheduleResponse(
 ) {
 
     public static InterviewScheduleResponse fromEntity(InterviewSchedule schedule) {
+        /* Dựng DTO trong lúc quan hệ còn được nạp; template chỉ nhận dữ liệu hiển thị, không phụ thuộc entity. */
         if (schedule == null) {
             return null;
         }
 
+        /* Thông tin cá nhân lấy từ tài khoản gắn với ứng viên, còn tên vị trí lấy từ tin tuyển dụng của hồ sơ. */
         Application app = schedule.getApplication();
         String candidateName = null;
         String candidateEmail = null;
@@ -61,6 +63,7 @@ public record InterviewScheduleResponse(
         Integer createdById = createdBy != null ? createdBy.getUserId() : null;
         String createdByName = createdBy != null ? createdBy.getFullName() : null;
 
+        /* Chuyển riêng hội đồng thành DTO để giữ danh sách tên/vai trò dùng chung cho trang danh sách và form sửa. */
         List<PanelMemberResponse> panelResponses = schedule.getInterviewPanels() != null
                 ? schedule.getInterviewPanels().stream()
                     .map(PanelMemberResponse::fromEntity)

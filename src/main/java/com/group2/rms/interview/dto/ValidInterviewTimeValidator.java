@@ -19,7 +19,7 @@ public class ValidInterviewTimeValidator implements ConstraintValidator<ValidInt
             return true;
         }
 
-        // Null-safety check: Tránh NullPointerException khi client gửi thiếu dữ liệu
+        /* Để @NotNull báo lỗi tại đúng ô bị thiếu, tránh thêm lỗi so sánh thời gian lên cùng dữ liệu chưa đủ. */
         if (request.getStartTime() == null || request.getEndTime() == null) {
             return true;
         }

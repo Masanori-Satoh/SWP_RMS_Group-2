@@ -29,14 +29,12 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * Chốt kết quả phỏng vấn:
- * - Người chốt: Hiring Manager quản lý phòng ban của yêu cầu tuyển dụng đối với vị trí thông thường;
- *   hoặc Giám đốc (Director) khi tuyển vị trí Hiring Manager (Phương án 2: yêu cầu do Giám đốc tạo).
- * - Mỗi lịch một kết quả (UQ_InterviewFinalResult_Interview). Passed/Failed là cuối cùng;
- *   Considering được chốt lại sau, giữ nguyên ConsideredAt.
- * - Trong 24h sau giờ kết thúc phải đủ phiếu của hội đồng; sau 24h chốt tự do. Các hạn khác chỉ cảnh báo.
- * - Trạng thái Application do module candidate đổi qua ApplicationStatusService (dunglt bổ sung):
- *   Failed → Rejected; Passed / Considering → giữ Interviewing.
+ * Chốt kết quả phỏng vấn theo quyền HM phụ trách phòng ban hoặc Director khi tuyển HM.
+ * Mỗi lịch có một kết quả: Considering được chốt lại, Passed/Failed là cuối cùng.
+ * Trong cửa sổ 24h sau EndTime cần đủ phiếu; hết cửa sổ vẫn được chốt khi thiếu phiếu.
+ *
+ * Lịch Completed, quyết định Passed/Failed/Considering và trạng thái hồ sơ là ba khái niệm riêng.
+ * Passed/Considering giữ hồ sơ ở Interviewing; Failed chuyển hồ sơ còn trong vòng phỏng vấn sang Rejected.
  */
 @Service
 @RequiredArgsConstructor
@@ -53,12 +51,23 @@ public class InterviewFinalResultServiceImpl implements InterviewFinalResultServ
     private final NotificationService notificationService;
     private final Clock clock;
 
+    /**
+     * Lưu quyết định, hoàn thành lịch và đồng bộ trạng thái hồ sơ trong cùng transaction.
+     * Chốt lại Considering cập nhật kết quả hiện có, không tạo thêm bản ghi.
+     */
     @Override
     @Transactional
     public void decide(Long interviewId, SubmitFinalResultRequest request, User hiringManager) {
+        /*
+         * Xác định người chốt qua requisition/phòng ban của hồ sơ,
+         * không dựa vào người tạo lịch hay người có mặt trong hội đồng.
+         */
         InterviewSchedule schedule = interviewScheduleRepository.findByIdWithDetails(interviewId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy lịch phỏng vấn với mã: " + interviewId));
 
+        /*
+         * Vị trí tuyển HM cần Director chốt; vị trí thông thường cần HM quản lý đúng phòng ban.
+         */
         if (!isDecisionMaker(hiringManager, schedule)) {
             if (requiresDirectorDecision(schedule)) {
                 throw new AccessDeniedException("Chỉ Giám đốc mới được chốt kết quả phỏng vấn cho vị trí Hiring Manager.");
@@ -66,6 +75,10 @@ public class InterviewFinalResultServiceImpl implements InterviewFinalResultServ
             throw new AccessDeniedException("Chỉ Hiring Manager phụ trách phòng ban của vị trí này mới được chốt kết quả.");
         }
 
+        /*
+         * Passed/Failed không được ghi đè; chỉ Considering được sửa.
+         * Dùng chung một mốc now cho lần quyết định này.
+         */
         LocalDateTime now = LocalDateTime.now(clock);
         String decision = request.finalDecision();
         InterviewFinalResult existing = interviewFinalResultRepository.findByScheduleId(interviewId).orElse(null);
@@ -74,11 +87,18 @@ public class InterviewFinalResultServiceImpl implements InterviewFinalResultServ
         }
 
         if (existing == null) {
+            /*
+             * Lần chốt đầu kiểm tra lịch đã diễn ra, chưa hủy và đủ phiếu trong cửa sổ 24h.
+             * Chỉ phiếu của hội đồng hiện tại được tính vào điều kiện đủ phiếu.
+             */
             String blockedReason = InterviewFinalResultService.blockedReason(schedule,
                     submittedPanelCount(schedule), schedule.getInterviewPanels().size(), now);
             if (blockedReason != null) {
                 throw new InterviewFinalResultException(blockedReason);
             }
+            /*
+             * Chỉ ghi ConsideredAt khi bắt đầu cân nhắc; chốt thẳng Passed/Failed để mốc này null.
+             */
             interviewFinalResultRepository.save(InterviewFinalResult.builder()
                     .interviewSchedule(schedule)
                     .hiringManager(hiringManager)
@@ -89,7 +109,10 @@ public class InterviewFinalResultServiceImpl implements InterviewFinalResultServ
                     .consideredAt(InterviewFinalResult.CONSIDERING.equals(decision) ? now : null)
                     .build());
         } else {
-            // Chốt lại từ Considering: giữ ConsideredAt để biết đã cân nhắc bao lâu
+            /*
+             * Chốt lại Considering không xét đủ phiếu lần nữa. Giữ ConsideredAt ban đầu
+             * để việc lưu lại không kéo dài thêm hạn cân nhắc 7 ngày.
+             */
             existing.setHiringManager(hiringManager);
             existing.setFinalDecision(decision);
             existing.setRecommendedSalary(request.recommendedSalary());
@@ -98,6 +121,10 @@ public class InterviewFinalResultServiceImpl implements InterviewFinalResultServ
             interviewFinalResultRepository.save(existing);
         }
 
+        /*
+         * Đã có quyết định thì hoàn thành lịch đang hoạt động, kể cả Considering.
+         * Quyết định còn tạm không có nghĩa buổi phỏng vấn vẫn đang diễn ra.
+         */
         InterviewStatus current = schedule.getInterviewStatus();
         if (current == InterviewStatus.Scheduled || current == InterviewStatus.Rescheduled) {
             if (!current.canTransitionTo(InterviewStatus.Completed)) {
@@ -108,15 +135,19 @@ public class InterviewFinalResultServiceImpl implements InterviewFinalResultServ
             interviewScheduleRepository.save(schedule);
         }
 
-        // dunglt bổ sung: chốt Failed thì hồ sơ → Rejected; Passed giữ Interviewing để HR lập offer.
-        // Considering chưa phải quyết định cuối: chỉ đưa hồ sơ cũ (HM_Passed) sang Interviewing.
+        /*
+         * Đồng bộ qua ApplicationStatusService: Considering/Passed giữ Interviewing để tiếp tục xử lý;
+         * Failed chuyển sang Rejected. Module candidate kiểm soát trạng thái nguồn để không kéo lùi hồ sơ.
+         */
         Integer applicationId = schedule.getApplication().getApplicationId();
         if (InterviewFinalResult.CONSIDERING.equals(decision)) {
             applicationStatusService.onInterviewScheduled(applicationId);
         } else {
             applicationStatusService.onInterviewDecided(applicationId, InterviewFinalResult.PASSED.equals(decision));
         }
-        // hoangnh bổ sung: báo HR kết quả để lập offer / đóng hồ sơ
+        /*
+         * Báo HR kết quả sau khi đồng bộ hồ sơ để tiếp tục lập offer hoặc đóng hồ sơ.
+         */
         notificationService.notifyInterviewResultDecided(schedule, hiringManager, decision);
 
         log.info("Người dùng #{} chốt kết quả {} cho lịch phỏng vấn #{}.",
@@ -125,6 +156,10 @@ public class InterviewFinalResultServiceImpl implements InterviewFinalResultServ
 
     @Override
     public boolean requiresDirectorDecision(InterviewSchedule schedule) {
+        /*
+         * Phương án tuyển HM nhận diện bằng người tạo requisition có vai trò Director,
+         * không dựa trên tên vị trí tuyển dụng.
+         */
         if (schedule == null) {
             return false;
         }
@@ -141,6 +176,10 @@ public class InterviewFinalResultServiceImpl implements InterviewFinalResultServ
 
     @Override
     public boolean isDecisionMaker(User user, InterviewSchedule schedule) {
+        /*
+         * Dùng chung cho quyền hiện nút chốt và thao tác chốt.
+         * Thành viên hội đồng không mặc nhiên có quyền chốt; HM còn phải phụ trách đúng phòng ban.
+         */
         if (user == null || schedule == null) {
             return false;
         }
@@ -159,6 +198,10 @@ public class InterviewFinalResultServiceImpl implements InterviewFinalResultServ
 
     /** Số thành viên hội đồng đã nộp phiếu (phiếu của người ngoài hội đồng không tính). */
     private int submittedPanelCount(InterviewSchedule schedule) {
+        /*
+         * Loại phiếu của người đã bị gỡ khỏi hội đồng; mỗi người chỉ đóng góp một lượt đếm.
+         * Tránh dùng phiếu của hội đồng cũ để mở quyền chốt sớm.
+         */
         Set<Integer> panelIds = schedule.getInterviewPanels().stream()
                 .filter(panel -> panel.getInterviewer() != null)
                 .map(panel -> panel.getInterviewer().getUserId())

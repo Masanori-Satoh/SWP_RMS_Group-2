@@ -71,6 +71,7 @@ public class InterviewEvaluation {
 
     @PrePersist
     protected void onPersist() {
+        /* Ghi thời điểm nộp nếu bên gọi chưa cấp; thời điểm này dùng để phân biệt đúng hạn và nộp trễ. */
         if (this.evaluatedAt == null) {
             this.evaluatedAt = LocalDateTime.now();
         }

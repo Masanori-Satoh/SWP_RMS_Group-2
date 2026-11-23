@@ -50,6 +50,9 @@ public interface InterviewFinalResultService {
      * @param panelSize      số thành viên hội đồng
      */
     static String blockedReason(InterviewSchedule schedule, int submittedCount, int panelSize, LocalDateTime now) {
+        /*
+         * Completed chưa chắc đủ phiếu. Lần chốt đầu vẫn phải qua cửa sổ chờ phiếu nếu còn trong 24h.
+         */
         if (schedule.getInterviewStatus() == null) {
             return "Trạng thái lịch phỏng vấn không hợp lệ.";
         }
@@ -63,6 +66,9 @@ public interface InterviewFinalResultService {
         if (statusReason != null) {
             return statusReason;
         }
+        /*
+         * Đủ phiếu được tính theo hội đồng hiện tại; hết cửa sổ 24h thì thiếu phiếu không còn chặn chốt.
+         */
         if (submittedCount < panelSize && InterviewDeadlines.withinEvaluationWindow(schedule, now)) {
             return "Chưa đủ phiếu đánh giá (" + submittedCount + "/" + panelSize + "). Có thể chốt khi đủ phiếu hoặc sau "
                     + InterviewDeadlines.evaluationDeadline(schedule).format(DEADLINE_FORMAT) + ".";

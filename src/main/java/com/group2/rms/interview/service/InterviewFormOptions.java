@@ -12,7 +12,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-/** Dữ liệu dropdown cho form lịch phỏng vấn và tra cứu người dùng, để controller không gọi thẳng repository. */
+/**
+ * Dữ liệu lựa chọn cho form lịch; điều kiện hồ sơ và hội đồng vẫn được kiểm tra lại lúc lưu.
+ */
 @Service
 @RequiredArgsConstructor
 public class InterviewFormOptions {
@@ -22,6 +24,9 @@ public class InterviewFormOptions {
 
     /** Hồ sơ đủ điều kiện xếp lịch; khi sửa lịch thì giữ cả hồ sơ hiện tại dù không còn đủ điều kiện. */
     public List<Application> eligibleApplications(Integer currentApplicationId) {
+        /*
+         * Form sửa giữ hồ sơ hiện tại dù đã rời danh sách đủ điều kiện tạo lịch mới, tránh mất lựa chọn.
+         */
         List<Application> applications = new ArrayList<>(applicationRepository.findEligibleForInterview());
         if (currentApplicationId != null
                 && applications.stream().noneMatch(a -> a.getApplicationId().equals(currentApplicationId))) {
@@ -32,6 +37,10 @@ public class InterviewFormOptions {
 
     /** Mọi tài khoản nội bộ đang Active (kể cả HR khác, Director), trừ hiddenUserId nếu có. */
     public List<User> availableInterviewers(Integer hiddenUserId) {
+        /*
+         * Cho phép mọi vai trò nội bộ Active tham gia, gồm cả HR khác và Director.
+         * HR đang đặt lịch được ẩn, trừ khi vốn đã thuộc hội đồng do người khác xếp.
+         */
         return userRepository.findAllWithRoleAndDepartment().stream()
                 .filter(u -> u.getRole() != null
                         && RoleAuthorities.INTERNAL_ROLE_NAMES.contains(u.getRole().getRoleName()))

@@ -22,6 +22,10 @@ public class CandidateInterviewController {
 
     @GetMapping
     public String myInterviews(Model model) {
+        /*
+         * Ứng viên thấy lịch từ mọi hồ sơ thuộc tài khoản mình,
+         * không nhận phiếu đánh giá và thông tin chốt nội bộ.
+         */
         Integer candidateUserId = currentUserService.requireUser().getUserId();
         model.addAttribute("schedules", interviewSchedulingService.getSchedulesForCandidate(candidateUserId));
         model.addAttribute("activeMenu", "interviews");

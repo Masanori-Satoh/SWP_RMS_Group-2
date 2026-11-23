@@ -25,6 +25,10 @@ public class InterviewResultController {
 
     @GetMapping("/{id}/result")
     public String viewResult(@PathVariable("id") Long id, Model model) {
+        /*
+         * Quyền xem phiếu và quyền chốt do service xác định riêng.
+         * Nút tiềm năng và gửi lại thư trên trang này sử dụng các chức năng của module talentpool.
+         */
         User viewer = currentUserService.requireUser();
         model.addAttribute("activeMenu", "interviews");
         // ducnm bổ sung: không thuộc hội đồng của buổi này (GBR-05) thì vẫn vào được trang (còn sidebar/topbar)

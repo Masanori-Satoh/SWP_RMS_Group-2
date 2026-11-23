@@ -19,6 +19,7 @@ import java.util.Objects;
 @Builder
 public class InterviewPanel {
 
+    /* Hai quan hệ @MapsId cùng tạo khóa (InterviewId, InterviewerId), mỗi người chỉ có một chỗ trong hội đồng. */
     @EmbeddedId
     private InterviewPanelId id;
 
@@ -38,6 +39,7 @@ public class InterviewPanel {
 
     @Override
     public boolean equals(Object o) {
+        /* So sánh bằng khóa ghép để Set nhận diện đúng thành viên mà không duyệt các quan hệ LAZY. */
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         InterviewPanel that = (InterviewPanel) o;
@@ -51,6 +53,7 @@ public class InterviewPanel {
 
     @Override
     public String toString() {
+        /* Chỉ in khóa và vai trò để log không tải quan hệ LAZY hoặc lặp giữa lịch và hội đồng. */
         return "InterviewPanel{" +
                "id=" + id +
                ", roleInPanel=" + roleInPanel +

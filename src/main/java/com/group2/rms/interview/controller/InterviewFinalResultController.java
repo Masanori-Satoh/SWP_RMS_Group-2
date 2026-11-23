@@ -49,6 +49,9 @@ public class InterviewFinalResultController {
                     .body(new ApiResponse<>(false, "Vui lòng kiểm tra lại các ô được đánh dấu.", fieldErrors));
         }
 
+        /*
+         * Quyền chốt kiểm tra theo requisition và phòng ban, độc lập với quyền tham gia hội đồng.
+         */
         try {
             interviewFinalResultService.decide(id, request, currentUserService.requireUser());
         } catch (InterviewFinalResultException e) {

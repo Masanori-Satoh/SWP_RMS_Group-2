@@ -8,6 +8,10 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+/**
+ * Query trả cả phiếu cũ của người đã bị gỡ. Khi xét đủ phiếu,
+ * service phải đối chiếu người nộp với hội đồng hiện tại.
+ */
 @Repository
 public interface InterviewEvaluationRepository extends JpaRepository<InterviewEvaluation, Integer> {
 
@@ -24,6 +28,8 @@ public interface InterviewEvaluationRepository extends JpaRepository<InterviewEv
 
     /**
      * Lấy toàn bộ phiếu đánh giá của một lịch, JOIN FETCH người đánh giá để tránh N+1.
+     * Thứ tự từ thời điểm nộp sớm đến muộn; query không tự giới hạn chỉ phiếu của người đang xem.
+     * Không dùng số lượng list trực tiếp làm số thành viên hội đồng đã nộp nếu hội đồng từng được thay đổi.
      */
     @Query("SELECT e FROM InterviewEvaluation e " +
            "JOIN FETCH e.interviewer u " +
@@ -31,7 +37,10 @@ public interface InterviewEvaluationRepository extends JpaRepository<InterviewEv
            "ORDER BY e.evaluatedAt ASC")
     List<InterviewEvaluation> findByScheduleIdWithInterviewer(@Param("interviewId") Long interviewId);
 
-    /** Phiếu của một người trên nhiều lịch (danh sách lịch: trạng thái chấm điểm của người xem). */
+    /**
+     * Phiếu của một người trên nhiều lịch, phục vụ nhãn chấm điểm cá nhân trên trang danh sách.
+     * Đọc theo lô để tránh một truy vấn riêng cho mỗi thẻ lịch.
+     */
     List<InterviewEvaluation> findByInterviewer_UserIdAndInterviewSchedule_InterviewIdIn(
             Integer interviewerId, java.util.Collection<Long> interviewIds);
 }

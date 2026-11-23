@@ -12,7 +12,7 @@ public interface InterviewEvaluationService {
 
     /**
      * Thành viên hội đồng nộp phiếu cho một lịch phỏng vấn.
-     * Phiếu đầu tiên của lịch đang Scheduled/Rescheduled sẽ chuyển lịch sang Completed (D3').
+     * Lịch đang Scheduled/Rescheduled chuyển sang Completed khi đủ phiếu hội đồng hoặc đã đến giờ kết thúc (D3').
      *
      * @throws com.group2.rms.core.exception.ResourceNotFoundException không có lịch
      * @throws org.springframework.security.access.AccessDeniedException người nộp không thuộc hội đồng (GBR-05)
@@ -25,6 +25,9 @@ public interface InterviewEvaluationService {
      * Dùng chung cho Service nộp phiếu và trang kết quả (ẩn/hiện nút "Đánh giá").
      */
     static String blockedReason(InterviewSchedule schedule, LocalDateTime now) {
+        /*
+         * Completed vẫn được nộp bổ sung; hạn 24h chỉ cảnh báo trễ, không tước quyền nộp.
+         */
         if (schedule.getInterviewStatus() == null) {
             return "Trạng thái lịch phỏng vấn không hợp lệ.";
         }

@@ -8,12 +8,14 @@ import org.springframework.data.domain.Pageable;
 import java.util.List;
 
 /**
- * Service interface quản lý nghiệp vụ Lên lịch phỏng vấn (Interview Scheduling - Iteration 1).
+ * Quản lý lịch cho HR/Director và truy vấn theo phạm vi người xem.
+ * Bản triển khai đồng bộ lịch hết giờ cả khi đọc; email được gửi riêng sau thao tác lưu lịch.
  */
 public interface InterviewSchedulingService {
 
     /**
-     * Tạo mới một lịch phỏng vấn (Dành cho HR).
+     * Tạo mới một lịch phỏng vấn (Dành cho HR/Director).
+     * Có lịch chưa bắt đầu thì hủy lịch đó và tạo lịch thay thế; có lịch đang diễn ra thì từ chối.
      *
      * @param request  Dữ liệu yêu cầu tạo lịch
      * @param hrUserId ID của tài khoản HR đang đăng nhập thực hiện thao tác
@@ -22,7 +24,7 @@ public interface InterviewSchedulingService {
     InterviewScheduleResponse createSchedule(InterviewScheduleRequest request, Integer hrUserId);
 
     /**
-     * Cập nhật thông tin lịch phỏng vấn (Dành cho HR).
+     * Cập nhật thông tin lịch phỏng vấn (Dành cho HR/Director).
      * Tuân thủ Business Rule GBR-01 (không được chuyển lùi trạng thái).
      *
      * @param interviewId ID của lịch phỏng vấn cần cập nhật
@@ -33,7 +35,7 @@ public interface InterviewSchedulingService {
     InterviewScheduleResponse updateSchedule(Long interviewId, InterviewScheduleRequest request, Integer hrUserId);
 
     /**
-     * Hủy lịch phỏng vấn (Dành cho HR).
+     * Hủy lịch phỏng vấn (Dành cho HR/Director).
      * Chuyển trạng thái sang Cancelled tuân thủ Business Rule GBR-01.
      *
      * @param interviewId ID của lịch phỏng vấn cần hủy

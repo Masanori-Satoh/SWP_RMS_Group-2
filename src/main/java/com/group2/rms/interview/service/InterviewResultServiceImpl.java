@@ -40,6 +40,10 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+/**
+ * Tổng hợp kết quả và tiến độ chấm điểm theo quyền người xem.
+ * Quyền xem toàn bộ phiếu, quyền đánh giá và quyền chốt là ba điều kiện riêng biệt.
+ */
 @Service
 @RequiredArgsConstructor
 public class InterviewResultServiceImpl implements InterviewResultService {
@@ -56,6 +60,9 @@ public class InterviewResultServiceImpl implements InterviewResultService {
     @Override
     @Transactional
     public InterviewResultDetailResponse getResult(Long interviewId, User viewer) {
+        /*
+         * Đồng bộ lịch hết giờ trước khi tính quyền thao tác và các cảnh báo trên trang kết quả.
+         */
         LocalDateTime now = LocalDateTime.now(clock);
         interviewScheduleRepository.completeEndedSchedules(now);
         Integer viewerId = viewer != null ? viewer.getUserId() : null;
@@ -63,6 +70,10 @@ public class InterviewResultServiceImpl implements InterviewResultService {
         InterviewSchedule schedule = interviewScheduleRepository.findByIdWithDetails(interviewId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy lịch phỏng vấn với mã: " + interviewId));
 
+        /*
+         * Cho phép vai trò quản lý hoặc thành viên hội đồng xem lịch.
+         * Được vào trang không đồng nghĩa được nộp phiếu hoặc chốt kết quả.
+         */
         boolean panelMember = schedule.getInterviewPanels().stream()
                 .anyMatch(panel -> isUser(panel.getInterviewer(), viewerId));
         boolean fullAccess = viewerRoleName != null && FULL_ACCESS_ROLES.contains(viewerRoleName);
@@ -75,6 +86,10 @@ public class InterviewResultServiceImpl implements InterviewResultService {
         FinalResult finalResult = interviewFinalResultRepository.findByScheduleId(interviewId)
                 .map(result -> toFinalResult(result, now))
                 .orElse(null);
+        /*
+         * Thành viên thông thường chỉ thấy phiếu của mình cho tới khi có kết quả.
+         * Theo chính sách hiện tại, Considering cũng mở quyền xem toàn bộ phiếu.
+         */
         boolean canSeeAll = fullAccess || finalResult != null;
 
         Map<Integer, LocalDateTime> submittedAtById = allEvaluations.stream()
@@ -87,6 +102,10 @@ public class InterviewResultServiceImpl implements InterviewResultService {
                         panel -> panel.getRoleInPanel() != null ? panel.getRoleInPanel().getDisplayName() : "",
                         (first, second) -> first));
 
+        /*
+         * Điều kiện đủ phiếu chỉ tính thành viên hội đồng hiện tại.
+         * submittedCount trên DTO vẫn phản ánh tập người đã nộp trong toàn bộ phiếu lưu của lịch.
+         */
         List<PanelMemberStatus> panel = schedule.getInterviewPanels().stream()
                 .filter(member -> member.getInterviewer() != null)
                 .sorted(Comparator.comparing((InterviewPanel member) -> member.getInterviewer().getFullName(),
@@ -107,6 +126,9 @@ public class InterviewResultServiceImpl implements InterviewResultService {
                 .toList();
         int submittedPanelCount = (int) panel.stream().filter(PanelMemberStatus::submitted).count();
 
+        /*
+         * Giới hạn ngay nội dung phiếu được trả về; không chỉ ẩn phiếu của người khác trên giao diện.
+         */
         List<InterviewEvaluation> visibleEvaluations = canSeeAll
                 ? allEvaluations
                 : allEvaluations.stream().filter(evaluation -> isUser(evaluation.getInterviewer(), viewerId)).toList();
@@ -114,6 +136,9 @@ public class InterviewResultServiceImpl implements InterviewResultService {
                 .map(evaluation -> toResponse(evaluation, roleByInterviewer, viewerId, schedule))
                 .toList();
 
+        /*
+         * Chỉ mở đánh giá cho thành viên chưa nộp phiếu và đã đủ điều kiện thời gian.
+         */
         String blockedReason = null;
         boolean canEvaluate = false;
         if (panelMember && !submittedIds.contains(viewerId)) {
@@ -121,6 +146,10 @@ public class InterviewResultServiceImpl implements InterviewResultService {
             canEvaluate = blockedReason == null;
         }
 
+        /*
+         * Người có quyền chốt được xử lý khi chưa có kết quả hoặc còn Considering.
+         * Lần chốt đầu xét đủ phiếu trong 24h; chốt lại Considering không xét lại điều kiện này.
+         */
         String finalizeBlockedReason = null;
         boolean canFinalize = false;
         boolean openDecision = finalResult == null || finalResult.considering();
@@ -134,6 +163,9 @@ public class InterviewResultServiceImpl implements InterviewResultService {
         LocalDateTime decisionDeadline = InterviewDeadlines.decisionDeadline(schedule);
         boolean decisionOverdue = finalResult == null && decisionDeadline != null && now.isAfter(decisionDeadline);
 
+        /*
+         * Chỉ trả điểm tổng hợp và phân bố đề xuất khi người xem được xem toàn bộ hội đồng.
+         */
         Application application = schedule.getApplication();
         InterviewStatus status = schedule.getInterviewStatus();
         return new InterviewResultDetailResponse(
@@ -168,6 +200,9 @@ public class InterviewResultServiceImpl implements InterviewResultService {
     @Override
     @Transactional(readOnly = true)
     public Map<Long, InterviewCardState> decisionStates(List<InterviewScheduleResponse> schedules) {
+        /*
+         * Lấy kết quả theo lô để ghép nhãn cho danh sách; lịch chưa cần nhãn không có entry trong map.
+         */
         if (schedules == null || schedules.isEmpty()) {
             return Map.of();
         }
@@ -190,6 +225,9 @@ public class InterviewResultServiceImpl implements InterviewResultService {
     @Override
     @Transactional(readOnly = true)
     public Map<Long, InterviewCardState> evaluationStates(List<InterviewScheduleResponse> schedules, Integer viewerId) {
+        /*
+         * Chỉ nhắc chấm điểm ở lịch người xem được phân công, không nhắc mọi lịch họ có quyền xem.
+         */
         if (schedules == null || schedules.isEmpty() || viewerId == null) {
             return Map.of();
         }
@@ -226,6 +264,10 @@ public class InterviewResultServiceImpl implements InterviewResultService {
 
     private static InterviewCardState decisionState(InterviewScheduleResponse schedule, InterviewFinalResult result,
                                                     LocalDateTime now) {
+        /*
+         * Ưu tiên nhãn quyết định đã có; khi chưa chốt mới xét cảnh báo chậm chốt.
+         * Quá hạn không tự đổi Considering thành Failed.
+         */
         if (result != null) {
             if (result.isConsidering()) {
                 LocalDateTime deadline = InterviewDeadlines.considerDeadline(result.getConsideredAt());
@@ -280,6 +322,10 @@ public class InterviewResultServiceImpl implements InterviewResultService {
     }
 
     private static Averages averages(List<InterviewEvaluation> evaluations) {
+        /*
+         * Bỏ qua ô chưa chấm, không tính thành 0. Điểm tổng hợp lấy trung bình mọi ô có điểm,
+         * không lấy trung bình điểm từng người vì số tiêu chí mỗi người chấm có thể khác nhau.
+         */
         if (evaluations.isEmpty()) {
             return null;
         }
@@ -292,6 +338,9 @@ public class InterviewResultServiceImpl implements InterviewResultService {
     }
 
     private static List<RecommendationCount> recommendationCounts(List<InterviewEvaluation> evaluations) {
+        /*
+         * Giữ đủ ba nhóm đề xuất theo thứ tự cố định, kể cả nhóm không có phiếu nào chọn.
+         */
         Map<String, Long> counts = evaluations.stream()
                 .map(InterviewEvaluation::getRecommendation)
                 .filter(Objects::nonNull)
@@ -306,6 +355,10 @@ public class InterviewResultServiceImpl implements InterviewResultService {
     }
 
     private static FinalResult toFinalResult(InterviewFinalResult result, LocalDateTime now) {
+        /*
+         * Giữ nhận xét gốc để chốt lại và bản đã escape để hiển thị.
+         * Hạn cân nhắc chỉ còn hiệu lực khi Considering, nhưng vẫn giữ ConsideredAt để truy vết.
+         */
         String decision = result.getFinalDecision();
         boolean considering = result.isConsidering();
         String display = considering ? "Đang cân nhắc"
@@ -349,7 +402,9 @@ public class InterviewResultServiceImpl implements InterviewResultService {
         };
     }
 
-    /** Escape HTML rồi đổi xuống dòng thành &lt;br/&gt; để render bằng th:utext an toàn. */
+    /**
+     * Escape nhận xét trước khi thêm thẻ xuống dòng để th:utext không render HTML do người dùng nhập.
+     */
     private static String toHtml(String text) {
         if (text == null || text.isBlank()) {
             return null;

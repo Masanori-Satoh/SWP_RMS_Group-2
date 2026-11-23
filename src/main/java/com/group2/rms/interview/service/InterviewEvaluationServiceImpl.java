@@ -19,11 +19,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 
 /**
- * Nộp phiếu đánh giá phỏng vấn.
- * - D1': chỉ thành viên InterviewPanel của lịch được nộp, mỗi người một phiếu.
- * - D2': nộp được khi đã tới giờ bắt đầu và lịch chưa bị hủy.
- * - D3' (ducnm sửa): lịch Scheduled/Rescheduled chuyển sang Completed khi đã đủ phiếu của cả hội đồng
- *   HOẶC đã qua giờ kết thúc buổi phỏng vấn (GBR-01 chỉ đi tiến) — không còn tự chuyển ngay từ phiếu đầu tiên.
+ * Nộp phiếu đánh giá của thành viên hội đồng, mỗi người một phiếu cho một lịch.
+ * Chỉ nộp từ giờ bắt đầu, lịch hủy không nhận phiếu; quá hạn vẫn nhận và đánh dấu nộp trễ.
+ * Lịch hoàn thành khi đủ phiếu hoặc đã đến EndTime. Nộp phiếu không trực tiếp chốt kết quả hay loại hồ sơ.
  */
 @Service
 @RequiredArgsConstructor
@@ -36,10 +34,15 @@ public class InterviewEvaluationServiceImpl implements InterviewEvaluationServic
     @Override
     @Transactional
     public void submit(Long interviewId, SubmitEvaluationRequest request, Integer evaluatorId) {
+        /*
+         * Lưu phiếu và hoàn thành lịch cùng transaction để tránh cập nhật dở dang.
+         */
         InterviewSchedule schedule = interviewScheduleRepository.findByIdWithDetails(interviewId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy lịch phỏng vấn với mã: " + interviewId));
 
-        // GBR-05: chỉ thành viên hội đồng của lịch này được đánh giá
+        /*
+         * Chỉ thành viên của chính lịch này được nộp, dù người dùng có vai trò Interviewer/HR/HM.
+         */
         InterviewPanel membership = schedule.getInterviewPanels().stream()
                 .filter(panel -> panel.getInterviewer() != null
                         && evaluatorId != null
@@ -48,15 +51,25 @@ public class InterviewEvaluationServiceImpl implements InterviewEvaluationServic
                 .orElseThrow(() -> new AccessDeniedException(
                         "Bạn không thuộc hội đồng của buổi phỏng vấn này nên không thể đánh giá."));
 
+        /*
+         * Completed vẫn nhận phiếu bổ sung; hạn EndTime + 24h chỉ dùng đánh dấu trễ, không khóa nộp.
+         */
         String blockedReason = InterviewEvaluationService.blockedReason(schedule, LocalDateTime.now());
         if (blockedReason != null) {
             throw new InterviewEvaluationException(blockedReason);
         }
 
+        /*
+         * Không nhận lại phiếu đã nộp cho cùng lịch và cùng người.
+         */
         if (interviewEvaluationRepository.existsByScheduleIdAndInterviewerId(interviewId, evaluatorId)) {
             throw new InterviewEvaluationException("Bạn đã nộp phiếu đánh giá cho buổi phỏng vấn này.");
         }
 
+        /*
+         * Mỗi thành viên chỉ chấm mục thuộc chuyên môn, nhưng phải có ít nhất một điểm.
+         * Nhận xét trống được chuẩn hóa thành null.
+         */
         InterviewEvaluation evaluation = InterviewEvaluation.builder()
                 .interviewSchedule(schedule)
                 .interviewer(membership.getInterviewer())
@@ -70,15 +83,20 @@ public class InterviewEvaluationServiceImpl implements InterviewEvaluationServic
                 .build();
         interviewEvaluationRepository.save(evaluation);
 
-        // D3' (ducnm sửa): hết giờ phỏng vấn HOẶC đủ phiếu của cả hội đồng thì chuyển Completed
+        /*
+         * Chỉ hoàn thành lịch hoạt động khi đủ phiếu hội đồng hiện tại hoặc đã tới EndTime.
+         * Phiếu đầu tiên không tự làm buổi phỏng vấn hoàn thành.
+         */
         InterviewStatus current = schedule.getInterviewStatus();
         if (current == InterviewStatus.Scheduled || current == InterviewStatus.Rescheduled) {
             java.util.Set<Integer> panelIds = schedule.getInterviewPanels().stream()
                     .filter(panel -> panel.getInterviewer() != null)
                     .map(panel -> panel.getInterviewer().getUserId())
                     .collect(java.util.stream.Collectors.toSet());
-            // Gom theo tập người đã nộp rồi thêm người vừa nộp: truy vấn có thể đã thấy phiếu vừa lưu (Hibernate
-            // auto-flush) hoặc chưa, dùng tập thì không bị đếm trùng như cách cộng +1 trước đây.
+            /*
+             * Gom người đã nộp vào Set rồi thêm người vừa nộp để không đếm trùng khi query đã thấy phiếu mới.
+             * Phiếu của người không còn trong hội đồng không tham gia điều kiện đủ phiếu.
+             */
             java.util.Set<Integer> submittedIds = interviewEvaluationRepository.findByScheduleIdWithInterviewer(interviewId).stream()
                     .map(e -> e.getInterviewer().getUserId())
                     .filter(panelIds::contains)

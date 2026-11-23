@@ -65,6 +65,7 @@ public class InterviewFinalResult {
 
     @PrePersist
     protected void onPersist() {
+        /* Chỉ bù thời điểm quyết định nếu còn thiếu; không tự đặt lại ConsideredAt khi kết quả được cập nhật. */
         if (this.approvedAt == null) {
             this.approvedAt = LocalDateTime.now();
         }

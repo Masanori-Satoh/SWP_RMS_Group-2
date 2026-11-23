@@ -43,6 +43,7 @@ public enum InterviewStatus {
             return true;
         }
 
+        /* Chuyển sang trạng thái khác phải theo luồng tiến; Completed/Cancelled không có đích chuyển mới. */
         return switch (this) {
             case Scheduled -> target == Rescheduled || target == Completed || target == Cancelled;
             case Rescheduled -> target == Completed || target == Cancelled || target == Rescheduled;
@@ -54,6 +55,7 @@ public enum InterviewStatus {
      * Danh sách các trạng thái tiếp theo hợp lệ có thể chuyển đến.
      */
     public Set<InterviewStatus> nextValidStatuses() {
+        /* Chỉ liệt kê đích khác trạng thái hiện tại; canTransitionTo vẫn chấp nhận thao tác giữ nguyên trạng thái. */
         return switch (this) {
             case Scheduled -> Set.of(Rescheduled, Completed, Cancelled);
             case Rescheduled -> Set.of(Completed, Cancelled);
