@@ -284,7 +284,7 @@ class ApplicationPipelineServiceTests {
                 detail.stepper().stream().map(StageItem::state).toList());
         assertEquals("Chờ HR duyệt CV · Đang chờ: HR", detail.stepper().get(0).detail());
         assertNull(detail.interviewId(), "chưa có lịch phỏng vấn");
-        assertEquals(new ApplicationDetailResponse.Actions(true, false, false, true), detail.actions());
+        assertEquals(new ApplicationDetailResponse.Actions(true, false, false, true, false), detail.actions());
         assertEquals(List.of("Thư mời: Đang soạn", "Kết quả phỏng vấn: Đạt", "Lịch phỏng vấn: Scheduled", "HR: Đạt",
                         "Nộp hồ sơ"),
                 detail.timeline().stream().map(TimelineItem::title).toList());
@@ -314,6 +314,46 @@ class ApplicationPipelineServiceTests {
         assertTrue(detail.timeline().stream().noneMatch(item -> "Nộp hồ sơ".equals(item.title())));
         verify(applications, never()).save(any());
         verify(applications, never()).saveAndFlush(any());
+    }
+
+    @Test
+    void restoreActionComesFromTheAccessRuleAndRestorationsAppearInTheTimeline() {
+        Application rejected = application();
+        rejected.setApplicationStatus("Rejected");
+        when(applications.findDetailById(ID)).thenReturn(Optional.of(rejected));
+        when(reviews.findLastFailRole(ID)).thenReturn("HiringManager");
+        when(access.canRestore(actor, rejected, "HiringManager", false)).thenReturn(true);
+        var byHm = mock(ApplicationPipelineRepository.TalentPoolEventRow.class);
+        when(byHm.getKind()).thenReturn("RestoredByHiringManager");
+        when(byHm.getAt()).thenReturn(SUBMITTED.plusDays(2));
+        when(byHm.getActor()).thenReturn("HM Tuấn");
+        var byHr = mock(ApplicationPipelineRepository.TalentPoolEventRow.class);
+        when(byHr.getKind()).thenReturn("RestoredByHR");
+        when(byHr.getAt()).thenReturn(SUBMITTED.plusDays(1));
+        when(byHr.getActor()).thenReturn("Lan HR");
+        var byDirector = mock(ApplicationPipelineRepository.TalentPoolEventRow.class);
+        when(byDirector.getKind()).thenReturn("RestoredByDirector");
+        when(byDirector.getAt()).thenReturn(SUBMITTED.plusDays(3));
+        when(byDirector.getActor()).thenReturn("Giám đốc Minh");
+        when(pipelineQueries.findRestorationEvents(ID)).thenReturn(List.of(byHm, byHr, byDirector));
+
+        ApplicationDetailResponse detail = service.detail(ID);
+
+        assertTrue(detail.actions().restore());
+        assertEquals(List.of("Giám đốc khôi phục hồ sơ", "Trưởng bộ phận khôi phục hồ sơ", "HR khôi phục hồ sơ",
+                        "Nộp hồ sơ"),
+                detail.timeline().stream().map(TimelineItem::title).toList());
+        assertEquals("Giám đốc Minh", detail.timeline().getFirst().actor());
+        assertEquals("neutral", detail.timeline().getFirst().tone());
+    }
+
+    @Test
+    void restoreActionIsOffWhenTheRuleSaysNo() {
+        Application rejected = application();
+        rejected.setApplicationStatus("Rejected");
+        when(applications.findDetailById(ID)).thenReturn(Optional.of(rejected));
+
+        assertFalse(service.detail(ID).actions().restore());
     }
 
     @Test

@@ -44,6 +44,9 @@ public interface NotificationService {
     /** dunglt bổ sung: hồ sơ bị loại (vòng CV hoặc phỏng vấn): báo ứng viên; không kèm người loại và lý do (GBR-02). */
     void notifyApplicationRejected(Application application);
 
+    /** dunglt bổ sung: hồ sơ bị loại ở vòng CV được khôi phục: báo ứng viên; không nêu ai khôi phục (GBR-02). */
+    void notifyApplicationRestored(Application application);
+
     /** Lịch mới: báo hội đồng phỏng vấn và ứng viên. */
     void notifyInterviewScheduled(InterviewSchedule schedule, User actor);
 

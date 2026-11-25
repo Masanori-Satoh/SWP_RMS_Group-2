@@ -23,6 +23,7 @@ public final class NotificationLabels {
             case "APPLICATION_HR_PASSED" -> "Hồ sơ chờ duyệt";
             case "APPLICATION_HM_PASSED" -> "Hồ sơ chờ xếp lịch";
             case "APPLICATION_REJECTED" -> "Hồ sơ không tiếp tục"; // dunglt bổ sung
+            case "APPLICATION_RESTORED" -> "Hồ sơ tiếp tục"; // dunglt bổ sung
             case "INTERVIEW_SCHEDULED" -> "Lịch phỏng vấn mới";
             case "INTERVIEW_RESCHEDULED" -> "Đổi lịch phỏng vấn";
             case "INTERVIEW_CANCELLED" -> "Hủy lịch phỏng vấn";
@@ -44,7 +45,7 @@ public final class NotificationLabels {
         }
         return switch (eventType) {
             case "REQUISITION_APPROVED", "JOB_POSTING_PUBLISHED", "JOB_POSTING_REOPENED", "APPLICATION_HM_PASSED",
-                 "INTERVIEW_SCHEDULED", "OFFER_DIRECTOR_APPROVED", "OFFER_LETTER_SENT", "OFFER_ACCEPTED" -> "success";
+                 "INTERVIEW_SCHEDULED", "OFFER_DIRECTOR_APPROVED", "APPLICATION_RESTORED", "OFFER_LETTER_SENT", "OFFER_ACCEPTED" -> "success";
             case "REQUISITION_PENDING_DIRECTOR", "APPLICATION_HR_PASSED", "INTERVIEW_RESCHEDULED",
                  "OFFER_PENDING_DIRECTOR", "OFFER_EXPIRED", "JOB_POSTING_PAUSED" -> "warning";
             case "REQUISITION_REJECTED", "APPLICATION_REJECTED", "INTERVIEW_CANCELLED", "OFFER_DIRECTOR_REJECTED",

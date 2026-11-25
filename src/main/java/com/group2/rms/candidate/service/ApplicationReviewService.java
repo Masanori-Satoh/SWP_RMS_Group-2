@@ -5,6 +5,7 @@ import com.group2.rms.candidate.dto.ApplicationStatusLabels;
 import com.group2.rms.candidate.entity.Application;
 import com.group2.rms.candidate.entity.ApplicationReview;
 import com.group2.rms.candidate.exception.ApplicationReviewException;
+import com.group2.rms.candidate.repository.ApplicationPipelineRepository;
 import com.group2.rms.candidate.repository.ApplicationRepository;
 import com.group2.rms.candidate.repository.ApplicationReviewRepository;
 import com.group2.rms.candidate.validator.ApplicationAccess;
@@ -30,6 +31,7 @@ public class ApplicationReviewService {
     private final ApplicationReviewRepository reviewRepository;
     private final ApplicationAccess applicationAccess;
     private final NotificationService notificationService;
+    private final ApplicationPipelineRepository pipelineQueries;
 
     /**
      * Thẩm định hồ sơ ứng tuyển, lưu đánh giá, chuyển trạng thái và gửi thông báo.
@@ -91,6 +93,43 @@ public class ApplicationReviewService {
             case "Fail" -> "Đã đánh dấu hồ sơ không đạt.";
             default -> "Đã tạm giữ hồ sơ.";
         };
+    }
+
+    /**
+     * Khôi phục đơn bị loại ở vòng CV (spec 08/11): đơn về đúng bước đã loại ({@code Applied} nếu HR loại,
+     * {@code HR_Passed} nếu HM/Giám đốc loại). Lượt {@code ApplicationReview} cũ giữ nguyên trong lịch sử; ghi thêm
+     * một dòng AuditLog {@code RestoredBy*}. Đổi trạng thái chỉ qua {@code transition}, nên hai người bấm cùng lúc
+     * thì người sau nhận lỗi.
+     *
+     * @return thông báo thành công để hiện trên trang chi tiết
+     */
+    @Transactional
+    public String restore(Integer applicationId) {
+        User actor = applicationAccess.actor();
+        Application application = load(applicationId);
+        applicationAccess.requireView(actor, application);
+        if (!applicationAccess.isReviewer(actor)) {
+            throw new AccessDeniedException("Chỉ HR, trưởng bộ phận hoặc Giám đốc được khôi phục hồ sơ.");
+        }
+        String lastFailRole = reviewRepository.findLastFailRole(applicationId);
+        boolean proposalCancelled = pipelineQueries.countTalentPoolCancellation(applicationId) > 0;
+        String blocked = applicationAccess.restoreBlockedReason(application, lastFailRole, proposalCancelled);
+        if (blocked != null) {
+            throw new ApplicationReviewException(null, blocked);
+        }
+        if (!applicationAccess.canRestore(actor, application, lastFailRole, proposalCancelled)) {
+            throw new AccessDeniedException("Bạn không có quyền khôi phục hồ sơ này.");
+        }
+        if (applicationRepository.transition(applicationId, Set.of(ApplicationStatusService.REJECTED),
+                ApplicationAccess.restoreTarget(lastFailRole)) == 0) {
+            throw new ApplicationReviewException(null, "Hồ sơ vừa được người khác xử lý. Vui lòng tải lại trang.");
+        }
+        applicationRepository.recordRestoration(actor.getUserId(), applicationId,
+                applicationAccess.isHr(actor) ? "RestoredByHR"
+                        : applicationAccess.isDirector(actor) ? "RestoredByDirector"
+                                : "RestoredByHiringManager");
+        notificationService.notifyApplicationRestored(application);
+        return "Đã khôi phục hồ sơ.";
     }
 
     private Application load(Integer applicationId) {

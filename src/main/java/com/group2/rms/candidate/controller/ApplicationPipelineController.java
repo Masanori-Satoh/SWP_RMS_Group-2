@@ -142,6 +142,20 @@ public class ApplicationPipelineController {
         return renderDetail(id, model);
     }
 
+    /**
+     * Khôi phục hồ sơ bị loại ở vòng CV (nút trên trang chi tiết). Thành công hay lỗi nghiệp vụ đều quay về trang
+     * chi tiết, lỗi hiện ở header qua flash {@code errorMessage} (cùng chỗ với RMS-041).
+     */
+    @PostMapping("/{id}/restore")
+    public String restore(@PathVariable Integer id, RedirectAttributes redirect) {
+        try {
+            redirect.addFlashAttribute("successMessage", reviewService.restore(id));
+        } catch (ApplicationReviewException e) {
+            redirect.addFlashAttribute("errorMessage", e.getMessage());
+        }
+        return "redirect:/applications/" + id;
+    }
+
     private String renderDetail(Integer id, Model model) {
         ApplicationDetailResponse detail = pipelineService.detail(id);
         model.addAttribute("detail", detail);

@@ -114,6 +114,18 @@ public interface ApplicationPipelineRepository extends Repository<Application, I
                         """, nativeQuery = true)
         List<TalentPoolEventRow> findTalentPoolEvents(@Param("id") Integer applicationId);
 
+        /** Các lần khôi phục hồ sơ bị loại ở vòng CV, cho timeline (NewValue bắt đầu bằng {@code RestoredBy}). */
+        @Query(value = """
+                        SELECT l.[Timestamp] AS at, l.NewValue AS kind, u.FullName AS actor
+                        FROM AuditLog l
+                        JOIN [User] u ON u.UserId = l.UserId
+                        WHERE l.EntityName = 'Application'
+                          AND l.EntityId = CAST(:id AS NVARCHAR(50))
+                          AND l.NewValue LIKE 'RestoredBy%'
+                        ORDER BY l.[Timestamp] DESC, l.AuditLogId DESC
+                        """, nativeQuery = true)
+        List<TalentPoolEventRow> findRestorationEvents(@Param("id") Integer applicationId);
+
         interface TalentPoolEventRow {
                 LocalDateTime getAt();
 

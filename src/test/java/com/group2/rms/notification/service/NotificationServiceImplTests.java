@@ -1033,10 +1033,55 @@ class NotificationServiceImplTests {
             assertEquals(candidateUser, saved.getRecipient());
             assertNull(saved.getActor());
             assertEquals("APPLICATION_REJECTED", saved.getEventType());
-            assertEquals("APP_REJECTED_88", saved.getEventId());
+            assertEquals("APP_REJECTED_88_" + NotificationMessages.eventTime(LocalDateTime.now(CLOCK)),
+                    saved.getEventId());
             assertEquals("/portal/applications/88", saved.getLinkUrl());
             assertEquals("danger", NotificationLabels.eventTone(saved.getEventType()));
             assertNotNull(NotificationLabels.eventLabel(saved.getEventType()));
+        }
+
+        @Test
+        @DisplayName("notifyApplicationRejected: loại lần hai (sau khôi phục) có eventId khác nên báo lại, lần một vẫn không trùng")
+        void notifyApplicationRejected_secondRejectionHasAnotherEventId() {
+            Clock later = Clock.fixed(Instant.parse("2026-10-30T02:00:00Z"), ZoneId.of("Asia/Ho_Chi_Minh"));
+            NotificationServiceImpl laterService = new NotificationServiceImpl(notificationRepository, userRepository,
+                    events, later);
+
+            notificationService.notifyApplicationRejected(application());
+            laterService.notifyApplicationRejected(application());
+
+            List<Notification> saved = savedNotifications(2);
+            assertNotEquals(saved.get(0).getEventId(), saved.get(1).getEventId());
+            assertTrue(saved.get(0).getEventId().startsWith("APP_REJECTED_88_"));
+            assertTrue(saved.get(1).getEventId().startsWith("APP_REJECTED_88_"));
+        }
+
+        @Test
+        @DisplayName("notifyApplicationRestored: Chỉ ứng viên nhận, không lộ ai khôi phục, link về đơn, loại sự kiện APPLICATION_RESTORED")
+        void notifyApplicationRestored_shouldNotifyCandidateOnly_withoutActor() {
+            notificationService.notifyApplicationRestored(application());
+
+            Notification saved = savedNotifications(1).get(0);
+            assertEquals(candidateUser, saved.getRecipient());
+            assertNull(saved.getActor());
+            assertEquals("APPLICATION_RESTORED", saved.getEventType());
+            assertEquals("88", saved.getReferenceId());
+            assertEquals("/portal/applications/88", saved.getLinkUrl());
+            assertTrue(saved.getTitle().startsWith("Cập nhật hồ sơ ứng tuyển: "));
+            assertTrue(saved.getContent().contains("tiếp tục được xem xét"));
+            assertEquals("APP_RESTORED_88_" + NotificationMessages.eventTime(LocalDateTime.now(CLOCK)),
+                    saved.getEventId());
+            assertEquals("Hồ sơ tiếp tục", NotificationLabels.eventLabel(saved.getEventType()));
+            assertEquals("success", NotificationLabels.eventTone(saved.getEventType()));
+        }
+
+        @Test
+        @DisplayName("notifyApplicationRestored: thiếu Candidate thì bỏ qua, không lỗi")
+        void notifyApplicationRestored_ignoresApplicationWithoutCandidate() {
+            notificationService.notifyApplicationRestored(Application.builder().applicationId(88).build());
+            notificationService.notifyApplicationRestored(null);
+
+            verifyNoInteractions(notificationRepository);
         }
 
         @Test

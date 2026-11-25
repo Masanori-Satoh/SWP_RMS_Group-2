@@ -222,7 +222,7 @@
                     </div>
                 </section>
                 <section
-                    th:if="${detail.actions.review or detail.actions.scheduleInterview or detail.actions.createOffer or detail.interviewId != null}"
+                    th:if="${detail.actions.review or detail.actions.restore or detail.actions.scheduleInterview or detail.actions.createOffer or detail.interviewId != null}"
                     class="card app-actions adw-surface apd-review" aria-labelledby="app-actions-title">
                     <h2 id="app-actions-title" class="app-section-title apd-title apd-action-title">Đánh giá hồ sơ</h2>
 
@@ -269,7 +269,7 @@
                             </div>
                             <div class="dialog-body">
                                 <p id="app-reject-message">
-                                    Hồ sơ chuyển sang Không đạt và không hoàn tác được.
+                                    Hồ sơ chuyển sang Không đạt. Bạn có thể khôi phục lại khi đợt tuyển còn mở.
                                     Nhận xét nội bộ bạn đã nhập sẽ được lưu cùng quyết định.
                                 </p>
                             </div>
@@ -278,6 +278,33 @@
                                 <button type="submit" form="app-review-form" name="decision" value="Fail"
                                     class="btn btn--danger btn--sm" data-review-confirm>Xác nhận loại ứng viên</button>
                             </div>
+                        </div>
+                    </dialog>
+
+                    <!-- Khôi phục hồ sơ bị loại ở vòng CV. Hộp xác nhận là <dialog> + form POST (không dùng
+             fragments/ui/dialogs :: confirm); mở/đóng bằng js/pages/application-review.js. Chỉ HR khôi phục đơn HR
+             loại (về bước HR); HM/Giám đốc khôi phục đơn HM loại (về bước HM) nên bước đích suy ra từ vai trò người xem. -->
+                    <div th:if="${detail.actions.restore}" class="app-restore apd-restore">
+                        <p class="text-muted">Hồ sơ này đã bị loại ở vòng xem CV; bạn có thể đưa hồ sơ trở lại bước duyệt.</p>
+                        <button type="button" class="btn btn--secondary btn--sm" data-restore-open
+                            aria-haspopup="dialog" aria-controls="app-restore-dialog">Khôi phục hồ sơ</button>
+                    </div>
+                    <dialog th:if="${detail.actions.restore}" id="app-restore-dialog" class="confirm-dialog"
+                        aria-labelledby="app-restore-title" aria-describedby="app-restore-message">
+                        <div class="dialog-content">
+                            <div class="dialog-header">
+                                <h2 id="app-restore-title" class="dialog-title">Khôi phục hồ sơ?</h2>
+                            </div>
+                            <div class="dialog-body">
+                                <p id="app-restore-message"
+                                    th:text="|Hồ sơ trở lại bước ${detail.viewerRole == 'HR' ? 'Chờ HR duyệt CV' : 'Chờ trưởng bộ phận duyệt CV'} và ứng viên sẽ được báo.|">
+                                    Hồ sơ trở lại bước Chờ HR duyệt CV và ứng viên sẽ được báo.</p>
+                            </div>
+                            <form class="dialog-actions" method="post"
+                                th:action="@{/applications/{id}/restore(id=${detail.applicationId})}">
+                                <button type="button" class="btn btn--secondary btn--sm" data-restore-cancel>Hủy</button>
+                                <button type="submit" class="btn btn--primary btn--sm" data-restore-confirm>Khôi phục hồ sơ</button>
+                            </form>
                         </div>
                     </dialog>
 

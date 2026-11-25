@@ -47,3 +47,49 @@
     submitting = false;
   });
 })();
+
+/*
+ * Khôi phục hồ sơ bị loại ở vòng CV: nút mở hộp xác nhận, "Hủy" đóng; "Khôi phục hồ sơ" là nút submit của form POST
+ * trong hộp. Không có JS thì hộp <dialog> vẫn ẩn, nên nút chỉ có tác dụng khi có JS (hồ sơ vẫn khôi phục được
+ * bằng cách gửi POST /applications/{id}/restore). Chặn gửi hai lần bằng cờ.
+ */
+(function () {
+  'use strict';
+
+  var dialog = document.getElementById('app-restore-dialog');
+  var openButton = document.querySelector('[data-restore-open]');
+  if (!dialog || !openButton || typeof dialog.showModal !== 'function') {
+    return;
+  }
+
+  var cancelButton = dialog.querySelector('[data-restore-cancel]');
+  var form = dialog.querySelector('form');
+  var submitting = false;
+
+  openButton.addEventListener('click', function () {
+    dialog.showModal();
+    cancelButton.focus();
+  });
+
+  cancelButton.addEventListener('click', function () {
+    dialog.close();
+  });
+
+  form.addEventListener('submit', function (event) {
+    if (submitting) {
+      event.preventDefault();
+      return;
+    }
+    submitting = true;
+  });
+
+  dialog.addEventListener('close', function () {
+    if (!submitting) {
+      openButton.focus();
+    }
+  });
+
+  window.addEventListener('pageshow', function () {
+    submitting = false;
+  });
+})();

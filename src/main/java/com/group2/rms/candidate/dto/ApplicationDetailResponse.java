@@ -46,6 +46,6 @@ public record ApplicationDetailResponse(
 
     /** Thao tác người xem được làm trên hồ sơ này. */
     public record Actions(boolean review, boolean scheduleInterview, boolean createOffer,
-                          boolean openJobPosting) {
+                          boolean openJobPosting, boolean restore) {
     }
 }

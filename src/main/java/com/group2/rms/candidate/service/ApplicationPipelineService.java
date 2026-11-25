@@ -178,7 +178,10 @@ public class ApplicationPipelineService {
                                                 applicationAccess.canReview(actor, application),
                                                 applicationAccess.canScheduleInterview(actor, progress),
                                                 applicationAccess.canCreateOffer(actor, progress),
-                                                applicationAccess.canOpenJobPosting(actor)),
+                                                applicationAccess.canOpenJobPosting(actor),
+                                                applicationAccess.canRestore(actor, application,
+                                                                reviewRepository.findLastFailRole(applicationId),
+                                                                cancelledProposal)),
                                 actor.getRole() == null ? null : actor.getRole().getRoleName(),
                                 "HM_Suggested".equals(status) || cancelledProposal);
         }
@@ -338,6 +341,12 @@ public class ApplicationPipelineService {
                                                 review.getReviewer().getFullName(),
                                                 review.getComments(),
                                                 ApplicationStatusLabels.decisionTone(review.getDecision()))));
+                pipelineRepository.findRestorationEvents(id).forEach(event -> items.add(new TimelineItem(
+                                event.getAt(), switch (event.getKind()) {
+                                        case "RestoredByHR" -> "HR khôi phục hồ sơ";
+                                        case "RestoredByDirector" -> "Giám đốc khôi phục hồ sơ";
+                                        default -> "Trưởng bộ phận khôi phục hồ sơ";
+                                }, event.getActor(), null, "neutral")));
                 pipelineRepository.findInterviewEvents(id).forEach(event -> items.add(new TimelineItem(
                                 event.getAt(), "Lịch phỏng vấn: " + event.getStatus(), null, null, "neutral")));
                 pipelineRepository.findInterviewResultEvents(id).forEach(event -> items.add(new TimelineItem(

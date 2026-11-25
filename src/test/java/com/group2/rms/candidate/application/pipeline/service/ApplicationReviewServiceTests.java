@@ -6,6 +6,7 @@ import com.group2.rms.candidate.dto.ApplicationReviewRequest;
 import com.group2.rms.candidate.entity.Application;
 import com.group2.rms.candidate.entity.ApplicationReview;
 import com.group2.rms.candidate.exception.ApplicationReviewException;
+import com.group2.rms.candidate.repository.ApplicationPipelineRepository;
 import com.group2.rms.candidate.repository.ApplicationRepository;
 import com.group2.rms.candidate.repository.ApplicationReviewRepository;
 import com.group2.rms.core.exception.ResourceNotFoundException;
@@ -41,13 +42,14 @@ class ApplicationReviewServiceTests {
     @Mock ApplicationReviewRepository reviews;
     @Mock ApplicationAccess access;
     @Mock NotificationService notificationService;
+    @Mock ApplicationPipelineRepository pipelineQueries;
 
     private ApplicationReviewService service;
     private final User actor = User.builder().userId(1).fullName("Lan HR").build();
 
     @BeforeEach
     void setUp() {
-        service = new ApplicationReviewService(applications, reviews, access, notificationService);
+        service = new ApplicationReviewService(applications, reviews, access, notificationService, pipelineQueries);
         when(access.actor()).thenReturn(actor);
     }
 
@@ -207,6 +209,129 @@ class ApplicationReviewServiceTests {
         when(applications.findDetailById(ID)).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class, () -> service.review(ID, new ApplicationReviewRequest("Pass", null)));
+    }
+
+    // ------------------------------------------------------------------ khôi phục hồ sơ bị loại ở vòng CV
+
+    @Test
+    void hrRestoresItsOwnRejectionBackToApplied() {
+        Application application = rejectedBy("HR", true);
+        when(access.isHr(actor)).thenReturn(true);
+        when(applications.transition(ID, Set.of("Rejected"), "Applied")).thenReturn(1);
+
+        assertEquals("Đã khôi phục hồ sơ.", service.restore(ID));
+
+        verify(applications).recordRestoration(1, ID, "RestoredByHR");
+        verify(notificationService).notifyApplicationRestored(application);
+        verify(reviews, never()).save(any());
+        verify(reviews, never()).delete(any());
+    }
+
+    @Test
+    void hiringManagerRestoresBackToHrPassed() {
+        Application application = rejectedBy("HiringManager", true);
+        when(applications.transition(ID, Set.of("Rejected"), "HR_Passed")).thenReturn(1);
+
+        service.restore(ID);
+
+        verify(applications).recordRestoration(1, ID, "RestoredByHiringManager");
+        verify(notificationService).notifyApplicationRestored(application);
+    }
+
+    @Test
+    void directorRestoresAHiringManagerRejectionAndIsRecordedAsDirector() {
+        rejectedBy("Director", true);
+        when(access.isDirector(actor)).thenReturn(true);
+        when(applications.transition(ID, Set.of("Rejected"), "HR_Passed")).thenReturn(1);
+
+        service.restore(ID);
+
+        verify(applications).recordRestoration(1, ID, "RestoredByDirector");
+    }
+
+    @Test
+    void wrongRoleOrDepartmentIsAccessDeniedAndNothingChanges() {
+        rejectedBy("HiringManager", false);
+
+        assertThrows(AccessDeniedException.class, () -> service.restore(ID));
+
+        verify(applications, never()).transition(anyInt(), any(), any());
+        verify(applications, never()).recordRestoration(anyInt(), anyInt(), any());
+        verifyNoInteractions(notificationService);
+    }
+
+    @Test
+    void nonReviewerRolesCannotRestore() {
+        Application application = application("Rejected");
+        when(applications.findDetailById(ID)).thenReturn(Optional.of(application));
+        when(access.isReviewer(actor)).thenReturn(false);
+
+        assertThrows(AccessDeniedException.class, () -> service.restore(ID));
+        verify(applications, never()).transition(anyInt(), any(), any());
+    }
+
+    @Test
+    void anApplicationThatCannotBeRestoredShowsTheReasonOnThePage() {
+        Application application = application("Rejected");
+        when(applications.findDetailById(ID)).thenReturn(Optional.of(application));
+        when(access.isReviewer(actor)).thenReturn(true);
+        when(reviews.findLastFailRole(ID)).thenReturn(null);
+        when(access.restoreBlockedReason(application, null, false))
+                .thenReturn("Chỉ khôi phục được hồ sơ bị loại ở vòng xem CV.");
+
+        ApplicationReviewException e = assertThrows(ApplicationReviewException.class, () -> service.restore(ID));
+
+        assertNull(e.getField());
+        assertEquals("Chỉ khôi phục được hồ sơ bị loại ở vòng xem CV.", e.getMessage());
+        verify(applications, never()).transition(anyInt(), any(), any());
+        verifyNoInteractions(notificationService);
+    }
+
+    @Test
+    void aCancelledTalentPoolProposalIsPassedToTheRule() {
+        Application application = application("Rejected");
+        when(applications.findDetailById(ID)).thenReturn(Optional.of(application));
+        when(access.isReviewer(actor)).thenReturn(true);
+        when(reviews.findLastFailRole(ID)).thenReturn("HR");
+        when(pipelineQueries.countTalentPoolCancellation(ID)).thenReturn(1);
+        when(access.restoreBlockedReason(application, "HR", true))
+                .thenReturn("Đề xuất ứng viên đã bị hủy nên không thể khôi phục hồ sơ.");
+
+        assertThrows(ApplicationReviewException.class, () -> service.restore(ID));
+        verify(applications, never()).transition(anyInt(), any(), any());
+    }
+
+    @Test
+    void twoPeopleRestoringAtOnceTheSecondOneGetsAnErrorAndNoSideEffects() {
+        rejectedBy("HR", true);
+        when(applications.transition(ID, Set.of("Rejected"), "Applied")).thenReturn(0);
+
+        ApplicationReviewException e = assertThrows(ApplicationReviewException.class, () -> service.restore(ID));
+
+        assertEquals("Hồ sơ vừa được người khác xử lý. Vui lòng tải lại trang.", e.getMessage());
+        verify(applications, never()).recordRestoration(anyInt(), anyInt(), any());
+        verifyNoInteractions(notificationService);
+    }
+
+    @Test
+    void restoreOutsideScopeIsDeniedAndMissingApplicationIsNotFound() {
+        Application application = application("Rejected");
+        when(applications.findDetailById(ID)).thenReturn(Optional.of(application));
+        doThrow(new AccessDeniedException("no")).when(access).requireView(actor, application);
+        assertThrows(AccessDeniedException.class, () -> service.restore(ID));
+
+        when(applications.findDetailById(ID)).thenReturn(Optional.empty());
+        assertThrows(ResourceNotFoundException.class, () -> service.restore(ID));
+    }
+
+    /** Đơn Rejected, lượt Fail mới nhất do {@code failedBy}; {@code allowed} là kết quả {@code canRestore} cho người bấm. */
+    private Application rejectedBy(String failedBy, boolean allowed) {
+        Application application = application("Rejected");
+        when(applications.findDetailById(ID)).thenReturn(Optional.of(application));
+        when(access.isReviewer(actor)).thenReturn(true);
+        when(reviews.findLastFailRole(ID)).thenReturn(failedBy);
+        when(access.canRestore(actor, application, failedBy, false)).thenReturn(allowed);
+        return application;
     }
 
     // ------------------------------------------------------------------ chấm lại AI

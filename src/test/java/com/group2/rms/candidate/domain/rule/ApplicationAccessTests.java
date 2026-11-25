@@ -727,6 +727,87 @@ class ApplicationAccessTests {
         assertEquals(true, access.canOpenJobPosting(engineeringHead));
     }
 
+    // ------------------------------------------------------------------ khôi phục hồ sơ bị loại ở vòng CV
+
+    @Test
+    @DisplayName("Khôi phục: HR chỉ khôi phục đơn HR loại; HM/Director/Admin/Interviewer thì không")
+    void hrRestoresOnlyWhatHrRejected() {
+        Application application = rejected(engineering, "Published");
+        assertEquals(true, access.canRestore(hr, application, "HR", false));
+        assertEquals(false, access.canRestore(hr, application, "HiringManager", false));
+        assertEquals(false, access.canRestore(hr, application, "Director", false));
+        for (User other : List.of(engineeringHead, director, admin, interviewer)) {
+            assertEquals(false, access.canRestore(other, application, "HR", false));
+        }
+        assertEquals("Applied", ApplicationAccess.restoreTarget("HR"));
+    }
+
+    @Test
+    @DisplayName("Khôi phục: HM đúng phòng hoặc Giám đốc khôi phục đơn HM/Giám đốc loại; HM phòng khác, HR, Admin thì không")
+    void hiringManagerOfTheDepartmentOrDirectorRestoresWhatHmRejected() {
+        Application application = rejected(engineering, "Published");
+        for (String failedBy : List.of("HiringManager", "Director")) {
+            assertEquals(true, access.canRestore(engineeringHead, application, failedBy, false));
+            assertEquals(true, access.canRestore(engineeringMember, application, failedBy, false));
+            assertEquals(true, access.canRestore(director, application, failedBy, false));
+            assertEquals(false, access.canRestore(salesHead, application, failedBy, false), "HM phòng khác");
+            assertEquals(false, access.canRestore(hr, application, failedBy, false), "HR không khôi phục đơn HM loại");
+            assertEquals(false, access.canRestore(admin, application, failedBy, false));
+        }
+        assertEquals("HR_Passed", ApplicationAccess.restoreTarget("HiringManager"));
+        assertEquals("HR_Passed", ApplicationAccess.restoreTarget("Director"));
+    }
+
+    @Test
+    @DisplayName("Khôi phục: tin Paused vẫn được; tin Closed, trượt phỏng vấn, talent pool đã hủy thì không")
+    void restoreNeedsAnOpenPostingAndACvRoundRejection() {
+        assertEquals(true, access.canRestore(hr, rejected(engineering, "Paused"), "HR", false));
+        assertEquals(false, access.canRestore(hr, rejected(engineering, "Closed"), "HR", false));
+        assertEquals(false, access.canRestore(hr, rejected(engineering, null), "HR", false));
+        assertEquals(false, access.canRestore(hr, rejected(engineering, "Published"), null, false),
+                "lượt duyệt mới nhất không phải Fail (trượt phỏng vấn)");
+        assertEquals(false, access.canRestore(hr, rejected(engineering, "Published"), "HR", true),
+                "đề xuất talent pool đã hủy");
+        assertEquals(false, access.canRestore(hr, rejected(engineering, "Published"), "Unknown", false));
+    }
+
+    @Test
+    @DisplayName("Khôi phục: chỉ đơn đang Rejected; Withdrawn, Cancelled, Hired và đơn đã khôi phục (Applied) thì không")
+    void onlyRejectedApplicationsCanBeRestored() {
+        for (String status : List.of("Withdrawn", "Cancelled", "Hired", "Applied", "HR_Passed", "Interviewing")) {
+            Application application = rejected(engineering, "Published");
+            application.setApplicationStatus(status);
+            assertEquals(false, access.canRestore(hr, application, "HR", false), status);
+            assertEquals(false, access.canRestore(director, application, "HiringManager", false), status);
+        }
+    }
+
+    @Test
+    @DisplayName("Khôi phục: restoreBlockedReason trả đúng câu báo lỗi cho từng điều kiện, null nếu thỏa")
+    void restoreBlockedReasonNamesTheFailedCondition() {
+        Application ok = rejected(engineering, "Published");
+        assertEquals(null, access.restoreBlockedReason(ok, "HR", false));
+
+        Application moved = rejected(engineering, "Published");
+        moved.setApplicationStatus("Applied");
+        assertEquals("Hồ sơ không còn ở trạng thái Không đạt. Vui lòng tải lại trang.",
+                access.restoreBlockedReason(moved, "HR", false));
+        assertEquals("Đề xuất ứng viên đã bị hủy nên không thể khôi phục hồ sơ.",
+                access.restoreBlockedReason(ok, "HR", true));
+        assertEquals("Chỉ khôi phục được hồ sơ bị loại ở vòng xem CV.", access.restoreBlockedReason(ok, null, false));
+        assertEquals("Tin tuyển dụng đã đóng nên không thể khôi phục hồ sơ.",
+                access.restoreBlockedReason(rejected(engineering, "Closed"), "HR", false));
+    }
+
+    private static Application rejected(Department department, String postingStatus) {
+        JobRequisition requisition = JobRequisition.builder().requisitionId(7).department(department).build();
+        return Application.builder()
+                .applicationId(APPLICATION_ID)
+                .jobPosting(JobPosting.builder().requisition(requisition).postingStatus(postingStatus).build())
+                .applicationStatus("Rejected")
+                .build();
+    }
+
     private static User user(int id, String roleName, Department department) {
         return User.builder()
                 .userId(id)

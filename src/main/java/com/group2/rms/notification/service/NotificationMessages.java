@@ -168,6 +168,13 @@ public final class NotificationMessages {
                 application.getJobPosting().getPostingTitle());
     }
 
+    // dunglt bổ sung: không nêu ai khôi phục, lý do (GBR-02)
+    public static String applicationRestoredContent(Application application) {
+        return String.format(
+                "Hồ sơ của bạn cho vị trí \"%s\" tiếp tục được xem xét. Bạn có thể xem chi tiết ở Đơn của tôi.",
+                application.getJobPosting().getPostingTitle());
+    }
+
     // "dd/MM/yyyy HH:mm – HH:mm"; chưa có giờ kết thúc thì chỉ hiện giờ bắt đầu
     public static String interviewTime(InterviewSchedule schedule) {
         String when = displayTime(schedule.getStartTime());

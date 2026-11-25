@@ -28,6 +28,8 @@ public class ApplicationAccess {
 
     public static final Set<String> HR_REVIEW_STATUSES = Set.of("Applied");
     public static final String HM_REVIEW_STATUS = "HR_Passed";
+    /** Tin còn mở thì mới khôi phục được đơn đã loại; tin Closed thì không. */
+    private static final Set<String> RESTORABLE_POSTING_STATUSES = Set.of("Published", "Paused");
 
     private static final Set<String> VIEW_ALL_ROLES = Set.of(ROLE_HR, ROLE_DIRECTOR);
 
@@ -80,6 +82,51 @@ public class ApplicationAccess {
             return HM_REVIEW_STATUS.equals(status);
         }
         return isHiringManager(user) && HM_REVIEW_STATUS.equals(status) && inManagedDepartment(user, application);
+    }
+
+    /**
+     * Khôi phục đơn bị loại ở vòng CV (spec 08/11), một nguồn cho service và trang chi tiết. Đủ khi: đơn đang
+     * {@code Rejected}; lượt duyệt mới nhất là {@code Fail} do {@code lastFailRole} ({@code null} nếu không phải
+     * Fail, ví dụ trượt phỏng vấn); tin còn mở (Published, Paused); không phải đề xuất talent pool đã hủy; và
+     * người bấm đúng vai trò: HR khôi phục đơn HR loại; HM đúng phòng hoặc Giám đốc khôi phục đơn HM/Giám đốc loại.
+     */
+    public boolean canRestore(User user, Application application, String lastFailRole, boolean proposalCancelled) {
+        if (restoreBlockedReason(application, lastFailRole, proposalCancelled) != null) {
+            return false;
+        }
+        return switch (lastFailRole) {
+            case "HR" -> isHr(user);
+            case "HiringManager", "Director" -> isDirector(user)
+                    || (isHiringManager(user) && inManagedDepartment(user, application));
+            default -> false;
+        };
+    }
+
+    /**
+     * Phần điều kiện khôi phục không phụ thuộc người bấm (1 đến 4 của spec); {@code null} nếu thỏa, ngược lại là
+     * câu báo lỗi cho người dùng. Tách riêng để service phân biệt "đơn không khôi phục được" (lỗi hiện trên trang)
+     * với "sai vai trò" (403).
+     */
+    public String restoreBlockedReason(Application application, String lastFailRole, boolean proposalCancelled) {
+        if (!ApplicationStatusService.REJECTED.equals(application.getApplicationStatus())) {
+            return "Hồ sơ không còn ở trạng thái Không đạt. Vui lòng tải lại trang.";
+        }
+        if (proposalCancelled) {
+            return "Đề xuất ứng viên đã bị hủy nên không thể khôi phục hồ sơ.";
+        }
+        if (lastFailRole == null) {
+            return "Chỉ khôi phục được hồ sơ bị loại ở vòng xem CV.";
+        }
+        String postingStatus = application.getJobPosting() == null ? null : application.getJobPosting().getPostingStatus();
+        if (postingStatus == null || !RESTORABLE_POSTING_STATUSES.contains(postingStatus)) {
+            return "Tin tuyển dụng đã đóng nên không thể khôi phục hồ sơ.";
+        }
+        return null;
+    }
+
+    /** Trạng thái đơn quay về: đúng bước đã loại. HR loại thì về {@code Applied}, HM/Giám đốc loại thì về {@code HR_Passed}. */
+    public static String restoreTarget(String lastFailRole) {
+        return "HR".equals(lastFailRole) ? "Applied" : HM_REVIEW_STATUS;
     }
 
     /**

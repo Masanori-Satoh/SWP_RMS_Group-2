@@ -317,7 +317,27 @@ public class NotificationServiceImpl implements NotificationService {
                 .eventType("APPLICATION_REJECTED")
                 .referenceId(String.valueOf(application.getApplicationId()))
                 .linkUrl("/portal/applications/" + application.getApplicationId())
-                .eventId("APP_REJECTED_" + application.getApplicationId()));
+                // dunglt bổ sung: khóa thời gian để đơn bị loại lần hai (sau khôi phục) vẫn báo lại
+                .eventId("APP_REJECTED_" + application.getApplicationId() + "_"
+                        + NotificationMessages.eventTime(LocalDateTime.now(clock))));
+    }
+
+    // dunglt bổ sung: báo ứng viên hồ sơ tiếp tục được xem xét; actor null để không lộ người khôi phục (GBR-02)
+    @Override
+    @Transactional
+    public void notifyApplicationRestored(Application application) {
+        if (application == null || application.getCandidate() == null) {
+            log.warn("Cannot send restoration notification: Application or Candidate is null");
+            return;
+        }
+        notifyEach(Collections.singletonList(application.getCandidate().getAccount()), null, Notification.builder()
+                .title("Cập nhật hồ sơ ứng tuyển: " + application.getJobPosting().getPostingTitle())
+                .content(NotificationMessages.applicationRestoredContent(application))
+                .eventType("APPLICATION_RESTORED")
+                .referenceId(String.valueOf(application.getApplicationId()))
+                .linkUrl("/portal/applications/" + application.getApplicationId())
+                .eventId("APP_RESTORED_" + application.getApplicationId() + "_"
+                        + NotificationMessages.eventTime(LocalDateTime.now(clock))));
     }
 
     @Override

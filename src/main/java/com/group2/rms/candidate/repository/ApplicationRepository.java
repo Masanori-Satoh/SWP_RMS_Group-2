@@ -107,6 +107,21 @@ public interface ApplicationRepository extends JpaRepository<Application, Intege
                         @Param("oldStatus") String oldStatus);
 
         /**
+         * Ghi nhật ký khôi phục hồ sơ bị loại ở vòng CV. {@code newValue}: {@code RestoredByHR},
+         * {@code RestoredByHiringManager} hoặc {@code RestoredByDirector} (theo vai trò người bấm).
+         * SQL thuần, cùng lý do với {@link #recordWithdrawal}.
+         */
+        @Modifying
+        @Query(value = """
+                        INSERT INTO AuditLog (UserId, [Action], EntityName, EntityId, OldValue, NewValue)
+                        VALUES (:userId, 'UPDATE', 'Application', CAST(:id AS NVARCHAR(50)), 'Rejected', :newValue)
+                        """, nativeQuery = true)
+        void recordRestoration(
+                        @Param("userId") Integer userId,
+                        @Param("id") Integer applicationId,
+                        @Param("newValue") String newValue);
+
+        /**
          * Truy vấn thông tin dữ kiện tiến trình phỏng vấn và thư mời cho danh sách hồ
          * sơ.
          */

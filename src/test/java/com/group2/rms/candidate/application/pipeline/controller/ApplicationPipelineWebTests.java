@@ -761,6 +761,91 @@ class ApplicationPipelineWebTests {
     }
 
     @Test
+    void restoreButtonAndConfirmDialogShowOnlyWhenTheViewerMayRestore() throws Exception {
+        when(pipeline.detail(298)).thenReturn(
+                detail(false, true, null, false, false, null, "Rejected", null, "HR", true, true));
+
+        mvc.perform(get("/applications/298").with(as("hr_lan", "HR")))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("data-restore-open")))
+                .andExpect(content().string(containsString("id=\"app-restore-dialog\"")))
+                .andExpect(content().string(containsString("Khôi phục hồ sơ?")))
+                .andExpect(content().string(containsString(
+                        "Hồ sơ trở lại bước Chờ HR duyệt CV và ứng viên sẽ được báo.")))
+                .andExpect(content().string(containsString("action=\"/applications/298/restore\"")))
+                .andExpect(content().string(containsString("name=\"_csrf\"")))
+                .andExpect(content().string(containsString("Hủy")));
+
+        when(pipeline.detail(298)).thenReturn(
+                detail(false, false, null, false, false, null, "Rejected", null, "Hiring Manager", true, true));
+        mvc.perform(get("/applications/298").with(as("hm_tuan", "Hiring Manager")))
+                .andExpect(content().string(containsString(
+                        "Hồ sơ trở lại bước Chờ trưởng bộ phận duyệt CV và ứng viên sẽ được báo.")));
+
+        when(pipeline.detail(298)).thenReturn(
+                detail(false, true, null, false, false, null, "Rejected", null, "HR", true, false));
+        mvc.perform(get("/applications/298").with(as("hr_lan", "HR")))
+                .andExpect(status().isOk())
+                .andExpect(content().string(not(containsString("data-restore-open"))))
+                .andExpect(content().string(not(containsString("app-restore-dialog"))))
+                .andExpect(content().string(not(containsString("/applications/298/restore"))));
+    }
+
+    @Test
+    void rejectDialogNoLongerPromisesTheRejectionIsFinal() throws Exception {
+        when(pipeline.detail(298)).thenReturn(detail(false, true, null, true, false));
+
+        mvc.perform(get("/applications/298").with(as("hr_lan", "HR")))
+                .andExpect(content().string(containsString(
+                        "Hồ sơ chuyển sang Không đạt. Bạn có thể khôi phục lại khi đợt tuyển còn mở.")))
+                .andExpect(content().string(not(containsString("không hoàn tác được"))));
+    }
+
+    @Test
+    void restoreRedirectsBackWithSuccessMessage() throws Exception {
+        when(reviewService.restore(298)).thenReturn("Đã khôi phục hồ sơ.");
+
+        mvc.perform(post("/applications/298/restore").with(as("hr_lan", "HR")).with(csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/applications/298"))
+                .andExpect(flash().attribute("successMessage", "Đã khôi phục hồ sơ."));
+    }
+
+    @Test
+    void restoreBusinessErrorGoesBackToThePageWhichShowsIt() throws Exception {
+        String message = "Hồ sơ vừa được người khác xử lý. Vui lòng tải lại trang.";
+        when(reviewService.restore(298)).thenThrow(new ApplicationReviewException(null, message));
+        when(pipeline.detail(298)).thenReturn(detail(false, true, null, true, false, null, "Applied", null, "HR", true));
+
+        mvc.perform(post("/applications/298/restore").with(as("hr_lan", "HR")).with(csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/applications/298"))
+                .andExpect(flash().attribute("errorMessage", message));
+
+        // trang nhận flash đó và hiện ra ở header, dù form/section duyệt có hay không
+        mvc.perform(get("/applications/298").with(as("hr_lan", "HR")).flashAttr("errorMessage", message))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Hồ sơ vừa được người khác xử lý.")))
+                .andExpect(content().string(containsString("role=\"alert\"")));
+    }
+
+    @Test
+    void restoreNeedsCsrfAndAReviewerRoleAndServiceDenialIs403() throws Exception {
+        mvc.perform(post("/applications/298/restore").with(as("hr_lan", "HR")))
+                .andExpect(status().isForbidden());
+        for (String role : List.of("System Admin", "Candidate", "Interviewer")) {
+            mvc.perform(post("/applications/298/restore").with(as("other", role)).with(csrf()))
+                    .andExpect(status().isForbidden());
+        }
+        verify(reviewService, never()).restore(any());
+
+        // HR bấm đơn do HM loại / HM phòng khác: service từ chối bằng AccessDeniedException
+        when(reviewService.restore(298)).thenThrow(new AccessDeniedException("Bạn không có quyền khôi phục hồ sơ này."));
+        mvc.perform(post("/applications/298/restore").with(as("hr_lan", "HR")).with(csrf()))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
     void invalidInputIsRejectedBeforeTheService() throws Exception {
         when(pipeline.detail(298)).thenReturn(detail(false, true, null, true, false));
 
@@ -1156,6 +1241,14 @@ class ApplicationPipelineWebTests {
     private static ApplicationDetailResponse detail(boolean nextSteps, boolean openJobPosting, String linkedIn,
                                                     boolean review, boolean rescreen, Long interviewId, String status,
                                                     BigDecimal aiMatchScore, String viewerRole, boolean personalFacts) {
+        return detail(nextSteps, openJobPosting, linkedIn, review, rescreen, interviewId, status, aiMatchScore,
+                viewerRole, personalFacts, false);
+    }
+
+    private static ApplicationDetailResponse detail(boolean nextSteps, boolean openJobPosting, String linkedIn,
+                                                    boolean review, boolean rescreen, Long interviewId, String status,
+                                                    BigDecimal aiMatchScore, String viewerRole, boolean personalFacts,
+                                                    boolean restore) {
         return new ApplicationDetailResponse(298, 15, false, "An Võ", "an.vo@example.com", "0901 234 567", linkedIn, null,
                 personalFacts ? java.time.LocalDate.of(1995, 8, 17) : null, personalFacts ? "Nữ" : null,
                 personalFacts ? "Số 88 Láng Hạ, Đống Đa, Hà Nội" : "  ",
@@ -1167,7 +1260,7 @@ class ApplicationPipelineWebTests {
                         new StageItem("INTERVIEW", "Phỏng vấn", null, null, "current",
                                 "Chờ xếp lịch phỏng vấn · Đang chờ: HR", false)),
                 interviewId,
-                new ApplicationDetailResponse.Actions(review, nextSteps, nextSteps, openJobPosting),
+                new ApplicationDetailResponse.Actions(review, nextSteps, nextSteps, openJobPosting, restore),
                 viewerRole, "HM_Suggested".equals(status));
     }
 

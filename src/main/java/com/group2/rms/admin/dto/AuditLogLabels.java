@@ -37,6 +37,10 @@ public final class AuditLogLabels {
             // dunglt bổ sung: trạng thái đơn mới (migration 019)
             Map.entry("Cancelled", "Trạng thái: Dừng hồ sơ do đóng đợt tuyển"),
             Map.entry("PostingClosed", "Trạng thái: Dừng hồ sơ do đóng đợt tuyển"),
+            // dunglt bổ sung: khôi phục hồ sơ bị loại ở vòng CV
+            Map.entry("RestoredByHR", "Trạng thái: HR đã khôi phục hồ sơ"),
+            Map.entry("RestoredByHiringManager", "Trạng thái: Trưởng bộ phận đã khôi phục hồ sơ"),
+            Map.entry("RestoredByDirector", "Trạng thái: Giám đốc đã khôi phục hồ sơ"),
             Map.entry("InterviewCancelledOnClose", "Đã hủy lịch phỏng vấn do đóng đợt tuyển"));
     private static final Map<String, String> MAIL_VALUES = Map.of(
             "MailSent:PostingClosed", "Đã gửi thông báo đóng đợt tuyển",
