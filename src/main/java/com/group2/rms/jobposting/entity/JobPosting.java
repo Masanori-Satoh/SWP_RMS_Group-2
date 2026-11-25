@@ -42,6 +42,11 @@ public class JobPosting extends BaseEntity {
     /** Tin "đang mở" của một yêu cầu: mỗi yêu cầu chỉ được có 1 tin ở các trạng thái này. */
     public static final List<String> OPEN_STATUSES = List.of(STATUS_DRAFT, STATUS_PUBLISHED, STATUS_PAUSED);
 
+    // Mức độ ưu tiên hiển thị trên trang tuyển dụng công khai (3 = High, 2 = Medium, 1 = Low)
+    public static final int PRIORITY_LOW = 1;
+    public static final int PRIORITY_MEDIUM = 2;
+    public static final int PRIORITY_HIGH = 3;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "JobPostingId")
@@ -104,6 +109,13 @@ public class JobPosting extends BaseEntity {
      */
     @Column(name = "PostingStatus", nullable = false, length = 20)
     private String postingStatus;
+
+    /**
+     * Độ ưu tiên hiển thị: 3 = High, 2 = Medium, 1 = Low.
+     */
+    @Builder.Default
+    @Column(name = "Priority", nullable = false)
+    private Integer priority = PRIORITY_LOW;
 
     @Column(name = "ClosedAt")
     private LocalDateTime closedAt;

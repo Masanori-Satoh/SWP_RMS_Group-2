@@ -72,7 +72,7 @@ public class CareerPortalController {
             @RequestParam(required = false) String employmentType,
             @RequestParam(required = false) String workModel,
             @RequestParam(required = false) String salaryRange,
-            @PageableDefault(size = JOBS_PER_PAGE, sort = "postingDate", direction = Sort.Direction.DESC)
+            @PageableDefault(size = JOBS_PER_PAGE, sort = {"priority", "postingDate"}, direction = Sort.Direction.DESC)
             Pageable pageable,
             Model model) {
 

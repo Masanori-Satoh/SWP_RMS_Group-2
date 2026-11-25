@@ -243,67 +243,67 @@ INSERT INTO RequisitionApproval (RequisitionId, DirectorId, [Status], Comments, 
 
 -- JobPosting (10 dòng)
 SET IDENTITY_INSERT JobPosting ON;
-INSERT INTO JobPosting (JobPostingId, RequisitionId, PostingNo, PostingTitle, JobDescription, JobRequirements, Benefits, SalaryDisplay, NumberOfPositionsDisplay, WorkLocation, WorkingHours, EmploymentType, WorkModel, PostingDate, ApplicationDeadline, PostingStatus, ClosedAt, CreatedBy, CreatedAt, UpdatedAt) VALUES
+INSERT INTO JobPosting (JobPostingId, RequisitionId, PostingNo, PostingTitle, JobDescription, JobRequirements, Benefits, SalaryDisplay, NumberOfPositionsDisplay, WorkLocation, WorkingHours, EmploymentType, WorkModel, PostingDate, ApplicationDeadline, PostingStatus, Priority, ClosedAt, CreatedBy, CreatedAt, UpdatedAt) VALUES
     (1, 1, 1, N'Senior Java Backend Engineer', N'Phát triển RESTful API bằng Spring Boot, tối ưu SQL Server, triển khai Docker.
 Làm việc cùng đội ngũ trẻ, quy trình Agile/Scrum.', N'- Tối thiểu 3 năm Java
 - thành thạo Spring Boot, JPA/Hibernate, Redis, RabbitMQ.', N'- Lương tháng 13, thưởng dự án
 - Bảo hiểm sức khỏe PVI
 - 12 ngày phép năm
-- Review lương 2 lần/năm', N'30,000,000 - 45,000,000 VND', 2, N'Tầng 8, Tòa nhà RMS Tower, Phố Duy Tân, Cầu Giấy, Hà Nội', N'Thứ 2 - Thứ 6 (08:30 - 17:30)', NULL, NULL, DATEADD(MINUTE, -85920, @D0), DATEADD(MINUTE, 44639, @D0), N'Published', NULL, 3, DATEADD(MINUTE, -86880, @D0), NULL),
+- Review lương 2 lần/năm', N'30,000,000 - 45,000,000 VND', 2, N'Tầng 8, Tòa nhà RMS Tower, Phố Duy Tân, Cầu Giấy, Hà Nội', N'Thứ 2 - Thứ 6 (08:30 - 17:30)', NULL, NULL, DATEADD(MINUTE, -85920, @D0), DATEADD(MINUTE, 44639, @D0), N'Published', 2, NULL, 3, DATEADD(MINUTE, -86880, @D0), NULL),
     (2, 2, 1, N'Frontend ReactJS Developer', N'Phát triển giao diện web bằng React 18, TypeScript, tích hợp REST API.
 Làm việc cùng đội ngũ trẻ, quy trình Agile/Scrum.', N'- Tối thiểu 2 năm ReactJS
 - thành thạo Redux Toolkit hoặc Zustand.', N'- Lương tháng 13, thưởng dự án
 - Bảo hiểm sức khỏe PVI
 - 12 ngày phép năm
-- Review lương 2 lần/năm', N'20,000,000 - 32,000,000 VND', NULL, N'Tầng 8, Tòa nhà RMS Tower, Phố Duy Tân, Cầu Giấy, Hà Nội', N'Thứ 2 - Thứ 6 (08:30 - 17:30)', NULL, NULL, DATEADD(MINUTE, -83040, @D0), DATEADD(MINUTE, 37439, @D0), N'Published', NULL, 3, DATEADD(MINUTE, -84000, @D0), NULL),
+- Review lương 2 lần/năm', N'20,000,000 - 32,000,000 VND', NULL, N'Tầng 8, Tòa nhà RMS Tower, Phố Duy Tân, Cầu Giấy, Hà Nội', N'Thứ 2 - Thứ 6 (08:30 - 17:30)', NULL, NULL, DATEADD(MINUTE, -83040, @D0), DATEADD(MINUTE, 37439, @D0), N'Published', 2, NULL, 3, DATEADD(MINUTE, -84000, @D0), NULL),
     (3, 3, 1, N'QA Automation Engineer', N'Xây dựng framework kiểm thử tự động API và Web UI bằng Playwright, tích hợp CI/CD.
 Làm việc cùng đội ngũ trẻ, quy trình Agile/Scrum.', N'- Tối thiểu 2 năm Automation Test
 - thành thạo Postman, Playwright hoặc Selenium.', N'- Lương tháng 13, thưởng dự án
 - Bảo hiểm sức khỏe PVI
 - 12 ngày phép năm
-- Review lương 2 lần/năm', N'18,000,000 - 28,000,000 VND', 1, N'Tầng 8, Tòa nhà RMS Tower, Phố Duy Tân, Cầu Giấy, Hà Nội', N'Thứ 2 - Thứ 6 (08:30 - 17:30)', NULL, NULL, DATEADD(MINUTE, -78720, @D0), DATEADD(MINUTE, 30239, @D0), N'Paused', NULL, 4, DATEADD(MINUTE, -79680, @D0), DATEADD(MINUTE, -6540, @D0)),
+- Review lương 2 lần/năm', N'18,000,000 - 28,000,000 VND', 1, N'Tầng 8, Tòa nhà RMS Tower, Phố Duy Tân, Cầu Giấy, Hà Nội', N'Thứ 2 - Thứ 6 (08:30 - 17:30)', NULL, NULL, DATEADD(MINUTE, -78720, @D0), DATEADD(MINUTE, 30239, @D0), N'Paused', 1, NULL, 4, DATEADD(MINUTE, -79680, @D0), DATEADD(MINUTE, -6540, @D0)),
     (4, 4, 1, N'Business Development Executive (B2B)', N'Tìm kiếm khách hàng B2B, tư vấn giải pháp chuyển đổi số, đàm phán hợp đồng.
 Làm việc cùng đội ngũ trẻ, quy trình Agile/Scrum.', N'- Tối thiểu 1 năm Sales B2B ngành phần mềm
 - giao tiếp và thuyết trình tốt.', N'- Lương tháng 13, thưởng dự án
 - Bảo hiểm sức khỏe PVI
 - 12 ngày phép năm
-- Review lương 2 lần/năm', N'15,000,000 - 25,000,000 VND', 2, N'Số 12 Lê Thánh Tôn, Bến Nghé, Quận 1, TP. Hồ Chí Minh', N'Thứ 2 - Thứ 7 (08:00 - 17:00)', NULL, NULL, DATEADD(MINUTE, -80160, @D0), DATEADD(MINUTE, 31679, @D0), N'Published', NULL, 4, DATEADD(MINUTE, -81120, @D0), NULL),
+- Review lương 2 lần/năm', N'15,000,000 - 25,000,000 VND', 2, N'Số 12 Lê Thánh Tôn, Bến Nghé, Quận 1, TP. Hồ Chí Minh', N'Thứ 2 - Thứ 7 (08:00 - 17:00)', NULL, NULL, DATEADD(MINUTE, -80160, @D0), DATEADD(MINUTE, 31679, @D0), N'Published', 1, NULL, 4, DATEADD(MINUTE, -81120, @D0), NULL),
     (5, 5, 1, N'Digital Marketing Specialist', N'Lập kế hoạch và triển khai chiến dịch quảng cáo Facebook, Google, TikTok.
 Làm việc cùng đội ngũ trẻ, quy trình Agile/Scrum.', N'- Tối thiểu 1 năm Digital Marketing
 - biết đo lường hiệu quả chiến dịch.', N'- Lương tháng 13, thưởng dự án
 - Bảo hiểm sức khỏe PVI
 - 12 ngày phép năm
-- Review lương 2 lần/năm', N'14,000,000 - 20,000,000 VND', 1, N'Số 12 Lê Thánh Tôn, Bến Nghé, Quận 1, TP. Hồ Chí Minh', N'Thứ 2 - Thứ 6 (08:30 - 17:30)', NULL, NULL, DATEADD(MINUTE, -64320, @D0), DATEADD(MINUTE, -1441, @D0), N'Published', NULL, 4, DATEADD(MINUTE, -65280, @D0), NULL),
+- Review lương 2 lần/năm', N'14,000,000 - 20,000,000 VND', 1, N'Số 12 Lê Thánh Tôn, Bến Nghé, Quận 1, TP. Hồ Chí Minh', N'Thứ 2 - Thứ 6 (08:30 - 17:30)', NULL, NULL, DATEADD(MINUTE, -64320, @D0), DATEADD(DAY, 30, @D0), N'Published', 3, NULL, 4, DATEADD(MINUTE, -65280, @D0), NULL),
     (6, 6, 1, N'Kế toán tổng hợp', N'Hạch toán, lập báo cáo thuế tháng/quý, quyết toán cuối năm.
 Làm việc cùng đội ngũ trẻ, quy trình Agile/Scrum.', N'- Tốt nghiệp Kế toán – Kiểm toán
 - tối thiểu 2 năm kế toán tổng hợp, thành thạo MISA.', N'- Lương tháng 13, thưởng dự án
 - Bảo hiểm sức khỏe PVI
 - 12 ngày phép năm
-- Review lương 2 lần/năm', N'15,000,000 - 22,000,000 VND', 1, N'Tầng 8, Tòa nhà RMS Tower, Phố Duy Tân, Cầu Giấy, Hà Nội', N'Thứ 2 - Thứ 6 (08:30 - 17:30)', NULL, NULL, DATEADD(MINUTE, -57120, @D0), DATEADD(MINUTE, 51839, @D0), N'Published', NULL, 3, DATEADD(MINUTE, -58080, @D0), NULL),
+- Review lương 2 lần/năm', N'15,000,000 - 22,000,000 VND', 1, N'Tầng 8, Tòa nhà RMS Tower, Phố Duy Tân, Cầu Giấy, Hà Nội', N'Thứ 2 - Thứ 6 (08:30 - 17:30)', NULL, NULL, DATEADD(MINUTE, -57120, @D0), DATEADD(MINUTE, 51839, @D0), N'Published', 1, NULL, 3, DATEADD(MINUTE, -58080, @D0), NULL),
     (7, 7, 1, N'Thực tập sinh Java Backend', N'Tham gia phát triển module nội bộ cùng đội Backend dưới sự hướng dẫn của mentor.
 Làm việc cùng đội ngũ trẻ, quy trình Agile/Scrum.', N'- Sinh viên năm 3-4 ngành CNTT
 - nắm vững Java cơ bản và OOP.', N'- Lương tháng 13, thưởng dự án
 - Bảo hiểm sức khỏe PVI
 - 12 ngày phép năm
-- Review lương 2 lần/năm', N'3,000,000 - 5,000,000 VND', 3, N'Làm việc từ xa', N'Thứ 2 - Thứ 6 (08:30 - 17:30)', NULL, NULL, DATEADD(MINUTE, -136320, @D0), DATEADD(MINUTE, -70561, @D0), N'Closed', DATEADD(MINUTE, -70980, @D0), 3, DATEADD(MINUTE, -137280, @D0), DATEADD(MINUTE, -70980, @D0)),
+- Review lương 2 lần/năm', N'3,000,000 - 5,000,000 VND', 3, N'Làm việc từ xa', N'Thứ 2 - Thứ 6 (08:30 - 17:30)', NULL, NULL, DATEADD(MINUTE, -136320, @D0), DATEADD(MINUTE, -70561, @D0), N'Closed', 1, DATEADD(MINUTE, -70980, @D0), 3, DATEADD(MINUTE, -137280, @D0), DATEADD(MINUTE, -70980, @D0)),
     (8, 7, 2, N'Thực tập sinh Java Backend', N'Tham gia phát triển module nội bộ cùng đội Backend dưới sự hướng dẫn của mentor.
 Làm việc cùng đội ngũ trẻ, quy trình Agile/Scrum.', N'- Sinh viên năm 3-4 ngành CNTT
 - nắm vững Java cơ bản và OOP.', N'- Lương tháng 13, thưởng dự án
 - Bảo hiểm sức khỏe PVI
 - 12 ngày phép năm
-- Review lương 2 lần/năm', N'3,000,000 - 5,000,000 VND', 3, N'Làm việc từ xa', N'Thứ 2 - Thứ 6 (08:30 - 17:30)', N'Internship', N'Hybrid', DATEADD(MINUTE, -60, @Now), DATEADD(MINUTE, 59039, @D0), N'Published', NULL, 3, DATEADD(MINUTE, -90, @Now), NULL),
+- Review lương 2 lần/năm', N'3,000,000 - 5,000,000 VND', 3, N'Làm việc từ xa', N'Thứ 2 - Thứ 6 (08:30 - 17:30)', N'Internship', N'Hybrid', DATEADD(MINUTE, -60, @Now), DATEADD(MINUTE, 59039, @D0), N'Published', 2, NULL, 3, DATEADD(MINUTE, -90, @Now), NULL),
     (9, 12, 1, N'Customer Support Executive', N'Tiếp nhận và xử lý yêu cầu hỗ trợ của khách hàng qua điện thoại, email, chat.
 Làm việc cùng đội ngũ trẻ, quy trình Agile/Scrum.', N'- Giao tiếp tốt
 - kiên nhẫn, ưu tiên có kinh nghiệm chăm sóc khách hàng.', N'- Lương tháng 13, thưởng dự án
 - Bảo hiểm sức khỏe PVI
 - 12 ngày phép năm
-- Review lương 2 lần/năm', N'9,000,000 - 12,000,000 VND', 2, N'Số 12 Lê Thánh Tôn, Bến Nghé, Quận 1, TP. Hồ Chí Minh', N'Thứ 2 - Thứ 6 (08:30 - 17:30)', NULL, NULL, DATEADD(MINUTE, -150720, @D0), DATEADD(MINUTE, -20161, @D0), N'Closed', DATEADD(MINUTE, -16260, @D0), 4, DATEADD(MINUTE, -151680, @D0), DATEADD(MINUTE, -16260, @D0)),
+- Review lương 2 lần/năm', N'9,000,000 - 12,000,000 VND', 2, N'Số 12 Lê Thánh Tôn, Bến Nghé, Quận 1, TP. Hồ Chí Minh', N'Thứ 2 - Thứ 6 (08:30 - 17:30)', NULL, NULL, DATEADD(MINUTE, -150720, @D0), DATEADD(MINUTE, -20161, @D0), N'Closed', 1, DATEADD(MINUTE, -16260, @D0), 4, DATEADD(MINUTE, -151680, @D0), DATEADD(MINUTE, -16260, @D0)),
     (10, 13, 1, N'Customer Support Executive (Đợt 2)', N'Tiếp nhận và xử lý yêu cầu hỗ trợ của khách hàng qua điện thoại, email, chat.
 Làm việc cùng đội ngũ trẻ, quy trình Agile/Scrum.', N'- Giao tiếp tốt
 - kiên nhẫn, ưu tiên có kinh nghiệm chăm sóc khách hàng.', N'- Lương tháng 13, thưởng dự án
 - Bảo hiểm sức khỏe PVI
 - 12 ngày phép năm
-- Review lương 2 lần/năm', N'9,000,000 - 13,000,000 VND', 1, N'Số 12 Lê Thánh Tôn, Bến Nghé, Quận 1, TP. Hồ Chí Minh', N'Thứ 2 - Thứ 6 (08:30 - 17:30)', NULL, NULL, NULL, NULL, N'Draft', NULL, 4, DATEADD(MINUTE, -3360, @D0), NULL);
+- Review lương 2 lần/năm', N'9,000,000 - 13,000,000 VND', 1, N'Số 12 Lê Thánh Tôn, Bến Nghé, Quận 1, TP. Hồ Chí Minh', N'Thứ 2 - Thứ 6 (08:30 - 17:30)', NULL, NULL, NULL, NULL, N'Draft', 1, NULL, 4, DATEADD(MINUTE, -3360, @D0), NULL);
 SET IDENTITY_INSERT JobPosting OFF;
 
 -- Candidate (122 dòng)

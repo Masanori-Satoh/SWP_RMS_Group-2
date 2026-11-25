@@ -179,6 +179,7 @@ public final class PublicJobSearch {
                 if (query != null && !Long.class.equals(query.getResultType())) {
                     query.orderBy(
                             cb.desc(score),
+                            cb.desc(root.get("priority")),
                             cb.desc(root.get("postingDate")),
                             cb.desc(root.get("jobPostingId")));
                 }

@@ -233,6 +233,7 @@ CREATE TABLE JobPosting (
     PostingDate          DATETIME2 NULL,
     ApplicationDeadline  DATETIME2 NULL,
     PostingStatus        NVARCHAR(20) NOT NULL CONSTRAINT DF_JobPosting_PostingStatus DEFAULT N'Draft',
+    Priority             INT NOT NULL CONSTRAINT DF_JobPosting_Priority DEFAULT 1, -- 3: High, 2: Medium, 1: Low
     ClosedAt             DATETIME2 NULL,         -- [MỚI]
     CreatedBy            INT NOT NULL,
     CreatedAt            DATETIME2 NOT NULL CONSTRAINT DF_JobPosting_CreatedAt DEFAULT SYSDATETIME(),
@@ -261,6 +262,9 @@ CREATE TABLE JobPosting (
 
     CONSTRAINT CK_JobPosting_Status
         CHECK (PostingStatus IN (N'Draft', N'Published', N'Paused', N'Closed')),
+
+    CONSTRAINT CK_JobPosting_Priority
+        CHECK (Priority IN (1, 2, 3)),
  
     CONSTRAINT CK_JobPosting_Deadline
         CHECK (ApplicationDeadline IS NULL OR PostingDate IS NULL OR ApplicationDeadline > PostingDate),
@@ -643,7 +647,7 @@ WHERE PostingStatus <> N'Closed';
 -- Trang danh sách tin tuyển dụng công khai (Yêu cầu có cột NumberOfPositionsDisplay trong bảng)
 CREATE NONCLUSTERED INDEX IX_JobPosting_Public
 ON JobPosting(PostingStatus, ApplicationDeadline)
-INCLUDE (PostingTitle, WorkLocation, SalaryDisplay, NumberOfPositionsDisplay, PostingDate);
+INCLUDE (PostingTitle, WorkLocation, SalaryDisplay, NumberOfPositionsDisplay, PostingDate, Priority);
 GO
 
 -- =============================================================================

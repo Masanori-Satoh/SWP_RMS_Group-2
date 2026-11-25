@@ -87,7 +87,9 @@ public class CareerPortalService {
                 null,
                 null,
                 null,
-                PageRequest.of(0, limit, Sort.by(Sort.Direction.DESC, "postingDate"))).getContent();
+                PageRequest.of(0, limit, Sort.by(
+                        Sort.Order.desc("priority"),
+                        Sort.Order.desc("postingDate")))).getContent();
     }
 
     private static String employmentTypeLabel(JobPosting job) {
